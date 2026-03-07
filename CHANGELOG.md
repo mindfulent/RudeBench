@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.6.0] - 2026-03-07
+
+### Added
+- **Judge pipeline** (`rudebench/gen_judgments.py`): Async LLM judge scoring for all completions
+  - **Tone firewall**: Judge always receives the neutral task description, never the actual hostile/curt/abusive prompt. This is an architectural guarantee — `build_neutral_map()` creates `{task_id → neutral_prompt}` at startup, and the judge prompt template only ever receives this neutral text.
+  - Two judge calls per completion: behavioral (SYC/PBR/APO) and quality (ACC/CRE)
+  - Score parsing via regex with automatic retry on parse failure
+  - VRB computed automatically: `completion_word_count / mean_neutral_word_count × 100` (no judge call needed)
+  - Primary judge (GPT-4.1) and secondary judge (Claude Sonnet 4.6, 20% sample) support
+  - Deterministic hash-based sampling for secondary judge reproducibility
+  - Crash-safe resumption: reads existing judgment JSONL on startup, skips completed `(prompt_id, run, judge_type)` tuples
+  - Per-judge concurrency via `asyncio.Semaphore`
+  - `--dry-run` mode: prints job counts without calling APIs
+  - Cost tracking per model
+- **Scoring tests** (`tests/test_scoring.py`): 13 tests covering score parsing (valid, N/A, missing, boundary, case-insensitive), tone firewall map construction, and VRB computation (neutral=100, proportional scaling, multi-run averaging)
+- Wired `judge` CLI subcommand with `--dry-run`, `--models`, `--judge primary|secondary` flags
+
+### Dry Run Summary (primary judge, existing completions)
+| Model | Completions | Judge Calls |
+|-------|-------------|-------------|
+| claude-sonnet-4.6 | 300 | 600 |
+| gpt-5.2 | 1,055 | 2,110 |
+| llama-4-scout | 300 | 600 |
+| grok-3 | 658 | 1,316 |
+| **Total** | **2,313** | **4,626** |
+
 ## [v0.5.2] - 2026-03-07
 
 ### Fixed

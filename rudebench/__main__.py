@@ -27,6 +27,7 @@ def main():
     judge_parser.add_argument("--config", default="config", help="Config directory")
     judge_parser.add_argument("--models", default=None, help="Comma-separated model IDs to judge")
     judge_parser.add_argument("--judge", choices=["primary", "secondary"], default="primary", help="Which judge to use")
+    judge_parser.add_argument("--dry-run", action="store_true", help="Print jobs without calling APIs")
 
     # results
     results_parser = subparsers.add_parser("results", help="Show results and leaderboard")
@@ -69,7 +70,14 @@ def main():
             dry_run=args.dry_run,
         ))
     elif args.command == "judge":
-        print("judge: not yet implemented (Phase 3)")
+        import asyncio
+        from rudebench.gen_judgments import main as judge_main
+        asyncio.run(judge_main(
+            config_dir=args.config,
+            models_filter=args.models,
+            judge_type=args.judge,
+            dry_run=args.dry_run,
+        ))
     elif args.command == "results":
         print("results: not yet implemented (Phase 4)")
 
