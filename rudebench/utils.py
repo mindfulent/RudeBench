@@ -10,7 +10,7 @@ def read_jsonl(path: str | Path) -> list[dict]:
     if not path.exists():
         return []
     records = []
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -22,7 +22,7 @@ def write_jsonl(path: str | Path, records: list[dict]) -> None:
     """Write a list of dicts to a JSONL file (overwrites)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         for record in records:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
@@ -31,5 +31,5 @@ def append_jsonl(path: str | Path, record: dict) -> None:
     """Append a single dict to a JSONL file."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a") as f:
+    with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")

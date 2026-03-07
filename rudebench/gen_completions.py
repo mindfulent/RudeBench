@@ -21,6 +21,23 @@ logging.getLogger("LiteLLM").setLevel(logging.WARNING)
 REFUSAL_KEYWORDS = {"sorry", "cannot", "apologize", "unable", "won't", "can't"}
 
 
+class _RateLimiter:
+    """Simple token-bucket rate limiter for API calls per minute."""
+
+    def __init__(self, rpm: int):
+        self._interval = 60.0 / rpm  # seconds between allowed calls
+        self._lock = asyncio.Lock()
+        self._last = 0.0
+
+    async def acquire(self):
+        async with self._lock:
+            now = time.monotonic()
+            wait = self._last + self._interval - now
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self._last = time.monotonic()
+
+
 def _detect_refusal(text: str, finish_reason: str) -> bool:
     """Detect if a response is a refusal (turn-2 only)."""
     if finish_reason == "content_filter":
@@ -45,6 +62,7 @@ def _get_cost(response) -> float:
 
 async def _run_job(
     sem: asyncio.Semaphore,
+    rate_limiter: _RateLimiter | None,
     model: dict,
     prompt: dict,
     run: int,
@@ -59,6 +77,8 @@ async def _run_job(
             t0 = time.time()
 
             # Turn 1: greeting
+            if rate_limiter:
+                await rate_limiter.acquire()
             r1 = await litellm.acompletion(
                 model=model["litellm_model"],
                 messages=[{"role": "user", "content": greeting}],
@@ -70,6 +90,8 @@ async def _run_job(
             greeting_tokens = r1.usage.total_tokens if r1.usage else 0
 
             # Turn 2: task prompt with conversation history
+            if rate_limiter:
+                await rate_limiter.acquire()
             r2 = await litellm.acompletion(
                 model=model["litellm_model"],
                 messages=[
@@ -188,10 +210,14 @@ async def main(config_dir: str = "config", models_filter: str | None = None, dry
         print(f"\n{model['id']}: {len(jobs)} jobs ({skipped} already done)")
 
         sem = asyncio.Semaphore(model["parallel"])
+        rpm = model.get("rpm_limit")
+        rate_limiter = _RateLimiter(rpm) if rpm else None
+        if rpm:
+            print(f"  Rate limited: {rpm} RPM")
         pbar = tqdm(total=len(jobs), desc=model["id"], unit="job")
 
         tasks = [
-            _run_job(sem, model, prompt, run, greeting, gen_cfg, output_path, pbar)
+            _run_job(sem, rate_limiter, model, prompt, run, greeting, gen_cfg, output_path, pbar)
             for prompt, run in jobs
         ]
         costs = await asyncio.gather(*tasks)

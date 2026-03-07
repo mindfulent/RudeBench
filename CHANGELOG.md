@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.1] - 2026-03-07
+
+### Fixed
+- **UTF-8 encoding for all JSONL I/O** (`utils.py`): Explicit `encoding="utf-8"` on all file operations. Windows defaults to cp1252 which can't encode Unicode characters (Greek letters, arrows, etc.) in model responses, causing silent data loss.
+- **RPM rate limiter** (`gen_completions.py`): Added token-bucket `_RateLimiter` class to throttle API calls for providers with low rate limits (e.g., Groq free tier at 30 RPM). Configured via optional `rpm_limit` field in `models.yaml`.
+- **Corrected Groq model ID** (`models.yaml`): Changed from `groq/llama-4-scout` to `groq/meta-llama/llama-4-scout-17b-16e-instruct`.
+- Converted `data/prompts.jsonl` to UTF-8.
+
+### Validated
+- Smoke test: 300/300 completions for `llama-4-scout` (run=1), schema matches TDD spec, $0.08 cost.
+- Resumption: killed and restarted mid-run, picked up exactly 16 missing jobs with no duplicates.
+
 ## [v0.5.0] - 2026-03-07
 
 ### Added

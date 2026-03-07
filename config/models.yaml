@@ -15,8 +15,9 @@ models:
     env_key: GEMINI_API_KEY
 
   - id: llama-4-scout
-    litellm_model: groq/llama-4-scout
+    litellm_model: groq/meta-llama/llama-4-scout-17b-16e-instruct
     parallel: 32
+    rpm_limit: 28           # Groq free tier: 30 RPM, leave headroom
     env_key: GROQ_API_KEY
 
   - id: grok-3
