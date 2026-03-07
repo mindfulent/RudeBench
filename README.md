@@ -74,10 +74,11 @@ R = 100: identical behavior regardless of tone. R = 0: maximum behavioral instab
 ## Repository Structure
 
 ```
-RudeBench_Research_Briefing.md   # Full research design and methodology
-RudeBench_Paper_Draft.docx       # arXiv preprint draft
-CLAUDE.md                        # Claude Code project guide
-CHANGELOG.md                     # Version history
+docs/
+  RudeBench_Research_Briefing.md   # Full research design and methodology
+  RudeBench_Paper_Draft.docx       # arXiv preprint draft
+CLAUDE.md                          # Claude Code project guide
+CHANGELOG.md                       # Version history
 ```
 
 ## Citation

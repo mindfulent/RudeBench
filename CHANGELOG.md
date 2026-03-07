@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.1.2] - 2026-03-07
+
+### Changed
+- Moved research briefing and paper draft into `docs/` folder
+- Updated file path references in CLAUDE.md and README.md
+
 ## [v0.1.1] - 2026-03-07
 
 ### Added

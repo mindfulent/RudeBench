@@ -19,8 +19,8 @@ RudeBench is a multi-dimensional behavioral benchmark measuring how LLMs change 
 
 ## Key Files
 
-- `RudeBench_Research_Briefing.md` — Complete research design, methodology, and phase plan (the authoritative reference)
-- `RudeBench_Paper_Draft.docx` — arXiv preprint draft; Section 5 (Results) is placeholder, everything else is complete
+- `docs/RudeBench_Research_Briefing.md` — Complete research design, methodology, and phase plan (the authoritative reference)
+- `docs/RudeBench_Paper_Draft.docx` — arXiv preprint draft; Section 5 (Results) is placeholder, everything else is complete
 
 ## Benchmark Design (Do Not Change Without Good Reason)
 
