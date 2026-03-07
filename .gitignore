@@ -1,0 +1,20 @@
+# Secrets
+.env
+
+# Raw results (too large for git, reproducible from code)
+results/completions/
+results/judgments/
+
+# Python
+__pycache__/
+*.egg-info/
+dist/
+.venv/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Keep committed:
+# results/leaderboard.csv
+# results/summary.json
+# data/prompts.jsonl

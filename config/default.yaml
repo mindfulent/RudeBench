@@ -1,0 +1,11 @@
+bench_name: rudebench-v1
+data_file: data/prompts.jsonl
+output_dir: results
+
+generation:
+  temperature: 0.7
+  max_tokens: 2048
+  num_runs: 10
+  system_prompt: null       # Use provider defaults
+
+dry_run: false              # If true, print what would be sent but don't call APIs

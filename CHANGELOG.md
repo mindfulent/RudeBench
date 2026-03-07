@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.2.0] - 2026-03-07
+
+### Added
+- Installable Python package scaffold (`pyproject.toml`, `rudebench/` package)
+- CLI entry point with subcommands: `validate`, `generate`, `judge`, `results`
+- Config files: `config/default.yaml`, `config/models.yaml`, `config/judge.yaml` (from TDD Section 3.4)
+- Config loader with validation (`rudebench/config.py`)
+- JSONL I/O utilities: `read_jsonl`, `write_jsonl`, `append_jsonl` (`rudebench/utils.py`)
+- Module stubs: `gen_completions.py`, `gen_judgments.py`, `show_results.py`
+- `.env.example` with API key placeholders for all 5 providers
+- `.gitignore` for Python, results, secrets
+- Directory structure: `data/`, `results/`, `analysis/`, `paper/figures/`, `scripts/`, `tests/`
+
 ## [v0.1.4] - 2026-03-07
 
 ### Added

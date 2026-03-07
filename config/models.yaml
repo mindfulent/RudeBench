@@ -1,0 +1,25 @@
+models:
+  - id: claude-sonnet-4.6
+    litellm_model: claude-sonnet-4-6-20250514
+    parallel: 16             # asyncio.Semaphore limit
+    env_key: ANTHROPIC_API_KEY
+
+  - id: gpt-5.2
+    litellm_model: gpt-5.2
+    parallel: 32
+    env_key: OPENAI_API_KEY
+
+  - id: gemini-2.5-pro
+    litellm_model: gemini/gemini-2.5-pro
+    parallel: 16
+    env_key: GEMINI_API_KEY
+
+  - id: llama-4-scout
+    litellm_model: groq/llama-4-scout
+    parallel: 32
+    env_key: GROQ_API_KEY
+
+  - id: grok-3
+    litellm_model: xai/grok-3-beta
+    parallel: 16
+    env_key: XAI_API_KEY
