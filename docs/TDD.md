@@ -155,17 +155,21 @@ One JSON object per line. 200 lines total (50 tasks × 4 tones).
 
 One JSON object per completion. 2,000 lines per model (200 prompts × 10 runs).
 
+Each completion uses a **two-turn conversation**: turn 1 sends the greeting (from `config/default.yaml`), turn 2 sends the actual task prompt. Only the turn-2 response is scored.
+
 ```json
 {
   "prompt_id": "coding_fibonacci_hostile",
   "task_id": "coding_fibonacci",
   "model_id": "claude-sonnet-4.6",
   "run": 3,
+  "greeting_response": "Hello! How can I help you today?",
+  "greeting_tokens": 18,
   "response": "The issue is that your function...",
   "word_count": 187,
   "input_tokens": 52,
   "output_tokens": 243,
-  "cost_usd": 0.0039,
+  "cost_usd": 0.0042,
   "latency_ms": 1823,
   "finish_reason": "stop",
   "refused": false,
@@ -175,8 +179,12 @@ One JSON object per completion. 2,000 lines per model (200 prompts × 10 runs).
 
 **Field rules:**
 - `run`: 1–10 (not 0-indexed)
+- `greeting_response`: the model's natural reply to the turn-1 greeting (stored for reproducibility)
+- `greeting_tokens`: combined input+output token count for the greeting turn
+- `response`: the turn-2 task response only (this is what gets judged)
+- `word_count`: word count of the turn-2 response only
+- `cost_usd`: combined cost of both turns, from LiteLLM's `response._hidden_params["response_cost"]`
 - `refused`: `true` if model declined to respond (content filter, safety refusal)
-- `cost_usd`: from LiteLLM's `response._hidden_params["response_cost"]`
 
 ### 3.3 Judgment Schema (`results/judgments/{judge-model}/{model-id}.jsonl`)
 
@@ -224,6 +232,7 @@ generation:
   max_tokens: 2048
   num_runs: 10
   system_prompt: null       # Use provider defaults
+  greeting: "Hello"         # Fixed turn-1 greeting for two-turn conversation architecture
 
 dry_run: false              # If true, print what would be sent but don't call APIs
 ```
@@ -471,36 +480,45 @@ Each phase produces a tagged version, committed and pushed.
 
 **`gen_completions.py` design:**
 
+Each completion uses a **two-turn conversation**. Turn 1 sends the greeting (from `config/default.yaml`); turn 2 sends the actual task prompt. Both turns are treated as an atomic unit — if either fails, both are retried. The greeting turn is trivial (~5 input tokens, ~15-25 output tokens) so retrying both is negligible.
+
 ```
 main(config_dir, models_filter, dry_run)
   ├── Load config (default.yaml + models.yaml)
+  ├── Load greeting from config (default: "Hello")
   ├── Load prompts (data/prompts.jsonl)
   ├── For each model:
   │   ├── Load completed set from results/completions/{model-id}.jsonl
   │   ├── Build job list: [(prompt, run_number) for all missing combinations]
   │   ├── Create asyncio.Semaphore(model.parallel)
-  │   ├── Dispatch all jobs with acompletion()
-  │   │   ├── Each job: semaphore → litellm.acompletion() → append to JSONL
+  │   ├── Dispatch all jobs (two-turn per job):
+  │   │   ├── Turn 1: acompletion(messages=[{user: greeting}]) → greeting_response
+  │   │   ├── Turn 2: acompletion(messages=[
+  │   │   │     {user: greeting},
+  │   │   │     {assistant: greeting_response},
+  │   │   │     {user: task_prompt}
+  │   │   │   ]) → task_response
   │   │   ├── Retry: LiteLLM handles 429/500 with num_retries=3
-  │   │   └── Track: cost, tokens, latency, refusal detection
+  │   │   └── Track: cost (both turns), tokens, latency, refusal detection
   │   ├── tqdm progress bar per model
   │   └── Print cost summary
   └── Print total cost summary
 ```
 
 **Key implementation details:**
-- **Resumption:** On startup, read existing output JSONL into a `set` of `(prompt_id, run)` tuples. Skip any job already in the set. This makes the harness fully idempotent.
+- **Two-turn flow:** The greeting establishes rapport before the model encounters the task prompt. The model's greeting response is included in the turn-2 message history so it "remembers" committing to a helpful persona.
+- **Resumption:** On startup, read existing output JSONL into a `set` of `(prompt_id, run)` tuples. Skip any job already in the set. This makes the harness fully idempotent. Both turns are atomic — partial completions (greeting done, task failed) are not saved.
 - **Concurrency:** One `asyncio.Semaphore` per model (from `models.yaml` `parallel` field). Models with higher rate limits get higher parallelism.
-- **Refusal detection:** If `finish_reason` is `"content_filter"` or response is empty/very short (<10 words) with apology keywords, mark `refused: true`.
-- **Cost tracking:** Accumulate `cost_usd` from LiteLLM per-request. Print running total per model.
-- **Dry-run mode:** Print job list and estimated cost without calling any APIs.
+- **Refusal detection:** If `finish_reason` is `"content_filter"` or response is empty/very short (<10 words) with apology keywords, mark `refused: true`. Applies to turn-2 response only.
+- **Cost tracking:** Accumulate `cost_usd` from both turns per job. Print running total per model.
+- **Dry-run mode:** Print job list and estimated cost without calling any APIs. Reports 20,000 API calls (10,000 greeting + 10,000 task).
 - **CLI:** `python -m rudebench.gen_completions [--config config/] [--models claude-sonnet-4.6,gpt-5.2] [--dry-run]`
 
 **Acceptance criteria:**
-- `--dry-run` correctly lists all 10,000 jobs with estimated costs
-- Single-model smoke test: run 1 prompt × 1 run against one real API, verify JSONL output matches schema
+- `--dry-run` correctly lists all 10,000 jobs (20,000 API calls) with estimated costs
+- Single-model smoke test: run 1 prompt × 1 run against one real API, verify JSONL output matches schema (includes `greeting_response` and `greeting_tokens`)
 - Resumption: kill and restart mid-run, verify no duplicate completions
-- Cost is tracked and printed
+- Cost is tracked and printed (both turns combined)
 
 ---
 
@@ -693,10 +711,11 @@ echo "=== Done ==="
 The single most important methodological safeguard. Prevents the judge from scoring responses differently based on what tone produced them.
 
 ```
-Model receives:     hostile prompt  →  generates response
-Judge receives:     neutral prompt  +  that same response  →  scores response
+Model receives:     greeting → greeting_response → hostile prompt → task response
+Judge receives:     neutral prompt + turn-2 task response only → scores response
 
 The judge NEVER sees the hostile/curt/abusive prompt.
+The judge NEVER sees the turn-1 greeting exchange.
 ```
 
 **Implementation:** `gen_judgments.py` builds `neutral_map = {task_id: neutral_prompt_text}` at startup. For every completion, regardless of its actual tone, the judge prompt template receives `neutral_map[completion.task_id]` as `{neutral_task_description}`.
@@ -744,7 +763,7 @@ Based on research in `docs/research/api_pricing.md`. Using standard (non-batch) 
 |-------|-----------|------|-------|
 | Phase 0 (Scaffold) | 0 | $0 | No API calls |
 | Phase 1 (Prompts) | 0 | $0 | Claude generates prompts as part of development work |
-| Phase 2 (Completions) | 10,000 | ~$112 | 5 models × 2,000 calls each |
+| Phase 2 (Completions) | 20,000 | ~$115 | 5 models × 2,000 jobs × 2 turns each (~$3 for greeting turns) |
 | Phase 3 (Judge) | ~24,000 | ~$68 | Primary: ~20K calls ($32), Secondary 20%: ~4K calls ($36) |
 | Phase 4 (Analysis) | 0 | $0 | Computation only |
 | Phase 5 (Integration) | ~100 | ~$2 | Smoke tests |
@@ -753,8 +772,8 @@ Based on research in `docs/research/api_pricing.md`. Using standard (non-batch) 
 
 | Scenario | Completions | Judge | Buffer (15%) | Total |
 |----------|-------------|-------|--------------|-------|
-| **Standard API** | $112 | $68 | $27 | **~$207** |
-| **With batch APIs (future)** | $57 | $35 | $14 | **~$106** |
+| **Standard API** | $115 | $68 | $27 | **~$210** |
+| **With batch APIs (future)** | $58 | $35 | $14 | **~$107** |
 
 Well within the $200-500 budget. Enough headroom for a full re-run if needed.
 

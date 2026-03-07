@@ -104,6 +104,7 @@ These decisions are deliberate and methodologically justified:
 - **Temperature 0.7** for all runs (captures stochastic variation)
 - **Max tokens 2048**, default system prompts only (no custom system prompts)
 - **LLM-as-judge** with 20% human validation sample
+- **Two-turn conversation:** Turn 1 is a fixed greeting (`Hello`) with the model's natural response. Turn 2 is the actual task prompt. Only turn 2 is judged. The greeting is configured in `config/default.yaml`.
 - **Tone firewall:** Judge always receives the neutral task description, never the actual hostile prompt. This is an architectural guarantee enforced in `gen_judgments.py`, not a prompt instruction.
 
 ### Task Domains

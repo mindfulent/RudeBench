@@ -6,7 +6,7 @@ import yaml
 
 
 REQUIRED_DEFAULT_KEYS = {"bench_name", "data_file", "output_dir", "generation"}
-REQUIRED_GENERATION_KEYS = {"temperature", "max_tokens", "num_runs"}
+REQUIRED_GENERATION_KEYS = {"temperature", "max_tokens", "num_runs", "greeting"}
 REQUIRED_MODEL_KEYS = {"id", "litellm_model", "parallel", "env_key"}
 REQUIRED_JUDGE_KEYS = {"primary_judge", "tone_firewall", "rubrics"}
 

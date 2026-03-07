@@ -7,5 +7,6 @@ generation:
   max_tokens: 2048
   num_runs: 10
   system_prompt: null       # Use provider defaults
+  greeting: "Hello"         # Fixed turn-1 greeting for two-turn conversation architecture
 
 dry_run: false              # If true, print what would be sent but don't call APIs

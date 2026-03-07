@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.1] - 2026-03-07
+
+### Changed
+- **Two-turn conversation architecture**: Each completion now uses a two-turn flow — turn 1 sends a fixed greeting ("Hello"), turn 2 sends the task prompt with full conversation history. Only the turn-2 response is judged. This creates more ecologically valid scenarios where the model has already committed to a helpful persona before encountering hostile tone.
+- Added `greeting` field to `config/default.yaml` generation section (single source of truth)
+- Added `greeting` to required generation config keys in `rudebench/config.py`
+- Updated completion schema in TDD with `greeting_response` and `greeting_tokens` fields
+- Updated Phase 2 harness design in TDD to show two-step API flow
+- Updated cost budget (~$112 → ~$115, trivial increase for greeting turns)
+- Added two-turn architecture to CLAUDE.md benchmark design section
+- Updated Research Briefing evaluation protocol and Phase 3 description
+- Added clarifying comments to `config/judge.yaml` noting turn-2-only evaluation
+
 ## [v0.3.0] - 2026-03-07
 
 ### Added

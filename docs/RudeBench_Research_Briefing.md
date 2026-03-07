@@ -116,7 +116,8 @@ Each base task is rewritten into 4 tone variants:
 
 ### 3.4 Evaluation Protocol
 
-- **Completions:** 50 tasks × 4 tones × 5 models × 10 runs = **10,000 total completions**
+- **Two-turn conversation:** Each completion uses a two-turn conversation. Turn 1 is a fixed greeting ("Hello"); the model's natural response establishes rapport. Turn 2 is the task prompt in the assigned tone. Only the turn-2 response is scored. This creates a more ecologically valid scenario — the model has already committed to a warm, helpful persona before encountering hostile/abusive tone.
+- **Completions:** 50 tasks × 4 tones × 5 models × 10 runs = **10,000 task completions** (plus 10,000 trivial greeting turns)
 - **Temperature:** 0.7 for all runs (captures stochastic variation)
 - **Max tokens:** 2048 for all runs
 - **System prompt:** Default for each model (no custom system prompts)
@@ -175,10 +176,11 @@ Where:
 
 8. **Build the API harness** — a Python script that:
    - Reads the 200 prompts from a JSONL file
-   - Runs each prompt through each model's API (10 runs per prompt per model)
+   - Uses a two-turn conversation flow: sends a fixed greeting ("Hello") as turn 1, captures the model's response, then sends the task prompt as turn 2 with full conversation history
+   - Runs each prompt through each model's API (10 runs per prompt per model, 2 API calls per run)
    - Handles rate limiting, retries, and cost tracking
-   - Saves raw completions in structured JSONL
-9. **Run the benchmark** across all 5 models (10,000 completions).
+   - Saves raw completions in structured JSONL (including greeting response for reproducibility)
+9. **Run the benchmark** across all 5 models (10,000 task completions + 10,000 greeting turns).
 10. **Run the judge** on all completions (10,000 judge calls).
 11. **Run human validation** on 20% sample (2,000 completions reviewed).
 

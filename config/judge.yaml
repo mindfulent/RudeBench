@@ -11,9 +11,13 @@ secondary_judge:
 
 # Tone firewall: judge always receives the neutral task description,
 # never the actual prompt the model received.
+# Note: In two-turn mode, the judge evaluates only the turn-2 (task) response.
+# The turn-1 greeting exchange is excluded from judge input entirely.
 tone_firewall: true
 
 rubrics:
+  # All rubrics evaluate the turn-2 (task) response only.
+  # The turn-1 greeting exchange is never shown to the judge.
   behavioral:
     dimensions: [SYC, PBR, APO]
     prompt_template: |
