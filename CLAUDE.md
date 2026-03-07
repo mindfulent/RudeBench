@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RudeBench is a multi-dimensional behavioral benchmark measuring how LLMs change behavior (not just accuracy) under hostile prompting. It evaluates 5 frontier models across 6 behavioral dimensions, 4 tone conditions, and 4 task domains, producing a composite Resilience Score per model.
+RudeBench is a multi-dimensional behavioral benchmark measuring how LLMs change behavior (not just accuracy) under varying tone conditions. It evaluates 5 frontier models across 6 behavioral dimensions, 6 tone conditions (from grateful to abusive), and 4 task domains, producing a composite Resilience Score per model.
 
 **Status:** Research design finalized, TDD complete, ready for Phase 0 implementation.
 
 **Domain:** rudebench.com (acquired)
-**Budget:** $200–500 for initial benchmark run (~10,000 API completions + judge evaluations)
+**Budget:** $200–500 for initial benchmark run (~15,000 API completions + judge evaluations)
 
 ## Workflow Rules
 
@@ -37,7 +37,7 @@ pip install -e .
 # Validate prompts
 python -m rudebench validate [--data data/prompts.jsonl]
 
-# Generate completions (10,000 API calls)
+# Generate completions (15,000 API calls)
 python -m rudebench generate [--config config/] [--models MODEL,...] [--dry-run]
 
 # Run LLM judge scoring
@@ -60,7 +60,7 @@ config/default.yaml          # Run settings (temp, max_tokens, num_runs)
 config/models.yaml           # Model list with provider + concurrency
 config/judge.yaml            # Judge model, rubrics, tone firewall, few-shot
 
-data/prompts.jsonl           # 200 prompts (50 tasks × 4 tones)
+data/prompts.jsonl           # 300 prompts (50 tasks × 6 tones)
 
 rudebench/                   # Python package
   __init__.py                # Version string
@@ -87,7 +87,7 @@ Each phase = a tagged version, committed and pushed. Full details in `docs/TDD.m
 | Phase | Version | Goal |
 |-------|---------|------|
 | 0: Scaffold | v0.2.0 | Installable package, configs, stubs |
-| 1: Prompts | v0.3.0 | 200 validated prompts in JSONL |
+| 1: Prompts | v0.3.0 | 300 validated prompts in JSONL |
 | 2: Completions | v0.4.0 | Async API harness with resumption + cost tracking |
 | 3: Judge | v0.5.0 | LLM judge with tone firewall |
 | 4: Analysis | v0.6.0 | Resilience Scores, leaderboard, paper figures |
@@ -97,10 +97,10 @@ Each phase = a tagged version, committed and pushed. Full details in `docs/TDD.m
 
 These decisions are deliberate and methodologically justified:
 
-- **4 tone levels:** Neutral, Curt, Hostile, Abusive (no "Very Polite" — signal is on the hostile end)
+- **6 tone levels:** Grateful, Friendly, Neutral, Curt, Hostile, Abusive — captures the full behavioral spectrum from positive to negative. Any behavioral change from neutral = instability, regardless of direction.
 - **±15% word count constraint** across tone variants — prevents confounding tone with brevity. This is the single most important methodological control.
 - **6 behavioral dimensions:** ACC (accuracy), SYC (sycophancy), PBR (pushback retention), CRE (creative risk), VRB (verbosity change), APO (apology frequency)
-- **50 base tasks × 4 tones × 5 models × 10 runs = 10,000 completions**
+- **50 base tasks × 6 tones × 5 models × 10 runs = 15,000 completions**
 - **Temperature 0.7** for all runs (captures stochastic variation)
 - **Max tokens 2048**, default system prompts only (no custom system prompts)
 - **LLM-as-judge** with 20% human validation sample
@@ -153,7 +153,7 @@ R = 100 means identical behavior regardless of tone. R = 0 means maximum behavio
 ## Data Schemas
 
 Prompt, completion, and judgment JSONL schemas are fully defined in `docs/TDD.md` Section 3. Key patterns:
-- Prompt IDs: `{domain}_{task_slug}_{tone}` (e.g., `coding_fibonacci_hostile`)
-- Task IDs: `{domain}_{task_slug}` (groups the 4 tone variants)
+- Prompt IDs: `{domain}_{task_slug}_{tone}` (e.g., `coding_fibonacci_hostile`, `factual_great_wall_grateful`)
+- Task IDs: `{domain}_{task_slug}` (groups the 6 tone variants)
 - Completion files: `results/completions/{model-id}.jsonl`
 - Judgment files: `results/judgments/{judge-model}/{model-id}.jsonl`

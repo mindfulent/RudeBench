@@ -19,36 +19,36 @@
 
 ## Total Cost Estimate
 
-Assumptions: 2,000 calls/model, ~200 input tokens, ~1,000 output tokens average.
+Assumptions: 3,000 calls/model (50 tasks × 6 tones × 10 runs), ~200 input tokens, ~1,000 output tokens average.
 
 ### Standard API
 | Model | Total |
 |-------|-------|
-| Claude 4.6 Sonnet | $31.20 |
-| GPT-5.2 | $28.70 |
-| Gemini 2.5 Pro | $20.50 |
-| Llama 4 Scout (Groq) | $0.72 |
-| Grok 3 | $31.20 |
-| **Subtotal** | **$112.32** |
+| Claude 4.6 Sonnet | $46.80 |
+| GPT-5.2 | $43.05 |
+| Gemini 2.5 Pro | $30.75 |
+| Llama 4 Scout (Groq) | $1.08 |
+| Grok 3 | $46.80 |
+| **Subtotal** | **$168.48** |
 
 ### Batch API (recommended)
 | Model | Total |
 |-------|-------|
-| Claude 4.6 Sonnet | $15.60 |
-| GPT-5.2 | $14.35 |
-| Gemini 2.5 Pro | $10.25 |
-| Llama 4 Scout (Groq) | $0.72 |
-| Grok 3 | $15.60 |
-| **Subtotal** | **$56.52** |
+| Claude 4.6 Sonnet | $23.40 |
+| GPT-5.2 | $21.53 |
+| Gemini 2.5 Pro | $15.38 |
+| Llama 4 Scout (Groq) | $1.08 |
+| Grok 3 | $23.40 |
+| **Subtotal** | **$84.79** |
 
 ### Grand Total (with judge costs)
 | Scenario | Completions | Judge | Total |
 |----------|-------------|-------|-------|
-| Standard API | $112 | ~$25 | ~$137 |
-| All Batch API | $57 | ~$18 | ~$75 |
-| With 20% retry buffer | — | — | ~$90 (batch) / ~$165 (standard) |
+| Standard API | $168 | ~$38 | ~$206 |
+| All Batch API | $85 | ~$27 | ~$112 |
+| With 20% retry buffer | — | — | ~$135 (batch) / ~$247 (standard) |
 
-**Budget of $200-500 is very realistic.** Even worst-case (full run twice at standard pricing) is ~$275.
+**Budget of $200-500 is very realistic.** Even worst-case (full run twice at standard pricing) is ~$415.
 
 ## Unified API Client: LiteLLM (Library Mode)
 

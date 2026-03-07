@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.4.0] - 2026-03-07
+
+### Changed
+- **Expanded from 4 to 6 tone conditions**: Added **Grateful** (deep appreciation, explicit gratitude) and **Friendly** (casual warmth, encouraging) tones to capture the full behavioral spectrum. The benchmark now measures whether models change behavior when treated *well*, not just when treated poorly.
+- Prompt dataset expanded from 200 to **300 prompts** (50 tasks × 6 tones)
+- Total completions per run: 10,000 → **15,000** (300 prompts × 5 models × 10 runs)
+- Resilience Score formula now uses 5 non-neutral tones {grateful, friendly, curt, hostile, abusive}
+- Updated all documentation (CLAUDE.md, README.md, Research Briefing, TDD, api_pricing)
+- Updated review page to 3-column grid layout for 6 tone cards
+- Updated validation script for 300 prompts and 6 tones per task
+- Estimated cost: ~$315 standard API (still within $200-500 budget)
+
 ## [v0.3.2] - 2026-03-07
 
 ### Changed

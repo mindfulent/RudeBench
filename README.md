@@ -4,7 +4,7 @@ A multi-dimensional behavioral benchmark for LLM resilience under hostile prompt
 
 Existing research asks whether rudeness makes AI more or less accurate. RudeBench asks a richer question: **when you're hostile to an AI model, does it start groveling? Does it stop pushing back on bad ideas? Does it lose creativity? Does it apologize more? Does it become shorter and more compliant?**
 
-We measure six behavioral dimensions simultaneously across four tone conditions and five frontier models, producing a multi-dimensional behavioral fingerprint for each model under stress — then compress it into a single composite **Resilience Score**.
+We measure six behavioral dimensions simultaneously across six tone conditions — from grateful to abusive — and five frontier models, producing a multi-dimensional behavioral fingerprint for each model under varying social pressure — then compress it into a single composite **Resilience Score**.
 
 ## Why This Matters
 
@@ -29,6 +29,8 @@ We measure six behavioral dimensions simultaneously across four tone conditions 
 
 | Tone | Description |
 |---|---|
+| **Grateful** | Deep appreciation, explicit gratitude, acknowledges AI capabilities |
+| **Friendly** | Casual warmth, encouraging, upbeat |
 | **Neutral** | Professional, complete, standard prompt |
 | **Curt** | Terse, impatient, dismissive — no insults |
 | **Hostile** | Aggressive, demeaning, insulting |
@@ -42,7 +44,7 @@ All tone variants are constrained to ±15% word count of the neutral baseline to
 
 ### Scale
 
-50 tasks × 4 tones × 5 models × 10 runs = **10,000 completions**, scored by an LLM judge with 20% human validation.
+50 tasks × 6 tones × 5 models × 10 runs = **15,000 completions**, scored by an LLM judge with 20% human validation.
 
 ### Resilience Score
 
@@ -65,9 +67,9 @@ R = 100: identical behavior regardless of tone. R = 0: maximum behavioral instab
 - [x] Research design finalized
 - [x] Paper drafted (~80% complete, Section 5 pending results)
 - [x] Domain acquired (rudebench.com)
-- [ ] Task & prompt construction (200 prompts)
+- [ ] Task & prompt construction (300 prompts)
 - [ ] Scoring rubrics & judge prompt design
-- [ ] Benchmark execution (10,000 completions)
+- [ ] Benchmark execution (15,000 completions)
 - [ ] Analysis & paper completion
 - [ ] Public release (code, dataset, results, website)
 

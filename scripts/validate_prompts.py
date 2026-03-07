@@ -17,10 +17,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from rudebench.utils import read_jsonl
 
-VALID_TONES = {"neutral", "curt", "hostile", "abusive"}
+VALID_TONES = {"grateful", "friendly", "neutral", "curt", "hostile", "abusive"}
 VALID_DOMAINS = {"coding", "creative", "analysis", "factual"}
 DOMAIN_COUNTS = {"coding": 15, "creative": 12, "analysis": 13, "factual": 10}
-TONE_ORDER = ["neutral", "curt", "hostile", "abusive"]
+TONE_ORDER = ["grateful", "friendly", "neutral", "curt", "hostile", "abusive"]
 
 REQUIRED_FIELDS = {
     "id": str,
@@ -46,11 +46,11 @@ def validate_prompts(data_path: str = "data/prompts.jsonl") -> dict[str, list[st
     errors: dict[str, list[str]] = {}
     prompts = read_jsonl(data_path)
 
-    # Check 1: Exactly 200 lines, all valid JSON
+    # Check 1: Exactly 300 lines, all valid JSON
     check = "01_count_and_json"
     errs = []
-    if len(prompts) != 200:
-        errs.append(f"Expected 200 prompts, got {len(prompts)}")
+    if len(prompts) != 300:
+        errs.append(f"Expected 300 prompts, got {len(prompts)}")
     errors[check] = errs
 
     # Check 2: Exactly 50 unique task_id values
@@ -61,7 +61,7 @@ def validate_prompts(data_path: str = "data/prompts.jsonl") -> dict[str, list[st
         errs.append(f"Expected 50 unique task_ids, got {len(task_ids)}")
     errors[check] = errs
 
-    # Check 3: Each task_id has exactly 4 tone variants
+    # Check 3: Each task_id has exactly 6 tone variants
     check = "03_tone_variants"
     errs = []
     task_tones: dict[str, set[str]] = {}
@@ -227,8 +227,8 @@ def print_report(data_path: str = "data/prompts.jsonl") -> None:
         tasks.setdefault(tid, {})[tone] = wc
 
     # Print header
-    print(f"{'task_id':<40} {'neutral':>8} {'curt':>8} {'hostile':>8} {'abusive':>8}")
-    print("-" * 80)
+    print(f"{'task_id':<40} {'grateful':>8} {'friendly':>8} {'neutral':>8} {'curt':>8} {'hostile':>8} {'abusive':>8}")
+    print("-" * 104)
 
     violations = 0
     for tid in sorted(tasks.keys()):
@@ -250,7 +250,7 @@ def print_report(data_path: str = "data/prompts.jsonl") -> None:
                     parts.append(f"{wc:>8}")
         print("".join(parts))
 
-    print("-" * 80)
+    print("-" * 104)
     print(f"Total tasks: {len(tasks)}, Total prompts: {len(prompts)}, "
           f"Word count violations: {violations}")
 
