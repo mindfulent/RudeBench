@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.0] - 2026-03-07
+
+### Added
+- **Completion harness** (`rudebench/gen_completions.py`): Async LiteLLM dispatcher for generating all 15,000 completions (300 prompts × 5 models × 10 runs)
+  - Two-turn conversation architecture: turn 1 sends greeting, turn 2 sends task prompt with full history
+  - Per-model concurrency via `asyncio.Semaphore` (from `models.yaml` `parallel` field)
+  - Crash-safe resumption: reads existing output JSONL on startup, skips completed `(prompt_id, run)` pairs
+  - Refusal detection: `content_filter` finish reason or short responses (<10 words) with apology keywords
+  - Cost tracking from both turns via LiteLLM `response_cost`
+  - Dry-run mode: `--dry-run` prints job counts and API call estimates without calling APIs
+  - `tqdm` progress bars per model
+  - Graceful error handling: failed jobs log warnings but don't crash the run
+- **Config tests** (`tests/test_config.py`): 12 tests covering config loading, validation, and model field checks
+- Wired `generate` CLI subcommand to `gen_completions.main()`
+
 ## [v0.4.2] - 2026-03-07
 
 ### Changed

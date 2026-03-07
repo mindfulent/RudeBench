@@ -61,7 +61,13 @@ def main():
         print(f"\n{passed}/10 checks passed, {total_errors} total errors")
         sys.exit(0 if total_errors == 0 else 1)
     elif args.command == "generate":
-        print("generate: not yet implemented (Phase 2)")
+        import asyncio
+        from rudebench.gen_completions import main as gen_main
+        asyncio.run(gen_main(
+            config_dir=args.config,
+            models_filter=args.models,
+            dry_run=args.dry_run,
+        ))
     elif args.command == "judge":
         print("judge: not yet implemented (Phase 3)")
     elif args.command == "results":
