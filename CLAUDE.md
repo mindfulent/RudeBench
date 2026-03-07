@@ -11,6 +11,12 @@ RudeBench is a multi-dimensional behavioral benchmark measuring how LLMs change 
 **Domain:** rudebench.com (acquired)
 **Budget:** $200–500 for initial benchmark run (~10,000 API completions + judge evaluations)
 
+## Workflow Rules
+
+- **Always update CHANGELOG.md** before finishing a task. Log what changed under the current version.
+- **Always commit and push** after completing a task. Do not move on to the next task without committing.
+- **Versioning** starts at v0.1.1. Bump the version as appropriate when work is completed.
+
 ## Key Files
 
 - `RudeBench_Research_Briefing.md` — Complete research design, methodology, and phase plan (the authoritative reference)
