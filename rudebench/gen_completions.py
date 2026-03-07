@@ -6,6 +6,10 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()  # Load API keys from .env file
+
 import litellm
 from tqdm import tqdm
 
@@ -76,6 +80,9 @@ async def _run_job(
         try:
             t0 = time.time()
 
+            # Per-model max_tokens override (reasoning models need more headroom)
+            max_tokens = model.get("max_tokens", gen_cfg["max_tokens"])
+
             # Turn 1: greeting
             if rate_limiter:
                 await rate_limiter.acquire()
@@ -83,7 +90,7 @@ async def _run_job(
                 model=model["litellm_model"],
                 messages=[{"role": "user", "content": greeting}],
                 temperature=gen_cfg["temperature"],
-                max_tokens=gen_cfg["max_tokens"],
+                max_tokens=max_tokens,
                 num_retries=3,
             )
             greeting_response = r1.choices[0].message.content or ""
@@ -100,7 +107,7 @@ async def _run_job(
                     {"role": "user", "content": prompt["prompt"]},
                 ],
                 temperature=gen_cfg["temperature"],
-                max_tokens=gen_cfg["max_tokens"],
+                max_tokens=max_tokens,
                 num_retries=3,
             )
 

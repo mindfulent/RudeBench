@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.2] - 2026-03-07
+
+### Fixed
+- **Auto-load `.env` file** (`gen_completions.py`): Added `python-dotenv` loading so API keys from `.env` are available without manual `export`. Previously required keys to be pre-exported in the shell.
+- **Claude Sonnet 4.6 model ID** (`models.yaml`): Changed from `claude-sonnet-4-6-20250514` to `anthropic/claude-sonnet-4-6`. LiteLLM requires the `anthropic/` provider prefix for newer models not yet in its registry, and the date suffix is not part of the API model ID.
+- **GPT-5.2 empty responses** (`models.yaml`, `gen_completions.py`): GPT-5.2 is a reasoning model that consumes `max_tokens` on internal reasoning before producing visible output. With `max_tokens: 2048`, all tokens were used for reasoning, yielding empty responses. Added per-model `max_tokens` override support and set GPT-5.2 to `16384` to provide headroom for both reasoning and 2048 tokens of visible output.
+- **Gemini RPM limit** (`models.yaml`): Added `rpm_limit: 14` for `gemini-2.5-pro` (free tier: 15 RPM).
+
+### Smoke Test Results (run=1, 300 completions per model)
+| Model | Status | Cost | Notes |
+|-------|--------|------|-------|
+| llama-4-scout | 300/300 | $0.08 | (v0.5.1) |
+| claude-sonnet-4.6 | 300/300 | $5.09 | 0 refusals, 197 stop + 103 length |
+| gpt-5.2 | 129/300 | $4.25 | Model works, OpenAI quota exceeded mid-run |
+| gemini-2.5-pro | 0/300 | $0 | Free tier quota exhausted, needs billing |
+| grok-3 | 0/300 | $0 | xAI account has no credits |
+
 ## [v0.5.1] - 2026-03-07
 
 ### Fixed
