@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.1.4] - 2026-03-07
+
+### Added
+- Technical Design Document (`docs/TDD.md`) — complete implementation blueprint:
+  - Tech stack: Python 3.10+, LiteLLM async, PyYAML, pandas, scipy, matplotlib, pytest
+  - Full repository layout with .gitignore strategy
+  - Data schemas: prompts JSONL, completions JSONL, judgments JSONL, YAML configs (default, models, judge)
+  - 6 implementation phases (v0.2.0–v0.7.0) with acceptance criteria per phase
+  - Judge design: tone firewall architecture, 5-level rubric anchors, validation experiment protocol, full prompt templates
+  - Cost budget breakdown: ~$207 standard API, ~$106 with batch APIs
+  - Testing strategy per phase
+
 ## [v0.1.3] - 2026-03-07
 
 ### Added
