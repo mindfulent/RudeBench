@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.0] - 2026-03-07
+
+### Added
+- **Prompt dataset**: 200 validated prompts in `data/prompts.jsonl` (50 tasks × 4 tones)
+  - 15 coding tasks, 12 creative writing, 13 analysis & advice, 10 factual Q&A
+  - 30 tasks with pushback expected (PBR dimension), 12 with creative risk (CRE)
+  - All non-neutral variants within ±15% word count of neutral baseline
+- Validation script (`scripts/validate_prompts.py`) with 10 automated checks and `--report` flag for word count deviation table
+- Prompt build script (`scripts/build_prompts.py`) for reproducible dataset generation
+- Pytest wrapper (`tests/test_prompts.py`) with per-check test functions for granular failure reporting
+- Wired `validate` subcommand in CLI (`python -m rudebench validate`)
+
 ## [v0.2.0] - 2026-03-07
 
 ### Added

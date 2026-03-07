@@ -14,6 +14,7 @@ def main():
     # validate
     validate_parser = subparsers.add_parser("validate", help="Validate prompt dataset")
     validate_parser.add_argument("--data", default="data/prompts.jsonl", help="Path to prompts JSONL file")
+    validate_parser.add_argument("--report", action="store_true", help="Print word count deviation report")
 
     # generate
     gen_parser = subparsers.add_parser("generate", help="Generate completions from all models")
@@ -39,7 +40,26 @@ def main():
         sys.exit(1)
 
     if args.command == "validate":
-        print("validate: not yet implemented (Phase 1)")
+        from scripts.validate_prompts import validate_prompts, print_report
+
+        if hasattr(args, "report") and args.report:
+            print_report(args.data)
+            print()
+
+        errors = validate_prompts(args.data)
+        total_errors = sum(len(e) for e in errors.values())
+        passed = sum(1 for e in errors.values() if not e)
+
+        for check, errs in sorted(errors.items()):
+            status = "PASS" if not errs else "FAIL"
+            print(f"[{status}] {check}")
+            for err in errs[:10]:
+                print(f"       {err}")
+            if len(errs) > 10:
+                print(f"       ... and {len(errs) - 10} more errors")
+
+        print(f"\n{passed}/10 checks passed, {total_errors} total errors")
+        sys.exit(0 if total_errors == 0 else 1)
     elif args.command == "generate":
         print("generate: not yet implemented (Phase 2)")
     elif args.command == "judge":
