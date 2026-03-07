@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.4.1] - 2026-03-07
+
+### Changed
+- **Restructured all 50 grateful prompts**: Moved explicit gratitude from generic opener to heartfelt closing. Prompts now lead with the task request in warm register and end with a "grateful"/"thankful" closing phrase. Rotates through 10 closing variations across the 50 tasks. Eliminates the repetitive "I appreciate your help..." opener pattern that was barely distinguishable from friendly tone.
+
 ## [v0.4.0] - 2026-03-07
 
 ### Changed
