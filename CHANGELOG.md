@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.2] - 2026-03-07
+
+### Changed
+- **Browser-renderable coding tasks**: Replaced all 15 coding tasks with visual HTML variants. Every coding prompt now requires a single self-contained HTML file, enabling iframe-based visual inspection on rudebench.com. Same CS concepts (binary search, race conditions, SQL injection, etc.), same dimension distributions (11 PBR, 4 no-PBR, 3 false premise), same difficulty spread (5 easy, 6 medium, 4 hard) — just browser-renderable output.
+- Regenerated `data/prompts.jsonl` (60 coding records changed, 140 other-domain records unchanged)
+- Added browser-renderable coding note to CLAUDE.md Benchmark Design section
+
 ## [v0.3.1] - 2026-03-07
 
 ### Changed
