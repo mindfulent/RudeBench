@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.4.2] - 2026-03-07
+
+### Changed
+- **Added "Shut up!" prefix to all 50 abusive prompts**: Since the two-turn conversation starts with "Hello", the abusive tone now opens with "Shut up!" to immediately signal hostility on the second turn. Trimmed 1-2 words from 8 prompts that would have exceeded ±15% word count tolerance.
+
 ## [v0.4.1] - 2026-03-07
 
 ### Changed
