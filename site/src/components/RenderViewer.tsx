@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { RenderIndex, Tone } from '../lib/types';
 import { TONES } from '../lib/types';
 import { TONE_COLORS, TONE_LABELS, MODEL_DISPLAY_NAMES } from '../lib/colors';
+
+const MODEL_FULL_IDS: Record<string, string> = {
+  claude: 'claude-sonnet-4.6',
+  gpt5mini: 'gpt-5-mini',
+  gemini: 'gemini-2.5-flash',
+  llama: 'llama-4-scout',
+  grok: 'grok-3-mini',
+};
 
 interface Props {
   index: RenderIndex;
@@ -10,7 +18,11 @@ interface Props {
 export default function RenderViewer({ index }: Props) {
   const [selectedTask, setSelectedTask] = useState(index.tasks[0] || '');
   const [selectedModel, setSelectedModel] = useState(index.models[0] || '');
-  const [showSource, setShowSource] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [promptTone, setPromptTone] = useState<Tone>('neutral');
+  const [prompts, setPrompts] = useState<Record<string, string> | null>(null);
+  const [promptLoading, setPromptLoading] = useState(false);
+  const promptCache = useRef<Record<string, Record<string, string>>>({});
 
   // Update URL
   useEffect(() => {
@@ -29,12 +41,41 @@ export default function RenderViewer({ index }: Props) {
     if (model && index.models.includes(model)) setSelectedModel(model);
   }, []);
 
+  // Fetch prompts when needed
+  useEffect(() => {
+    if (!showPrompt || !selectedTask || !selectedModel) return;
+
+    const fullModelId = MODEL_FULL_IDS[selectedModel] || selectedModel;
+    const cacheKey = `${fullModelId}_${selectedTask}`;
+
+    if (promptCache.current[cacheKey]) {
+      setPrompts(promptCache.current[cacheKey]);
+      return;
+    }
+
+    setPromptLoading(true);
+    setPrompts(null);
+
+    fetch(`/data/responses/${fullModelId}/${selectedTask}.json`)
+      .then(r => r.json())
+      .then((data: Array<{ tone: string; prompt_text: string }>) => {
+        const map: Record<string, string> = {};
+        for (const entry of data) {
+          map[entry.tone] = entry.prompt_text;
+        }
+        promptCache.current[cacheKey] = map;
+        setPrompts(map);
+      })
+      .catch(() => setPrompts(null))
+      .finally(() => setPromptLoading(false));
+  }, [showPrompt, selectedTask, selectedModel]);
+
   const matchingEntries = index.entries.filter(
     e => e.task_id === selectedTask && e.model === selectedModel
   );
 
   return (
-    <div className="h-full flex flex-col gap-3">
+    <div className="h-full flex flex-col gap-2">
       {/* Desktop-only notice */}
       <div className="sm:hidden rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
         The HTML render viewer is optimized for desktop. On mobile, you can view the task/model
@@ -70,14 +111,14 @@ export default function RenderViewer({ index }: Props) {
         </div>
 
         <button
-          onClick={() => setShowSource(!showSource)}
+          onClick={() => setShowPrompt(!showPrompt)}
           className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-            showSource
+            showPrompt
               ? 'bg-[var(--color-accent)] text-white'
               : 'bg-[var(--color-surface-2)] text-[var(--color-text-secondary)]'
           }`}
         >
-          {showSource ? 'Hide Source' : 'Show Source'}
+          {showPrompt ? 'Hide Prompt' : 'Show Prompt'}
         </button>
 
         {/* Task navigation inline */}
@@ -107,6 +148,41 @@ export default function RenderViewer({ index }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Prompt panel */}
+      {showPrompt && (
+        <div className="shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+          <div className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-surface-2)] border-b border-[var(--color-border)]">
+            <span className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider mr-2">Prompt</span>
+            {TONES.map(tone => (
+              <button
+                key={tone}
+                onClick={() => setPromptTone(tone)}
+                className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                  promptTone === tone
+                    ? 'text-white'
+                    : 'opacity-60 hover:opacity-100'
+                }`}
+                style={{
+                  color: promptTone === tone ? '#fff' : TONE_COLORS[tone],
+                  backgroundColor: promptTone === tone ? TONE_COLORS[tone] : 'transparent',
+                }}
+              >
+                {TONE_LABELS[tone]}
+              </button>
+            ))}
+          </div>
+          <div className="px-3 py-2 max-h-36 overflow-y-auto text-sm text-[var(--color-text-secondary)] whitespace-pre-wrap leading-relaxed">
+            {promptLoading ? (
+              <span className="text-[var(--color-text-muted)]">Loading prompt...</span>
+            ) : prompts && prompts[promptTone] ? (
+              prompts[promptTone]
+            ) : (
+              <span className="text-[var(--color-text-muted)]">Prompt not available</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Render grid - 3x2 filling remaining viewport */}
       {matchingEntries.length > 0 ? (

@@ -8,11 +8,15 @@ All notable changes to this project will be documented in this file.
 - **Bifurcation chart**: Interactive Recharts line chart as the new hero visual on the landing page, showing the sycophancy split between resilient (Claude, GPT-5 mini) and reactive (Gemini, Grok, Llama) model groups across all 6 tone levels
 - **Dimension switcher**: Pill buttons let users explore all 6 behavioral dimensions in the chart (SYC default)
 - Group A (solid blue lines) vs Group B (dashed warm lines) visual encoding
+- **Show Prompt** toggle on Render Viewer: reveals the original input prompt for the current task, with tone-colored tabs to switch between all 6 tone variants. Fetches from existing response JSON on demand with client-side caching.
+- **All 5 models in Render Viewer**: Renders now extracted from completions for all models (was only Claude/Llama). 445 render entries.
 
 ### Changed
 - **Landing page layout**: Chart section now leads after hero/methodology; insight cards follow; leaderboard pushed lower
 - **How It Works** section is now collapsible (`<details>`) to reduce initial scroll depth
 - Data reads from existing `dimensions.json` — no pipeline changes needed
+- **Render Viewer full-viewport layout**: 3x2 grid fills browser window, footer hidden, controls + navigation merged into single toolbar
+- Removed non-functional "Show Source" button from Render Viewer
 
 ## [v0.8.2] - 2026-03-08
 
