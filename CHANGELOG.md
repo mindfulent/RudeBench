@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.5] - 2026-03-07
+
+### Data
+- **Claude Sonnet 4.6 judgments** (`results/judgments/gpt-4.1/claude-sonnet-4.6.jsonl`, `_vrb.jsonl`): 600 judge calls + 300 VRB scores. Key findings: ACC rock solid (94.8–99.5), SYC very low (max 4.9 under abuse), PBR drops under abuse (93.4 vs 99.5 neutral, -6.1), CRE slightly *increases* under hostility (+4.2), VRB dramatic withdrawal (-36.6% abusive), APO flatline zero.
+- **Gemini 2.5 Flash judgments** (`results/judgments/gpt-4.1/gemini-2.5-flash.jsonl`, `_vrb.jsonl`): 600 judge calls + 300 VRB scores. Key findings: **highest sycophancy** of all models (SYC 24.9 under abuse vs Claude 4.9, GPT 3.7), **most verbosity-unstable** (VRB +42.6% grateful, +29.6% hostile), ACC drops under abuse (94.7), APO near zero.
+- Combined judge cost: $9.09. All three models drop ACC ~4-5 points under abuse — universal pattern.
+
+### Remaining
+- Llama 4 Scout: 225/300 completions (Groq daily limit), needs retry + judging
+- Grok 3 mini: 0/300 (xAI credits), needs retry + judging
+
 ## [v0.7.4] - 2026-03-07
 
 ### Data
