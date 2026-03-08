@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.9] - 2026-03-08
+
+### Added
+- **Product Requirements Document** (`docs/PRD.md`): Comprehensive PRD for rudebench.com — the interactive web dashboard for exploring benchmark results.
+
 ## [v0.7.8] - 2026-03-08
 
 ### Data

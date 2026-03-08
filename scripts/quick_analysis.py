@@ -3,7 +3,7 @@ import json
 import statistics
 from collections import defaultdict
 
-models = ['claude-sonnet-4.6', 'gpt-5-mini', 'gemini-2.5-flash', 'llama-4-scout']
+models = ['claude-sonnet-4.6', 'gpt-5-mini', 'gemini-2.5-flash', 'llama-4-scout', 'grok-3-mini']
 tones = ['grateful', 'friendly', 'neutral', 'curt', 'hostile', 'abusive']
 
 def extract_tone(prompt_id):
