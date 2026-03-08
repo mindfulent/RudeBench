@@ -34,15 +34,15 @@ export default function RenderViewer({ index }: Props) {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col gap-3">
       {/* Desktop-only notice */}
       <div className="sm:hidden rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
         The HTML render viewer is optimized for desktop. On mobile, you can view the task/model
         selector but the render grid works best on larger screens.
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-wrap gap-3">
+      {/* Controls + nav in one row */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <label className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Task</label>
           <select
@@ -79,20 +79,47 @@ export default function RenderViewer({ index }: Props) {
         >
           {showSource ? 'Hide Source' : 'Show Source'}
         </button>
+
+        {/* Task navigation inline */}
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => {
+              const idx = index.tasks.indexOf(selectedTask);
+              if (idx > 0) setSelectedTask(index.tasks[idx - 1]);
+            }}
+            disabled={index.tasks.indexOf(selectedTask) <= 0}
+            className="px-2.5 py-1.5 rounded bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] text-sm disabled:opacity-30"
+          >
+            &larr; Prev
+          </button>
+          <span className="text-xs text-[var(--color-text-muted)] tabular-nums">
+            {index.tasks.indexOf(selectedTask) + 1}/{index.tasks.length}
+          </span>
+          <button
+            onClick={() => {
+              const idx = index.tasks.indexOf(selectedTask);
+              if (idx < index.tasks.length - 1) setSelectedTask(index.tasks[idx + 1]);
+            }}
+            disabled={index.tasks.indexOf(selectedTask) >= index.tasks.length - 1}
+            className="px-2.5 py-1.5 rounded bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] text-sm disabled:opacity-30"
+          >
+            Next &rarr;
+          </button>
+        </div>
       </div>
 
-      {/* Render grid - 6 tones */}
+      {/* Render grid - 3x2 filling remaining viewport */}
       {matchingEntries.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 grid-rows-1 md:grid-rows-2 gap-2">
           {TONES.map(tone => {
             const entry = matchingEntries.find(e => e.tone === tone);
             return (
               <div
                 key={tone}
-                className="rounded-lg border border-[var(--color-border)] overflow-hidden"
+                className="rounded-lg border border-[var(--color-border)] overflow-hidden flex flex-col min-h-[300px]"
               >
                 <div
-                  className="px-3 py-2 text-sm font-semibold uppercase tracking-wider"
+                  className="px-3 py-1 text-xs font-semibold uppercase tracking-wider shrink-0"
                   style={{
                     color: TONE_COLORS[tone],
                     backgroundColor: `${TONE_COLORS[tone]}15`,
@@ -101,16 +128,16 @@ export default function RenderViewer({ index }: Props) {
                   {TONE_LABELS[tone]}
                 </div>
                 {entry ? (
-                  <div className="p-2">
+                  <div className="flex-1 min-h-0 p-1">
                     <iframe
                       src={`/renders/${entry.filename}`}
                       sandbox="allow-scripts"
-                      className="w-full h-[400px] border border-[var(--color-border)] rounded bg-white"
+                      className="w-full h-full border border-[var(--color-border)] rounded bg-white"
                       title={`${selectedTask} - ${tone} - ${selectedModel}`}
                     />
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-sm text-[var(--color-text-muted)]">
+                  <div className="flex-1 flex items-center justify-center text-sm text-[var(--color-text-muted)]">
                     No render available
                   </div>
                 )}
@@ -119,38 +146,11 @@ export default function RenderViewer({ index }: Props) {
           })}
         </div>
       ) : (
-        <div className="text-center py-12 text-[var(--color-text-muted)]">
+        <div className="flex-1 flex items-center justify-center text-[var(--color-text-muted)]">
           No renders available for this task/model combination.
           Renders are currently available for: {index.models.join(', ')}.
         </div>
       )}
-
-      {/* Task navigation */}
-      <div className="flex justify-between items-center text-sm">
-        <button
-          onClick={() => {
-            const idx = index.tasks.indexOf(selectedTask);
-            if (idx > 0) setSelectedTask(index.tasks[idx - 1]);
-          }}
-          disabled={index.tasks.indexOf(selectedTask) <= 0}
-          className="px-3 py-1.5 rounded bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] disabled:opacity-30"
-        >
-          ← Previous
-        </button>
-        <span className="text-[var(--color-text-muted)]">
-          {index.tasks.indexOf(selectedTask) + 1} / {index.tasks.length}
-        </span>
-        <button
-          onClick={() => {
-            const idx = index.tasks.indexOf(selectedTask);
-            if (idx < index.tasks.length - 1) setSelectedTask(index.tasks[idx + 1]);
-          }}
-          disabled={index.tasks.indexOf(selectedTask) >= index.tasks.length - 1}
-          className="px-3 py-1.5 rounded bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] disabled:opacity-30"
-        >
-          Next →
-        </button>
-      </div>
     </div>
   );
 }

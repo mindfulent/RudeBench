@@ -9,15 +9,31 @@ const rendersIndex = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
 ---
 
 <BaseLayout title="HTML Renders" description="View rendered HTML outputs from coding tasks across models and tones.">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-    <h1 class="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold mb-2 text-[var(--color-text-primary)]">
-      HTML Render Viewer
-    </h1>
-    <p class="text-sm text-[var(--color-text-secondary)] mb-6 sm:mb-8">
-      View rendered HTML outputs from coding tasks. Each card shows the model's code output
-      rendered in a sandboxed iframe. Compare how renders differ across tone conditions.
-    </p>
+  <div class="renders-page px-3 sm:px-4 py-3 flex flex-col">
+    <div class="mb-2">
+      <h1 class="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--color-text-primary)]">
+        HTML Render Viewer
+      </h1>
+      <p class="text-xs text-[var(--color-text-secondary)]">
+        View rendered HTML outputs from coding tasks. Compare how renders differ across tone conditions.
+      </p>
+    </div>
 
-    <RenderViewer index={rendersIndex} client:load />
+    <div class="flex-1 min-h-0">
+      <RenderViewer index={rendersIndex} client:load />
+    </div>
   </div>
 </BaseLayout>
+
+<style is:global>
+  /* Renders page: fill viewport, hide footer */
+  .renders-page {
+    height: calc(100vh - 5.5rem);
+  }
+  body:has(.renders-page) footer {
+    display: none;
+  }
+  body:has(.renders-page) main {
+    flex: none;
+  }
+</style>
