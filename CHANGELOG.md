@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.6] - 2026-03-07
+
+### Fixed
+- **Soft refusal rendering in coding viewer** (`scripts/extract_renders.py`): Responses without renderable HTML (e.g., Gemini refusing to produce code but writing a long explanation) now display inline with an orange "SOFT REFUSE" badge and the full refusal text in a scrollable container. Previously showed blank "No completion available". Detects soft refusals by checking for actual HTML tags (`<html>`, `<body>`, `<div>`, etc.) in the extracted content. Affected 4 Gemini completions: 2 tone-triggered (abusive fibonacci/dom_memory_leak) and 2 task-triggered (price_calculator grateful/hostile — Gemini considers demonstrating broken float arithmetic harmful).
+
 ## [v0.7.5] - 2026-03-07
 
 ### Data

@@ -35,16 +35,24 @@ def extract_html(response: str) -> str:
         if "<" in candidate:
             return candidate
 
-    # Try finding <!DOCTYPE or <html> block
+    # Try finding <!DOCTYPE or <html> block, truncating at </html>
     doctype_match = re.search(
         r"(<!DOCTYPE\s+html[^>]*>.*)", response, re.DOTALL | re.IGNORECASE
     )
     if doctype_match:
-        return doctype_match.group(1).strip()
+        candidate = doctype_match.group(1).strip()
+        close_match = re.search(r"</html\s*>", candidate, re.IGNORECASE)
+        if close_match:
+            return candidate[: close_match.end()].strip()
+        return candidate
 
     html_match = re.search(r"(<html[\s>].*)", response, re.DOTALL | re.IGNORECASE)
     if html_match:
-        return html_match.group(1).strip()
+        candidate = html_match.group(1).strip()
+        close_match = re.search(r"</html\s*>", candidate, re.IGNORECASE)
+        if close_match:
+            return candidate[: close_match.end()].strip()
+        return candidate
 
     # Fallback: raw response
     return response
@@ -114,15 +122,30 @@ def main():
             if tone not in renders[model_id][task_id]:
                 renders[model_id][task_id][tone] = {}
 
-            html_content = extract_html(rec["response"]) if not rec.get("refused") else ""
-            html_b64 = base64.b64encode(html_content.encode("utf-8")).decode("ascii")
+            response_text = rec.get("response", "")
+            hard_refused = rec.get("refused", False)
 
-            renders[model_id][task_id][tone][run] = {
+            # Detect soft refusals: response exists but contains no renderable HTML
+            has_html = False
+            html_b64 = ""
+            if not hard_refused and response_text:
+                html_content = extract_html(response_text)
+                has_html = bool(re.search(r"<(?:html|head|body|div|canvas|style|script)[\s>]", html_content, re.IGNORECASE))
+                if has_html:
+                    html_b64 = base64.b64encode(html_content.encode("utf-8")).decode("ascii")
+
+            entry = {
                 "html": html_b64,
                 "finish_reason": rec.get("finish_reason", "unknown"),
                 "word_count": rec.get("word_count", 0),
-                "refused": rec.get("refused", False),
+                "refused": hard_refused,
+                "has_html": has_html,
             }
+            # Store raw text for soft refusals (no HTML but has response)
+            if not hard_refused and not has_html and response_text:
+                entry["refusal_text"] = response_text
+
+            renders[model_id][task_id][tone][run] = entry
 
     all_tasks = sorted(all_tasks)
     all_models.sort()
@@ -290,6 +313,20 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     padding: 40px 14px; text-align: center; color: var(--text2); font-size: 13px;
   }
 
+  /* Soft refusal text */
+  .refusal-wrap {
+    padding: 12px 14px;
+  }
+  .refusal-wrap .refusal-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--orange); margin-bottom: 8px;
+  }
+  .refusal-wrap .refusal-text {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; font-size: 13px; line-height: 1.6; color: var(--text2);
+    max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;
+  }
+
   /* Keyboard hint */
   .keyboard-hint {
     text-align: center; padding: 12px; font-size: 12px; color: var(--text2);
@@ -444,13 +481,15 @@ function render() {
     if (runData) {
       if (runData.refused) {
         html += ' <span class="badge badge-refused">refused</span>';
+      } else if (!runData.has_html && runData.refusal_text) {
+        html += ' <span class="badge badge-refused">soft refuse</span>';
       } else {
         html += ` ${finishReasonBadge(runData.finish_reason)}`;
       }
     }
     html += `</div>`;
     html += `<div class="right">`;
-    if (runData && !runData.refused) {
+    if (runData) {
       html += `<span class="wc">${runData.word_count} words</span>`;
     }
     html += `</div></div>`;
@@ -459,9 +498,15 @@ function render() {
       html += '<div class="card-empty">No completion available</div>';
     } else if (runData.refused) {
       html += '<div class="card-empty">Model refused this prompt</div>';
-    } else {
-      // Decode base64 HTML
-      const rawHtml = atob(runData.html);
+    } else if (!runData.has_html && runData.refusal_text) {
+      // Soft refusal: model responded but no HTML produced
+      html += '<div class="refusal-wrap">';
+      html += '<div class="refusal-label">Soft Refusal — No HTML Output</div>';
+      html += `<div class="refusal-text">${escHtml(runData.refusal_text)}</div>`;
+      html += '</div>';
+    } else if (runData.has_html) {
+      // Decode base64 HTML (UTF-8 aware — atob returns Latin-1, so re-decode as UTF-8)
+      const rawHtml = new TextDecoder().decode(Uint8Array.from(atob(runData.html), c => c.charCodeAt(0)));
       // Iframe with srcdoc
       html += '<div class="iframe-wrap">';
       html += `<iframe sandbox="allow-scripts" srcdoc="${escAttr(rawHtml)}"></iframe>`;
@@ -470,6 +515,8 @@ function render() {
       html += `<div class="source-wrap${showSource ? " visible" : ""}">`;
       html += `<pre><code>${escHtml(rawHtml)}</code></pre>`;
       html += '</div>';
+    } else {
+      html += '<div class="card-empty">No renderable content</div>';
     }
 
     html += '</div>';
