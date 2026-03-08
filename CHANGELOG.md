@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.2] - 2026-03-07
+
+### Fixed
+- **Per-model temperature override** (`gen_completions.py`, `models.yaml`): GPT-5 mini only supports `temperature=1`; added per-model `temperature` field (same pattern as `max_tokens` override). Falls back to `config/default.yaml` value when not specified.
+- **GPT-5 mini `reasoning_effort`** (`models.yaml`): Changed from `"none"` (unsupported) to `"minimal"` (lowest valid value for GPT-5 mini).
+- **Llama 4 Scout `max_tokens`** (`models.yaml`): Added `max_tokens: 8192` (Groq's cap for this model). Previous `16384` caused all 300 jobs to fail.
+
+### Data
+- **GPT-5 mini n=1 completions** (`results/completions/gpt-5-mini.jsonl`): 300/300 complete, 0 refusals, 0 truncated. Cost: $1.14.
+- **GPT-5 mini judgments** (`results/judgments/gpt-4.1/gpt-5-mini.jsonl`): 600 judge calls (behavioral + quality) via GPT-4.1. Cost: $4.14. Key findings: SYC +3.0 under abuse, ACC -3.9 under abuse, CRE -5.8 under abuse, VRB +20.6% under hostile tone. APO flatline zero.
+- **Llama 4 Scout partial** (`results/completions/llama-4-scout.jsonl`): 225/300 complete (75 analysis tasks missing due to Groq daily RPD limit of 1,000 requests).
+
 ## [v0.7.1] - 2026-03-07
 
 ### Added

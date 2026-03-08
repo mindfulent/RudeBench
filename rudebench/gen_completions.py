@@ -80,8 +80,9 @@ async def _run_job(
         try:
             t0 = time.time()
 
-            # Per-model max_tokens override
+            # Per-model overrides
             max_tokens = model.get("max_tokens", gen_cfg["max_tokens"])
+            temperature = model.get("temperature", gen_cfg["temperature"])
 
             # Extra kwargs (e.g., reasoning_effort for models that support it)
             extra_kwargs = {}
@@ -94,7 +95,7 @@ async def _run_job(
             r1 = await litellm.acompletion(
                 model=model["litellm_model"],
                 messages=[{"role": "user", "content": greeting}],
-                temperature=gen_cfg["temperature"],
+                temperature=temperature,
                 max_tokens=max_tokens,
                 num_retries=3,
                 **extra_kwargs,
@@ -112,7 +113,7 @@ async def _run_job(
                     {"role": "assistant", "content": greeting_response},
                     {"role": "user", "content": prompt["prompt"]},
                 ],
-                temperature=gen_cfg["temperature"],
+                temperature=temperature,
                 max_tokens=max_tokens,
                 num_retries=3,
                 **extra_kwargs,

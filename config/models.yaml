@@ -7,7 +7,8 @@ models:
   - id: gpt-5-mini
     litellm_model: gpt-5-mini
     parallel: 32
-    reasoning_effort: "none"  # Disable reasoning tokens — non-reasoning benchmark
+    reasoning_effort: "minimal"  # Lowest reasoning — "none" not supported by GPT-5 mini
+    temperature: 1               # GPT-5 family only supports temperature=1
     env_key: OPENAI_API_KEY
 
   - id: gemini-2.5-flash
@@ -21,6 +22,7 @@ models:
     litellm_model: groq/meta-llama/llama-4-scout-17b-16e-instruct
     parallel: 32
     rpm_limit: 28            # Groq free tier: 30 RPM, leave headroom
+    max_tokens: 8192         # Groq max_tokens cap for this model
     env_key: GROQ_API_KEY
 
   - id: grok-3-mini
