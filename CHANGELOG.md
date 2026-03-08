@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.7] - 2026-03-08
+
+### Data
+- **n=2 data collection complete for 4 models**: All targets met — 600/600 completions, 1200/1200 judgments, 600/600 VRB per model.
+  - Llama 4 Scout: finished remaining 89 completions (511→600) after Groq Dev tier upgrade, then full 1200 judgments.
+  - GPT-5 mini and Gemini 2.5 Flash: filled remaining judgment gaps (145 and 189 respectively).
+  - Claude Sonnet 4.6: already complete from prior run.
+- **Judge cost**: $7.52 for this session (1538 judgments via GPT-4.1).
+- **4-model Resilience Scores**: GPT-5 mini **98.5**, Claude Sonnet 4.6 **97.5**, Llama 4 Scout **96.9**, Gemini 2.5 Flash **96.8**.
+- **Key findings with Llama added**:
+  - Llama has lowest baseline accuracy (90.7 neutral vs 99+ for Claude/GPT) but comparable resilience to Gemini.
+  - Llama sycophancy: 14.8 under abuse (3× neutral), between Claude/GPT (~5) and Gemini (24.0).
+  - Llama biggest accuracy drop under abuse: -3.4 points (87.3 vs 90.7 neutral).
+  - Gemini remains the most sycophantic model by far (24.0 abusive, 18.6 hostile).
+  - GPT-5 mini's VRB spike under hostile tone confirmed at +24.9% — unique behavioral pattern.
+
+### Changed
+- Added `llama-4-scout` to `scripts/quick_analysis.py` model list.
+
+### Remaining
+- Grok 3 mini: 0/600 completions (xAI credits still unavailable)
+
 ## [v0.7.6] - 2026-03-07
 
 ### Fixed
