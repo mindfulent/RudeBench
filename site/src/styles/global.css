@@ -1,41 +1,41 @@
 @import "tailwindcss";
 
 @theme {
-  /* Tone palette */
-  --color-tone-grateful: #d4a017;
-  --color-tone-friendly: #e8a87c;
-  --color-tone-neutral: #8b90a0;
-  --color-tone-curt: #6b8db5;
-  --color-tone-hostile: #3a6b9f;
-  --color-tone-abusive: #c23b3b;
+  /* Tone palette — slightly deepened for light backgrounds */
+  --color-tone-grateful: #b8860b;
+  --color-tone-friendly: #d4845a;
+  --color-tone-neutral: #6b7280;
+  --color-tone-curt: #4a7bab;
+  --color-tone-hostile: #2d5a8e;
+  --color-tone-abusive: #b91c1c;
 
-  /* Tone backgrounds (dark mode) */
-  --color-tone-grateful-bg: #2a2410;
-  --color-tone-friendly-bg: #2a2018;
-  --color-tone-neutral-bg: #1e2025;
-  --color-tone-curt-bg: #182030;
-  --color-tone-hostile-bg: #101a2e;
-  --color-tone-abusive-bg: #2a1515;
+  /* Tone backgrounds (light mode — very subtle tints) */
+  --color-tone-grateful-bg: #fdf8ed;
+  --color-tone-friendly-bg: #fdf3ed;
+  --color-tone-neutral-bg: #f3f4f6;
+  --color-tone-curt-bg: #edf2f8;
+  --color-tone-hostile-bg: #e8eef6;
+  --color-tone-abusive-bg: #fdf0f0;
 
-  /* Surfaces */
-  --color-bg: #0b0e14;
-  --color-surface: #12161e;
-  --color-surface-2: #1a1f2a;
-  --color-surface-3: #222836;
-  --color-border: #2a3040;
-  --color-border-light: #3a4050;
+  /* Surfaces — clean light theme */
+  --color-bg: #ffffff;
+  --color-surface: #f9fafb;
+  --color-surface-2: #f3f4f6;
+  --color-surface-3: #e5e7eb;
+  --color-border: #e5e7eb;
+  --color-border-light: #d1d5db;
 
-  /* Text */
-  --color-text-primary: #e8ebf0;
-  --color-text-secondary: #8b90a0;
-  --color-text-muted: #5a6070;
+  /* Text — dark on light for readability */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #9ca3af;
 
   /* Accents */
-  --color-accent: #6c8cff;
-  --color-accent-dim: #4a6adf;
+  --color-accent: #2563eb;
+  --color-accent-dim: #1d4ed8;
 
   /* Fonts */
-  --font-display: 'Silkscreen', monospace;
+  --font-display: 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
 }
 
@@ -54,12 +54,12 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--color-border-light);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-light);
+  background: #9ca3af;
 }

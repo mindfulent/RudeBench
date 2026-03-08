@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.8.2] - 2026-03-08
+
+### Changed
+- **Light theme redesign**: Replaced dark theme with a clean, professional light palette optimized for readability. White/light-gray surfaces, dark text, subtle tone-color tints.
+- **Dropped Space Grotesk**: Unified on Inter for all typography (headings and body). Removed Silkscreen/Space Grotesk references from PRD.
+- **Updated deviation heatmap colors** for light backgrounds: pastel tints (green/yellow/orange/red) with dark saturated text colors.
+- **Updated tone palette** for light mode: slightly deepened tone colors for contrast on white, subtle light tinted backgrounds.
+
 ## [v0.8.1] - 2026-03-08
 
 ### Added
@@ -28,8 +36,8 @@ All notable changes to this project will be documented in this file.
 - **Maturity badge**: Persistent "Early Release — n=2" indicator on every page (non-dismissable)
 - **Mobile-responsive design** throughout (renders page desktop-only by design)
 - **URL state management**: Deep-linkable URLs with search params (`/explore?dim=SYC&domain=coding`)
-- **Dark theme** with tone-mapped color palette (warm gold → peach → gray → steel blue → deep blue → crimson)
-- **Typography**: Silkscreen (Google Fonts) for headings, Inter for body text
+- **Tone-mapped color palette** (warm gold → peach → gray → steel blue → deep blue → crimson)
+- **Typography**: Inter (Google Fonts) for all text
 
 ### Tech Stack
 - Astro 5.x (SSG, zero JS for editorial pages)

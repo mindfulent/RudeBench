@@ -71,10 +71,11 @@ Design principles for the palette:
 
 ### 4.3 Typography & Layout
 
-- **Titles and headings:** Silkscreen (Google Fonts). The pixel/bitmap aesthetic gives the site a distinctive technical identity and contrasts well against data-dense content. Used for the site name, section headings, and editorial headlines. Not used for body text or data labels — Silkscreen is a display font and loses legibility at small sizes or in dense contexts.
-- **Editorial body text:** Clean sans-serif (e.g., Inter, IBM Plex Sans), generous white space, comfortable reading measure (~65 characters).
+- **Titles, headings, and body text:** Inter (Google Fonts). Clean, professional, highly legible at all sizes. Used consistently across editorial and data sections for a unified reading experience.
+- **Editorial body text:** Generous white space, comfortable reading measure (~65 characters).
 - **Data sections:** Compact sans-serif, tighter spacing, denser tables. Monospace for scores and numbers so columns align visually.
-- **Transition between modes** is signaled by a subtle shift in density and typography, not a hard visual break. Silkscreen headings appear in both modes, providing visual continuity.
+- **Transition between modes** is signaled by a subtle shift in density and spacing, not a hard visual break.
+- **Light theme throughout.** The site uses a white/light-gray palette optimized for readability and professional presentation. Dark backgrounds are not used.
 
 ### 4.4 Score Deviation Visualization
 

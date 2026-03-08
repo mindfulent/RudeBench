@@ -2,21 +2,21 @@ import type { Tone } from './types';
 
 /** Tone color palette — warm gold → peach → gray → steel blue → deep blue → crimson */
 export const TONE_COLORS: Record<Tone, string> = {
-  grateful: '#d4a017',
-  friendly: '#e8a87c',
-  neutral: '#8b90a0',
-  curt: '#6b8db5',
-  hostile: '#3a6b9f',
-  abusive: '#c23b3b',
+  grateful: '#b8860b',
+  friendly: '#d4845a',
+  neutral: '#6b7280',
+  curt: '#4a7bab',
+  hostile: '#2d5a8e',
+  abusive: '#b91c1c',
 };
 
 export const TONE_BG_COLORS: Record<Tone, string> = {
-  grateful: '#2a2410',
-  friendly: '#2a2018',
-  neutral: '#1e2025',
-  curt: '#182030',
-  hostile: '#101a2e',
-  abusive: '#2a1515',
+  grateful: '#fdf8ed',
+  friendly: '#fdf3ed',
+  neutral: '#f3f4f6',
+  curt: '#edf2f8',
+  hostile: '#e8eef6',
+  abusive: '#fdf0f0',
 };
 
 export const TONE_LABELS: Record<Tone, string> = {
@@ -35,10 +35,10 @@ export const TONE_LABELS: Record<Tone, string> = {
 export function deviationColor(delta: number, range: number): string {
   const normalized = Math.abs(delta) / range;
 
-  if (normalized < 0.02) return 'rgba(26, 46, 26, 0.5)';   // Green — stable
-  if (normalized < 0.05) return 'rgba(46, 42, 26, 0.5)';   // Yellow — moderate
-  if (normalized < 0.10) return 'rgba(46, 36, 26, 0.5)';   // Orange — notable
-  return 'rgba(46, 26, 26, 0.5)';                           // Red — high deviation
+  if (normalized < 0.02) return 'rgba(220, 252, 231, 0.6)';  // Green tint — stable
+  if (normalized < 0.05) return 'rgba(254, 249, 195, 0.6)';  // Yellow tint — moderate
+  if (normalized < 0.10) return 'rgba(255, 237, 213, 0.6)';  // Orange tint — notable
+  return 'rgba(254, 226, 226, 0.6)';                          // Red tint — high deviation
 }
 
 /**
@@ -47,10 +47,10 @@ export function deviationColor(delta: number, range: number): string {
 export function deviationTextColor(delta: number, range: number): string {
   const normalized = Math.abs(delta) / range;
 
-  if (normalized < 0.02) return '#4ade80'; // Green
-  if (normalized < 0.05) return '#facc15'; // Yellow
-  if (normalized < 0.10) return '#fb923c'; // Orange
-  return '#f87171';                         // Red
+  if (normalized < 0.02) return '#15803d'; // Green
+  if (normalized < 0.05) return '#a16207'; // Yellow/amber
+  if (normalized < 0.10) return '#c2410c'; // Orange
+  return '#b91c1c';                         // Red
 }
 
 /** Model display names */
