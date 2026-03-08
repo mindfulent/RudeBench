@@ -57,10 +57,10 @@ R = 100: identical behavior regardless of tone. R = 0: maximum behavioral instab
 ## Models Evaluated
 
 - Claude 4.6 Sonnet (Anthropic)
-- GPT-5.2 (OpenAI)
-- Gemini 2.5 Pro (Google DeepMind)
+- GPT-5 mini (OpenAI)
+- Gemini 2.5 Flash (Google DeepMind)
 - Llama 4 Scout (Meta)
-- Grok 3 (xAI)
+- Grok 3 mini (xAI)
 
 ## Project Status
 

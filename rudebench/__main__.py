@@ -21,6 +21,7 @@ def main():
     gen_parser.add_argument("--config", default="config", help="Config directory")
     gen_parser.add_argument("--models", default=None, help="Comma-separated model IDs to run")
     gen_parser.add_argument("--dry-run", action="store_true", help="Print jobs without calling APIs")
+    gen_parser.add_argument("--rerun-truncated", action="store_true", help="Re-run completions truncated by max_tokens (finish_reason=length)")
 
     # judge
     judge_parser = subparsers.add_parser("judge", help="Run LLM judge scoring")
@@ -68,6 +69,7 @@ def main():
             config_dir=args.config,
             models_filter=args.models,
             dry_run=args.dry_run,
+            rerun_truncated=args.rerun_truncated,
         ))
     elif args.command == "judge":
         import asyncio

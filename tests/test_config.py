@@ -33,8 +33,8 @@ class TestLoadConfig:
         cfg = load_config("config")
         gen = cfg["default"]["generation"]
         assert gen["temperature"] == 0.7
-        assert gen["max_tokens"] == 2048
-        assert gen["num_runs"] == 10
+        assert gen["max_tokens"] == 16384
+        assert gen["num_runs"] == 1
         assert gen["greeting"] == "Hello"
 
 
@@ -56,7 +56,7 @@ class TestModelValidation:
     def test_model_ids(self):
         cfg = load_config("config")
         ids = {m["id"] for m in cfg["models"]["models"]}
-        expected = {"claude-sonnet-4.6", "gpt-5.2", "gemini-2.5-pro", "llama-4-scout", "grok-3"}
+        expected = {"claude-sonnet-4.6", "gpt-5-mini", "gemini-2.5-flash", "llama-4-scout", "grok-3-mini"}
         assert ids == expected
 
     def test_parallel_is_positive_int(self):

@@ -4,25 +4,27 @@ models:
     parallel: 16             # asyncio.Semaphore limit
     env_key: ANTHROPIC_API_KEY
 
-  - id: gpt-5.2
-    litellm_model: gpt-5.2
+  - id: gpt-5-mini
+    litellm_model: gpt-5-mini
     parallel: 32
-    max_tokens: 16384         # Reasoning model: needs headroom for internal reasoning + 2048 visible output
+    reasoning_effort: "none"  # Disable reasoning tokens — non-reasoning benchmark
     env_key: OPENAI_API_KEY
 
-  - id: gemini-2.5-pro
-    litellm_model: gemini/gemini-2.5-pro
+  - id: gemini-2.5-flash
+    litellm_model: gemini/gemini-2.5-flash
     parallel: 16
-    rpm_limit: 14           # Gemini free tier: 15 RPM, leave headroom
+    rpm_limit: 14            # Gemini free tier: 15 RPM, leave headroom
+    reasoning_effort: "none"  # Disable reasoning tokens — non-reasoning benchmark
     env_key: GEMINI_API_KEY
 
   - id: llama-4-scout
     litellm_model: groq/meta-llama/llama-4-scout-17b-16e-instruct
     parallel: 32
-    rpm_limit: 28           # Groq free tier: 30 RPM, leave headroom
+    rpm_limit: 28            # Groq free tier: 30 RPM, leave headroom
     env_key: GROQ_API_KEY
 
-  - id: grok-3
-    litellm_model: xai/grok-3-beta
+  - id: grok-3-mini
+    litellm_model: xai/grok-3-mini-beta
     parallel: 16
+    reasoning_effort: "low"   # Minimum reasoning — "none" not supported by Grok 3 mini
     env_key: XAI_API_KEY

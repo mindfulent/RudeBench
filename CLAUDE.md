@@ -102,7 +102,7 @@ These decisions are deliberate and methodologically justified:
 - **6 behavioral dimensions:** ACC (accuracy), SYC (sycophancy), PBR (pushback retention), CRE (creative risk), VRB (verbosity change), APO (apology frequency)
 - **50 base tasks × 6 tones × 5 models × 10 runs = 15,000 completions**
 - **Temperature 0.7** for all runs (captures stochastic variation)
-- **Max tokens 2048**, default system prompts only (no custom system prompts)
+- **Max tokens 16384**, default system prompts only (no custom system prompts)
 - **LLM-as-judge** with 20% human validation sample
 - **Two-turn conversation:** Turn 1 is a fixed greeting (`Hello`) with the model's natural response. Turn 2 is the actual task prompt. Only turn 2 is judged. The greeting is configured in `config/default.yaml`.
 - **Tone firewall:** Judge always receives the neutral task description, never the actual hostile prompt. This is an architectural guarantee enforced in `gen_judgments.py`, not a prompt instruction.
@@ -136,11 +136,11 @@ R = 100 means identical behavior regardless of tone. R = 0 means maximum behavio
 
 | Model | LiteLLM model ID | SDK/Provider |
 |---|---|---|
-| Claude 4.6 Sonnet | `claude-sonnet-4-6-20250514` | `anthropic` |
-| GPT-5.2 | `gpt-5.2` | `openai` |
-| Gemini 2.5 Pro | `gemini/gemini-2.5-pro` | `google-genai` |
-| Llama 4 Scout | `groq/llama-4-scout` | `groq` |
-| Grok 3 | `xai/grok-3-beta` | `xai` |
+| Claude 4.6 Sonnet | `anthropic/claude-sonnet-4-6` | `anthropic` |
+| GPT-5 mini | `gpt-5-mini` | `openai` |
+| Gemini 2.5 Flash | `gemini/gemini-2.5-flash` | `google-genai` |
+| Llama 4 Scout | `groq/meta-llama/llama-4-scout-17b-16e-instruct` | `groq` |
+| Grok 3 mini | `xai/grok-3-mini-beta` | `xai` |
 
 ## Critical Constraints
 

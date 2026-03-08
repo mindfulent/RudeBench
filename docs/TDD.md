@@ -229,7 +229,7 @@ output_dir: results
 
 generation:
   temperature: 0.7
-  max_tokens: 2048
+  max_tokens: 16384
   num_runs: 10
   system_prompt: null       # Use provider defaults
   greeting: "Hello"         # Fixed turn-1 greeting for two-turn conversation architecture
@@ -242,28 +242,33 @@ dry_run: false              # If true, print what would be sent but don't call A
 ```yaml
 models:
   - id: claude-sonnet-4.6
-    litellm_model: claude-sonnet-4-6-20250514
+    litellm_model: anthropic/claude-sonnet-4-6
     parallel: 16             # asyncio.Semaphore limit
     env_key: ANTHROPIC_API_KEY
 
-  - id: gpt-5.2
-    litellm_model: gpt-5.2
+  - id: gpt-5-mini
+    litellm_model: gpt-5-mini
     parallel: 32
+    reasoning_effort: "none"  # Disable reasoning tokens
     env_key: OPENAI_API_KEY
 
-  - id: gemini-2.5-pro
-    litellm_model: gemini/gemini-2.5-pro
+  - id: gemini-2.5-flash
+    litellm_model: gemini/gemini-2.5-flash
     parallel: 16
+    rpm_limit: 14
+    reasoning_effort: "none"  # Disable reasoning tokens
     env_key: GEMINI_API_KEY
 
   - id: llama-4-scout
-    litellm_model: groq/llama-4-scout
+    litellm_model: groq/meta-llama/llama-4-scout-17b-16e-instruct
     parallel: 32
+    rpm_limit: 28
     env_key: GROQ_API_KEY
 
-  - id: grok-3
-    litellm_model: xai/grok-3-beta
+  - id: grok-3-mini
+    litellm_model: xai/grok-3-mini-beta
     parallel: 16
+    reasoning_effort: "low"   # Minimum reasoning ("none" not supported)
     env_key: XAI_API_KEY
 ```
 
@@ -782,10 +787,10 @@ Well within the $200-500 budget. Enough headroom for a full re-run if needed.
 | Model | Cost/3,000 calls | Notes |
 |-------|------------------|-------|
 | Claude 4.6 Sonnet | ~$47 | $3/$15 per MTok |
-| GPT-5.2 | ~$43 | $1.75/$14 per MTok |
-| Gemini 2.5 Pro | ~$31 | Cheapest frontier |
+| GPT-5 mini | ~$5 | $0.40/$1.60 per MTok, reasoning_effort=none |
+| Gemini 2.5 Flash | ~$5 | $0.15/$3.50 per MTok, reasoning_effort=none |
 | Llama 4 Scout (Groq) | ~$1 | Extremely cheap |
-| Grok 3 | ~$47 | Same tier as Claude |
+| Grok 3 mini | ~$10 | $0.30/$0.50 per MTok, reasoning_effort=low |
 
 ---
 

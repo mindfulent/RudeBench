@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.0] - 2026-03-07
+
+### Changed
+- **Pivoted to mid-range non-reasoning model lineup**: Replaced flagship reasoning models (GPT-5.2, Gemini 2.5 Pro, Grok 3) with their non-reasoning counterparts (GPT-5 mini, Gemini 2.5 Flash, Grok 3 mini). Claude Sonnet 4.6 and Llama 4 Scout retained. Reasoning models consumed `max_tokens` budget with thinking tokens, causing 92% truncation on Gemini and 100% on Claude coding tasks — a fundamental incompatibility with the benchmark design.
+- **Added `reasoning_effort` support** (`gen_completions.py`, `models.yaml`): Models can now specify `reasoning_effort` in config (e.g., `"none"` for GPT-5 mini/Gemini Flash, `"low"` for Grok 3 mini). Passed as `**extra_kwargs` to `litellm.acompletion()`. Models without the field (Claude, Llama) are unaffected.
+- **Raised `max_tokens` to 16384** (`config/default.yaml`): Eliminates all truncation risk. Cost is per-token-generated, not per-cap, so this has no cost impact. Absorbs any residual thinking tokens from Grok 3 mini's `reasoning_effort="low"`.
+- **Archived all existing completions** to `results/archive/completions/` (2,635 total: GPT-5.2 1,406, Grok-3 732, Llama-4-Scout 300, Claude-Sonnet 197). Fresh start with standardized lineup.
+- Removed per-model `max_tokens: 16384` override from GPT-5.2 (model removed).
+
+### Sunk Cost
+~$40 spent on 2,635 completions from the original lineup. All data archived, not deleted.
+
+### New Model Lineup
+| Model | LiteLLM ID | reasoning_effort |
+|-------|-----------|-----------------|
+| Claude 4.6 Sonnet | `anthropic/claude-sonnet-4-6` | — |
+| GPT-5 mini | `gpt-5-mini` | `none` |
+| Gemini 2.5 Flash | `gemini/gemini-2.5-flash` | `none` |
+| Llama 4 Scout | `groq/meta-llama/llama-4-scout-17b-16e-instruct` | — |
+| Grok 3 mini | `xai/grok-3-mini-beta` | `low` |
+
+## [v0.6.1] - 2026-03-07
+
+### Fixed
+- **Raised `max_tokens` from 2048 to 4096** (`config/default.yaml`): Claude Sonnet 4.6 generates elaborate `<style>` blocks that exhausted the 2048 token budget before reaching `<body>` or `<script>` — 90/90 coding completions were truncated (all `finish_reason=length`), producing pure CSS with no visible HTML. Other models affected: Grok-3 (15 truncated), Llama 4 Scout (1). GPT-5.2 was unaffected (already had per-model `max_tokens: 16384`). Raising globally to 4096 maintains methodological consistency across all models.
+- **Added `--rerun-truncated` flag** (`gen_completions.py`, `__main__.py`): Detects completions with `finish_reason=length`, removes them from the output file, and re-runs them with the updated `max_tokens`. Safe for dry-run mode (file modifications are skipped). Enables targeted re-generation without discarding valid completions.
+
 ## [v0.6.0] - 2026-03-07
 
 ### Added

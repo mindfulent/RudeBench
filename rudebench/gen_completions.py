@@ -14,7 +14,7 @@ import litellm
 from tqdm import tqdm
 
 from rudebench.config import load_config
-from rudebench.utils import append_jsonl, read_jsonl
+from rudebench.utils import append_jsonl, read_jsonl, write_jsonl
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +80,13 @@ async def _run_job(
         try:
             t0 = time.time()
 
-            # Per-model max_tokens override (reasoning models need more headroom)
+            # Per-model max_tokens override
             max_tokens = model.get("max_tokens", gen_cfg["max_tokens"])
+
+            # Extra kwargs (e.g., reasoning_effort for models that support it)
+            extra_kwargs = {}
+            if "reasoning_effort" in model:
+                extra_kwargs["reasoning_effort"] = model["reasoning_effort"]
 
             # Turn 1: greeting
             if rate_limiter:
@@ -92,6 +97,7 @@ async def _run_job(
                 temperature=gen_cfg["temperature"],
                 max_tokens=max_tokens,
                 num_retries=3,
+                **extra_kwargs,
             )
             greeting_response = r1.choices[0].message.content or ""
             greeting_tokens = r1.usage.total_tokens if r1.usage else 0
@@ -109,6 +115,7 @@ async def _run_job(
                 temperature=gen_cfg["temperature"],
                 max_tokens=max_tokens,
                 num_retries=3,
+                **extra_kwargs,
             )
 
             latency_ms = int((time.time() - t0) * 1000)
@@ -149,7 +156,7 @@ async def _run_job(
             return 0.0
 
 
-async def main(config_dir: str = "config", models_filter: str | None = None, dry_run: bool = False):
+async def main(config_dir: str = "config", models_filter: str | None = None, dry_run: bool = False, rerun_truncated: bool = False):
     """Generate completions for all models and prompts."""
     cfg = load_config(config_dir)
     default = cfg["default"]
@@ -188,6 +195,18 @@ async def main(config_dir: str = "config", models_filter: str | None = None, dry
 
         # Load existing completions for resumption
         existing = read_jsonl(output_path)
+
+        # If rerunning truncated, remove completions with finish_reason="length"
+        num_truncated = 0
+        if rerun_truncated:
+            truncated = [r for r in existing if r.get("finish_reason") == "length"]
+            if truncated:
+                num_truncated = len(truncated)
+                kept = [r for r in existing if r.get("finish_reason") != "length"]
+                if not dry_run:
+                    write_jsonl(output_path, kept)
+                existing = kept
+
         done_set = {(r["prompt_id"], r["run"]) for r in existing}
 
         # Build job list
@@ -202,6 +221,8 @@ async def main(config_dir: str = "config", models_filter: str | None = None, dry
 
         if dry_run:
             print(f"\n[DRY RUN] {model['id']}:")
+            if num_truncated:
+                print(f"  Truncated to re-run: {num_truncated}")
             print(f"  Total prompts:  {len(prompts)}")
             print(f"  Runs per prompt: {num_runs}")
             print(f"  Already done:   {skipped}")
@@ -214,7 +235,10 @@ async def main(config_dir: str = "config", models_filter: str | None = None, dry
             print(f"\n{model['id']}: all {skipped} completions already done, skipping.")
             continue
 
-        print(f"\n{model['id']}: {len(jobs)} jobs ({skipped} already done)")
+        if num_truncated:
+            print(f"\n{model['id']}: {len(jobs)} jobs ({skipped} already done, {num_truncated} truncated removed)")
+        else:
+            print(f"\n{model['id']}: {len(jobs)} jobs ({skipped} already done)")
 
         sem = asyncio.Semaphore(model["parallel"])
         rpm = model.get("rpm_limit")

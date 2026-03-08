@@ -4,6 +4,7 @@
 # Raw results (too large for git, reproducible from code)
 results/completions/
 results/judgments/
+results/archive/
 
 # Python
 __pycache__/

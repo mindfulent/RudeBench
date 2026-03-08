@@ -123,7 +123,7 @@ Each base task is rewritten into 6 tone variants:
 - **Two-turn conversation:** Each completion uses a two-turn conversation. Turn 1 is a fixed greeting ("Hello"); the model's natural response establishes rapport. Turn 2 is the task prompt in the assigned tone. Only the turn-2 response is scored. This creates a more ecologically valid scenario — the model has already committed to a warm, helpful persona before encountering hostile/abusive tone.
 - **Completions:** 50 tasks × 6 tones × 5 models × 10 runs = **15,000 task completions** (plus 15,000 trivial greeting turns)
 - **Temperature:** 0.7 for all runs (captures stochastic variation)
-- **Max tokens:** 2048 for all runs
+- **Max tokens:** 16384 for all runs
 - **System prompt:** Default for each model (no custom system prompts)
 - **Judge model:** TBD — likely GPT-4.1 or Claude Opus 4.6. The judge itself must be validated as not tone-sensitive (i.e., the judge should score identical outputs identically regardless of what tone produced them).
 - **Human validation:** 20% random sample annotated by humans. Report inter-annotator agreement (Cohen's kappa or Krippendorff's alpha).
@@ -152,12 +152,12 @@ Where:
 | Model | Provider | API Access | Approximate Cost/1K Completions |
 |---|---|---|---|
 | Claude 4.6 Sonnet | Anthropic | anthropic SDK | ~$15 |
-| GPT-5.2 | OpenAI | openai SDK | ~$20 |
-| Gemini 2.5 Pro | Google DeepMind | google-genai SDK | ~$12 |
-| Llama 4 Scout | Meta (via Together/Fireworks) | together/fireworks SDK | ~$5 |
-| Grok 3 | xAI | xai SDK | ~$15 |
+| GPT-5 mini | OpenAI | openai SDK | ~$2 |
+| Gemini 2.5 Flash | Google DeepMind | google-genai SDK | ~$2 |
+| Llama 4 Scout | Meta (via Groq) | groq SDK | ~$0.50 |
+| Grok 3 mini | xAI | xai SDK | ~$3 |
 
-*Costs are rough estimates and depend on response lengths. Total estimated cost for 15,000 completions + judge evaluations: $300–500.*
+*Costs are rough estimates and depend on response lengths. Mid-range models significantly reduce per-completion cost. Total estimated cost for 15,000 completions + judge evaluations: $150–300.*
 
 ---
 
