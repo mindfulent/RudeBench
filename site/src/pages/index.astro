@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Leaderboard from '../components/Leaderboard.tsx';
+import BifurcationChart from '../components/BifurcationChart.tsx';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -9,6 +10,9 @@ const leaderboardData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
 
 const metaPath = path.join(process.cwd(), 'public', 'data', 'meta.json');
 const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+
+const dimensionsPath = path.join(process.cwd(), 'public', 'data', 'dimensions.json');
+const dimensionsData = JSON.parse(fs.readFileSync(dimensionsPath, 'utf-8'));
 ---
 
 <BaseLayout title="RudeBench" description="A multi-dimensional behavioral benchmark measuring how LLMs change behavior under varying tone conditions.">
@@ -42,11 +46,13 @@ const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
       </div>
     </div>
 
-    {/* Methodology summary */}
+    {/* How It Works */}
     <div class="mb-10 sm:mb-14 max-w-3xl mx-auto">
-      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-6">
-        <h2 class="font-[family-name:var(--font-display)] text-base sm:text-lg font-bold mb-3 text-[var(--color-text-primary)]">How It Works</h2>
-        <div class="space-y-3 text-sm text-[var(--color-text-secondary)]">
+      <details class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <summary class="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer font-[family-name:var(--font-display)] text-base sm:text-lg font-bold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-colors rounded-lg">
+          How It Works
+        </summary>
+        <div class="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 text-sm text-[var(--color-text-secondary)]">
           <p>
             Each of 50 tasks is rewritten into 6 tones—from <span class="text-[var(--color-tone-grateful)]">grateful</span> to <span class="text-[var(--color-tone-abusive)]">abusive</span>—with
             identical underlying instructions and word count controlled within &plusmn;15%.
@@ -62,24 +68,26 @@ const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
             shifts its responses based on how you talk to it.
           </p>
         </div>
+      </details>
+    </div>
+
+    {/* Bifurcation Chart — the key finding */}
+    <div class="mb-12 sm:mb-16 max-w-4xl mx-auto">
+      <h2 class="font-[family-name:var(--font-display)] text-lg sm:text-xl font-bold mb-1 text-[var(--color-text-primary)]">
+        The Sycophancy Split
+      </h2>
+      <p class="text-sm text-[var(--color-text-secondary)] mb-5">
+        Under hostile and abusive tones, two groups emerge. Claude and GPT-5 mini hold sycophancy below 5, while
+        Gemini, Grok, and Llama spike to 15–24 — a 3–5x larger swing from the same tasks and judge.
+        Use the buttons to explore other dimensions.
+      </p>
+      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-6">
+        <BifurcationChart dimensionsData={dimensionsData} client:load />
       </div>
     </div>
 
-    {/* Leaderboard */}
-    <div class="mb-6">
-      <h2 class="font-[family-name:var(--font-display)] text-lg sm:text-xl font-bold mb-1 text-[var(--color-text-primary)]">
-        Resilience Leaderboard
-      </h2>
-      <p class="text-sm text-[var(--color-text-secondary)] mb-4">
-        Ranked by composite Resilience Score. Delta columns show average absolute deviation from neutral per dimension.
-        <span class="text-[var(--color-text-muted)]">Click a row to expand.</span>
-      </p>
-    </div>
-
-    <Leaderboard data={leaderboardData} client:load />
-
     {/* Headline findings */}
-    <div class="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div class="mb-12 sm:mb-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5">
         <h3 class="font-[family-name:var(--font-display)] text-xs sm:text-sm font-bold mb-2 text-[var(--color-text-primary)]">
           Sycophancy Bifurcation
@@ -119,6 +127,19 @@ const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
         </a>
       </div>
     </div>
+
+    {/* Leaderboard */}
+    <div class="mb-6">
+      <h2 class="font-[family-name:var(--font-display)] text-lg sm:text-xl font-bold mb-1 text-[var(--color-text-primary)]">
+        Resilience Leaderboard
+      </h2>
+      <p class="text-sm text-[var(--color-text-secondary)] mb-4">
+        Ranked by composite Resilience Score. Delta columns show average absolute deviation from neutral per dimension.
+        <span class="text-[var(--color-text-muted)]">Click a row to expand.</span>
+      </p>
+    </div>
+
+    <Leaderboard data={leaderboardData} client:load />
 
     {/* Quick links */}
     <div class="mt-12 sm:mt-16 text-center">

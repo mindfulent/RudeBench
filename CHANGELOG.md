@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.8.3] - 2026-03-08
+
+### Added
+- **Bifurcation chart**: Interactive Recharts line chart as the new hero visual on the landing page, showing the sycophancy split between resilient (Claude, GPT-5 mini) and reactive (Gemini, Grok, Llama) model groups across all 6 tone levels
+- **Dimension switcher**: Pill buttons let users explore all 6 behavioral dimensions in the chart (SYC default)
+- Group A (solid blue lines) vs Group B (dashed warm lines) visual encoding
+
+### Changed
+- **Landing page layout**: Chart section now leads after hero/methodology; insight cards follow; leaderboard pushed lower
+- **How It Works** section is now collapsible (`<details>`) to reduce initial scroll depth
+- Data reads from existing `dimensions.json` — no pipeline changes needed
+
 ## [v0.8.2] - 2026-03-08
 
 ### Changed
