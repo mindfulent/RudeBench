@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.4] - 2026-03-07
+
+### Data
+- **Gemini 2.5 Flash n=1 completions** (`results/completions/gemini-2.5-flash.jsonl`): 300/300 complete, 1 refusal (content_filter on `analysis_book_summary_curt`), 1 truncated. Cost: $1.56 (43min, rate-limited at 14 RPM). Key finding: VRB mirrors user energy — grateful +16.2%, curt -15.6%, abusive -12.1%. Factual domain under curt tone collapses to 49% VRB. Third distinct verbosity strategy alongside GPT-5 mini (verbose under hostility) and Claude (withdraws under all non-neutral).
+
 ## [v0.7.3] - 2026-03-07
 
 ### Added
