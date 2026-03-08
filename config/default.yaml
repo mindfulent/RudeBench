@@ -5,7 +5,7 @@ output_dir: results
 generation:
   temperature: 0.7
   max_tokens: 16384
-  num_runs: 1
+  num_runs: 2
   system_prompt: null       # Use provider defaults
   greeting: "Hello"         # Fixed turn-1 greeting for two-turn conversation architecture
 

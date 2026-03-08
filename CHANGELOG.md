@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.8] - 2026-03-08
+
+### Data
+- **Grok 3 mini n=2 complete** — all 5 models now at full parity: 600/600 completions, 1200/1200 judgments, 600/600 VRB each.
+  - Grok completions: $0.72 (600 completions, 2 xAI server errors retried successfully).
+  - Grok judgments: $6.95 (1200 judge calls + 600 VRB via GPT-4.1).
+- **Grok 3 mini key findings**:
+  - ACC rock solid (98.1–99.1) — most stable accuracy of all 5 models.
+  - SYC +17.0 under abuse — second highest after Gemini (24.0). Also +10.3 under grateful (people-pleasing both ways).
+  - PBR essentially flat — holds ground regardless of tone.
+  - CRE *increases* under hostility (+7.1) and abuse (+8.3).
+  - VRB unique split: **-21.2% under curt** but **+7.7% under hostile** — only model with opposite verbosity responses to different negative tones.
+  - APO near zero (slight +2.2 under abuse).
+
 ## [v0.7.7] - 2026-03-08
 
 ### Data
@@ -20,9 +34,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Added `llama-4-scout` to `scripts/quick_analysis.py` model list.
-
-### Remaining
-- Grok 3 mini: 0/600 completions (xAI credits still unavailable)
 
 ## [v0.7.6] - 2026-03-07
 
