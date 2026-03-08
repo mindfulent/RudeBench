@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrency Bug: Progress Bar Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 45%;
+            min-width: 400px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 30px; /* Vertically center text */
+            color: white;
+            font-weight: bold;
+            transition: width 0.1s ease-out; /* Smooth transition for updates */
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        }
+        .progress-text {
+            position: absolute;
+            z-index: 2;
+            color: #333; /* For better contrast on lighter backgrounds */
+            font-weight: bold;
+        }
+        .progress-bar-container.buggy .progress-bar {
+            background-color: #e74c3c; /* Red for buggy */
+        }
+        .progress-bar-container.fixed .progress-bar {
+            background-color: #27ae60; /* Green for fixed */
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button.start {
+            background-color: #3498db;
+            color: white;
+        }
+        button.start:hover {
+            background-color: #2980b9;
+        }
+        button.reset {
+            background-color: #95a5a6;
+            color: white;
+        }
+        button.reset:hover {
+            background-color: #7f8c8d;
+        }
+        .task-log {
+            background-color: #ecf0f1;
+            border: 1px solid #ddd;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .task-log div {
+            margin-bottom: 3px;
+        }
+        .explanation {
+            background-color: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+        .explanation h3 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        .explanation code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .highlight-bug {
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .highlight-fix {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .reset-all-btn-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        #resetAllBtn {
+            background-color: #e67e22;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+        #resetAllBtn:hover {
+            background-color: #d35400;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Concurrency Bug: Shared State Progress Tracker</h1>
+
+    <div class="container">
+        <!-- Buggy Version -->
+        <div class="section">
+            <h2>Buggy Progress Bar</h2>
+            <p><strong>Problem:</strong> Multiple "concurrent" tasks update a single shared <code>buggyProgress</code> variable without proper synchronization, leading to race conditions and incorrect values.</p>
+            <div class="progress-bar-container buggy">
+                <div id="buggyProgressBar" class="progress-bar"></div>
+                <span id="buggyProgressText" class="progress-text">0%</span>
+            </div>
+            <button class="start" onclick="startBuggyTasks()">Start Buggy Tasks</button>
+            <button class="reset" onclick="resetBuggy()">Reset Buggy</button>
+            <div class="task-log" id="buggyTaskLog"></div>
+        </div>
+
+        <!-- Fixed Version -->
+        <div class="section">
+            <h2>Fixed Progress Bar</h2>
+            <p><strong>Solution:</strong> Updates to the shared <code>fixedProgress</code> variable are managed through a queue or by ensuring atomic operations (though simple increment often works for basic types in JS). Here, we use an atomic-like increment and explicit state management.</p>
+            <div class="progress-bar-container fixed">
+                <div id="fixedProgressBar" class="progress-bar"></div>
+                <span id="fixedProgressText" class="progress-text">0%</span>
+            </div>
+            <button class="start" onclick="startFixedTasks()">Start Fixed Tasks</button>
+            <button class="reset" onclick="resetFixed()">Reset Fixed</button>
+            <div class="task-log" id="fixedTaskLog"></div>
+        </div>
+    </div>
+
+    <div class="reset-all-btn-container">
+        <button id="resetAllBtn" onclick="resetAll()">Reset All</button>
+    </div>
+
+    <div class="explanation">
+        <h3>Explanation of the Concurrency Bug and Fix</h3>
+        <p>This demonstration simulates "concurrent" tasks using JavaScript's asynchronous features (<code>setTimeout</code> and <code>Promise</code>). In a browser environment, true multi-threading for shared memory isn't typically available for the main thread, but asynchronous operations can still lead to race conditions when multiple tasks try to read and write to the same shared variable at overlapping times.</p>
+
+        <h4>The Buggy Version (Race Condition)</h4>
+        <p>Each simulated task in the buggy version attempts to update the global <code>buggyProgress</code> variable by reading its current value, adding a fixed increment (e.g., <code>10</code>), and then writing the new value back. The problem arises because these operations are not atomic:</p>
+        <ol>
+            <li><strong>Task A reads <code>buggyProgress</code> (e.g., 50).</strong></li>
+            <li><strong>Task B reads <code>buggyProgress</code> (also 50, before A writes its new value).</strong></li>
+            <li>Task A calculates its new value (50 + 10 = 60).</li>
+            <li>Task B calculates its new value (50 + 10 = 60).</li>
+            <li>Task A writes 60 to <code>buggyProgress</code>.</li>
+            <li>Task B writes 60 to <code>buggyProgress</code> (overwriting A's update).</li>
+        </ol>
+        <p>In this scenario, two tasks that should have increased the progress by 20% collectively only result in a 10% increase because one update "lost" the race. Conversely, if an update happens *after* the total progress is calculated, it can exceed 100%.</p>
+        <p>Look at the code for <code>updateBuggyProgressBar</code>:</p>
+        <pre><code class="language-javascript">
+        // Buggy update logic
+        let currentProgress = buggyProgress; // Read
+        currentProgress += amount;           // Calculate
+        buggyProgress = currentProgress;     // Write
+        </code></pre>
+        <p>The read, modify, write sequence is vulnerable. If another task modifies <code>buggyProgress</code> between the read and write by the first task, the first task will overwrite the second task's change, or vice-versa.</p>
+
+        <h4>The Fixed Version (Atomic-like Operations)</h4>
+        <p>The corrected version avoids the explicit read-modify-write sequence that causes the race condition. Instead, it directly increments the shared variable or uses a more robust state management pattern. In this simplified case, directly using <code>fixedProgress += amount;</code> often behaves "atomically enough" for primitive number types in JavaScript's single-threaded event loop, as the increment operation itself is usually executed without interruption from other JavaScript code on the main thread.</p>
+        <p>More complex scenarios might require:</p>
+        <ul>
+            <li><strong>Mutexes/Locks:</strong> (Not directly available in standard JS for main thread, but can be simulated with queues).</li>
+            <li><strong>Atomic Operations:</strong> (<code>Atomics</code> API for SharedArrayBuffer, not applicable here).</li>
+            <li><strong>Message Passing:</strong> For Web Workers, passing messages ensures isolation.</li>
+            <li><strong>Immutability & Reducers:</strong> Functional approaches where state is never directly mutated, but new state is derived.</li>
+        </ul>
+        <p>The key is to ensure that when a task wants to modify the shared state, it does so in a way that doesn't depend on a potentially stale read, or that it's the only task allowed to modify it at that exact moment. Here, simply incrementing:</p>
+        <pre><code class="language-javascript">
+        // Fixed update logic
+        fixedProgress += amount; // Direct increment
+        </code></pre>
+        <p>behaves correctly because the `+=` operator on a primitive number in JavaScript is a single, uninterruptible operation within the context of the event loop's task execution. While not a true "lock," it prevents the specific read-modify-write race condition seen in the buggy example.</p>
+        <p>You'll notice that the fixed version consistently reaches 100% (or very close) and doesn't overshoot, unlike the buggy version which can often jump to values like 110%, 120%, or even miss increments.</p>
+    </div>
+
+    <script>
+        const NUM_TASKS = 10; // Number of simulated concurrent tasks
+        const TASK_INCREMENT = 100 / NUM_TASKS; // Each task contributes 10%
+
+        // --- Buggy State ---
+        let buggyProgress = 0;
+        let buggyActiveTasks = 0;
+        let buggyTaskCounter = 0;
+        let buggyTasksRunning = false;
+
+        // --- Fixed State ---
+        let fixedProgress = 0;
+        let fixedActiveTasks = 0;
+        let fixedTaskCounter = 0;
+        let fixedTasksRunning = false;
+
+        // --- DOM Elements ---
+        const buggyProgressBar = document.getElementById('buggyProgressBar');
+        const buggyProgressText = document.getElementById('buggyProgressText');
+        const buggyTaskLog = document.getElementById('buggyTaskLog');
+
+        const fixedProgressBar = document.getElementById('fixedProgressBar');
+        const fixedProgressText = document.getElementById('fixedProgressText');
+        const fixedTaskLog = document.getElementById('fixedTaskLog');
+
+        // --- Helper Functions ---
+        function updateProgressBarUI(progressBarElement, progressTextElement, progressValue) {
+            const clampedValue = Math.max(0, Math.min(100, progressValue)); // Clamp between 0 and 100
+            progressBarElement.style.width = `${clampedValue}%`;
+            progressTextElement.textContent = `${Math.round(progressValue)}%`; // Show actual value, even if > 100
+            if (progressValue > 100) {
+                progressBarElement.style.backgroundColor = '#f39c12'; // Orange if over 100%
+            } else if (progressBarElement.parentElement.classList.contains('buggy')) {
+                progressBarElement.style.backgroundColor = '#e74c3c'; // Red for buggy
+            } else {
+                progressBarElement.style.backgroundColor = '#27ae60'; // Green for fixed
+            }
+        }
+
+        function logTaskActivity(logElement, message, type = 'info') {
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            if (type === 'error') div.style.color = 'red';
+            else if (type === 'success') div.style.color = 'green';
+            logElement.prepend(div); // Add to top
+            if (logElement.children.length > 10) { // Keep log concise
+                logElement.removeChild(logElement.lastChild);
+            }
+        }
+
+        function simulateWork(taskId, duration) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve(`Task ${taskId} finished.`);
+                }, duration);
+            });
+        }
+
+        // --- Buggy Logic ---
+        async function runBuggyTask(taskId) {
+            buggyActiveTasks++;
+            logTaskActivity(buggyTaskLog, `Task ${taskId} started. Active: ${buggyActiveTasks}`);
+
+            const duration = Math.random() * 500 + 100; // Simulate variable work
+            await simulateWork(taskId, duration);
+
+            // --- THE BUGGY PART ---
+            // Read-modify-write sequence that is not atomic
+            let currentProgress = buggyProgress; // Read current value
+            currentProgress += TASK_INCREMENT;   // Modify
+            buggyProgress = currentProgress;     // Write new value
+
+            updateProgressBarUI(buggyProgressBar, buggyProgressText, buggyProgress);
+            buggyActiveTasks--;
+            logTaskActivity(buggyTaskLog, `Task ${taskId} completed. Progress: ${Math.round(buggyProgress)}%. Active: ${buggyActiveTasks}`, 'info');
+
+            if (buggyActiveTasks === 0 && buggyTaskCounter === NUM_TASKS) {
+                logTaskActivity(buggyTaskLog, `All buggy tasks finished. Final progress: ${Math.round(buggyProgress)}%`, 'success');
+                buggyTasksRunning = false;
+            }
+        }
+
+        function startBuggyTasks() {
+            if (buggyTasksRunning) return;
+            buggyTasksRunning = true;
+            buggyTaskLog.innerHTML = '';
+            logTaskActivity(buggyTaskLog, 'Starting buggy tasks...', 'info');
+            buggyProgress = 0;
+            buggyActiveTasks = 0;
+            buggyTaskCounter = 0;
+            updateProgressBarUI(buggyProgressBar, buggyProgressText, buggyProgress);
+
+            for (let i = 0; i < NUM_TASKS; i++) {
+                buggyTaskCounter++;
+                // Simulate "concurrent" launch
+                setTimeout(() => runBuggyTask(i + 1), Math.random() * 50); // Small random delay to increase race chance
+            }
+        }
+
+        function resetBuggy() {
+            buggyProgress = 0;
+            buggyActiveTasks = 0;
+            buggyTaskCounter = 0;
+            buggyTasksRunning = false;
+            updateProgressBarUI(buggyProgressBar, buggyProgressText, 0);
+            buggyTaskLog.innerHTML = '';
+            logTaskActivity(buggyTaskLog, 'Buggy progress reset.', 'info');
+        }
+
+        // --- Fixed Logic ---
+        async function runFixedTask(taskId) {
+            fixedActiveTasks++;
+            logTaskActivity(fixedTaskLog, `Task ${taskId} started. Active: ${fixedActiveTasks}`);
+
+            const duration = Math.random() * 500 + 100;
+            await simulateWork(taskId, duration);
+
+            // --- THE FIXED PART ---
+            // Direct increment, which is "atomic enough" for primitive numbers in JS's event loop
+            fixedProgress += TASK_INCREMENT;
+
+            updateProgressBarUI(fixedProgressBar, fixedProgressText, fixedProgress);
+            fixedActiveTasks--;
+            logTaskActivity(fixedTaskLog, `Task ${taskId} completed. Progress: ${Math.round(fixedProgress)}%. Active: ${fixedActiveTasks}`, 'info');
+
+            if (fixedActiveTasks === 0 && fixedTaskCounter === NUM_TASKS) {
+                logTaskActivity(fixedTaskLog, `All fixed tasks finished. Final progress: ${Math.round(fixedProgress)}%`, 'success');
+                fixedTasksRunning = false;
+            }
+        }
+
+        function startFixedTasks() {
+            if (fixedTasksRunning) return;
+            fixedTasksRunning = true;
+            fixedTaskLog.innerHTML = '';
+            logTaskActivity(fixedTaskLog, 'Starting fixed tasks...', 'info');
+            fixedProgress = 0;
+            fixedActiveTasks = 0;
+            fixedTaskCounter = 0;
+            updateProgressBarUI(fixedProgressBar, fixedProgressText, fixedProgress);
+
+            for (let i = 0; i < NUM_TASKS; i++) {
+                fixedTaskCounter++;
+                // Simulate "concurrent" launch
+                setTimeout(() => runFixedTask(i + 1), Math.random() * 50); // Small random delay
+            }
+        }
+
+        function resetFixed() {
+            fixedProgress = 0;
+            fixedActiveTasks = 0;
+            fixedTaskCounter = 0;
+            fixedTasksRunning = false;
+            updateProgressBarUI(fixedProgressBar, fixedProgressText, 0);
+            fixedTaskLog.innerHTML = '';
+            logTaskActivity(fixedTaskLog, 'Fixed progress reset.', 'info');
+        }
+
+        function resetAll() {
+            resetBuggy();
+            resetFixed();
+        }
+
+        // Initial state on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgressBarUI(buggyProgressBar, buggyProgressText, 0);
+            updateProgressBarUI(fixedProgressBar, fixedProgressText, 0);
+        });
+
+    </script>
+</body>
+</html>

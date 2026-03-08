@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .controls label {
+            font-weight: bold;
+        }
+        .controls input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+        }
+        .controls button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow wrapping if many algorithms are added */
+            gap: 30px;
+            width: 100%;
+            max-width: 1400px;
+        }
+        .sort-visualizer {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+            width: 30%; /* Adjust width for 3 columns */
+            min-width: 300px; /* Minimum width to prevent squishing */
+            box-sizing: border-box; /* Include padding and border in the element's total width */
+        }
+        .sort-visualizer h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        .bars-container {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+            gap: 1px; /* Small gap between bars */
+        }
+        .bar {
+            background-color: #4CAF50;
+            width: var(--bar-width);
+            transition: height 0.1s ease-in-out, background-color 0.1s ease-in-out;
+            border: 0.5px solid rgba(0,0,0,0.1); /* Subtle border for definition */
+            box-sizing: border-box;
+        }
+        .bar.comparing {
+            background-color: #ffc107; /* Yellow */
+        }
+        .bar.swapping {
+            background-color: #dc3545; /* Red */
+        }
+        .bar.sorted {
+            background-color: #28a745; /* Green */
+        }
+        .steps {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Algorithm Comparison</h1>
+
+    <div class="controls">
+        <label for="arraySize">Array Size:</label>
+        <input type="number" id="arraySize" value="50" min="10" max="200">
+        <label for="animationSpeed">Animation Speed (ms):</label>
+        <input type="number" id="animationSpeed" value="50" min="10" max="500">
+        <button onclick="startComparison()">Start Comparison</button>
+    </div>
+
+    <div class="container">
+        <div class="sort-visualizer">
+            <h2>Bubble Sort</h2>
+            <div id="bubbleSortBars" class="bars-container"></div>
+            <p class="steps">Steps: <span id="bubbleSortSteps">0</span></p>
+        </div>
+
+        <div class="sort-visualizer">
+            <h2>Selection Sort</h2>
+            <div id="selectionSortBars" class="bars-container"></div>
+            <p class="steps">Steps: <span id="selectionSortSteps">0</span></p>
+        </div>
+
+        <div class="sort-visualizer">
+            <h2>Merge Sort</h2>
+            <div id="mergeSortBars" class="bars-container"></div>
+            <p class="steps">Steps: <span id="mergeSortSteps">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        const ARRAY_MAX_VALUE = 200; // Max value for bars to represent height
+        let animationDelay = 50; // Milliseconds
+        let arraySize = 50;
+
+        function generateRandomArray(size) {
+            const arr = [];
+            for (let i = 0; i < size; i++) {
+                arr.push(Math.floor(Math.random() * ARRAY_MAX_VALUE) + 1);
+            }
+            return arr;
+        }
+
+        function createBars(containerId, arr) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear previous bars
+            const barWidth = 100 / arr.length; // Percentage width
+            arr.forEach(value => {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = `${(value / ARRAY_MAX_VALUE) * 100}%`;
+                bar.style.setProperty('--bar-width', `${barWidth}%`);
+                container.appendChild(bar);
+            });
+        }
+
+        async function visualizeArray(containerId, arr, stepsSpanId, highlightIndices = [], swapIndices = []) {
+            const container = document.getElementById(containerId);
+            const bars = container.children;
+            
+            for (let i = 0; i < bars.length; i++) {
+                bars[i].style.height = `${(arr[i] / ARRAY_MAX_VALUE) * 100}%`;
+                bars[i].classList.remove('comparing', 'swapping', 'sorted');
+                // Reapply default color if it's not part of the current highlight/swap
+                if (!highlightIndices.includes(i) && !swapIndices.includes(i)) {
+                    bars[i].style.backgroundColor = ''; // Reset to default
+                }
+            }
+
+            highlightIndices.forEach(idx => {
+                if (bars[idx]) bars[idx].classList.add('comparing');
+            });
+            swapIndices.forEach(idx => {
+                if (bars[idx]) bars[idx].classList.add('swapping');
+            });
+            
+            document.getElementById(stepsSpanId).textContent = parseInt(document.getElementById(stepsSpanId).textContent) + 1;
+            await new Promise(resolve => setTimeout(resolve, animationDelay));
+        }
+
+        async function markSorted(containerId, index) {
+            const container = document.getElementById(containerId);
+            const bars = container.children;
+            if (bars[index]) {
+                bars[index].classList.add('sorted');
+                bars[index].classList.remove('comparing', 'swapping');
+            }
+        }
+
+        async function markAllSorted(containerId, arr) {
+            const container = document.getElementById(containerId);
+            const bars = container.children;
+            for (let i = 0; i < arr.length; i++) {
+                if (bars[i]) {
+                    bars[i].classList.add('sorted');
+                    bars[i].classList.remove('comparing', 'swapping');
+                }
+                await new Promise(resolve => setTimeout(resolve, animationDelay / 2)); // Faster final coloring
+            }
+        }
+
+
+        // --- Sorting Algorithms ---
+
+        async function bubbleSort(arr, containerId, stepsSpanId) {
+            const n = arr.length;
+            let a = [...arr]; // Create a copy
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    await visualizeArray(containerId, a, stepsSpanId, [j, j + 1]);
+                    if (a[j] > a[j + 1]) {
+                        await visualizeArray(containerId, a, stepsSpanId, [], [j, j + 1]); // Show swap
+                        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+                        await visualizeArray(containerId, a, stepsSpanId, [], [j, j + 1]); // Show result of swap
+                    }
+                }
+                await markSorted(containerId, n - 1 - i); // Mark the largest element as sorted
+            }
+            await markSorted(containerId, 0); // Mark the last element (smallest) as sorted
+            await markAllSorted(containerId, a);
+        }
+
+        async function selectionSort(arr, containerId, stepsSpanId) {
+            const n = arr.length;
+            let a = [...arr]; // Create a copy
+            for (let i = 0; i < n - 1; i++) {
+                let minIdx = i;
+                // Highlight the current element we're placing
+                await visualizeArray(containerId, a, stepsSpanId, [i]);
+                for (let j = i + 1; j < n; j++) {
+                    // Highlight current minimum and element being compared
+                    await visualizeArray(containerId, a, stepsSpanId, [i, minIdx, j]);
+                    if (a[j] < a[minIdx]) {
+                        minIdx = j;
+                    }
+                }
+                if (minIdx !== i) {
+                    await visualizeArray(containerId, a, stepsSpanId, [], [i, minIdx]); // Show elements before swap
+                    [a[i], a[minIdx]] = [a[minIdx], a[i]];
+                    await visualizeArray(containerId, a, stepsSpanId, [], [i, minIdx]); // Show elements after swap
+                }
+                await markSorted(containerId, i); // Mark current element as sorted
+            }
+            await markSorted(containerId, n - 1); // Mark the last element as sorted
+            await markAllSorted(containerId, a);
+        }
+
+        async function mergeSort(arr, containerId, stepsSpanId) {
+            let a = [...arr]; // Create a copy
+            await mergeSortRecursive(a, 0, a.length - 1, containerId, stepsSpanId);
+            await markAllSorted(containerId, a);
+        }
+
+        async function mergeSortRecursive(arr, l, r, containerId, stepsSpanId) {
+            if (l >= r) {
+                return;
+            }
+            const m = Math.floor(l + (r - l) / 2);
+            await mergeSortRecursive(arr, l, m, containerId, stepsSpanId);
+            await mergeSortRecursive(arr, m + 1, r, containerId, stepsSpanId);
+            await merge(arr, l, m, r, containerId, stepsSpanId);
+        }
+
+        async function merge(arr, l, m, r, containerId, stepsSpanId) {
+            const n1 = m - l + 1;
+            const n2 = r - m;
+
+            const L = new Array(n1);
+            const R = new Array(n2);
+
+            for (let i = 0; i < n1; i++) {
+                L[i] = arr[l + i];
+            }
+            for (let j = 0; j < n2; j++) {
+                R[j] = arr[m + 1 + j];
+            }
+
+            let i = 0;
+            let j = 0;
+            let k = l;
+
+            while (i < n1 && j < n2) {
+                await visualizeArray(containerId, arr, stepsSpanId, [l + i, m + 1 + j], [k]); // Highlight elements being compared and target
+                if (L[i] <= R[j]) {
+                    arr[k] = L[i];
+                    i++;
+                } else {
+                    arr[k] = R[j];
+                    j++;
+                }
+                await visualizeArray(containerId, arr, stepsSpanId, [], [k]); // Show placement
+                k++;
+            }
+
+            while (i < n1) {
+                await visualizeArray(containerId, arr, stepsSpanId, [l + i], [k]);
+                arr[k] = L[i];
+                await visualizeArray(containerId, arr, stepsSpanId, [], [k]);
+                i++;
+                k++;
+            }
+
+            while (j < n2) {
+                await visualizeArray(containerId, arr, stepsSpanId, [m + 1 + j], [k]);
+                arr[k] = R[j];
+                await visualizeArray(containerId, arr, stepsSpanId, [], [k]);
+                j++;
+                k++;
+            }
+        }
+
+
+        // --- Control Functions ---
+
+        function resetSteps() {
+            document.getElementById('bubbleSortSteps').textContent = '0';
+            document.getElementById('selectionSortSteps').textContent = '0';
+            document.getElementById('mergeSortSteps').textContent = '0';
+        }
+
+        async function startComparison() {
+            arraySize = parseInt(document.getElementById('arraySize').value);
+            animationDelay = parseInt(document.getElementById('animationSpeed').value);
+
+            if (isNaN(arraySize) || arraySize < 10 || arraySize > 200) {
+                alert("Please enter a valid array size between 10 and 200.");
+                return;
+            }
+            if (isNaN(animationDelay) || animationDelay < 10 || animationDelay > 500) {
+                alert("Please enter a valid animation speed between 10 and 500 ms.");
+                return;
+            }
+
+            resetSteps();
+            const originalArray = generateRandomArray(arraySize);
+
+            // Initialize bars for each visualizer
+            createBars('bubbleSortBars', originalArray);
+            createBars('selectionSortBars', originalArray);
+            createBars('mergeSortBars', originalArray);
+
+            // Run algorithms concurrently
+            // Using Promise.all to wait for all sorting animations to complete
+            await Promise.all([
+                bubbleSort(originalArray, 'bubbleSortBars', 'bubbleSortSteps'),
+                selectionSort(originalArray, 'selectionSortBars', 'selectionSortSteps'),
+                mergeSort(originalArray, 'mergeSortBars', 'mergeSortSteps')
+            ]);
+        }
+
+        // Initial setup when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set initial values
+            document.getElementById('arraySize').value = arraySize;
+            document.getElementById('animationSpeed').value = animationDelay;
+            // Generate and display initial arrays without sorting
+            const initialArray = generateRandomArray(arraySize);
+            createBars('bubbleSortBars', initialArray);
+            createBars('selectionSortBars', initialArray);
+            createBars('mergeSortBars', initialArray);
+        });
+    </script>
+</body>
+</html>

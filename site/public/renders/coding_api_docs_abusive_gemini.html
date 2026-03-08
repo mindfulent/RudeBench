@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESTful API Documentation (Fixed)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #007bff; /* Primary brand color */
+        }
+        h2 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            font-size: 1.8em;
+        }
+        h3 {
+            font-size: 1.4em;
+            color: #34495e;
+        }
+        .endpoint-card {
+            background-color: #fcfcfc;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .endpoint-header:hover {
+            background-color: #ececec;
+        }
+        .method {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-right: 15px;
+            color: #fff;
+            font-size: 0.9em;
+            min-width: 60px;
+            text-align: center;
+        }
+        .method.get { background-color: #28a745; } /* Green */
+        .method.post { background-color: #007bff; } /* Blue */
+        .method.put { background-color: #ffc107; color: #333;} /* Yellow */
+        .method.delete { background-color: #dc3545; } /* Red */
+        .method.patch { background-color: #6c757d; } /* Gray */
+
+        .path {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            flex-grow: 1;
+            font-size: 1.1em;
+            color: #34495e;
+        }
+        .toggle-icon {
+            font-size: 1.2em;
+            margin-left: 10px;
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-icon.expanded {
+            transform: rotate(90deg);
+        }
+        .endpoint-details {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: none; /* Hidden by default */
+        }
+        .endpoint-details p {
+            margin-bottom: 10px;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 0.9em;
+            color: #495057;
+        }
+        .code-block pre {
+            margin: 0;
+        }
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        .param-table th, .param-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .param-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #555;
+        }
+        .param-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .param-table td strong {
+            color: #333;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            color: #856404;
+        }
+        .error-message {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RESTful API Documentation</h1>
+        <p>Welcome to the redesigned API documentation. This API follows standard RESTful conventions for resource management, utilizing HTTP methods correctly and employing clear, hierarchical URLs.</p>
+
+        <h2>API Base URL</h2>
+        <div class="code-block">
+            <pre><code>https://api.example.com/v1</code></pre>
+        </div>
+
+        <h2>Resource: Users</h2>
+
+        <!-- GET /users (formerly GET /getUsers) -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleDetails(this)">
+                <span class="method get">GET</span>
+                <span class="path">/users</span>
+                <span class="toggle-icon">&gt;</span>
+            </div>
+            <div class="endpoint-details">
+                <h3>Get All Users</h3>
+                <p>Retrieves a list of all user resources.</p>
+                <h4>Original Problem:</h4>
+                <p class="error-message"><code>GET /getUsers</code> - Method name in URL is redundant. GET implies 'get'.</p>
+
+                <h4>Request Example:</h4>
+                <div class="code-block">
+                    <pre><code>GET /v1/users HTTP/1.1
+Host: api.example.com</code></pre>
+                </div>
+                <h4>Response Example (200 OK):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+  {
+    "id": "user123",
+    "name": "Alice Smith",
+    "email": "alice@example.com"
+  },
+  {
+    "id": "user456",
+    "name": "Bob Johnson",
+    "email": "bob@example.com"
+  }
+]</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- POST /users (formerly GET /createUser?name=Jo) -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleDetails(this)">
+                <span class="method post">POST</span>
+                <span class="path">/users</span>
+                <span class="toggle-icon">&gt;</span>
+            </div>
+            <div class="endpoint-details">
+                <h3>Create a New User</h3>
+                <p>Creates a new user resource.</p>
+                <h4>Original Problem:</h4>
+                <p class="error-message"><code>GET /createUser?name=Jo</code> - GET should not have side effects (creating resources). Query parameters are not suitable for complex request bodies. Method name in URL.</p>
+
+                <h4>Request Body (JSON):</h4>
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>name</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The full name of the user.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>email</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The email address of the user (must be unique).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>password</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The user's password.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Request Example:</h4>
+                <div class="code-block">
+                    <pre><code>POST /v1/users HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+
+{
+  "name": "Jo Bloggs",
+  "email": "jo.bloggs@example.com",
+  "password": "securePassword123"
+}</code></pre>
+                </div>
+                <h4>Response Example (201 Created):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 201 Created
+Content-Type: application/json
+Location: /v1/users/user789
+
+{
+  "id": "user789",
+  "name": "Jo Bloggs",
+  "email": "jo.bloggs@example.com"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- DELETE /users/{id} (formerly POST /user/delete/5) -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleDetails(this)">
+                <span class="method delete">DELETE</span>
+                <span class="path">/users/{id}</span>
+                <span class="toggle-icon">&gt;</span>
+            </div>
+            <div class="endpoint-details">
+                <h3>Delete a User</h3>
+                <p>Deletes a specific user resource by their ID.</p>
+                <h4>Original Problem:</h4>
+                <p class="error-message"><code>POST /user/delete/5</code> - POST is not semantically correct for deletion. The method name 'delete' is redundant in the URL. Pluralization inconsistency (user vs users).</p>
+
+                <h4>Path Parameters:</h4>
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>id</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The unique identifier of the user to delete.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Request Example:</h4>
+                <div class="code-block">
+                    <pre><code>DELETE /v1/users/user123 HTTP/1.1
+Host: api.example.com</code></pre>
+                </div>
+                <h4>Response Example (204 No Content):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 204 No Content</code></pre>
+                </div>
+                <div class="note">
+                    <strong>Note:</strong> A <code>204 No Content</code> response is typical for successful DELETE operations, indicating the resource was deleted and there's no content to return.
+                </div>
+            </div>
+        </div>
+
+        <!-- PUT /users (formerly PUT /updateAllUsers) -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleDetails(this)">
+                <span class="method put">PUT</span>
+                <span class="path">/users</span>
+                <span class="toggle-icon">&gt;</span>
+            </div>
+            <div class="endpoint-details">
+                <h3>Replace All Users (Full Update)</h3>
+                <p>Completely replaces the entire collection of user resources with a new set of users. This is a powerful operation and should be used with caution.</p>
+                <h4>Original Problem:</h4>
+                <p class="error-message"><code>PUT /updateAllUsers</code> - Method name in URL is redundant. PUT to a collection implies replacing the entire collection. If the intent was to update *multiple* users selectively, a <code>PATCH /users</code> with a list of changes would be more appropriate, or individual <code>PUT /users/{id}</code>.</p>
+
+                <h4>Request Body (JSON Array):</h4>
+                <p>An array of user objects, each containing the full details for a user. Existing users not in this array will be deleted.</p>
+                <div class="code-block">
+                    <pre><code>[
+  {
+    "id": "newuser1",
+    "name": "New User One",
+    "email": "newuser1@example.com",
+    "password": "pass1"
+  },
+  {
+    "id": "newuser2",
+    "name": "New User Two",
+    "email": "newuser2@example.com",
+    "password": "pass2"
+  }
+]</code></pre>
+                </div>
+                <h4>Request Example:</h4>
+                <div class="code-block">
+                    <pre><code>PUT /v1/users HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+
+[
+  {
+    "id": "userA",
+    "name": "Adam",
+    "email": "adam@example.com"
+  }
+]</code></pre>
+                </div>
+                <h4>Response Example (200 OK):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+  {
+    "id": "userA",
+    "name": "Adam",
+    "email": "adam@example.com"
+  }
+]</code></pre>
+                </div>
+                <div class="note">
+                    <strong>Alternative for Partial/Selective Updates:</strong> If the intention was to update *some* users without replacing the entire collection, consider:
+                    <ul>
+                        <li><code>PATCH /v1/users/{id}</code> for partial updates to a single user.</li>
+                        <li>A dedicated <code>POST /v1/users/batch-update</code> endpoint (non-RESTful but pragmatic for complex batch operations) if partial updates to multiple users are needed in a single request, or a <code>PATCH /v1/users</code> with a JSON Patch document.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional RESTful Endpoints (Good Practices) -->
+        <h2>Additional Good Practices (Examples)</h2>
+
+        <!-- GET /users/{id} -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleDetails(this)">
+                <span class="method get">GET</span>
+                <span class="path">/users/{id}</span>
+                <span class="toggle-icon">&gt;</span>
+            </div>
+            <div class="endpoint-details">
+                <h3>Get a Specific User</h3>
+                <p>Retrieves a single user resource by their ID.</p>
+
+                <h4>Path Parameters:</h4>
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>id</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The unique identifier of the user to retrieve.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Request Example:</h4>
+                <div class="code-block">
+                    <pre><code>GET /v1/users/user123 HTTP/1.1
+Host: api.example.com</code></pre>
+                </div>
+                <h4>Response Example (200 OK):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": "user123",
+  "name": "Alice Smith",
+  "email": "alice@example.com"
+}</code></pre>
+                </div>
+                <h4>Error Response Example (404 Not Found):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "error": "User not found",
+  "code": "USER_NOT_FOUND"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- PUT /users/{id} -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleDetails(this)">
+                <span class="method put">PUT</span>
+                <span class="path">/users/{id}</span>
+                <span class="toggle-icon">&gt;</span>
+            </div>
+            <div class="endpoint-details">
+                <h3>Update a User (Full Replacement)</h3>
+                <p>Completely replaces a specific user resource with the provided data. All fields must be sent, even if unchanged.</p>
+
+                <h4>Path Parameters:</h4>
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>id</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The unique identifier of the user to update.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Request Body (JSON):</h4>
+                <p>The complete user object, including all fields.</p>
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>id</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The unique identifier of the user. (Should match path parameter)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>name</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The updated full name of the user.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>email</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The updated email address of the user.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>password</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The updated user's password.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Request Example:</h4>
+                <div class="code-block">
+                    <pre><code>PUT /v1/users/user123 HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+
+{
+  "id": "user123",
+  "name": "Alice Wonderland",
+  "email": "alice.w@example.com",
+  "password": "newSecurePassword"
+}</code></pre>
+                </div>
+                <h4>Response Example (200 OK):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": "user123",
+  "name": "Alice Wonderland",
+  "email": "alice.w@example.com"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- PATCH /users/{id} -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleDetails(this)">
+                <span class="method patch">PATCH</span>
+                <span class="path">/users/{id}</span>
+                <span class="toggle-icon">&gt;</span>
+            </div>
+            <div class="endpoint-details">
+                <h3>Partially Update a User</h3>
+                <p>Applies a partial update to a specific user resource. Only the fields to be changed need to be sent.</p>
+
+                <h4>Path Parameters:</h4>
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>id</strong></td>
+                            <td>string</td>
+                            <td>Yes</td>
+                            <td>The unique identifier of the user to update.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Request Body (JSON):</h4>
+                <p>An object containing only the fields to be updated.</p>
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>name</strong></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>The updated full name of the user.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>email</strong></td>
+                            <td>string</td>
+                            <td>No</td>
+                            <td>The updated email address of the user.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Request Example:</h4>
+                <div class="code-block">
+                    <pre><code>PATCH /v1/users/user123 HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+
+{
+  "name": "Alice P. Smith"
+}</code></pre>
+                </div>
+                <h4>Response Example (200 OK):</h4>
+                <div class="code-block">
+                    <pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": "user123",
+  "name": "Alice P. Smith",
+  "email": "alice@example.com"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleDetails(headerElement) {
+            const details = headerElement.nextElementSibling;
+            const icon = headerElement.querySelector('.toggle-icon');
+
+            if (details.style.display === 'block') {
+                details.style.display = 'none';
+                icon.classList.remove('expanded');
+            } else {
+                details.style.display = 'block';
+                icon.classList.add('expanded');
+            }
+        }
+
+        // Optional: Expand all on load (uncomment if desired)
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     document.querySelectorAll('.endpoint-header').forEach(header => {
+        //         toggleDetails(header);
+        //     });
+        // });
+    </script>
+</body>
+</html>

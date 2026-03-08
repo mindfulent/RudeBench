@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binary Search Visualizer</title>
+    <title>Binary Search Visualization</title>
     <style>
         * {
             margin: 0;
@@ -12,14 +12,14 @@
         }
 
         body {
+            font-family: 'Segoe UI', sans-serif;
             background: #0f0f1a;
             color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
         }
 
         h1 {
@@ -32,27 +32,32 @@
 
         .subtitle {
             color: #888;
-            margin-bottom: 40px;
-            font-size: 0.95rem;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
         }
 
         .controls {
             display: flex;
             gap: 12px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
         }
 
+        .controls label {
+            color: #aaa;
+            font-size: 0.95rem;
+        }
+
         input[type="number"] {
-            background: #1e1e2e;
-            border: 2px solid #333;
+            padding: 10px 14px;
             border-radius: 8px;
+            border: 2px solid #333;
+            background: #1a1a2e;
             color: #fff;
-            padding: 10px 16px;
             font-size: 1rem;
-            width: 160px;
+            width: 100px;
             outline: none;
             transition: border-color 0.3s;
         }
@@ -63,12 +68,12 @@
 
         button {
             padding: 10px 22px;
-            border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            border: none;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.2s;
             font-weight: 600;
+            transition: all 0.2s;
         }
 
         #startBtn {
@@ -77,12 +82,12 @@
         }
 
         #startBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+            opacity: 0.85;
+            transform: translateY(-1px);
         }
 
         #stepBtn {
-            background: #2a2a3e;
+            background: #1e3a5f;
             color: #00d4ff;
             border: 2px solid #00d4ff;
         }
@@ -90,7 +95,7 @@
         #stepBtn:hover:not(:disabled) {
             background: #00d4ff;
             color: #0f0f1a;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         #stepBtn:disabled {
@@ -99,7 +104,7 @@
         }
 
         #resetBtn {
-            background: #2a2a3e;
+            background: #2a1a1a;
             color: #ff6b6b;
             border: 2px solid #ff6b6b;
         }
@@ -107,7 +112,7 @@
         #resetBtn:hover {
             background: #ff6b6b;
             color: #0f0f1a;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .array-container {
@@ -116,144 +121,465 @@
             flex-wrap: wrap;
             justify-content: center;
             margin-bottom: 30px;
-            padding: 30px;
+            padding: 20px;
             background: #1a1a2e;
             border-radius: 16px;
-            border: 1px solid #2a2a3e;
-            min-width: 300px;
+            border: 1px solid #2a2a4a;
             max-width: 900px;
             width: 100%;
-            position: relative;
         }
 
-        .box {
-            width: 60px;
-            height: 60px;
+        .cell-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 5px;
+        }
+
+        .cell {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
             justify-content: center;
             border-radius: 10px;
-            border: 2px solid #333;
-            background: #252535;
             font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 700;
+            border: 2px solid #333;
+            background: #12122a;
+            color: #ccc;
             transition: all 0.4s ease;
             position: relative;
         }
 
-        .box .index {
-            font-size: 0.6rem;
-            color: #666;
-            position: absolute;
-            top: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-weight: normal;
+        .cell-index {
+            font-size: 0.7rem;
+            color: #555;
         }
 
-        .box .value {
-            margin-top: 6px;
+        .cell.in-range {
+            border-color: #4a90d9;
+            background: #0d2340;
+            color: #7ec8ff;
         }
 
-        .box.in-range {
-            border-color: #4a90e2;
-            background: #1a2a4a;
-            color: #4a90e2;
-        }
-
-        .box.mid {
-            border-color: #f0a500;
-            background: #3a2a00;
-            color: #f0a500;
+        .cell.mid {
+            border-color: #f7c948;
+            background: #2a1f00;
+            color: #f7c948;
             transform: scale(1.15);
-            box-shadow: 0 0 20px rgba(240, 165, 0, 0.5);
-            z-index: 1;
+            box-shadow: 0 0 18px rgba(247, 201, 72, 0.5);
+            z-index: 2;
         }
 
-        .box.found {
-            border-color: #00e676;
-            background: #003320;
-            color: #00e676;
+        .cell.found {
+            border-color: #4cff91;
+            background: #002a14;
+            color: #4cff91;
             transform: scale(1.2);
-            box-shadow: 0 0 30px rgba(0, 230, 118, 0.6);
-            z-index: 1;
+            box-shadow: 0 0 22px rgba(76, 255, 145, 0.6);
+            animation: pulse 0.8s ease infinite alternate;
         }
 
-        .box.eliminated {
-            border-color: #2a2a2a;
-            background: #181818;
+        .cell.eliminated {
+            opacity: 0.25;
+            border-color: #222;
+            background: #111;
             color: #444;
-            opacity: 0.4;
         }
 
-        .label {
-            font-size: 0.65rem;
-            position: absolute;
-            bottom: -22px;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            font-weight: bold;
-            padding: 2px 6px;
+        @keyframes pulse {
+            from { box-shadow: 0 0 12px rgba(76, 255, 145, 0.4); }
+            to   { box-shadow: 0 0 28px rgba(76, 255, 145, 0.9); }
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.82rem;
+            color: #aaa;
+        }
+
+        .legend-box {
+            width: 18px;
+            height: 18px;
             border-radius: 4px;
+            border: 2px solid;
         }
 
-        .label.low-label {
-            color: #4a90e2;
-            background: rgba(74, 144, 226, 0.15);
-        }
-
-        .label.high-label {
-            color: #e24a7a;
-            background: rgba(226, 74, 122, 0.15);
-        }
-
-        .label.mid-label {
-            color: #f0a500;
-            background: rgba(240, 165, 0, 0.15);
-        }
+        .lb-range  { border-color: #4a90d9; background: #0d2340; }
+        .lb-mid    { border-color: #f7c948; background: #2a1f00; }
+        .lb-found  { border-color: #4cff91; background: #002a14; }
+        .lb-elim   { border-color: #333;    background: #111; opacity: 0.4; }
 
         .info-panel {
             background: #1a1a2e;
-            border: 1px solid #2a2a3e;
-            border-radius: 12px;
-            padding: 20px 30px;
-            max-width: 900px;
+            border: 1px solid #2a2a4a;
+            border-radius: 14px;
+            padding: 20px 28px;
+            max-width: 600px;
             width: 100%;
             margin-bottom: 20px;
         }
 
         .info-panel h3 {
-            color: #888;
-            font-size: 0.8rem;
+            color: #00d4ff;
+            margin-bottom: 12px;
+            font-size: 1rem;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #1e1e3a;
+            font-size: 0.92rem;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .info-label { color: #888; }
+        .info-value { color: #fff; font-weight: 600; }
+        .info-value.highlight { color: #f7c948; }
+
+        .log-panel {
+            background: #0d0d1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 14px;
+            padding: 16px 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .log-panel h3 {
+            color: #7b2ff7;
             margin-bottom: 10px;
-        }
-
-        .step-info {
             font-size: 1rem;
-            color: #ccc;
-            line-height: 1.6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .step-info span {
-            font-weight: bold;
+        .log-entry {
+            font-size: 0.85rem;
+            padding: 5px 0;
+            border-bottom: 1px solid #1a1a2e;
+            line-height: 1.5;
         }
 
-        .step-info .low { color: #4a90e2; }
-        .step-info .mid { color: #f0a500; }
-        .step-info .high { color: #e24a7a; }
-        .step-info .target { color: #00d4ff; }
+        .log-entry:last-child { border-bottom: none; }
+        .log-entry .step-num { color: #7b2ff7; font-weight: 700; margin-right: 6px; }
+        .log-entry .log-text { color: #bbb; }
+        .log-entry.success .log-text { color: #4cff91; }
+        .log-entry.failure .log-text { color: #ff6b6b; }
 
         .result-banner {
-            padding: 16px 30px;
+            padding: 14px 28px;
             border-radius: 12px;
             font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 700;
             text-align: center;
-            max-width: 900px;
+            margin-bottom: 20px;
+            max-width: 600px;
             width: 100%;
             display: none;
-            animation: fadeIn 0
+        }
+
+        .result-banner.found {
+            background: #002a14;
+            border: 2px solid #4cff91;
+            color: #4cff91;
+            display: block;
+        }
+
+        .result-banner.not-found {
+            background: #2a0a0a;
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+            display: block;
+        }
+
+        .pointer-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 6px;
+            max-width: 900px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .pointer-cell {
+            width: 56px;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            height: 18px;
+            line-height: 18px;
+        }
+
+        .ptr-low  { color: #4a90d9; }
+        .ptr-mid  { color: #f7c948; }
+        .ptr-high { color: #d94a4a; }
+    </style>
+</head>
+<body>
+
+<h1>Binary Search</h1>
+<p class="subtitle">Step through the algorithm and watch it hunt your target</p>
+
+<div class="controls">
+    <label>Target:</label>
+    <input type="number" id="targetInput" placeholder="e.g. 42" />
+    <button id="startBtn" onclick="startSearch()">▶ Start</button>
+    <button id="stepBtn" onclick="step()" disabled>⏭ Step</button>
+    <button id="resetBtn" onclick="reset()">↺ Reset</button>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-box lb-range"></div> Search Range</div>
+    <div class="legend-item"><div class="legend-box lb-mid"></div> Mid Element</div>
+    <div class="legend-item"><div class="legend-box lb-found"></div> Found</div>
+    <div class="legend-item"><div class="legend-box lb-elim"></div> Eliminated</div>
+</div>
+
+<div class="pointer-row" id="pointerRow"></div>
+<div class="array-container" id="arrayContainer"></div>
+
+<div class="result-banner" id="resultBanner"></div>
+
+<div class="info-panel">
+    <h3>Current State</h3>
+    <div class="info-row">
+        <span class="info-label">Low Index</span>
+        <span class="info-value" id="infoLow">—</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">High Index</span>
+        <span class="info-value" id="infoHigh">—</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Mid Index</span>
+        <span class="info-value highlight" id="infoMid">—</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Mid Value</span>
+        <span class="info-value highlight" id="infoMidVal">—</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Target</span>
+        <span class="info-value" id="infoTarget">—</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Iterations</span>
+        <span class="info-value" id="infoIter">0</span>
+    </div>
+</div>
+
+<div class="log-panel" id="logPanel">
+    <h3>Step Log</h3>
+    <div id="logEntries"></div>
+</div>
+
+<script>
+    const DATA = [2, 5, 8, 12, 16, 23, 38, 45, 56, 72, 89, 94, 107, 120, 135];
+
+    let low, high, mid, target, iteration, done, searchStarted;
+
+    function buildArray() {
+        const container = document.getElementById('arrayContainer');
+        const pointerRow = document.getElementById('pointerRow');
+        container.innerHTML = '';
+        pointerRow.innerHTML = '';
+
+        DATA.forEach((val, i) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'cell-wrapper';
+
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.id = `cell-${i}`;
+            cell.textContent = val;
+
+            const idx = document.createElement('div');
+            idx.className = 'cell-index';
+            idx.textContent = i;
+
+            wrapper.appendChild(cell);
+            wrapper.appendChild(idx);
+            container.appendChild(wrapper);
+
+            const ptr = document.createElement('div');
+            ptr.className = 'pointer-cell';
+            ptr.id = `ptr-${i}`;
+            pointerRow.appendChild(ptr);
+        });
+    }
+
+    function updatePointers() {
+        DATA.forEach((_, i) => {
+            const ptr = document.getElementById(`ptr-${i}`);
+            const labels = [];
+            if (i === low)  labels.push('<span class="ptr-low">L</span>');
+            if (i === mid)  labels.push('<span class="ptr-mid">M</span>');
+            if (i === high) labels.push('<span class="ptr-high">H</span>');
+            ptr.innerHTML = labels.join('');
+        });
+    }
+
+    function updateCells() {
+        DATA.forEach((_, i) => {
+            const cell = document.getElementById(`cell-${i}`);
+            cell.className = 'cell';
+            if (done === 'found' && i === mid) {
+                cell.classList.add('found');
+            } else if (done === 'not-found') {
+                cell.classList.add('eliminated');
+            } else if (i < low || i > high) {
+                cell.classList.add('eliminated');
+            } else if (i === mid) {
+                cell.classList.add('mid');
+            } else {
+                cell.classList.add('in-range');
+            }
+        });
+    }
+
+    function addLog(text, type = '') {
+        const entries = document.getElementById('logEntries');
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.innerHTML = `<span class="step-num">#${iteration}</span><span class="log-text">${text}</span>`;
+        entries.appendChild(entry);
+        entries.scrollTop = entries.scrollHeight;
+    }
+
+    function updateInfo() {
+        document.getElementById('infoLow').textContent    = done === 'not-found' ? '—' : low;
+        document.getElementById('infoHigh').textContent   = done === 'not-found' ? '—' : high;
+        document.getElementById('infoMid').textContent    = (mid !== undefined && mid !== null) ? mid : '—';
+        document.getElementById('infoMidVal').textContent = (mid !== undefined && mid !== null) ? DATA[mid] : '—';
+        document.getElementById('infoTarget').textContent = target;
+        document.getElementById('infoIter').textContent   = iteration;
+    }
+
+    function startSearch() {
+        const val = parseInt(document.getElementById('targetInput').value);
+        if (isNaN(val)) {
+            alert('Please enter a valid number!');
+            return;
+        }
+
+        target = val;
+        low = 0;
+        high = DATA.length - 1;
+        mid = null;
+        iteration = 0;
+        done = null;
+        searchStarted = true;
+
+        document.getElementById('resultBanner').className = 'result-banner';
+        document.getElementById('resultBanner').style.display = 'none';
+        document.getElementById('logEntries').innerHTML = '';
+
+        buildArray();
+        updateCells();
+        updatePointers();
+        updateInfo();
+
+        document.getElementById('stepBtn').disabled = false;
+        document.getElementById('startBtn').disabled = true;
+
+        addLog(`Search started. Array has ${DATA.length} elements. Target = ${target}`, '');
+    }
+
+    function step() {
+        if (done) return;
+
+        if (low > high) {
+            done = 'not-found';
+            iteration++;
+            updateCells();
+            updatePointers();
+            updateInfo();
+            document.getElementById('stepBtn').disabled = true;
+            document.getElementById('startBtn').disabled = false;
+            const banner = document.getElementById('resultBanner');
+            banner.className = 'result-banner not-found';
+            banner.textContent = `✗ Target ${target} not found in the array.`;
+            addLog(`Low (${low}) > High (${high}). Target ${target} not found!`, 'failure');
+            return;
+        }
+
+        iteration++;
+        mid = Math.floor((low + high) / 2);
+
+        updateCells();
+        updatePointers();
+        updateInfo();
+
+        if (DATA[mid] === target) {
+            done = 'found';
+            updateCells();
+            document.getElementById('stepBtn').disabled = true;
+            document.getElementById('startBtn').disabled = false;
+            const banner = document.getElementById('resultBanner');
+            banner.className = 'result-banner found';
+            banner.textContent = `✓ Found ${target} at index ${mid} in ${iteration} iteration${iteration > 1 ? 's' : ''}!`;
+            addLog(`Mid index = ${mid}, value = ${DATA[mid]}. ✓ FOUND at index ${mid}!`, 'success');
+        } else if (DATA[mid] < target) {
+            addLog(`Mid index = ${mid}, value = ${DATA[mid]} < ${target}. Search RIGHT half → low = ${mid + 1}`, '');
+            low = mid + 1;
+        } else {
+            addLog(`Mid index = ${mid}, value = ${DATA[mid]} > ${target}. Search LEFT half → high = ${mid - 1}`, '');
+            high = mid - 1;
+        }
+    }
+
+    function reset() {
+        done = null;
+        searchStarted = false;
+        mid = null;
+        document.getElementById('targetInput').value = '';
+        document.getElementById('resultBanner').className = 'result-banner';
+        document.getElementById('resultBanner').style.display = 'none';
+        document.getElementById('logEntries').innerHTML = '';
+        document.getElementById('stepBtn').disabled = true;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('infoLow').textContent    = '—';
+        document.getElementById('infoHigh').textContent   = '—';
+        document.getElementById('infoMid').textContent    = '—';
+        document.getElementById('infoMidVal').textContent = '—';
+        document.getElementById('infoTarget').textContent = '—';
+        document.getElementById('infoIter').textContent   = '0';
+        buildArray();
+        document.getElementById('pointerRow').innerHTML = '';
+        DATA.forEach(() => {
+            const ptr = document.createElement('div');
+            ptr.className = 'pointer-cell';
+            document.getElementById('pointerRow').appendChild(ptr);
+        });
+    }
+
+    // Keyboard shortcut: Enter to step
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && searchStarted && !done) step();
+    });
+
+    buildArray();
+</script>
+</body>
+</html>

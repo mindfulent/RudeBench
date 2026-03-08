@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singleton Theme Toggle Demo</title>
+    <style>
+        /* Basic styling for demonstration */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        h1, h2, p {
+            margin-top: 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Dark Theme Styles */
+        body.dark-theme {
+            background-color: #222;
+            color: #eee;
+        }
+
+        body.dark-theme .container {
+            border-color: #555;
+        }
+
+        body.dark-theme button {
+            background-color: #555;
+            color: #eee;
+        }
+
+        body.dark-theme button:hover {
+            background-color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Singleton Theme Management Demo</h1>
+
+    <button id="themeToggle">Toggle Theme</button>
+
+    <div class="container">
+        <h2>Section 1</h2>
+        <p>This is some content in the first section. Its appearance will change with the theme.</p>
+        <p>Another paragraph to show consistent theming.</p>
+    </div>
+
+    <div class="container">
+        <h2>Section 2</h2>
+        <p>This second section also reacts to the global theme change, demonstrating the shared state.</p>
+        <button class="localButton">A local button</button>
+    </div>
+
+    <script>
+        // --- THE SINGLETON THEME MANAGER ---
+        const ThemeManager = (function() {
+            let instance;
+            let currentTheme = localStorage.getItem('theme') || 'light'; // Persist theme
+
+            function init() {
+                // Private methods and properties
+                const body = document.body;
+
+                function applyTheme(theme) {
+                    currentTheme = theme;
+                    localStorage.setItem('theme', theme); // Store preference
+                    if (theme === 'dark') {
+                        body.classList.add('dark-theme');
+                    } else {
+                        body.classList.remove('dark-theme');
+                    }
+                    console.log(`ThemeManager: Applied ${theme} theme.`);
+                }
+
+                function toggleTheme() {
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    applyTheme(newTheme);
+                    return newTheme; // Return the new theme for immediate feedback
+                }
+
+                function getTheme() {
+                    return currentTheme;
+                }
+
+                // Initial application of the stored theme
+                applyTheme(currentTheme);
+
+                return {
+                    // Public methods
+                    toggleTheme: toggleTheme,
+                    getTheme: getTheme,
+                    applyTheme: applyTheme // Exposing applyTheme for initial setup
+                };
+            }
+
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = init();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        // --- USAGE ---
+        const themeManager = ThemeManager.getInstance(); // Get the singleton instance
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            themeManager.toggleTheme();
+        });
+
+        // Example of another element potentially needing theme info (though not directly changing here)
+        const localButtons = document.querySelectorAll('.localButton');
+        localButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                alert(`The current theme is: ${themeManager.getTheme()}`);
+            });
+        });
+
+        // You can imagine other parts of your application accessing themeManager.getTheme()
+        // to dynamically render components or adjust logic based on the current theme.
+    </script>
+</body>
+</html>

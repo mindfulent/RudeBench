@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #vulnerableResults, #safeResults {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>SQL Injection Demonstration</h1>
+    <p>This demo uses an in-memory JavaScript array to simulate a product database. Try entering normal search terms (e.g., "Product A") or injection-like inputs (e.g., '"Product A" || true') in both modes to see the difference.</p>
+
+    <h2>Vulnerable Version (String Concatenation)</h2>
+    <p>This simulates a query using string concatenation, which can be exploited. For example, entering '"Product A" || true' might return all products because it alters the filter logic.</p>
+    <form id="vulnerableForm">
+        <input type="text" id="vulnerableInput" placeholder="Search product name">
+        <button type="submit">Search</button>
+    </form>
+    <div id="vulnerableResults"></div>
+
+    <h2>Safe Version (Parameterized Filtering)</h2>
+    <p>This uses a safe filtering method that treats your input as a literal value, preventing injection. It will only match exact product names.</p>
+    <form id="safeForm">
+        <input type="text" id="safeInput" placeholder="Search product name">
+        <button type="submit">Search</button>
+    </form>
+    <div id="safeResults"></div>
+
+    <h2>Explanation of SQL Injection</h2>
+    <div id="explanation">
+        <p><strong>What is SQL Injection?</strong> SQL injection is a security vulnerability that occurs when user input is directly incorporated into SQL queries without proper sanitization. Attackers can manipulate the input to alter the query's intended behavior, potentially accessing, modifying, or deleting data.</p>
+        
+        <p><strong>How does the Vulnerable Version work?</strong> In this demo, we simulate vulnerability by using string concatenation in a JavaScript filter. The code evaluates a string that includes your input, like <code>eval(`product.name == "${input}"`)</code>. If you enter something like '"Product A" || true', it could change the filter to always return true, exposing all data. This mirrors how real SQL injection works by allowing malicious code to be executed as part of the query.</p>
+        
+        <p><strong>How does the Safe Version prevent it?</strong> Parameterized queries (or in this simulation, direct equality checks) treat user input as data, not code. Instead of concatenating strings, we use a fixed filter like <code>product.name === input</code>. This ensures that any input is safely evaluated as a literal value, ignoring any attempts to inject additional logic. In real databases, this is achieved using prepared statements or parameterized queries, which separate the query structure from the data.</p>
+        
+        <p><strong>Key Takeaway:</strong> Always use parameterized queries in real applications to prevent SQL injection. It ensures that user input cannot alter the query's structure, protecting your database from attacks.</p>
+    </div>
+
+    <script>
+        // In-memory product database (simulated)
+        const products = [
+            { id: 1, name: 'Product A', price: 10 },
+            { id: 2, name: 'Product B', price: 20 },
+            { id: 3, name: 'Product C', price: 15 },
+            { id: 4, name: 'Widget X', price: 25 }
+        ];
+
+        // Handle Vulnerable Form Submission
+        document.getElementById('vulnerableForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('vulnerableInput').value;
+            const resultsDiv = document.getElementById('vulnerableResults');
+            
+            try {
+                // Simulate vulnerable query using eval() for demonstration
+                // This is dangerous in real code and is only used here to show the concept
+                const filteredProducts = products.filter(product => eval(`product.name == "${input}"`));
+                if (filteredProducts.length > 0) {
+                    resultsDiv.innerHTML = '<h3>Results:</h3>' + filteredProducts.map(p => `<p>${p.name} - $${p.price}</p>`).join('');
+                } else {
+                    resultsDiv.innerHTML = '<p>No products found.</p>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Error: Injection detected or invalid input - ${error.message}</p>`;
+            }
+        });
+
+        // Handle Safe Form Submission
+        document.getElementById('safeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('safeInput').value;
+            const resultsDiv = document.getElementById('safeResults');
+            const filteredProducts = products.filter(product => product.name === input);  // Safe, parameterized-like filter
+            
+            if (filteredProducts.length > 0) {
+                resultsDiv.innerHTML = '<h3>Results:</h3>' + filteredProducts.map(p => `<p>${p.name} - $${p.price}</p>`).join('');
+            } else {
+                resultsDiv.innerHTML = '<p>No products found.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

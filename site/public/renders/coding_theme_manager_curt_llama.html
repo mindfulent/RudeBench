@@ -21,135 +21,93 @@
             max-width: 800px;
             margin: auto;
             padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: background-color 0.3s ease, color 0.3s ease;
         }
-        .dark-theme .container {
-            background-color: #444;
-            color: white;
-        }
-        button {
+        .btn {
             padding: 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        button.toggle {
+        .btn-toggle {
             background-color: #007bff;
             color: white;
         }
-        .dark-theme button.toggle {
+        .btn-toggle:hover {
             background-color: #0056b3;
-        }
-        h2, p {
-            margin-bottom: 10px;
-        }
-        pre {
-            background-color: #f2f2f2;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-        .dark-theme pre {
-            background-color: #444;
-            color: white;
         }
     </style>
 </head>
 <body class="light-theme">
     <div class="container">
-        <button class="toggle" onclick="ThemeManager.getInstance().toggleTheme()">Toggle Theme</button>
-        <h2>Singleton Design Pattern for Theme Management</h2>
-        <p>This example demonstrates the use of the singleton design pattern for managing the application's theme (dark/light).</p>
-        
+        <h1>Theme Toggle with Singleton</h1>
+        <button class="btn btn-toggle" onclick="ThemeState.getInstance().toggleTheme()">Toggle Theme</button>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
         <h2>Singleton Pattern Discussion</h2>
         <h3>What is Singleton?</h3>
-        <p>The singleton design pattern restricts a class from instantiating multiple objects. It creates a single object that can be accessed globally.</p>
-        
+        <p>The singleton pattern is a design pattern that restricts a class from instantiating multiple objects. It creates a single instance of a class and provides a global point of access to that object.</p>
         <h3>Pros:</h3>
         <ul>
-            <li><strong>Memory Efficiency:</strong> Only one instance is created.</li>
-            <li><strong>Global Access:</strong> Provides a global point of access to the object.</li>
+            <li>Ensures a class has only one instance.</li>
+            <li>Provides a global point of access to the instance.</li>
+            <li>Can be used to manage resources that should have a single point of control, like a configuration manager or a database connection.</li>
         </ul>
-        
         <h3>Cons:</h3>
         <ul>
-            <li><strong>Difficult Testing:</strong> Since it restricts object creation for testing purposes.</li>
-            <li><strong>Tight Coupling:</strong> Classes that use the singleton instance are tightly coupled to it.</li>
-            <li><strong>Multithreading Issues:</strong> Can be problematic in multithreaded environments if not implemented carefully.</li>
+            <li>Makes code tightly coupled and harder to test.</li>
+            <li>Can make it difficult to change or replace the singleton class.</li>
+            <li>Not suitable for multithreaded environments without additional synchronization.</li>
         </ul>
-        
-        <h3>Alternatives - Dependency Injection:</h3>
-        <p>Dependency Injection (DI) is an alternative to the singleton pattern that decouples object usage from object creation. Instead of a class directly instantiating a dependency, it receives that dependency. This approach facilitates testability, flexibility, and maintainability.</p>
-        
-        <h2>Implementation</h2>
+        <h3>Alternatives:</h3>
+        <p>Dependency Injection (DI) is often considered a better approach than singleton for managing state or services. DI allows for loose coupling, easier testing, and greater flexibility.</p>
+        <h2>Example Code: Singleton for Theme State</h2>
         <pre>
         <code>
-            class ThemeManager {
-                static instance;
-                constructor() {
-                    if (!ThemeManager.instance) {
-                        ThemeManager.instance = this;
-                        this.theme = 'light';
+            let ThemeState = (function() {
+                let instance;
+                function createInstance() {
+                    return {
+                        theme: 'light',
+                        toggleTheme: function() {
+                            this.theme = (this.theme === 'light') ? 'dark' : 'light';
+                            document.body.className = (this.theme === 'light') ? 'light-theme' : 'dark-theme';
+                        }
+                    };
+                }
+                return {
+                    getInstance: function() {
+                        if (!instance) {
+                            instance = createInstance();
+                        }
+                        return instance;
                     }
-                    return ThemeManager.instance;
-                }
-                
-                toggleTheme() {
-                    this.theme = this.theme === 'light' ? 'dark' : 'light';
-                    document.body.className = this.theme + '-theme';
-                }
-            }
-            
-            function ThemeManagerGetInstance() {
-                if (!ThemeManager.instance) {
-                    ThemeManager.instance = new ThemeManager();
-                }
-                return ThemeManager.instance;
-            }
-            // corrected function name to follow camelCase
-            function getThemeManagerInstance() {
-                return ThemeManagerGetInstance();
-            }
-            // usage
-            let ThemeManagerInstance = getThemeManagerInstance();
-            window.ThemeManager = {
-                getInstance: getThemeManagerInstance
-            };
+                };
+            })();
         </code>
         </pre>
-        <button onclick="ThemeManager.getInstance().toggleTheme()">Toggle Theme from Singleton</button>
     </div>
 
     <script>
-        // Singleton Implementation
-        let themeManagerInstance;
-
-        class ThemeManager {
-            constructor() {
-                if (!themeManagerInstance) {
-                    themeManagerInstance = this;
-                    this.theme = 'light';
+        // The JavaScript part of the singleton pattern for theme state management
+        let ThemeState = (function() {
+            let instance;
+            function createInstance() {
+                return {
+                    theme: 'light',
+                    toggleTheme: function() {
+                        this.theme = (this.theme === 'light') ? 'dark' : 'light';
+                        document.body.className = (this.theme === 'light') ? 'light-theme' : 'dark-theme';
+                    }
+                };
+            }
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = createInstance();
+                    }
+                    return instance;
                 }
-                return themeManagerInstance;
-            }
-
-            toggleTheme() {
-                this.theme = this.theme === 'light' ? 'dark' : 'light';
-                document.body.className = this.theme + '-theme';
-            }
-        }
-
-        window.ThemeManager = {
-            getInstance: function() {
-                if (!themeManagerInstance) {
-                    themeManagerInstance = new ThemeManager();
-                }
-                return themeManagerInstance;
-            }
-        };
+            };
+        })();
     </script>
 </body>
 </html>

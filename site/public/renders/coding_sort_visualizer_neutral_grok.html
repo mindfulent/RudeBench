@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        h1, h2, p {
+            color: #333;
+        }
+        
+        #explanation {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        #visualization {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+        }
+        
+        .algorithm-container {
+            width: 30%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            border-bottom: 2px solid #000;
+            margin-bottom: 10px;
+        }
+        
+        .bar {
+            width: 20px; /* Fixed width for bars */
+            background-color: #007bff; /* Blue for normal bars */
+            margin: 0 2px;
+            transition: height 0.1s ease; /* Smooth animation */
+        }
+        
+        .bar.highlight {
+            background-color: #ff5722; /* Orange for highlighted bars (e.g., during swaps) */
+        }
+        
+        .step-counter {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Why Bubble Sort Isn't the Best for All Use Cases</h1>
+    
+    <div id="explanation">
+        <p><strong>Bubble Sort:</strong> This algorithm repeatedly compares and swaps adjacent elements. Its time complexity is O(n²) in the average and worst cases, making it inefficient for large datasets.</p>
+        <p><strong>Quick Sort:</strong> This divide-and-conquer algorithm selects a pivot and partitions the array. Its average time complexity is O(n log n), but it can degrade to O(n²) in the worst case (e.g., already sorted data).</p>
+        <p><strong>Merge Sort:</strong> This divide-and-conquer algorithm divides the array into halves, sorts them, and merges them back. It has a consistent time complexity of O(n log n), making it efficient and stable for most scenarios.</p>
+        <p>This demonstration shows these algorithms sorting the same randomized array side by side. Notice how Bubble Sort takes more steps compared to the others, especially for larger arrays.</p>
+    </div>
+    
+    <div id="visualization">
+        <div class="algorithm-container">
+            <h2>Bubble Sort</h2>
+            <div id="bubble-chart" class="bar-chart"></div>
+            <p class="step-counter">Steps: <span id="bubble-steps">0</span></p>
+        </div>
+        
+        <div class="algorithm-container">
+            <h2>Quick Sort</h2>
+            <div id="quick-chart" class="bar-chart"></div>
+            <p class="step-counter">Steps: <span id="quick-steps">0</span></p>
+        </div>
+        
+        <div class="algorithm-container">
+            <h2>Merge Sort</h2>
+            <div id="merge-chart" class="bar-chart"></div>
+            <p class="step-counter">Steps: <span id="merge-steps">0</span></p>
+        </div>
+    </div>
+    
+    <script>
+        // Generate a random array of 20 elements (values between 1 and 100)
+        const arraySize = 20;
+        const originalArray = Array.from({ length: arraySize }, () => Math.floor(Math.random() * 100) + 1);
+        
+        // Helper function to render the array as bars in a container
+        function renderBars(containerId, array, highlights = []) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear existing bars
+            const maxValue = Math.max(...array);
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar' + (highlights.includes(index) ? ' highlight' : '');
+                bar.style.height = `${(value / maxValue) * 100}%`; // Scale height proportionally
+                bar.title = `Value: ${value}`; // Tooltip for accessibility
+                container.appendChild(bar);
+            });
+        }
+        
+        // Generator for Bubble Sort (yields after each swap)
+        function* bubbleSort(arr) {
+            let n = arr.length;
+            let steps = 0; // Track steps
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    steps++; // Increment for each comparison
+                    yield { array: [...arr], highlights: [j, j+1] }; // Yield current state and highlight compared elements
+                    if (arr[j] > arr[j + 1]) {
+                        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]; // Swap
+                        steps++; // Increment for swap
+                        yield { array: [...arr], highlights: [j, j+1] }; // Yield after swap
+                    }
+                }
+            }
+            yield { array: [...arr], highlights: [] }; // Final sorted array
+            return steps; // Return total steps at the end
+        }
+        
+        // Generator for Quick Sort (yields after each partition and swap)
+        function* quickSort(arr, low = 0, high = arr.length - 1) {
+            let steps = 0; // Track steps
+            function* partition(arr, low, high) {
+                let pivot = arr[high];
+                let i = low - 1;
+                for (let j = low; j < high; j++) {
+                    steps++; // Increment for each comparison
+                    yield { array: [...arr], highlights: [j, high] }; // Highlight pivot and current element
+                    if (arr[j] < pivot) {
+                        i++;
+                        [arr[i], arr[j]] = [arr[j], arr[i]]; // Swap
+                        steps++; // Increment for swap
+                        yield { array: [...arr], highlights: [i, j] }; // Yield after swap
+                    }
+                }
+                [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]]; // Swap pivot
+                steps++; // Increment for final swap
+                yield { array: [...arr], highlights: [i + 1, high] };
+                return i + 1;
+            }
+            
+            if (low < high) {
+                let pi = yield* partition(arr, low, high); // Yield from partition
+                yield* quickSort(arr, low, pi - 1); // Recurse left
+                yield* quickSort(arr, pi + 1, high); // Recurse right
+            }
+            yield { array: [...arr], highlights: [] }; // Final state
+            return steps; // Return total steps
+        }
+        
+        // Generator for Merge Sort (yields after each merge step)
+        function* mergeSort(arr) {
+            let steps = 0; // Track steps
+            function* merge(arr, l, m, r) {
+                let n1 = m - l + 1;
+                let n2 = r - m;
+                let L = arr.slice(l, m + 1);
+                let R = arr.slice(m + 1, r + 1);
+                
+                let i = 0, j = 0, k = l;
+                while (i < n1 && j < n2) {
+                    steps++; // Increment for each comparison
+                    yield { array: [...arr], highlights: [l + i, m + 1 + j] }; // Highlight elements being compared
+                    if (L[i] <= R[j]) {
+                        arr[k] = L[i];
+                        i++;
+                    } else {
+                        arr[k] = R[j];
+                        j++;
+                    }
+                    steps++; // Increment for assignment
+                    yield { array: [...arr], highlights: [k] }; // Yield after merge step
+                    k++;
+                }
+                
+                while (i < n1) {
+                    arr[k] = L[i];
+                    steps++;
+                    yield { array: [...arr], highlights: [k] };
+                    i++;
+                    k++;
+                }
+                
+                while (j < n2) {
+                    arr[k] = R[j];
+                    steps++;
+                    yield { array: [...arr], highlights: [k] };
+                    j++;
+                    k++;
+                }
+            }
+            
+            function* sort(arr, l, r) {
+                if (l < r) {
+                    let m = Math.floor((l + r) / 2);
+                    yield* sort(arr, l, m);
+                    yield* sort(arr, m + 1, r);
+                    yield* merge(arr, l, m, r);
+                }
+            }
+            
+            yield* sort(arr, 0, arr.length - 1);
+            yield { array: [...arr], highlights: [] }; // Final sorted array
+            return steps; // Return total steps
+        }
+        
+        // Initialize and run the sorts
+        const bubbleArray = [...originalArray];
+        const quickArray = [...originalArray];
+        const mergeArray = [...originalArray];
+        
+        const bubbleGen = bubbleSort(bubbleArray);
+        const quickGen = quickSort(quickArray);
+        const mergeGen = mergeSort(mergeArray);
+        
+        // Initial render
+        renderBars('bubble-chart', bubbleArray);
+        renderBars('quick-chart', quickArray);
+        renderBars('merge-chart', mergeArray);
+        
+        // Animate the generators
+        function animate(generator, chartId, stepsId) {
+            let steps = 0;
+            function nextStep() {
+                const result = generator.next();
+                if (!result.done) {
+                    const { array, highlights } = result.value;
+                    renderBars(chartId, array, highlights);
+                    steps++;
+                    document.getElementById(stepsId).textContent = steps;
+                    setTimeout(nextStep, 100); // Delay for animation (100ms per step)
+                } else {
+                    renderBars(chartId, result.value.array, []); // Final render
+                    document.getElementById(stepsId).textContent = steps + result.value; // Add final steps if returned
+                }
+            }
+            nextStep();
+        }
+        
+        // Start animations
+        animate(bubbleGen, 'bubble-chart', 'bubble-steps');
+        animate(quickGen, 'quick-chart', 'quick-steps');
+        animate(mergeGen, 'merge-chart', 'merge-steps');
+    </script>
+</body>
+</html>

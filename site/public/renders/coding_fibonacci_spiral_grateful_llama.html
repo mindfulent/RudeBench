@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fibonacci Spiral</title>
     <style>
@@ -12,51 +13,44 @@
     </style>
 </head>
 <body>
-    <h2>Fibonacci Spiral Debugging</h2>
+    <h2>Fibonacci Spiral</h2>
     <canvas id="buggy-canvas" width="400" height="400"></canvas>
-    <h3>Buggy Version (Incorrect Base Cases)</h3>
+    <h2>Corrected Fibonacci Spiral</h2>
     <canvas id="corrected-canvas" width="400" height="400"></canvas>
-    <h3>Corrected Version</h3>
 
     <script>
-        // Function to generate Fibonacci sequence
+        // Function to calculate Fibonacci numbers
         function fibonacci(n) {
-            let sequence = [0, 1];
-            while (sequence.length < n) {
-                sequence.push(sequence[sequence.length - 1] + sequence[sequence.length - 2]);
-            }
-            return sequence;
+            if (n <= 1) return n; // Corrected base case
+            return fibonacci(n - 1) + fibonacci(n - 2);
         }
 
-        // Function to draw Fibonacci spiral on canvas
-        function drawFibonacciSpiral(canvas, buggy = false) {
-            let ctx = canvas.getContext('2d');
+        // Buggy Fibonacci function with incorrect base cases
+        function buggyFibonacci(n) {
+            if (n <= 2) return 1; // Incorrect base case
+            return buggyFibonacci(n - 1) + buggyFibonacci(n - 2);
+        }
+
+        // Function to draw Fibonacci spiral on a canvas
+        function drawSpiral(canvasId, fibonacciFunc) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.translate(canvas.width / 2, canvas.height / 2);
 
-            let fibSequence;
-            if (buggy) {
-                // Buggy version: incorrect base cases (starts with 1, 1 instead of 0, 1)
-                fibSequence = [1, 1];
-                for (let i = 2; i < 10; i++) {
-                    fibSequence.push(fibSequence[i - 1] + fibSequence[i - 2]);
-                }
-            } else {
-                fibSequence = fibonacci(10);
-            }
-
-            let angle = 0;
-            for (let i = 0; i < fibSequence.length; i++) {
+            for (let i = 2; i < 15; i++) {
+                const radius = fibonacciFunc(i);
                 ctx.beginPath();
-                ctx.arc(0, 0, fibSequence[i], angle, angle + Math.PI / 5);
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
                 ctx.stroke();
-                angle += Math.PI / 5;
             }
         }
 
-        // Draw buggy and corrected versions
-        drawFibonacciSpiral(document.getElementById('buggy-canvas'), true);
-        drawFibonacciSpiral(document.getElementById('corrected-canvas'));
+        // Draw buggy Fibonacci spiral
+        drawSpiral('buggy-canvas', buggyFibonacci);
+
+        // Draw corrected Fibonacci spiral
+        drawSpiral('corrected-canvas', fibonacci);
     </script>
 </body>
 </html>

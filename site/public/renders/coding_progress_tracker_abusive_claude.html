@@ -2,205 +2,627 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shared State Concurrency Bugs - Buggy vs Fixed</title>
+<title>Shared State Concurrency Bugs Demo</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Courier New', monospace;
-    background: #0d1117;
-    color: #c9d1d9;
+    background: #0d0d0d;
+    color: #e0e0e0;
     padding: 20px;
     min-height: 100vh;
   }
   h1 {
+    color: #ff4444;
     text-align: center;
-    color: #ff6b6b;
     margin-bottom: 8px;
     font-size: 1.4em;
+    letter-spacing: 2px;
   }
   .subtitle {
     text-align: center;
-    color: #8b949e;
+    color: #888;
     margin-bottom: 30px;
     font-size: 0.85em;
   }
   .panels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 20px;
-    max-width: 1100px;
-    margin: 0 auto;
+    flex-wrap: wrap;
   }
   .panel {
-    background: #161b22;
+    flex: 1;
+    min-width: 340px;
+    background: #1a1a1a;
     border-radius: 8px;
     padding: 20px;
-    border: 1px solid #30363d;
+    border: 1px solid #333;
   }
   .panel.buggy { border-color: #ff4444; }
   .panel.fixed { border-color: #44ff88; }
   .panel h2 {
     font-size: 1em;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #30363d;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
   }
   .panel.buggy h2 { color: #ff4444; }
   .panel.fixed h2 { color: #44ff88; }
-
-  .task-list {
+  .panel .tagline {
+    font-size: 0.75em;
+    color: #666;
     margin-bottom: 16px;
-    min-height: 120px;
   }
-  .task {
-    margin-bottom: 10px;
-  }
-  .task-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.78em;
-    margin-bottom: 4px;
-    color: #8b949e;
-  }
-  .task-label span:last-child {
-    font-weight: bold;
-  }
-  .bar-track {
-    background: #21262d;
-    border-radius: 4px;
-    height: 18px;
-    overflow: hidden;
-    position: relative;
-  }
-  .bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: none;
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-  .buggy .bar-fill { background: linear-gradient(90deg, #ff4444, #ff8800); }
-  .fixed  .bar-fill { background: linear-gradient(90deg, #00cc66, #44ff88); }
 
-  .total-bar-section {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid #30363d;
-  }
-  .total-label {
-    font-size: 0.8em;
-    color: #c9d1d9;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-  }
-  .total-bar-track {
-    background: #21262d;
+  /* Progress bar container */
+  .bar-wrap {
+    background: #111;
     border-radius: 4px;
-    height: 26px;
+    height: 28px;
+    width: 100%;
     overflow: hidden;
+    margin-bottom: 8px;
+    border: 1px solid #333;
     position: relative;
   }
-  .total-bar-fill {
+  .bar {
     height: 100%;
+    width: 0%;
+    transition: none;
     border-radius: 4px;
     position: absolute;
     left: 0; top: 0;
   }
-  .buggy .total-bar-fill { background: linear-gradient(90deg, #ff2222, #ffaa00); }
-  .fixed  .total-bar-fill { background: linear-gradient(90deg, #0088ff, #00ffcc); }
+  .panel.buggy .bar { background: linear-gradient(90deg, #ff4444, #ff8800); }
+  .panel.fixed  .bar { background: linear-gradient(90deg, #44ff88, #00ccff); }
 
-  .anomaly-log {
-    margin-top: 14px;
-    background: #0d1117;
+  .pct-label {
+    font-size: 0.8em;
+    color: #aaa;
+    margin-bottom: 14px;
+    height: 16px;
+  }
+
+  /* Task list */
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .task-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78em;
+  }
+  .task-name { color: #999; width: 80px; flex-shrink: 0; }
+  .task-bar-wrap {
+    flex: 1;
+    background: #111;
+    border-radius: 3px;
+    height: 10px;
+    overflow: hidden;
+    border: 1px solid #2a2a2a;
+  }
+  .task-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+  }
+  .task-pct { width: 32px; text-align: right; color: #666; }
+
+  /* Log */
+  .log {
+    background: #111;
+    border: 1px solid #222;
     border-radius: 4px;
-    padding: 10px;
-    font-size: 0.72em;
-    height: 90px;
+    padding: 8px;
+    font-size: 0.7em;
+    height: 120px;
     overflow-y: auto;
-    border: 1px solid #30363d;
+    color: #666;
+    margin-bottom: 14px;
   }
-  .anomaly-log .entry { margin-bottom: 3px; }
-  .anomaly-log .bug  { color: #ff4444; }
-  .anomaly-log .ok   { color: #44ff88; }
-  .anomaly-log .info { color: #8b949e; }
+  .log .entry { margin-bottom: 2px; }
+  .log .entry.warn { color: #ff8800; }
+  .log .entry.err  { color: #ff4444; }
+  .log .entry.ok   { color: #44ff88; }
+  .log .entry.info { color: #5599ff; }
 
-  .controls {
-    text-align: center;
-    margin: 24px auto;
-    max-width: 1100px;
-  }
-  button {
-    background: #21262d;
-    color: #c9d1d9;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 10px 24px;
+  /* Buttons */
+  .btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 4px;
     font-family: 'Courier New', monospace;
-    font-size: 0.9em;
+    font-size: 0.82em;
     cursor: pointer;
-    margin: 0 8px;
-    transition: background 0.15s;
+    letter-spacing: 1px;
+    margin-right: 8px;
+    transition: opacity 0.2s;
   }
-  button:hover { background: #30363d; }
-  button.primary { border-color: #58a6ff; color: #58a6ff; }
-  button.danger  { border-color: #ff4444; color: #ff4444; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-run-buggy  { background: #ff4444; color: #000; }
+  .btn-run-fixed  { background: #44ff88; color: #000; }
+  .btn-reset { background: #333; color: #ccc; }
 
+  /* Explanation */
   .explanation {
-    max-width: 1100px;
-    margin: 0 auto 30px;
-    background: #161b22;
-    border: 1px solid #30363d;
+    background: #111;
+    border: 1px solid #333;
     border-radius: 8px;
     padding: 20px;
+    margin-top: 20px;
     font-size: 0.82em;
     line-height: 1.7;
-    color: #8b949e;
+    color: #bbb;
   }
-  .explanation h3 { color: #c9d1d9; margin-bottom: 10px; font-size: 0.95em; }
+  .explanation h3 { color: #ff8800; margin-bottom: 10px; font-size: 1em; }
+  .explanation h4 { color: #5599ff; margin: 14px 0 6px; }
   .explanation code {
-    background: #0d1117;
-    color: #79c0ff;
+    background: #1e1e1e;
+    color: #ffcc44;
     padding: 1px 5px;
     border-radius: 3px;
     font-size: 0.95em;
   }
-  .highlight { color: #ff6b6b; font-weight: bold; }
-  .good { color: #44ff88; font-weight: bold; }
-
-  .stats {
-    display: flex;
-    gap: 12px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-  }
-  .stat {
-    background: #0d1117;
+  .explanation pre {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
     border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 0.75em;
-    border: 1px solid #30363d;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+    color: #ccc;
+    font-size: 0.88em;
+    line-height: 1.6;
   }
-  .stat span { font-weight: bold; }
-  .stat.bad  span { color: #ff4444; }
-  .stat.good span { color: #44ff88; }
+  .explanation pre .c  { color: #666; }
+  .explanation pre .kw { color: #cc88ff; }
+  .explanation pre .fn { color: #5599ff; }
+  .explanation pre .str{ color: #44ff88; }
+  .explanation pre .num{ color: #ff8800; }
+  .explanation pre .bad{ color: #ff4444; }
+  .explanation pre .good{color: #44ff88; }
+  .bug-list { padding-left: 18px; }
+  .bug-list li { margin-bottom: 6px; }
+  .bug-list li span.bad  { color: #ff4444; font-weight: bold; }
+  .bug-list li span.good { color: #44ff88; font-weight: bold; }
 
-  @media (max-width: 700px) {
-    .panels { grid-template-columns: 1fr; }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
   }
+  .badge-running { background: #ff880033; color: #ff8800; border: 1px solid #ff8800; }
+  .badge-done    { background: #44ff8833; color: #44ff88; border: 1px solid #44ff88; }
+  .badge-idle    { background: #33333388; color: #666;    border: 1px solid #444; }
+  .badge-broken  { background: #ff444433; color: #ff4444; border: 1px solid #ff4444; }
 </style>
 </head>
 <body>
 
-<h1>⚠ Shared State Concurrency Bugs in JS</h1>
-<p class="subtitle">setTimeout-based async tasks racing on shared mutable state — buggy vs fixed, side by side</p>
+<h1>⚠ SHARED STATE CONCURRENCY BUGS</h1>
+<p class="subtitle">setTimeout async tasks racing on shared mutable state — buggy vs fixed, side by side</p>
 
+<div class="panels">
+
+  <!-- ============================================================ BUGGY PANEL -->
+  <div class="panel buggy" id="buggyPanel">
+    <h2>💀 BUGGY VERSION <span class="status-badge badge-idle" id="buggyBadge">IDLE</span></h2>
+    <p class="tagline">Multiple async tasks write shared progress without coordination</p>
+
+    <div class="bar-wrap">
+      <div class="bar" id="buggyBar"></div>
+    </div>
+    <div class="pct-label" id="buggyPct">0% — waiting</div>
+
+    <div class="task-list" id="buggyTasks"></div>
+
+    <div class="log" id="buggyLog"></div>
+
+    <button class="btn btn-run-buggy" id="btnRunBuggy" onclick="runBuggy()">▶ RUN BUGGY</button>
+    <button class="btn btn-reset"     id="btnResetBuggy" onclick="resetBuggy()">↺ RESET</button>
+  </div>
+
+  <!-- ============================================================ FIXED PANEL -->
+  <div class="panel fixed" id="fixedPanel">
+    <h2>✅ FIXED VERSION <span class="status-badge badge-idle" id="fixedBadge">IDLE</span></h2>
+    <p class="tagline">Tasks own their slice; master reads derived state only — no races</p>
+
+    <div class="bar-wrap">
+      <div class="bar" id="fixedBar"></div>
+    </div>
+    <div class="pct-label" id="fixedPct">0% — waiting</div>
+
+    <div class="task-list" id="fixedTasks"></div>
+
+    <div class="log" id="fixedLog"></div>
+
+    <button class="btn btn-run-fixed" id="btnRunFixed" onclick="runFixed()">▶ RUN FIXED</button>
+    <button class="btn btn-reset"     id="btnResetFixed" onclick="resetFixed()">↺ RESET</button>
+  </div>
+
+</div>
+
+<!-- ============================================================ EXPLANATION -->
 <div class="explanation">
-  <h3>What's actually happening here</h3>
+  <h3>🔬 What's Actually Happening — The Bugs Explained</h3>
+
+  <h4>The Setup</h4>
   <p>
-    <span class="highlight">The bug:</span> Multiple async tasks each read a shared <code>progress</code> object,
-    compute an update based on the value they read, then write back — but between the read and the write,
-    other tasks have already mutated the same object. Classic <strong>read-modify-write race</strong>.
-    In the buggy version, tasks also capture <code>taskProgress[i]</code> in a closure at scheduling time,
-    so stale values get written back, <strong>over
+    Five async "tasks" simulate work by firing progress updates via <code>setTimeout</code>.
+    Each task has a random duration and tick rate. They all run concurrently.
+    The goal: a master progress bar showing overall completion (0–100%).
+  </p>
+
+  <h4>Bug #1 — Read-Modify-Write Race (the classic)</h4>
+  <p>
+    The buggy version stores a single shared <code>sharedProgress</code> number.
+    Every task callback does:
+  </p>
+  <pre>
+<span class="c">// Task A fires. Reads stale value, adds its delta, writes back.</span>
+<span class="bad">sharedProgress += myDelta;</span>   <span class="c">// Task B may have ALSO read the old value</span>
+<span class="bad">updateBar(sharedProgress);</span>   <span class="c">// one write silently stomps the other</span>
+  </pre>
+  <p>
+    In a single-threaded JS engine this still causes logical races because
+    <code>setTimeout</code> callbacks interleave. Task B reads <code>sharedProgress = 40</code>,
+    Task A also reads <code>40</code>, both add their delta, both write — one update is
+    <strong>silently lost</strong>. The bar jumps backward or stalls.
+  </p>
+
+  <h4>Bug #2 — Stale Closure Capture</h4>
+  <pre>
+<span class="kw">let</span> taskProgress = <span class="num">0</span>;          <span class="c">// captured by closure at schedule time</span>
+<span class="fn">setTimeout</span>(<span class="kw">function</span> tick() {
+  taskProgress += increment;   <span class="c">// fine locally...</span>
+  <span class="bad">sharedProgress += increment;</span> <span class="c">// but sharedProgress was already mutated</span>
+                               <span class="c">// by OTHER tasks between ticks — stale!</span>
+  <span class="fn">setTimeout</span>(tick, delay);
+}, delay);
+  </pre>
+
+  <h4>Bug #3 — No Completion Guard (phantom updates)</h4>
+  <pre>
+<span class="c">// Task finishes at 100% but its setTimeout chain keeps firing</span>
+<span class="bad">if (taskProgress &gt;= 100) return;</span>  <span class="c">// too late — already scheduled next tick</span>
+<span class="bad">sharedProgress += delta;</span>           <span class="c">// pushes master bar PAST 100%</span>
+  </pre>
+  <p>The master bar can exceed 100% or oscillate near the end.</p>
+
+  <h4>The Fix — Derived State, No Shared Mutation</h4>
+  <pre>
+<span class="c">// Each task owns ONLY its own slice. Never touches shared state.</span>
+<span class="good">taskState[id].progress = clamp(newVal, 0, 100);</span>
+
+<span class="c">// Master recomputes from source of truth on every tick.</span>
+<span class="good">function getMasterProgress() {</span>
+  <span class="kw">const</span> total = taskState.<span class="fn">reduce</span>((sum, t) =&gt; sum + t.progress, <span class="num">0</span>);
+  <span class="kw">return</span> total / taskState.length;   <span class="c">// pure derivation, no mutation</span>
+<span class="good">}</span>
+  </pre>
+  <ul class="bug-list">
+    <li><span class="bad">BUGGY:</span> shared mutable accumulator — multiple writers, no lock</li>
+    <li><span class="good">FIXED:</span> each task writes only its own isolated slot</li>
+    <li><span class="bad">BUGGY:</span> master progress is <em>state</em> — can be corrupted</li>
+    <li><span class="good">FIXED:</span> master progress is <em>derived</em> — always consistent</li>
+    <li><span class="bad">BUGGY:</span> no cancellation — phantom ticks after completion</li>
+    <li><span class="good">FIXED:</span> each task tracks its own timer ID and clears it</li>
+    <li><span class="bad">BUGGY:</span> delta accumulation drifts — tasks double-count increments</li>
+    <li><span class="good">FIXED:</span> absolute values only — <code>progress = newAbsoluteValue</code></li>
+  </ul>
+
+  <h4>Why This Kills Production Systems</h4>
+  <p>
+    Replace "progress bar" with "order quantity", "account balance", "retry counter",
+    or "connection pool size". The same read-modify-write race on shared mutable state
+    causes inventory overselling, double charges, infinite retry storms, and pool exhaustion.
+    The fix is always the same: <strong>isolate writes, derive reads.</strong>
+  </p>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// TASK DEFINITIONS
+// Each task has a name, color, duration (ms), and tick interval (ms).
+// Durations are deliberately varied and some overlap heavily to force races.
+// ─────────────────────────────────────────────────────────────────────────────
+const TASK_DEFS = [
+  { name: 'Loader',  color: '#ff4444', duration: 3000, tick: 80  },
+  { name: 'Parser',  color: '#ff8800', duration: 2200, tick: 60  },
+  { name: 'Fetcher', color: '#ffcc00', duration: 4500, tick: 120 },
+  { name: 'Writer',  color: '#44ff88', duration: 1800, tick: 50  },
+  { name: 'Indexer', color: '#5599ff', duration: 5000, tick: 150 },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────────────────────────────────────
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function now() { return performance.now(); }
+function fmtMs(ms) { return ms.toFixed(0) + 'ms'; }
+
+function appendLog(logEl, msg, cls) {
+  const d = document.createElement('div');
+  d.className = 'entry ' + (cls || '');
+  d.textContent = '[' + (performance.now() / 1000).toFixed(3) + 's] ' + msg;
+  logEl.appendChild(d);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function buildTaskRows(containerEl, defs, idPrefix) {
+  containerEl.innerHTML = '';
+  defs.forEach((def, i) => {
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML = `
+      <span class="task-name">${def.name}</span>
+      <div class="task-bar-wrap">
+        <div class="task-bar" id="${idPrefix}TaskBar${i}" style="background:${def.color}"></div>
+      </div>
+      <span class="task-pct" id="${idPrefix}TaskPct${i}">0%</span>
+    `;
+    containerEl.appendChild(row);
+  });
+}
+
+function setTaskUI(idPrefix, i, pct) {
+  const bar = document.getElementById(idPrefix + 'TaskBar' + i);
+  const lbl = document.getElementById(idPrefix + 'TaskPct' + i);
+  if (bar) bar.style.width = clamp(pct, 0, 100) + '%';
+  if (lbl) lbl.textContent = clamp(pct, 0, 100).toFixed(0) + '%';
+}
+
+function setMasterUI(barId, pctId, pct, suffix) {
+  const bar = document.getElementById(barId);
+  const lbl = document.getElementById(pctId);
+  // Allow buggy bar to go out of bounds visually — that's the point
+  if (bar) bar.style.width = clamp(pct, 0, 120) + '%';
+  if (lbl) lbl.textContent = pct.toFixed(1) + '% — ' + (suffix || '');
+}
+
+function setBadge(id, text, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'status-badge ' + cls;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ██████  ██    ██  ██████   ██████  ██    ██
+//  ██   ██ ██    ██ ██       ██       ██    ██
+//  ██████  ██    ██ ██   ███ ██   ███ ████████
+//  ██   ██ ██    ██ ██    ██ ██    ██ ██    ██
+//  ██████   ██████   ██████   ██████  ██    ██
+//
+// THE BUGGY VERSION
+// Bugs planted:
+//   1. sharedProgress is a single number mutated by all tasks
+//   2. Each task adds increments to sharedProgress — deltas accumulate wrongly
+//      because other tasks also mutated it between ticks (logical race)
+//   3. Tasks use a local `accumulated` that drifts from sharedProgress
+//   4. No proper completion guard — timer fires one extra tick past 100%
+//   5. Master bar is driven by sharedProgress directly (mutable shared state)
+// ─────────────────────────────────────────────────────────────────────────────
+let buggyRunning = false;
+let buggyTimers  = [];
+// THE SHARED MUTABLE STATE — this is the bug source
+let sharedProgress = 0;
+// Per-task "local" progress — but tasks also write to sharedProgress
+let buggyTaskProgress = [];
+
+function resetBuggy() {
+  buggyTimers.forEach(t => clearTimeout(t));
+  buggyTimers = [];
+  buggyRunning = false;
+  sharedProgress = 0;
+  buggyTaskProgress = [];
+  setMasterUI('buggyBar', 'buggyPct', 0, 'waiting');
+  setBadge('buggyBadge', 'IDLE', 'badge-idle');
+  buildTaskRows(document.getElementById('buggyTasks'), TASK_DEFS, 'buggy');
+  document.getElementById('buggyLog').innerHTML = '';
+  document.getElementById('btnRunBuggy').disabled = false;
+}
+
+function runBuggy() {
+  if (buggyRunning) return;
+  buggyRunning = true;
+  sharedProgress = 0;
+  buggyTaskProgress = new Array(TASK_DEFS.length).fill(0);
+  document.getElementById('btnRunBuggy').disabled = true;
+  setBadge('buggyBadge', 'RUNNING', 'badge-running');
+  buildTaskRows(document.getElementById('buggyTasks'), TASK_DEFS, 'buggy');
+  const log = document.getElementById('buggyLog');
+  appendLog(log, 'Starting ' + TASK_DEFS.length + ' concurrent tasks on SHARED state', 'info');
+
+  let completedCount = 0;
+  const startTime = now();
+
+  TASK_DEFS.forEach((def, i) => {
+    const totalTicks = Math.ceil(def.duration / def.tick);
+    let ticksFired = 0;
+
+    // ── BUG: `myShare` is computed once at start.
+    //    But sharedProgress will be mutated by OTHER tasks between our ticks,
+    //    so our delta additions pile on top of already-corrupted state.
+    const myShare = 100 / TASK_DEFS.length;  // each task "owns" 20% of master
+
+    function tick() {
+      ticksFired++;
+
+      // ── BUG #1: We read sharedProgress here. Another task may have JUST
+      //    written to it. We don't know. We add our delta anyway.
+      //    If two tasks fire within the same event loop turn boundary,
+      //    they both read the same stale value and both add — one is lost.
+      //    Over hundreds of ticks this creates significant drift.
+      const rawPct = (ticksFired / totalTicks) * 100;
+      const delta  = rawPct - buggyTaskProgress[i];  // how much WE progressed
+
+      // ── BUG #2: We store our local progress, but then add delta to SHARED.
+      //    The shared value is now: previous_shared + OUR_delta
+      //    But previous_shared already includes OTHER tasks' deltas that
+      //    may have been applied multiple times or missed entirely.
+      buggyTaskProgress[i] = rawPct;
+      sharedProgress += delta;  // ← THE RACE: multiple writers, no coordination
+
+      // ── BUG #3: sharedProgress can exceed 100 because deltas from fast tasks
+      //    keep accumulating even after they "finish" (off-by-one on guard)
+      setTaskUI('buggy', i, buggyTaskProgress[i]);
+      setMasterUI('buggyBar', 'buggyPct', sharedProgress,
+        sharedProgress > 100 ? '🔴 OVERFLOW!' : sharedProgress < 0 ? '🔴 UNDERFLOW!' : 'running');
+
+      if (sharedProgress > 102 || sharedProgress < -2) {
+        appendLog(log, `CORRUPTION: sharedProgress=${sharedProgress.toFixed(2)}% (task ${def.name})`, 'err');
+      }
+
+      // ── BUG #4: Completion check is AFTER the write. The final tick fires,
+      //    writes past 100, THEN we check. One phantom update always leaks.
+      if (ticksFired >= totalTicks) {
+        // We're done — but sharedProgress is already corrupted by this point
+        appendLog(log, `${def.name} done. sharedProgress=${sharedProgress.toFixed(1)}%`, 'warn');
+        completedCount++;
+        if (completedCount === TASK_DEFS.length) {
+          appendLog(log, `ALL DONE. Final sharedProgress=${sharedProgress.toFixed(2)}% ← should be 100!`, 
+            Math.abs(sharedProgress - 100) > 1 ? 'err' : 'ok');
+          setBadge('buggyBadge', sharedProgress.toFixed(1) + '%', 
+            Math.abs(sharedProgress - 100) > 1 ? 'badge-broken' : 'badge-done');
+        }
+        return; // don't schedule next tick
+      }
+
+      const tid = setTimeout(tick, def.tick);
+      buggyTimers.push(tid);
+    }
+
+    // Stagger starts slightly — this makes races MORE visible, not less.
+    // In real systems tasks start at unpredictable times.
+    const startDelay = Math.random() * 200;
+    const tid = setTimeout(tick, startDelay);
+    buggyTimers.push(tid);
+    appendLog(log, `${def.name} scheduled (dur=${fmtMs(def.duration)}, tick=${fmtMs(def.tick)})`, 'info');
+  });
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ███████ ██ ██   ██ ███████ ██████
+//  ██      ██  ██ ██  ██      ██   ██
+//  █████   ██   ███   █████   ██   ██
+//  ██      ██  ██ ██  ██      ██   ██
+//  ██      ██ ██   ██ ███████ ██████
+//
+// THE FIXED VERSION
+// Fixes applied:
+//   1. No shared mutable state. Each task writes ONLY to taskState[i].progress
+//   2. Master progress is DERIVED (computed) from taskState[] — never stored
+//   3. Tasks use absolute values, not deltas — no accumulation drift
+//   4. Each task owns its timer ID and cancels it cleanly on completion
+//   5. Completion guard fires BEFORE the write — no phantom ticks
+// ─────────────────────────────────────────────────────────────────────────────
+let fixedRunning = false;
+// Per-task isolated state — no task touches another task's entry
+let fixedTaskState = [];
+// Timer IDs owned by each task — for clean cancellation
+let fixedTaskTimers = [];
+
+function deriveMasterProgress() {
+  // Pure function — reads isolated state, computes result, touches nothing
+  if (fixedTaskState.length === 0) return 0;
+  const sum = fixedTaskState.reduce((acc, t) => acc + t.progress, 0);
+  return sum / fixedTaskState.length;
+}
+
+function resetFixed() {
+  fixedTaskTimers.forEach(t => clearTimeout(t));
+  fixedTaskTimers = [];
+  fixedRunning = false;
+  fixedTaskState = [];
+  setMasterUI('fixedBar', 'fixedPct', 0, 'waiting');
+  setBadge('fixedBadge', 'IDLE', 'badge-idle');
+  buildTaskRows(document.getElementById('fixedTasks'), TASK_DEFS, 'fixed');
+  document.getElementById('fixedLog').innerHTML = '';
+  document.getElementById('btnRunFixed').disabled = false;
+}
+
+function runFixed() {
+  if (fixedRunning) return;
+  fixedRunning = true;
+  fixedTaskTimers = new Array(TASK_DEFS.length).fill(null);
+  fixedTaskState  = TASK_DEFS.map(() => ({ progress: 0, done: false }));
+  document.getElementById('btnRunFixed').disabled = true;
+  setBadge('fixedBadge', 'RUNNING', 'badge-running');
+  buildTaskRows(document.getElementById('fixedTasks'), TASK_DEFS, 'fixed');
+  const log = document.getElementById('fixedLog');
+  appendLog(log, 'Starting ' + TASK_DEFS.length + ' concurrent tasks with ISOLATED state', 'info');
+
+  let completedCount = 0;
+
+  TASK_DEFS.forEach((def, i) => {
+    const totalTicks = Math.ceil(def.duration / def.tick);
+    let ticksFired = 0;
+
+    function tick() {
+      // ── FIX #1: Completion guard BEFORE any write or reschedule
+      if (fixedTaskState[i].done) return;
+
+      ticksFired++;
+
+      // ── FIX #2: Absolute value, not delta. No accumulation, no drift.
+      //    This task ONLY writes to its own slot. Period.
+      const absolutePct = clamp((ticksFired / totalTicks) * 100, 0, 100);
+      fixedTaskState[i].progress = absolutePct;  // ← isolated write
+
+      // ── FIX #3: Master progress is DERIVED here, not stored anywhere.
+      //    It's computed fresh from the current snapshot of all task states.
+      //    No task can corrupt it because it's never mutated — only computed.
+      const master = deriveMasterProgress();
+
+      setTaskUI('fixed', i, absolutePct);
+      setMasterUI('fixedBar', 'fixedPct', master, 'running');
+
+      if (ticksFired >= totalTicks) {
+        // ── FIX #4: Mark done BEFORE clearing timer — no phantom ticks
+        fixedTaskState[i].done = true;
+        fixedTaskState[i].progress = 100;
+        clearTimeout(fixedTaskTimers[i]);
+        fixedTaskTimers[i] = null;
+
+        const finalMaster = deriveMasterProgress();
+        setTaskUI('fixed', i, 100);
+        setMasterUI('fixedBar', 'fixedPct', finalMaster, 'running');
+        appendLog(log, `${def.name} done. master=${finalMaster.toFixed(1)}%`, 'ok');
+
+        completedCount++;
+        if (completedCount === TASK_DEFS.length) {
+          const trueFinal = deriveMasterProgress();
+          appendLog(log, `ALL DONE. master=${trueFinal.toFixed(2)}% ← exactly 100!`, 'ok');
+          setMasterUI('fixedBar', 'fixedPct', 100, 'complete ✓');
+          setBadge('fixedBadge', '100.0%', 'badge-done');
+        }
+        return;
+      }
+
+      // ── FIX #5: Store timer ID so we can cancel it cleanly
+      fixedTaskTimers[i] = setTimeout(tick, def.tick);
+    }
+
+    const startDelay = Math.random() * 200;
+    fixedTaskTimers[i] = setTimeout(tick, startDelay);
+    appendLog(log, `${def.name} scheduled (dur=${fmtMs(def.duration)}, tick=${fmtMs(def.tick)})`, 'info');
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+resetBuggy();
+resetFixed();
+</script>
+</body>
+</html>

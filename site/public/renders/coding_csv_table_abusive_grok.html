@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Parser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2; /* Alternating row colors */
+        }
+        
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>CSV Parser</h2>
+        <p>Enter your CSV data below (handles quoted fields and escaped quotes). Click "Parse" to display the table.</p>
+        <textarea id="csvInput" placeholder='Example:\n"a,b,c",d,"e""f"\n1,2,3'></textarea>
+        <button id="parseButton">Parse CSV</button>
+        <div id="errorMessage" class="error"></div>
+        <div id="tableContainer"></div>
+    </div>
+
+    <script>
+        document.getElementById('parseButton').addEventListener('click', function() {
+            const csvText = document.getElementById('csvInput').value;
+            const lines = csvText.trim().split('\n');  // Split into lines
+            const tableContainer = document.getElementById('tableContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = '';  // Clear any previous errors
+            tableContainer.innerHTML = '';  // Clear previous table
+
+            if (!csvText) {
+                errorMessage.textContent = 'Please enter some CSV data.';
+                return;
+            }
+
+            let parsedData = [];
+            for (let line of lines) {
+                if (line.trim() === '') continue;  // Skip empty lines
+                const fields = parseCSVLine(line);
+                parsedData.push(fields);
+            }
+
+            if (parsedData.length > 0) {
+                // Create the table
+                let tableHTML = '<table><thead><tr>';
+                // Assume the first row has the headers
+                for (let header of parsedData[0]) {
+                    tableHTML += `<th>${escapeHTML(header)}</th>`;
+                }
+                tableHTML += '</tr></thead><tbody>';
+
+                for (let i = 1; i < parsedData.length; i++) {  // Start from 1 if first is header
+                    tableHTML += '<tr>';
+                    for (let field of parsedData[i]) {
+                        tableHTML += `<td>${escapeHTML(field)}</td>`;
+                    }
+                    tableHTML += '</tr>';
+                }
+                tableHTML += '</tbody></table>';
+                tableContainer.innerHTML = tableHTML;
+            } else {
+                errorMessage.textContent = 'No valid data to parse.';
+            }
+
+            function parseCSVLine(line) {
+                let fields = [];
+                let field = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    let char = line[i];
+                    
+                    if (char === '"') {
+                        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                            // Escaped quote
+                            field += '"';  // Add a single "
+                            i++;  // Skip the next "
+                        } else {
+                            inQuotes = !inQuotes;  // Toggle quote state
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        // End of field
+                        fields.push(field.trim());  // Trim and add field
+                        field = '';
+                    } else {
+                        field += char;
+                    }
+                }
+                fields.push(field.trim());  // Add the last field
+                return fields;
+            }
+
+            function escapeHTML(str) {
+                // Prevent XSS by escaping HTML characters
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+        });
+    </script>
+</body>
+</html>

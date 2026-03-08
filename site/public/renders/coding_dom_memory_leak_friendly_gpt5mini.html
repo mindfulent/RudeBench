@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Widget Dashboard — Memory Leak Demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 16px; color: #111; }
+  h1 { margin: 0 0 12px 0; font-size: 20px; }
+  .container { display: flex; gap: 16px; align-items: flex-start; }
+  .panel { border: 1px solid #ddd; padding: 12px; width: 48%; box-sizing: border-box; border-radius: 6px; background: #f9f9f9; }
+  .controls { display: flex; gap: 8px; margin-bottom: 8px; }
+  .widgets { border-top: 1px dashed #ccc; padding-top: 8px; }
+  .widget { background: white; border: 1px solid #e0e0e0; padding: 8px; margin: 8px 0; border-radius: 4px; display:flex; justify-content:space-between; align-items:center; }
+  button { cursor: pointer; }
+  .stats { margin-bottom: 8px; font-size: 13px; color: #333; }
+  .note { margin-top:12px; font-size:13px; color:#444; background:#fffbea; padding:8px; border-radius:6px; border:1px solid #f0e6b8; }
+  code { background:#eee; padding:2px 4px; border-radius:4px; }
+</style>
+</head>
+<body>
+<h1>Widget Dashboard Memory Leak Demonstration</h1>
+<p>Two side-by-side dashboards. The left intentionally leaks by keeping references and listeners after removal. The right cleans up properly. Use the buttons to add/remove widgets repeatedly and watch the counters.</p>
+
+<div class="container">
+  <div class="panel" id="leak-panel">
+    <h2>Leaking version</h2>
+    <div class="controls">
+      <button id="leak-add">Add widget</button>
+      <button id="leak-remove">Remove last widget</button>
+    </div>
+    <div class="stats">
+      Visible widgets: <span id="leak-visible">0</span> • Tracked alive objects: <span id="leak-tracked">0</span>
+    </div>
+    <div class="widgets" id="leak-widgets"></div>
+    <div class="note">
+      This version attaches listeners and stores references on a global "leakedStore" and never removes them. The GC is not "broken" — it's the code keeping things reachable.
+    </div>
+  </div>
+
+  <div class="panel" id="fixed-panel">
+    <h2>Fixed version</h2>
+    <div class="controls">
+      <button id="fixed-add">Add widget</button>
+      <button id="fixed-remove">Remove last widget</button>
+    </div>
+    <div class="stats">
+      Visible widgets: <span id="fixed-visible">0</span> • Tracked alive objects: <span id="fixed-tracked">0</span>
+    </div>
+    <div class="widgets" id="fixed-widgets"></div>
+    <div class="note">
+      This version removes listeners and clears references when widgets are removed so the GC can reclaim memory.
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+Overview:
+- This demo creates lightweight "widget" DOM nodes that also capture some data in closures.
+- The leaking version intentionally keeps references to DOM nodes and closures in a global store,
+  and attaches event listeners without removing them — preventing garbage collection.
+- The fixed version removes listeners and clears references, allowing the GC to reclaim memory.
+
+How to experiment:
+- Add a bunch of widgets (e.g. 500+), then remove them.
+- The "visible widgets" shows current DOM elements.
+- The "tracked alive objects" shows how many widget objects our code considers "alive".
+  In the leaking version this number will not go down when widgets are removed.
+- Use browser devtools -> Memory to take heap snapshots if you want to inspect retained nodes.
+*/
+
+// Utility for IDs
+let idCounter = 1;
+function nextId() { return idCounter++; }
+
+// -----------------------
+// Leaking version
+// -----------------------
+const leakWidgetsRoot = document.getElementById('leak-widgets');
+const leakVisibleEl = document.getElementById('leak-visible');
+const leakTrackedEl = document.getElementById('leak-tracked');
+
+// Intentionally leaked store: keeps references to closures and DOM nodes
+const leakedStore = { items: [] };
+// Tracked count only updated by our code (illustrative)
+let leakTrackedCount = 0;
+
+function createLeakingWidget() {
+  const id = nextId();
+  // create a DOM node
+  const el = document.createElement('div');
+  el.className = 'widget';
+  el.innerHTML = '<div>Widget #' + id + '</div><div><button class="leak-action">Action</button></div>';
+
+  // create some captured data to mimic real widget state (array of strings)
+  const bigData = new Array(2000).fill('x' + id); // relatively large to make retention visible
+
+  // attach an event listener that captures the DOM node and bigData in closure
+  function onAction() {
+    // do something trivial but capture 'el' and 'bigData'
+    console.log('Leaky widget', id, 'action, data length:', bigData.length);
+    // access el to make sure it's captured
+    el.style.background = el.style.background ? '' : '#fff8e0';
+  }
+  const btn = el.querySelector('.leak-action');
+  btn.addEventListener('click', onAction);
+
+  // Intentionally store references in the leakedStore so they never get freed
+  leakedStore.items.push({ id, el, onAction, bigData });
+
+  leakTrackedCount++;
+  leakTrackedEl.textContent = String(leakTrackedCount);
+
+  return el;
+}
+
+function removeLastLeakingWidget() {
+  // remove from DOM
+  const last = leakWidgetsRoot.lastElementChild;
+  if (!last) return;
+  leakWidgetsRoot.removeChild(last);
+
+  // Intentionally do NOT remove the entry from leakedStore.
+  // Therefore the stored {el, bigData, onAction} remains reachable and cannot be GC'd.
+
+  // visible count changes but tracked count stays unchanged to illustrate leak
+  leakVisibleEl.textContent = String(leakWidgetsRoot.children.length);
+  // tracked intentionally not decremented
+  leakTrackedEl.textContent = String(leakTrackedCount);
+}
+
+// Buttons wiring
+document.getElementById('leak-add').addEventListener('click', function addMany() {
+  // Add 20 at a time to make the effect faster to observe
+  for (let i=0;i<20;i++) {
+    const w = createLeakingWidget();
+    leakWidgetsRoot.appendChild(w);
+  }
+  leakVisibleEl.textContent = String(leakWidgetsRoot.children.length);
+});
+document.getElementById('leak-remove').addEventListener('click', function() {
+  // remove 20 at a time
+  for (let i=0;i<20;i++) removeLastLeakingWidget();
+  leakVisibleEl.textContent = String(leakWidgetsRoot.children.length);
+});
+
+// -----------------------
+// Fixed version
+// -----------------------
+const fixedWidgetsRoot = document.getElementById('fixed-widgets');
+const fixedVisibleEl = document.getElementById('fixed-visible');
+const fixedTrackedEl = document.getElementById('fixed-tracked');
+
+let fixedTrackedCount = 0;
+
+// We'll keep a store of active widgets so we can cleanly teardown each
+const activeFixedWidgets = new Map();
+
+function createFixedWidget() {
+  const id = nextId();
+  const el = document.createElement('div');
+  el.className = 'widget';
+  el.innerHTML = '<div>Widget #' + id + '</div><div><button class="fixed-action">Action</button></div>';
+
+  // mimic some large per-widget state
+  const bigData = new Array(2000).fill('y' + id);
+
+  function onAction() {
+    console.log('Fixed widget', id, 'action, data length:', bigData.length);
+    el.style.background = el.style.background ? '' : '#e8fff2';
+  }
+  const btn = el.querySelector('.fixed-action');
+  btn.addEventListener('click', onAction);
+
+  // store what we need to teardown later
+  activeFixedWidgets.set(id, { id, el, onAction, bigData, btn });
+
+  fixedTrackedCount++;
+  fixedTrackedEl.textContent = String(fixedTrackedCount);
+
+  return { id, el };
+}
+
+function removeLastFixedWidget() {
+  // remove from DOM
+  const last = fixedWidgetsRoot.lastElementChild;
+  if (!last) return;
+
+  // find its id by parsing text (in a real app you'd store id on element.dataset)
+  const label = last.textContent || '';
+  const m = label.match(/#(\d+)/);
+  const id = m ? Number(m[1]) : null;
+
+  fixedWidgetsRoot.removeChild(last);
+
+  if (id && activeFixedWidgets.has(id)) {
+    // Proper cleanup:
+    const info = activeFixedWidgets.get(id);
+    // remove event listener
+    info.btn.removeEventListener('click', info.onAction);
+    // clear large arrays and references
+    info.bigData = null;
+    info.onAction = null;
+    info.btn = null;
+    // remove from map so nothing keeps a reference to el or bigData
+    activeFixedWidgets.delete(id);
+
+    fixedTrackedCount--;
+    fixedTrackedEl.textContent = String(fixedTrackedCount);
+  }
+
+  fixedVisibleEl.textContent = String(fixedWidgetsRoot.children.length);
+}
+
+// Buttons wiring
+document.getElementById('fixed-add').addEventListener('click', function() {
+  for (let i=0;i<20;i++) {
+    const { id, el } = createFixedWidget();
+    fixedWidgetsRoot.appendChild(el);
+  }
+  fixedVisibleEl.textContent = String(fixedWidgetsRoot.children.length);
+});
+document.getElementById('fixed-remove').addEventListener('click', function() {
+  for (let i=0;i<20;i++) removeLastFixedWidget();
+  fixedVisibleEl.textContent = String(fixedWidgetsRoot.children.length);
+});
+
+// initialize counts
+leakVisibleEl.textContent = '0';
+leakTrackedEl.textContent = '0';
+fixedVisibleEl.textContent = '0';
+fixedTrackedEl.textContent = '0';
+
+/*
+Why this demonstrates that the GC isn't to blame:
+- The garbage collector only reclaims objects that are unreachable from roots (global objects, closures
+  still referenced by other live objects, active stack frames, etc.).
+- In the leaking version we intentionally keep references to removed DOM nodes and large arrays inside 'leakedStore'.
+  As long as 'leakedStore.items' contains those entries, they remain reachable, so GC will not free them.
+- In other words: memory growth is caused by application code holding references, not a faulty GC.
+- The fixed version removes event listeners and deletes references, making those objects unreachable and therefore
+  collectible.
+
+Notes for real debugging:
+- Use heap snapshots in the browser devtools to find detached DOM nodes or objects retaining large arrays.
+- Look for event listeners, closures, timers, or global caches that keep references.
+- Tools: Chrome DevTools -> Memory -> take snapshot; filter for 'Detached' elements or inspect the retaining paths.
+*/
+</script>
+</body>
+</html>

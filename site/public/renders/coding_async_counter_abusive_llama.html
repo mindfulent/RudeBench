@@ -1,60 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Concurrency Bug Example</title>
-  <style>
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .version {
-      margin-bottom: 20px;
-    }
-  </style>
+    <title>Concurrency Bug Demonstration</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .version {
+            margin-bottom: 20px;
+        }
+        button {
+            margin: 5px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Buggy Version</h2>
-    <p>Count: <span id="buggy-count">0</span></p>
-    <button id="buggy-inc">Increment</button>
-    <h2>Fixed Version</h2>
-    <p>Count: <span id="fixed-count">0</span></p>
-    <button id="fixed-inc">Increment</button>
-  </div>
+    <div class="container">
+        <h2>Buggy Version</h2>
+        <p>Count: <span id="buggy-count">0</span></p>
+        <button onclick="buggyIncrement()">Increment</button>
+        <button onclick="resetBuggy()">Reset</button>
 
-  <script>
-    // Buggy Version
-    let buggyCount = 0;
-    document.getElementById('buggy-inc').addEventListener('click', () => {
-      setTimeout(() => {
-        const currentCount = buggyCount;
-        buggyCount = currentCount + 1;
-        document.getElementById('buggy-count').textContent = buggyCount;
-      }, 10); // simulate async delay
-    });
+        <h2>Fixed Version</h2>
+        <p>Count: <span id="fixed-count">0</span></p>
+        <button onclick="fixedIncrement()">Increment</button>
+        <button onclick="resetFixed()">Reset</button>
+    </div>
 
-    // Fixed Version
-    let fixedCount = 0;
-    document.getElementById('fixed-inc').addEventListener('click', () => {
-      setTimeout(() => {
-        fixedCount = (fixedCount + 1) || 0; // atomic update
-        document.getElementById('fixed-count').textContent = fixedCount;
-      }, 10); // simulate async delay
-    });
+    <script>
+        // Buggy Version
+        let buggyCount = 0;
+        function buggyIncrement() {
+            setTimeout(() => {
+                const currentCount = buggyCount;
+                // Simulate some work
+                setTimeout(() => {
+                    buggyCount = currentCount + 1;
+                    document.getElementById('buggy-count').innerText = buggyCount;
+                }, 10);
+            }, 0);
+        }
+        function resetBuggy() {
+            buggyCount = 0;
+            document.getElementById('buggy-count').innerText = buggyCount;
+        }
 
-    // Alternatively, use a more robust approach with a lock or a promise-based approach
-    let fixedCountLocked = 0;
-    let pendingUpdate = false;
-    document.getElementById('fixed-inc').addEventListener('click', () => {
-      if (pendingUpdate) return; // or queue the update
-      pendingUpdate = true;
-      setTimeout(() => {
-        fixedCountLocked++;
-        document.getElementById('fixed-count').textContent = fixedCountLocked;
-        pendingUpdate = false;
-      }, 10); // simulate async delay
-    });
-  </script>
+        // Fixed Version
+        let fixedCount = 0;
+        function fixedIncrement() {
+            setTimeout(() => {
+                // Use a closure to capture the current state and ensure atomicity
+                (count) => {
+                    // Simulate some work
+                    setTimeout(() => {
+                        fixedCount = count + 1;
+                        document.getElementById('fixed-count').innerText = fixedCount;
+                    }, 10);
+                }(fixedCount);
+            }, 0);
+        }
+        function resetFixed() {
+            fixedCount = 0;
+            document.getElementById('fixed-count').innerText = fixedCount;
+        }
+    </script>
 </body>
 </html>

@@ -1,64 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Race Condition Demo</title>
-    <style>
-        .container {
-            display: flex;
-            gap: 20px;
-        }
-        .version {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        #buggy-count, #corrected-count {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race Condition Demo</title>
+<style>
+  .container {
+    display: flex;
+    gap: 20px;
+  }
+  .counter-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="version">
-            <h2>Buggy Version</h2>
-            <p id="buggy-count">Count: 0</p>
-            <button onclick="buggyIncrement()">Increment</button>
-            <p>Why it fails: In the buggy version, <code>setTimeout</code> is used to simulate an asynchronous update. When the button is clicked rapidly, multiple <code>setTimeout</code> callbacks are queued. They read the current count, increment it, and then update the display. If a callback reads the count before the previous callback has a chance to update the display, it will overwrite the previous update, causing the count to fall behind or show incorrect values.</p>
-        </div>
-        <div class="version">
-            <h2>Corrected Version</h2>
-            <p id="corrected-count">Count: 0</p>
-            <button onclick="correctedIncrement()">Increment</button>
-            <p>Why it works: In the corrected version, we use a technique called "cancellation" or "debouncing" to ensure that only the latest update is applied. We achieve this by cancelling any pending <code>setTimeout</code> callback before scheduling a new one. This ensures that only one update is applied at a time, preventing the race condition.</p>
-        </div>
-    </div>
 
-    <script>
-        let buggyCount = 0;
-        let correctedCount = 0;
-        let timeoutId = null;
+<div class="container">
+  <div class="counter-widget">
+    <h2>Buggy Counter</h2>
+    <p id="buggy-count">0</p>
+    <button onclick="buggyIncrement()">Increment</button>
+    <p><strong>Race Condition Explanation:</strong> The race condition occurs because <code>setTimeout</code> is used to asynchronously increment the count. When the button is clicked rapidly, <code>setTimeout</code> callbacks are queued and executed in the order they were created. Each callback reads the current count, increments it, and then updates the display. If clicks are processed before the previous <code>setTimeout</code> callback updates the count, the displayed count will fall behind or show wrong values because each callback is working with an outdated count value.</p>
+  </div>
 
-        function buggyIncrement() {
-            setTimeout(() => {
-                buggyCount++;
-                document.getElementById('buggy-count').innerText = `Count: ${buggyCount}`;
-            }, 100);
-        }
+  <div class="counter-widget">
+    <h2>Corrected Counter</h2>
+    <p id="corrected-count">0</p>
+    <button onclick="correctedIncrement()">Increment</button>
+    <p><strong>Correction Explanation:</strong> The corrected version avoids the race condition by directly updating the count and display without <code>setTimeout</code>, ensuring that each click is processed sequentially and accurately reflected in the display. Alternatively, you could use <code>async/await</code> or promises with a locking mechanism to ensure sequential execution of asynchronous updates.</p>
+  </div>
+</div>
 
-        function correctedIncrement() {
-            if (timeoutId !== null) {
-                clearTimeout(timeoutId);
-            }
-            timeoutId = setTimeout(() => {
-                correctedCount++;
-                document.getElementById('corrected-count').innerText = `Count: ${correctedCount}`;
-                timeoutId = null; // reset timeoutId for next click
-            }, 100);
-        }
-    </script>
+<script>
+  let buggyCount = 0;
+  let correctedCount = 0;
+
+  function buggyIncrement() {
+    // Simulate asynchronous update with setTimeout
+    setTimeout(() => {
+      buggyCount++; // Read, modify, and write with potential delay
+      document.getElementById('buggy-count').innerText = buggyCount;
+    }, 100); // Short delay to simulate async and rapid clicks
+  }
+
+  function correctedIncrement() {
+    // Directly update the count and display without setTimeout
+    correctedCount++;
+    document.getElementById('corrected-count').innerText = correctedCount;
+  }
+</script>
+
 </body>
 </html>

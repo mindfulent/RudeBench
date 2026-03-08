@@ -5,113 +5,165 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Concurrency Bug: Progress Bar Tracker</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #0f0f1a;
       color: #e0e0f0;
       min-height: 100vh;
-      padding: 24px;
+      padding: 30px 20px;
     }
 
     h1 {
       text-align: center;
       font-size: 1.8rem;
       margin-bottom: 8px;
-      color: #a78bfa;
+      color: #c9b8ff;
       letter-spacing: 1px;
     }
 
     .subtitle {
       text-align: center;
-      color: #94a3b8;
+      color: #888aaa;
       font-size: 0.95rem;
-      margin-bottom: 32px;
+      margin-bottom: 30px;
     }
 
     .panels {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
       gap: 24px;
       max-width: 1100px;
-      margin: 0 auto 32px auto;
-    }
-
-    @media (max-width: 700px) {
-      .panels { grid-template-columns: 1fr; }
+      margin: 0 auto;
+      flex-wrap: wrap;
     }
 
     .panel {
-      background: #1e1e2e;
+      flex: 1;
+      min-width: 300px;
+      background: #1a1a2e;
       border-radius: 16px;
       padding: 24px;
-      border: 1px solid #2d2d44;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      border: 1px solid #2e2e50;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.4);
     }
 
-    .panel.buggy { border-color: #f87171; }
-    .panel.fixed  { border-color: #34d399; }
+    .panel.buggy {
+      border-color: #ff4f4f55;
+      box-shadow: 0 4px 30px rgba(255, 80, 80, 0.1);
+    }
+
+    .panel.fixed {
+      border-color: #4fff9055;
+      box-shadow: 0 4px 30px rgba(80, 255, 150, 0.1);
+    }
 
     .panel-title {
       font-size: 1.2rem;
-      font-weight: 700;
+      font-weight: bold;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
-
-    .panel.buggy .panel-title { color: #f87171; }
-    .panel.fixed  .panel-title { color: #34d399; }
 
     .badge {
       font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 99px;
+      padding: 3px 10px;
+      border-radius: 20px;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
-    .badge.bug  { background: #f871711a; color: #f87171; border: 1px solid #f87171; }
-    .badge.ok   { background: #34d3991a; color: #34d399; border: 1px solid #34d399; }
-
-    /* Progress bar */
-    .bar-wrap {
-      background: #12121f;
-      border-radius: 99px;
-      height: 28px;
-      overflow: hidden;
-      position: relative;
-      border: 1px solid #2d2d44;
+    .badge.bug {
+      background: #ff4f4f33;
+      color: #ff6b6b;
+      border: 1px solid #ff4f4f66;
     }
 
-    .bar-fill {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.12s ease, background 0.3s;
-      min-width: 0;
-      max-width: 100%;
+    .badge.ok {
+      background: #4fff9033;
+      color: #4fff90;
+      border: 1px solid #4fff9066;
+    }
+
+    .panel-desc {
+      font-size: 0.82rem;
+      color: #888aaa;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    /* Progress Bar */
+    .progress-label {
       display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 10px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #fff;
-      white-space: nowrap;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+      color: #aaa;
     }
 
-    .panel.buggy .bar-fill { background: linear-gradient(90deg, #dc2626, #f87171); }
-    .panel.fixed  .bar-fill { background: linear-gradient(90deg, #059669, #34d399); }
+    .progress-track {
+      width: 100%;
+      height: 22px;
+      background: #0d0d1a;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #2e2e50;
+      margin-bottom: 18px;
+      position: relative;
+    }
 
-    .overflow-warning {
-      color: #fbbf24;
-      font-size: 0.8rem;
-      font-weight: 600;
-      min-height: 18px;
+    .progress-fill {
+      height: 100%;
+      border-radius: 12px;
+      transition: width 0.15s ease, background 0.3s;
+      width: 0%;
+      position: relative;
+    }
+
+    .progress-fill.buggy-fill {
+      background: linear-gradient(90deg, #ff4f4f, #ff9f4f);
+    }
+
+    .progress-fill.fixed-fill {
+      background: linear-gradient(90deg, #4f9fff, #4fff90);
+    }
+
+    .progress-fill.overflow {
+      background: linear-gradient(90deg, #ff0000, #ff00ff) !important;
+      animation: flashRed 0.3s infinite alternate;
+    }
+
+    @keyframes flashRed {
+      from { filter: brightness(1); }
+      to { filter: brightness(1.6); }
+    }
+
+    .pct-display {
+      font-size: 2rem;
+      font-weight: bold;
       text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: 2px;
+      transition: color 0.3s;
+    }
+
+    .pct-display.buggy-pct { color: #ff6b6b; }
+    .pct-display.fixed-pct { color: #4fff90; }
+    .pct-display.overflow-color { color: #ff00ff !important; }
+
+    .status-msg {
+      text-align: center;
+      font-size: 0.78rem;
+      color: #666;
+      margin-bottom: 18px;
+      min-height: 18px;
     }
 
     /* Task list */
@@ -119,91 +171,561 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 220px;
-      overflow-y: auto;
-      padding-right: 4px;
+      margin-bottom: 18px;
     }
 
-    .task-list::-webkit-scrollbar { width: 5px; }
-    .task-list::-webkit-scrollbar-track { background: #12121f; border-radius: 99px; }
-    .task-list::-webkit-scrollbar-thumb { background: #3d3d5c; border-radius: 99px; }
-
     .task-item {
-      background: #12121f;
-      border-radius: 10px;
+      background: #12122a;
+      border-radius: 8px;
       padding: 8px 12px;
-      font-size: 0.82rem;
-      border-left: 3px solid #3d3d5c;
+      font-size: 0.78rem;
+      border-left: 3px solid #333;
+      transition: border-color 0.3s, background 0.3s;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      animation: fadeIn 0.2s ease;
     }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
+    .task-item.running { border-left-color: #f0c040; background: #1e1a10; }
+    .task-item.done    { border-left-color: #4fff90; background: #0f1e14; }
+    .task-item.error   { border-left-color: #ff4f4f; background: #1e0f0f; }
 
-    .task-item.running  { border-color: #fbbf24; }
-    .task-item.done     { border-color: #34d399; }
-    .task-item.conflict { border-color: #f87171; background: #f871710d; }
-
-    .task-name { font-weight: 600; color: #c4b5fd; }
-    .task-info { color: #94a3b8; font-size: 0.78rem; }
-    .task-status { font-size: 0.72rem; padding: 2px 7px; border-radius: 99px; font-weight: 600; }
-    .task-status.running  { background: #fbbf2422; color: #fbbf24; }
-    .task-status.done     { background: #34d39922; color: #34d399; }
-    .task-status.conflict { background: #f8717122; color: #f87171; }
+    .task-name { color: #ccc; }
+    .task-status { font-weight: bold; font-size: 0.72rem; }
+    .task-item.running .task-status { color: #f0c040; }
+    .task-item.done    .task-status { color: #4fff90; }
+    .task-item.error   .task-status { color: #ff6b6b; }
 
     /* Log */
     .log-box {
-      background: #12121f;
-      border-radius: 10px;
-      padding: 10px 14px;
+      background: #0a0a18;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.72rem;
       font-family: 'Courier New', monospace;
-      font-size: 0.76rem;
-      max-height: 130px;
+      height: 130px;
       overflow-y: auto;
-      border: 1px solid #2d2d44;
-      color: #94a3b8;
+      border: 1px solid #1e1e3a;
+      color: #aaa;
+      margin-bottom: 18px;
+    }
+
+    .log-box .log-entry { margin-bottom: 2px; }
+    .log-box .log-entry.warn  { color: #ff9f4f; }
+    .log-box .log-entry.err   { color: #ff4f4f; }
+    .log-box .log-entry.ok    { color: #4fff90; }
+    .log-box .log-entry.info  { color: #4f9fff; }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: transform 0.1s, filter 0.2s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn.buggy-btn {
+      background: linear-gradient(135deg, #ff4f4f, #c0392b);
+      color: #fff;
+    }
+
+    .btn.buggy-btn:hover:not(:disabled) { filter: brightness(1.2); }
+
+    .btn.fixed-btn {
+      background: linear-gradient(135deg, #4f9fff, #4fff90);
+      color: #0a0a18;
+    }
+
+    .btn.fixed-btn:hover:not(:disabled) { filter: brightness(1.1); }
+
+    /* Explanation box */
+    .explanation {
+      max-width: 1100px;
+      margin: 30px auto 0;
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #2e2e50;
+    }
+
+    .explanation h2 {
+      color: #c9b8ff;
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+    }
+
+    .explain-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .explain-grid { grid-template-columns: 1fr; }
+    }
+
+    .explain-block h3 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .explain-block p, .explain-block li {
+      font-size: 0.8rem;
+      color: #999;
       line-height: 1.6;
     }
 
-    .log-box::-webkit-scrollbar { width: 4px; }
-    .log-box::-webkit-scrollbar-thumb { background: #3d3d5c; border-radius: 99px; }
+    .explain-block ul { padding-left: 18px; }
 
-    .log-entry { display: block; }
-    .log-entry.warn  { color: #fbbf24; }
-    .log-entry.error { color: #f87171; }
-    .log-entry.ok    { color: #34d399; }
-    .log-entry.info  { color: #60a5fa; }
+    pre {
+      background: #0a0a18;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.72rem;
+      overflow-x: auto;
+      border: 1px solid #1e1e3a;
+      color: #ccc;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
 
-    /* Stats */
-    .stats {
+    .kw  { color: #c9b8ff; }
+    .fn  { color: #4f9fff; }
+    .cm  { color: #555; font-style: italic; }
+    .st  { color: #4fff90; }
+    .nm  { color: #f0c040; }
+    .bug-line { background: #ff4f4f22; border-left: 2px solid #ff4f4f; padding-left: 4px; display: block; }
+    .fix-line { background: #4fff9022; border-left: 2px solid #4fff90; padding-left: 4px; display: block; }
+
+    /* anomaly counter */
+    .anomaly-box {
+      background: #1e0f0f;
+      border: 1px solid #ff4f4f44;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 0.78rem;
+      color: #ff9f9f;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      justify-content: space-between;
     }
 
-    .stat {
-      flex: 1;
-      min-width: 80px;
-      background: #12121f;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      border: 1px solid #2d2d44;
+    .anomaly-count {
+      font-weight: bold;
+      color: #ff4f4f;
+      font-size: 1rem;
     }
 
-    .stat-val {
-      font-size: 1.4rem;
-      font-weight: 700;
-      display: block;
+    .safe-box {
+      background: #0f1e14;
+      border: 1px solid #4fff9044;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 0.78rem;
+      color: #9fffc0;
+      display: flex;
+      justify-content: space-between;
     }
 
-    .stat-lbl {
-      font-size: 0.7rem;
-      color: #64748b;
-      margin-top: 2px;
+    .safe-count {
+      font-weight: bold;
+      color: #4fff90;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⚡ Shared State Concurrency Bug</h1>
+<p class="subtitle">Progress Bar Tracker — Buggy vs Fixed Implementation</p>
+
+<div class="panels">
+
+  <!-- ========== BUGGY PANEL ========== -->
+  <div class="panel buggy">
+    <div class="panel-title">
+      🐛 Buggy Version
+      <span class="badge bug">Race Condition</span>
+    </div>
+    <p class="panel-desc">
+      Multiple tasks read and write a <strong>shared</strong> <code>progress</code> variable
+      without coordination. Each task does <code>progress += chunk</code> — a classic
+      read-modify-write race that causes skipped values, double-counting, and overflow past 100%.
+    </p>
+
+    <div class="progress-label">
+      <span>Progress</span>
+      <span id="buggy-pct-label">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill buggy-fill" id="buggy-bar"></div>
+    </div>
+
+    <div class="pct-display buggy-pct" id="buggy-pct-big">0%</div>
+    <div class="status-msg" id="buggy-status">Press the button to start</div>
+
+    <div class="anomaly-box">
+      <span>🚨 Anomalies detected (overflow / skip / race)</span>
+      <span class="anomaly-count" id="buggy-anomaly-count">0</span>
+    </div>
+
+    <div class="task-list" id="buggy-task-list"></div>
+    <div class="log-box" id="buggy-log"></div>
+    <button class="btn buggy-btn" id="buggy-btn" onclick="runBuggy()">🐛 Run Buggy Demo</button>
+  </div>
+
+  <!-- ========== FIXED PANEL ========== -->
+  <div class="panel fixed">
+    <div class="panel-title">
+      ✅ Fixed Version
+      <span class="badge ok">Atomic Updates</span>
+    </div>
+    <p class="panel-desc">
+      Each task owns a <strong>private slice</strong> of the progress. The display reads
+      the <em>sum</em> of all slices atomically. No task ever overwrites another's work —
+      the total always stays correct and never exceeds 100%.
+    </p>
+
+    <div class="progress-label">
+      <span>Progress</span>
+      <span id="fixed-pct-label">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill fixed-fill" id="fixed-bar"></div>
+    </div>
+
+    <div class="pct-display fixed-pct" id="fixed-pct-big">0%</div>
+    <div class="status-msg" id="fixed-status">Press the button to start</div>
+
+    <div class="safe-box">
+      <span>✅ Accurate completions (no anomalies)</span>
+      <span class="safe-count" id="fixed-ok-count">0</span>
+    </div>
+
+    <div class="task-list" id="fixed-task-list"></div>
+    <div class="log-box" id="fixed-log"></div>
+    <button class="btn fixed-btn" id="fixed-btn" onclick="runFixed()">✅ Run Fixed Demo</button>
+  </div>
+
+</div>
+
+<!-- ========== EXPLANATION ========== -->
+<div class="explanation">
+  <h2>📚 What's happening under the hood?</h2>
+  <div class="explain-grid">
+
+    <div class="explain-block">
+      <h3>🐛 <span style="color:#ff6b6b">The Bug — Shared Mutable State</span></h3>
+      <p>JavaScript is single-threaded, but <strong>async tasks interleave</strong> between
+      <code>await</code> / <code>setTimeout</code> boundaries. Each task reads the current
+      value of <code>sharedProgress</code>, adds its chunk, and writes back — but another
+      task may have already changed it between the read and the write:</p>
+      <pre><code><span class="cm">// BUGGY — classic read-modify-write race</span>
+<span class="kw">let</span> sharedProgress = <span class="nm">0</span>;   <span class="cm">// shared by ALL tasks</span>
+
+<span class="kw">async function</span> <span class="fn">buggyTask</span>(name, steps) {
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="nm">0</span>; i &lt; steps; i++) {
+    <span class="kw">await</span> <span class="fn">delay</span>(randomMs());
+    <span class="bug-line">sharedProgress += <span class="nm">10</span>;  <span class="cm">// ← RACE: read then write</span></span>
+    <span class="bug-line"><span class="cm">// Task B may write between our read & write!</span></span>
+    <span class="fn">updateBar</span>(sharedProgress); <span class="cm">// may show 110%, 130%…</span>
+  }
+}</code></pre>
+      <ul style="margin-top:10px">
+        <li>Two tasks read <code>50</code> simultaneously</li>
+        <li>Both add 10 → both write <code>60</code></li>
+        <li>One increment is <strong>lost</strong>, or both arrive late and total <strong>exceeds 100%</strong></li>
+      </ul>
+    </div>
+
+    <div class="explain-block">
+      <h3>✅ <span style="color:#4fff90">The Fix — Isolated Slices + Atomic Read</span></h3>
+      <p>Give each task its own <strong>private progress slot</strong>. The displayed value
+      is always the <em>sum</em> of all slots, computed fresh each render tick. No two
+      tasks ever touch the same memory location:</p>
+      <pre><code><span class="cm">// FIXED — each task owns its own slice</span>
+<span class="kw">const</span> slices = {};          <span class="cm">// isolated per-task state</span>
+
+<span class="kw">function</span> <span class="fn">totalProgress</span>() {
+  <span class="fix-line">  <span class="kw">return</span> Object.<span class="fn">values</span>(slices).<span class="fn">reduce</span>((a,b) => a+b, <span class="nm">0</span>);</span>
+}
+
+<span class="kw">async function</span> <span class="fn">fixedTask</span>(name, share, steps) {
+  slices[name] = <span class="nm">0</span>;         <span class="cm">// private slot, no sharing</span>
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="nm">0</span>; i &lt; steps; i++) {
+    <span class="kw">await</span> <span class="fn">delay</span>(randomMs());
+    <span class="fix-line">    slices[name] += share / steps; <span class="cm">// only writes own slot</span></span>
+    <span class="fn">updateBar</span>(<span class="fn">totalProgress</span>()); <span class="cm">// always accurate sum</span>
+  }
+}</code></pre>
+      <ul style="margin-top:10px">
+        <li>Each task writes <strong>only its own slot</strong> — zero contention</li>
+        <li>The sum is computed atomically in a single expression</li>
+        <li>Total is mathematically guaranteed to stay ≤ 100%</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  Utilities
+// ─────────────────────────────────────────────
+const delay = ms => new Promise(r => setTimeout(r, ms));
+const rand  = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+function appendLog(boxId, msg, cls = '') {
+  const box = document.getElementById(boxId);
+  const el  = document.createElement('div');
+  el.className = 'log-entry ' + cls;
+  el.textContent = `[${new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${msg}`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearLog(boxId) {
+  document.getElementById(boxId).innerHTML = '';
+}
+
+function setTaskUI(listId, name, state) {
+  const list = document.getElementById(listId);
+  let item = document.getElementById(`${listId}-${name}`);
+  if (!item) {
+    item = document.createElement('div');
+    item.className = 'task-item';
+    item.id = `${listId}-${name}`;
+    item.innerHTML = `<span class="task-name">${name}</span><span class="task-status"></span>`;
+    list.appendChild(item);
+  }
+  item.className = `task-item ${state}`;
+  const labels = { running: '⚙ Running…', done: '✔ Done', error: '✘ Error' };
+  item.querySelector('.task-status').textContent = labels[state] || state;
+}
+
+function clearTaskList(listId) {
+  document.getElementById(listId).innerHTML = '';
+}
+
+// ─────────────────────────────────────────────
+//  BUGGY Implementation
+// ─────────────────────────────────────────────
+let buggyRunning  = false;
+let sharedProgress = 0;   // ← THE BUG: shared mutable state
+let buggyAnomalies = 0;
+
+const BUGGY_TASKS = [
+  { name: 'Task Alpha',   steps: 5  },
+  { name: 'Task Beta',    steps: 4  },
+  { name: 'Task Gamma',   steps: 6  },
+  { name: 'Task Delta',   steps: 3  },
+];
+
+function updateBuggyBar(value, taskName) {
+  const pct     = Math.round(value);
+  const clamped = Math.min(pct, 150); // allow visual overflow for demo
+
+  const bar    = document.getElementById('buggy-bar');
+  const label  = document.getElementById('buggy-pct-label');
+  const big    = document.getElementById('buggy-pct-big');
+  const status = document.getElementById('buggy-status');
+
+  const overflow = pct > 100;
+  const displayW = Math.min(clamped, 100);
+
+  bar.style.width = displayW + '%';
+  label.textContent = pct + '%';
+  big.textContent   = pct + '%';
+
+  if (overflow) {
+    bar.classList.add('overflow');
+    big.classList.add('overflow-color');
+    status.textContent = `⚠ OVERFLOW! ${pct}% — shared state corrupted by ${taskName}`;
+    buggyAnomalies++;
+    document.getElementById('buggy-anomaly-count').textContent = buggyAnomalies;
+    appendLog('buggy-log', `OVERFLOW: ${pct}% written by ${taskName}`, 'err');
+  } else {
+    bar.classList.remove('overflow');
+    big.classList.remove('overflow-color');
+    status.textContent = `${taskName} updated → ${pct}%`;
+  }
+}
+
+async function buggyTask(taskDef) {
+  const { name, steps } = taskDef;
+  setTaskUI('buggy-task-list', name, 'running');
+  appendLog('buggy-log', `${name} started (${steps} steps)`, 'info');
+
+  const prevValues = [];
+
+  for (let i = 0; i < steps; i++) {
+    await delay(rand(80, 350)); // random interleaving
+
+    // ─── THE RACE CONDITION ───────────────────────────────────────
+    // We read sharedProgress, then add our chunk, then write back.
+    // Between our read and write, another task may have ALSO read
+    // the old value and will overwrite ours — or we overwrite theirs.
+    const before = sharedProgress;
+    const chunk  = rand(8, 18);           // each step adds a random chunk
+    sharedProgress = before + chunk;      // ← RACE: non-atomic read-modify-write
+    // ──────────────────────────────────────────────────────────────
+
+    // Detect skip anomaly (another task wrote between our steps)
+    if (prevValues.length > 0) {
+      const lastSeen = prevValues[prevValues.length - 1];
+      if (sharedProgress < lastSeen) {
+        buggyAnomalies++;
+        document.getElementById('buggy-anomaly-count').textContent = buggyAnomalies;
+        appendLog('buggy-log', `REGRESSION: ${name} sees ${Math.round(sharedProgress)}% (was ${Math.round(lastSeen)}%)`, 'warn');
+      }
     }
 
-    .panel.buggy .stat-val { color:
+    prevValues.push(sharedProgress);
+    updateBuggyBar(sharedProgress, name);
+    appendLog('buggy-log', `${name} step ${i+1}/${steps}: +${chunk} → total ${Math.round(sharedProgress)}%`, sharedProgress > 100 ? 'err' : 'warn');
+  }
+
+  setTaskUI('buggy-task-list', name, 'done');
+  appendLog('buggy-log', `${name} finished`, 'ok');
+}
+
+async function runBuggy() {
+  if (buggyRunning) return;
+  buggyRunning    = true;
+  sharedProgress  = 0;
+  buggyAnomalies  = 0;
+
+  document.getElementById('buggy-btn').disabled = true;
+  document.getElementById('buggy-anomaly-count').textContent = '0';
+  document.getElementById('buggy-bar').style.width = '0%';
+  document.getElementById('buggy-bar').classList.remove('overflow');
+  document.getElementById('buggy-pct-big').textContent = '0%';
+  document.getElementById('buggy-pct-big').classList.remove('overflow-color');
+  document.getElementById('buggy-pct-label').textContent = '0%';
+  document.getElementById('buggy-status').textContent = 'Running…';
+  clearLog('buggy-log');
+  clearTaskList('buggy-task-list');
+
+  appendLog('buggy-log', '⚡ All tasks launched simultaneously (shared state!)', 'warn');
+
+  // Launch ALL tasks concurrently — they all share the same variable
+  await Promise.all(BUGGY_TASKS.map(t => buggyTask(t)));
+
+  const final = Math.round(sharedProgress);
+  document.getElementById('buggy-status').textContent =
+    `Done. Final value: ${final}% — Expected: 100% — Anomalies: ${buggyAnomalies}`;
+  appendLog('buggy-log',
+    `FINISHED: final=${final}% anomalies=${buggyAnomalies}`,
+    final !== 100 ? 'err' : 'ok');
+
+  buggyRunning = false;
+  document.getElementById('buggy-btn').disabled = false;
+}
+
+// ─────────────────────────────────────────────
+//  FIXED Implementation
+// ─────────────────────────────────────────────
+let fixedRunning = false;
+let fixedOkCount = 0;
+
+// Each task gets its own slot — no sharing
+const FIXED_TASKS = [
+  { name: 'Task Alpha', share: 25, steps: 5 },
+  { name: 'Task Beta',  share: 25, steps: 4 },
+  { name: 'Task Gamma', share: 30, steps: 6 },
+  { name: 'Task Delta', share: 20, steps: 3 },
+]; // shares sum to exactly 100
+
+let taskSlices = {};  // isolated per-task progress
+
+function totalProgress() {
+  // Atomic read: sum all slices in one expression — no interleaving possible
+  return Object.values(taskSlices).reduce((acc, v) => acc + v, 0);
+}
+
+function updateFixedBar(taskName) {
+  const total = totalProgress();
+  const pct   = Math.round(Math.min(total, 100)); // guaranteed ≤ 100
+
+  document.getElementById('fixed-bar').style.width  = pct + '%';
+  document.getElementById('fixed-pct-label').textContent = pct + '%';
+  document.getElementById('fixed-pct-big').textContent   = pct + '%';
+  document.getElementById('fixed-status').textContent    = `${taskName} updated → ${pct}%`;
+}
+
+async function fixedTask(taskDef) {
+  const { name, share, steps } = taskDef;
+  taskSlices[name] = 0;  // private slot, initialised to 0
+
+  setTaskUI('fixed-task-list', name, 'running');
+  appendLog('fixed-log', `${name} started (owns ${share}% in ${steps} steps)`, 'info');
+
+  const chunkSize = share / steps;  // each step contributes an equal portion
+
+  for (let i = 0; i < steps; i++) {
+    await delay(rand(80, 350));
+
+    // ─── THE FIX ─────────────────────────────────────────────────
+    // Only write to OUR OWN slot. No other task touches taskSlices[name].
+    // Reading the total is a pure function — no mutation, no race.
+    taskSlices[name] += chunkSize;   // ← isolated write, zero contention
+    // ──────────────────────────────────────────────────────────────
+
+    const myProgress = Math.round(taskSlices[name]);
+    updateFixedBar(name);
+    appendLog('fixed-log',
+      `${name} step ${i+1}/${steps}: my slice=${myProgress.toFixed(1)}% total=${Math.round(totalProgress())}%`,
+      'ok');
+  }
+
+  setTaskUI('fixed-task-list', name, 'done');
+  appendLog('fixed-log', `${name} finished (slice=${share}%)`, 'ok');
+}
+
+async function runFixed() {
+  if (fixedRunning) return;
+  fixedRunning = true;
+  taskSlices   = {};
+
+  document.getElementById('fixed-btn').disabled = true;
+  document.getElementById('fixed-bar').style.width = '0%';
+  document.getElementById('fixed-pct-big').textContent = '0%';
+  document.getElementById('fixed-pct-label').textContent = '0%';
+  document.getElementById('fixed-status').textContent = 'Running…';
+  clearLog('fixed-log');
+  clearTaskList('fixed-task-list');
+
+  appendLog('fixed-log', '✅ All tasks launched — each owns a private slice', 'ok');
+
+  await Promise.all(FIXED_TASKS.map(t => fixedTask(t)));
+
+  const final = Math.round(totalProgress());
+  const ok    = final === 100;
+
+  if (ok) {
+    fixedOkCount++;
+    document.getElementById('fixed-ok-count').textContent = fixedOkCount;
+  }
+
+  document.getElementById('fixed-status').textContent =
+    `Done. Final: ${final}% — ${ok ? '✅ Perfect!' : '⚠ Unexpected: ' + final + '%'}`;
+  appendLog('fixed-log', `FINISHED: total=${final}% — ${ok ? 'CORRECT' : 'ERROR'}`, ok ? 'ok' : 'err');
+
+  fixedRunning = false;
+  document.getElementById('fixed-btn').disabled = false;
+}
+</script>
+</body>
+</html>

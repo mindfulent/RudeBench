@@ -5,84 +5,80 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Singleton Theme Manager</title>
   <style>
-    /* ── CSS custom properties driven by a data-theme attribute ── */
+    /* ── CSS custom properties driven by data-theme attribute ── */
     :root {
       --transition: 0.35s ease;
     }
 
     [data-theme="light"] {
-      --bg-primary:    #f0f4f8;
+      --bg-primary:    #f0f2f5;
       --bg-secondary:  #ffffff;
       --bg-card:       #ffffff;
-      --bg-code:       #e8edf2;
-      --text-primary:  #1a202c;
+      --bg-code:       #e8ecf0;
+      --text-primary:  #1a1d23;
       --text-secondary:#4a5568;
       --text-muted:    #718096;
       --accent:        #4f46e5;
       --accent-hover:  #4338ca;
-      --accent-light:  #e0e7ff;
-      --border:        #cbd5e0;
+      --accent-light:  #eef2ff;
+      --border:        #d1d9e0;
       --shadow:        rgba(0,0,0,0.08);
-      --tag-bg:        #e0e7ff;
-      --tag-text:      #3730a3;
-      --pro-bg:        #f0fdf4;
-      --pro-border:    #86efac;
-      --pro-text:      #166534;
-      --con-bg:        #fff1f2;
-      --con-border:    #fda4af;
-      --con-text:      #9f1239;
-      --warn-bg:       #fffbeb;
-      --warn-border:   #fcd34d;
-      --warn-text:     #92400e;
-      --table-head:    #eef2ff;
-      --table-alt:     #f8fafc;
+      --badge-pro-bg:  #d1fae5;
+      --badge-pro-txt: #065f46;
+      --badge-con-bg:  #fee2e2;
+      --badge-con-txt: #991b1b;
+      --badge-tip-bg:  #fef3c7;
+      --badge-tip-txt: #92400e;
       --toggle-bg:     #cbd5e0;
       --toggle-knob:   #ffffff;
       --nav-bg:        #ffffff;
+      --table-head:    #f7fafc;
+      --table-stripe:  #f0f4f8;
+      --progress-bg:   #e2e8f0;
     }
 
     [data-theme="dark"] {
       --bg-primary:    #0f1117;
-      --bg-secondary:  #1a1d27;
-      --bg-card:       #1e2130;
-      --bg-code:       #252836;
+      --bg-secondary:  #1a1d2e;
+      --bg-card:       #1e2235;
+      --bg-code:       #12151f;
       --text-primary:  #e2e8f0;
       --text-secondary:#a0aec0;
       --text-muted:    #718096;
       --accent:        #818cf8;
-      --accent-hover:  #a5b4fc;
+      --accent-hover:  #6366f1;
       --accent-light:  #1e1b4b;
-      --border:        #2d3748;
+      --border:        #2d3250;
       --shadow:        rgba(0,0,0,0.4);
-      --tag-bg:        #1e1b4b;
-      --tag-text:      #a5b4fc;
-      --pro-bg:        #052e16;
-      --pro-border:    #166534;
-      --pro-text:      #86efac;
-      --con-bg:        #2d0a14;
-      --con-border:    #9f1239;
-      --con-text:      #fda4af;
-      --warn-bg:       #1c1506;
-      --warn-border:   #92400e;
-      --warn-text:     #fcd34d;
-      --table-head:    #1e1b4b;
-      --table-alt:     #161926;
+      --badge-pro-bg:  #064e3b;
+      --badge-pro-txt: #6ee7b7;
+      --badge-con-bg:  #7f1d1d;
+      --badge-con-txt: #fca5a5;
+      --badge-tip-bg:  #78350f;
+      --badge-tip-txt: #fde68a;
       --toggle-bg:     #4f46e5;
       --toggle-knob:   #ffffff;
-      --nav-bg:        #1a1d27;
+      --nav-bg:        #1a1d2e;
+      --table-head:    #252844;
+      --table-stripe:  #1a1d2e;
+      --progress-bg:   #2d3250;
     }
 
+    /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background-color: var(--bg-primary);
+      background: var(--bg-primary);
       color: var(--text-primary);
-      transition: background-color var(--transition), color var(--transition);
       line-height: 1.7;
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
     }
 
-    /* ── NAV ── */
+    /* ── Navigation ── */
     nav {
       position: sticky;
       top: 0;
@@ -90,31 +86,38 @@
       background: var(--nav-bg);
       border-bottom: 1px solid var(--border);
       box-shadow: 0 2px 12px var(--shadow);
-      padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 64px;
       transition: background var(--transition), border-color var(--transition);
     }
 
-    .nav-brand {
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
       display: flex;
       align-items: center;
       gap: 0.6rem;
       font-weight: 700;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       color: var(--accent);
+      text-decoration: none;
     }
 
-    .nav-brand .logo {
-      width: 32px; height: 32px;
+    .nav-logo .logo-icon {
+      width: 32px;
+      height: 32px;
       background: var(--accent);
       border-radius: 8px;
       display: grid;
       place-items: center;
       color: #fff;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 900;
     }
 
@@ -125,41 +128,34 @@
     }
 
     .nav-links a {
-      text-decoration: none;
       color: var(--text-secondary);
+      text-decoration: none;
       font-size: 0.9rem;
+      font-weight: 500;
       transition: color var(--transition);
     }
 
     .nav-links a:hover { color: var(--accent); }
 
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
 
-    /* ── TOGGLE SWITCH ── */
+    /* ── Toggle Switch ── */
     .theme-toggle {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
       cursor: pointer;
       user-select: none;
     }
 
-    .toggle-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      min-width: 36px;
-    }
+    .toggle-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
 
     .toggle-track {
-      position: relative;
       width: 52px;
       height: 28px;
       background: var(--toggle-bg);
-      border-radius: 999px;
+      border-radius: 14px;
+      position: relative;
       transition: background var(--transition);
       cursor: pointer;
       border: none;
@@ -174,32 +170,1221 @@
 
     .toggle-knob {
       position: absolute;
-      top: 3px; left: 3px;
-      width: 22px; height: 22px;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
       background: var(--toggle-knob);
       border-radius: 50%;
       transition: transform var(--transition), background var(--transition);
       display: grid;
       place-items: center;
-      font-size: 0.7rem;
+      font-size: 12px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.25);
     }
 
     [data-theme="dark"] .toggle-knob { transform: translateX(24px); }
 
-    /* ── LAYOUT ── */
+    /* ── Layout ── */
     .container {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 2rem 1.5rem;
+      padding: 2rem 1.5rem 4rem;
     }
 
-    section { margin-bottom: 3rem; }
+    section { margin-bottom: 3.5rem; }
 
-    h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
-    h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); }
-    h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
-    p  { color: var(--text-secondary); margin-bottom: 0.75rem; }
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 4rem 1rem 3rem;
+    }
 
-    .subtitle {
-      color: var
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.9rem;
+      border-radius: 99px;
+      margin-bottom: 1.2rem;
+      border: 1px solid var(--accent);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent), #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      transition: color var(--transition);
+    }
+
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    .btn {
+      padding: 0.7rem 1.6rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+    }
+
+    .btn-outline:hover { background: var(--accent-light); transform: translateY(-1px); }
+
+    /* ── Section Headers ── */
+    .section-header { margin-bottom: 1.5rem; }
+
+    .section-header h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .section-header p { color: var(--text-secondary); font-size: 0.95rem; }
+
+    .divider {
+      width: 48px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+      margin: 0.6rem 0 0.8rem;
+    }
+
+    /* ── Cards Grid ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px var(--shadow);
+      transition: background var(--transition), border-color var(--transition),
+                  box-shadow var(--transition), transform 0.2s;
+    }
+
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow); }
+
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 0.8rem;
+      display: block;
+    }
+
+    .card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+
+    .card p { color: var(--text-secondary); font-size: 0.9rem; transition: color var(--transition); }
+
+    /* ── Code Block ── */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      transition: border-color var(--transition);
+    }
+
+    .code-dots { display: flex; gap: 6px; }
+
+    .code-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-red   { background: #ff5f57; }
+    .dot-yellow{ background: #ffbd2e; }
+    .dot-green { background: #28c840; }
+
+    .code-lang {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    pre {
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+      color: var(--text-primary);
+    }
+
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .cm  { color: #546e7a; font-style: italic; }
+    .num { color: #f78c6c; }
+
+    /* ── Stat Cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      box-shadow: 0 2px 8px var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+    /* ── Progress Bars ── */
+    .progress-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .progress-item label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .progress-item label span { color: var(--text-muted); font-weight: 400; }
+
+    .progress-track {
+      height: 8px;
+      background: var(--progress-bg);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: background var(--transition);
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 12px var(--shadow);
+      transition: border-color var(--transition);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      background: var(--table-head);
+      padding: 0.85rem 1rem;
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    tbody tr { transition: background var(--transition); }
+
+    tbody tr:nth-child(even) { background: var(--table-stripe); }
+
+    tbody tr:hover { background: var(--accent-light); }
+
+    tbody td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      transition: color var(--transition), border-color var(--transition);
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    .tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .tag-green { background: var(--badge-pro-bg); color: var(--badge-pro-txt); }
+    .tag-red   { background: var(--badge-con-bg); color: var(--badge-con-txt); }
+    .tag-yellow{ background: var(--badge-tip-bg); color: var(--badge-tip-txt); }
+
+    /* ── Alert / Callout ── */
+    .callout {
+      display: flex;
+      gap: 1rem;
+      padding: 1.1rem 1.25rem;
+      border-radius: 10px;
+      border-left: 4px solid;
+      margin-bottom: 1rem;
+      transition: background var(--transition);
+    }
+
+    .callout-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+    .callout-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+
+    .callout-body p { font-size: 0.875rem; }
+
+    .callout-pro {
+      background: var(--badge-pro-bg);
+      border-color: #10b981;
+      color: var(--badge-pro-txt);
+    }
+
+    .callout-con {
+      background: var(--badge-con-bg);
+      border-color: #ef4444;
+      color: var(--badge-con-txt);
+    }
+
+    .callout-tip {
+      background: var(--badge-tip-bg);
+      border-color: #f59e0b;
+      color: var(--badge-tip-txt);
+    }
+
+    /* ── Discussion Section ── */
+    .discussion {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      box-shadow: 0 4px 24px var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .discussion h2 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+    }
+
+    .discussion-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    @media (max-width: 640px) {
+      .discussion-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+
+    .disc-col h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .disc-item {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+      padding: 0.85rem;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 0.875rem;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .disc-item-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    .disc-item-text strong { display: block; font-weight: 600; margin-bottom: 0.2rem; }
+
+    .disc-item-text p { color: var(--text-secondary); line-height: 1.5; transition: color var(--transition); }
+
+    .alternatives-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .alt-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .alt-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .alt-card p { font-size: 0.85rem; color: var(--text-secondary); transition: color var(--transition); }
+
+    /* ── Form ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color var(--transition), background var(--transition);
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .form-group textarea { min-height: 100px; resize: vertical; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    footer strong { color: var(--accent); }
+
+    /* ── Singleton Visualizer ── */
+    .visualizer {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .vis-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .vis-box {
+      background: var(--bg-code);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: all var(--transition);
+    }
+
+    .vis-box.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .vis-arrow { color: var(--text-muted); font-size: 1.2rem; }
+
+    .vis-singleton {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.85rem;
+      font-family: monospace;
+      font-weight: 700;
+      text-align: center;
+      min-width: 160px;
+    }
+
+    #instance-count {
+      font-size: 1.5rem;
+      font-weight: 800;
+      display: block;
+    }
+
+    #theme-log {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      font-family: monospace;
+      color: var(--text-secondary);
+      max-height: 100px;
+      overflow-y: auto;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    #theme-log p { margin-bottom: 0.2rem; }
+
+    #theme-log .log-entry { color: var(--accent); }
+  </style>
+</head>
+<body data-theme="light">
+
+<!-- ── Navigation ── -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">
+      <div class="logo-icon">S</div>
+      SingletonUI
+    </a>
+    <ul class="nav-links">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#code">Code</a></li>
+      <li><a href="#discussion">Discussion</a></li>
+    </ul>
+    <div class="nav-right">
+      <span class="toggle-label" id="theme-label">Light</span>
+      <button class="toggle-track" id="themeToggle" aria-label="Toggle theme" role="switch" aria-checked="false">
+        <div class="toggle-knob" id="toggleKnob">☀️</div>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <span class="hero-badge">Design Pattern</span>
+  <h1>Singleton Theme Manager</h1>
+  <p>
+    A practical demonstration of the <strong>Singleton pattern</strong> managing
+    application-wide theme state — with an honest discussion of its trade-offs.
+  </p>
+  <div class="hero-actions">
+    <a href="#demo" class="btn btn-primary">View Demo</a>
+    <a href="#discussion" class="btn btn-outline">Read Discussion</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── Overview Cards ── -->
+  <section id="overview">
+    <div class="section-header">
+      <h2>What is the Singleton Pattern?</h2>
+      <div class="divider"></div>
+      <p>Ensures a class has only one instance and provides a global access point to it.</p>
+    </div>
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">🔒</span>
+        <h3>Single Instance</h3>
+        <p>Only one ThemeManager object ever exists in memory. Every call to <code>getInstance()</code> returns the exact same object reference.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌐</span>
+        <h3>Global Access Point</h3>
+        <p>Any module in your app can access the theme state without passing references through props or function arguments.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">⚡</span>
+        <h3>Lazy Initialization</h3>
+        <p>The instance is created only when first requested, avoiding unnecessary memory allocation at startup.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">📡</span>
+        <h3>Observer Ready</h3>
+        <p>Easily extended with the Observer pattern so components can subscribe to theme changes reactively.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Stats ── -->
+  <section>
+    <div class="section-header">
+      <h2>Pattern at a Glance</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-value" id="instanceCount">1</span>
+        <div class="stat-label">Active Instances</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="toggleCount">0</span>
+        <div class="stat-label">Theme Toggles</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="subscriberCount">3</span>
+        <div class="stat-label">Subscribers</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="currentThemeDisplay">Light</span>
+        <div class="stat-label">Current Theme</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Singleton Visualizer ── -->
+  <section id="demo">
+    <div class="section-header">
+      <h2>Live Singleton Visualizer</h2>
+      <div class="divider"></div>
+      <p>Toggle the theme and watch the singleton state update in real time.</p>
+    </div>
+    <div class="visualizer">
+      <div class="vis-row">
+        <div class="vis-box active" id="vis-nav">NavBar</div>
+        <div class="vis-arrow">→</div>
+        <div class="vis-singleton">
+          ThemeManager.getInstance()<br>
+          <span id="instance-count">1 instance</span>
+        </div>
+        <div class="vis-arrow">→</div>
+        <div class="vis-box active" id="vis-cards">Cards</div>
+      </div>
+      <div class="vis-row">
+        <div class="vis-box active" id="vis-form">Form</div>
+        <div class="vis-arrow">→</div>
+        <div class="vis-box active" id="vis-table">Table</div>
+        <div class="vis-arrow">→</div>
+        <div class="vis-box active" id="vis-footer">Footer</div>
+      </div>
+      <p style="font-size:0.8rem; color: var(--text-muted); margin-bottom:0.75rem;">
+        📋 Theme change log:
+      </p>
+      <div id="theme-log">
+        <p class="log-entry">▶ ThemeManager initialised — theme: "light"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Progress Bars ── -->
+  <section>
+    <div class="section-header">
+      <h2>Pattern Adoption</h2>
+      <div class="divider"></div>
+      <p>How widely various design patterns appear in production codebases.</p>
+    </div>
+    <div class="progress-list">
+      <div class="progress-item">
+        <label>Singleton <span>78%</span></label>
+        <div class="progress-track"><div class="progress-fill" style="width:78%"></div></div>
+      </div>
+      <div class="progress-item">
+        <label>Observer <span>85%</span></label>
+        <div class="progress-track"><div class="progress-fill" style="width:85%"></div></div>
+      </div>
+      <div class="progress-item">
+        <label>Factory <span>91%</span></label>
+        <div class="progress-track"><div class="progress-fill" style="width:91%"></div></div>
+      </div>
+      <div class="progress-item">
+        <label>Dependency Injection <span>94%</span></label>
+        <div class="progress-track"><div class="progress-fill" style="width:94%"></div></div>
+      </div>
+      <div class="progress-item">
+        <label>Module Pattern <span>97%</span></label>
+        <div class="progress-track"><div class="progress-fill" style="width:97%"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Code Block ── -->
+  <section id="code">
+    <div class="section-header">
+      <h2>Implementation</h2>
+      <div class="divider"></div>
+      <p>The complete Singleton ThemeManager used on this page.</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot dot-red"></div>
+          <div class="code-dot dot-yellow"></div>
+          <div class="code-dot dot-green"></div>
+        </div>
+        <span class="code-lang">JavaScript — ThemeManager.js</span>
+        <button class="copy-btn" onclick="copyCode()">Copy</button>
+      </div>
+<pre><code><span class="kw">class</span> <span class="fn">ThemeManager</span> {
+  <span class="cm">// Private static field holds the single instance</span>
+  <span class="kw">static</span> #instance = <span class="kw">null</span>;
+
+  <span class="fn">constructor</span>() {
+    <span class="kw">if</span> (<span class="fn">ThemeManager</span>.#instance) {
+      <span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">"Use ThemeManager.getInstance()"</span>);
+    }
+    <span class="kw">this</span>.theme      = <span class="kw">this</span>.<span class="fn">_loadTheme</span>();
+    <span class="kw">this</span>.subscribers = [];
+    <span class="kw">this</span>.<span class="fn">_apply</span>();
+  }
+
+  <span class="cm">/** Returns the single shared instance (creates it on first call) */</span>
+  <span class="kw">static</span> <span class="fn">getInstance</span>() {
+    <span class="kw">if</span> (!<span class="fn">ThemeManager</span>.#instance) {
+      <span class="fn">ThemeManager</span>.#instance = <span class="kw">new</span> <span class="fn">ThemeManager</span>();
+    }
+    <span class="kw">return</span> <span class="fn">ThemeManager</span>.#instance;
+  }
+
+  <span class="fn">toggle</span>() {
+    <span class="kw">this</span>.theme = <span class="kw">this</span>.theme === <span class="str">"light"</span> ? <span class="str">"dark"</span> : <span class="str">"light"</span>;
+    <span class="kw">this</span>.<span class="fn">_apply</span>();
+    <span class="kw">this</span>.<span class="fn">_save</span>();
+    <span class="kw">this</span>.<span class="fn">_notify</span>();
+  }
+
+  <span class="fn">subscribe</span>(callback) {
+    <span class="kw">this</span>.subscribers.<span class="fn">push</span>(callback);
+    <span class="kw">return</span> () => {   <span class="cm">// returns unsubscribe fn</span>
+      <span class="kw">this</span>.subscribers = <span class="kw">this</span>.subscribers
+        .<span class="fn">filter</span>(cb => cb !== callback);
+    };
+  }
+
+  <span class="fn">_apply</span>()  { document.body.dataset.theme = <span class="kw">this</span>.theme; }
+  <span class="fn">_save</span>()   { localStorage.<span class="fn">setItem</span>(<span class="str">"theme"</span>, <span class="kw">this</span>.theme); }
+  <span class="fn">_notify</span>() { <span class="kw">this</span>.subscribers.<span class="fn">forEach</span>(cb => <span class="fn">cb</span>(<span class="kw">this</span>.theme)); }
+  <span class="fn">_loadTheme</span>() {
+    <span class="kw">return</span> localStorage.<span class="fn">getItem</span>(<span class="str">"theme"</span>)
+      ?? (window.matchMedia(<span class="str">"(prefers-color-scheme: dark)"</span>).matches
+          ? <span class="str">"dark"</span> : <span class="str">"light"</span>);
+  }
+}</code></pre>
+    </div>
+  </section>
+
+  <!-- ── Comparison Table ── -->
+  <section>
+    <div class="section-header">
+      <h2>Pattern Comparison</h2>
+      <div class="divider"></div>
+      <p>How Singleton stacks up against common alternatives for shared state.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pattern</th>
+            <th>Instance Control</th>
+            <th>Testability</th>
+            <th>Coupling</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Singleton</strong></td>
+            <td><span class="tag tag-green">Strict (1)</span></td>
+            <td><span class="tag tag-red">Hard</span></td>
+            <td><span class="tag tag-red">High</span></td>
+            <td>Config, loggers, theme</td>
+          </tr>
+          <tr>
+            <td><strong>Dependency Injection</strong></td>
+            <td><span class="tag tag-yellow">Flexible</span></td>
+            <td><span class="tag tag-green">Easy</span></td>
+            <td><span class="tag tag-green">Low</span></td>
+            <td>Services, repositories</td>
+          </tr>
+          <tr>
+            <td><strong>Module (ES6)</strong></td>
+            <td><span class="tag tag-green">Strict (1)</span></td>
+            <td><span class="tag tag-yellow">Moderate</span></td>
+            <td><span class="tag tag-yellow">Medium</span></td>
+            <td>Utilities, constants</td>
+          </tr>
+          <tr>
+            <td><strong>Context / Store</strong></td>
+            <td><span class="tag tag-yellow">Managed</span></td>
+            <td><span class="tag tag-green">Easy</span></td>
+            <td><span class="tag tag-green">Low</span></td>
+            <td>React/Vue state trees</td>
+          </tr>
+          <tr>
+            <td><strong>Service Locator</strong></td>
+            <td><span class="tag tag-yellow">Registry</span></td>
+            <td><span class="tag tag-red">Hard</span></td>
+            <td><span class="tag tag-red">High</span></td>
+            <td>Legacy plugin systems</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Callouts ── -->
+  <section>
+    <div class="section-header">
+      <h2>Quick Takeaways</h2>
+      <div class="divider"></div>
+    </div>
+    <div class="callout callout-pro">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <h4>When Singleton Works Well</h4>
+        <p>Use it for truly global, stateless-ish resources: logging, configuration, hardware interfaces, or — as shown here — a lightweight theme manager where only one authoritative state should ever exist.</p>
+      </div>
+    </div>
+    <div class="callout callout-con">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <h4>When Singleton Hurts</h4>
+        <p>Avoid it for business logic services, data repositories, or anything you need to mock in tests. Hidden global state makes code harder to reason about and unit-test in isolation.</p>
+      </div>
+    </div>
+    <div class="callout callout-tip">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>A Pragmatic Middle Ground</h4>
+        <p>ES6 modules are singletons by nature — the module cache ensures one instance. Exporting a plain object or a frozen config from a module gives you singleton semantics without a class, and it's far easier to mock in tests.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Form ── -->
+  <section>
+    <div class="section-header">
+      <h2>Theme-Aware Form</h2>
+      <div class="divider"></div>
+      <p>Every input element inherits the theme automatically via CSS custom properties.</p>
+    </div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fname">First Name</label>
+          <input type="text" id="fname" placeholder="Ada" />
+        </div>
+        <div class="form-group">
+          <label for="lname">Last Name</label>
+          <input type="text" id="lname" placeholder="Lovelace" />
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="ada@example.com" />
+        </div>
+        <div class="form-group">
+          <label for="role">Role</label>
+          <select id="role">
+            <option>Frontend Engineer</option>
+            <option>Backend Engineer</option>
+            <option>Architect</option>
+            <option>Tech Lead</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label for="thoughts">Thoughts on Singletons</label>
+          <textarea id="thoughts" placeholder="Share your experience with the Singleton pattern..."></textarea>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:1rem" onclick="showToast('Form submitted! (demo only)')">
+        Submit Feedback
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Discussion ── -->
+  <section id="discussion">
+    <div class="discussion">
+      <h2>📚 In-Depth Discussion</h2>
+      <div class="divider"></div>
+      <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+        The Singleton pattern is one of the most recognised — and most debated — patterns in software design.
+        Here is an honest look at both sides, and guidance on when to reach for something better.
+      </p>
+
+      <div class="discussion-grid">
+        <!-- Advantages -->
+        <div class="disc-col">
+          <h3>✅ Advantages</h3>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">🎯</div>
+            <div class="disc-item-text">
+              <strong>Controlled Instance Count</strong>
+              <p>Guarantees exactly one instance exists, preventing accidental duplication of expensive resources like DB connection pools or hardware drivers.</p>
+            </div>
+          </div>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">💾</div>
+            <div class="disc-item-text">
+              <strong>Lazy Initialisation</strong>
+              <p>The object is created only when first needed, avoiding wasteful startup costs if the resource is never actually used.</p>
+            </div>
+          </div>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">🌍</div>
+            <div class="disc-item-text">
+              <strong>Global Accessibility</strong>
+              <p>Any part of the codebase can retrieve the instance without threading it through constructors or function arguments — convenient for cross-cutting concerns.</p>
+            </div>
+          </div>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">📦</div>
+            <div class="disc-item-text">
+              <strong>Single Source of Truth</strong>
+              <p>For genuinely global state (app config, feature flags, active theme) having one authoritative object eliminates synchronisation bugs.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disadvantages -->
+        <div class="disc-col">
+          <h3>❌ Disadvantages</h3>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">🧪</div>
+            <div class="disc-item-text">
+              <strong>Poor Testability</strong>
+              <p>Global state persists between tests, causing hidden coupling. You cannot easily inject a mock or reset state, making unit tests fragile and order-dependent.</p>
+            </div>
+          </div>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">🔗</div>
+            <div class="disc-item-text">
+              <strong>Hidden Dependencies</strong>
+              <p>Callers implicitly depend on the global instance rather than declaring dependencies explicitly. This violates the Dependency Inversion Principle and obscures the call graph.</p>
+            </div>
+          </div>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">🧵</div>
+            <div class="disc-item-text">
+              <strong>Concurrency Hazards</strong>
+              <p>In multi-threaded environments (e.g., Node.js workers, Java) naive implementations suffer race conditions during initialisation without careful double-checked locking.</p>
+            </div>
+          </div>
+
+          <div class="disc-item">
+            <div class="disc-item-icon">📐</div>
+            <div class="disc-item-text">
+              <strong>Violates SRP</strong>
+              <p>The class manages both its business logic and its own lifecycle, giving it two reasons to change and making it harder to extend without modification.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- When to use DI instead -->
+      <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:1rem;">
+        🔄 When Dependency Injection (or Alternatives) Are More Appropriate
+      </h3>
+      <div class="alternatives-grid">
+        <div class="alt-card">
+          <h4>🏭 Use DI When Testing Matters</h4>
+          <p>If you need to swap implementations (real DB vs. in-memory mock), inject the dependency through the constructor. Your test can pass a fake without touching global state.</p>
+        </div>
+        <div class="alt-card">
+          <h4>📦 Use ES6 Modules as Singletons</h4>
+          <p>The module cache already ensures one instance. Export a plain frozen object or an instance created at module level — simpler, no class boilerplate, and still mockable via <code>jest.mock()</code>.</p>
+        </div>
+        <div class="alt-card">
+          <h4>⚛️ Use Context / Stores in UI Frameworks</h4>
+          <p>React Context, Vue's provide/inject, or Pinia/Redux give you scoped global state with first-class tooling, devtools, and time-travel debugging that a hand-rolled Singleton can't match.</p>
+        </div>
+        <div class="alt-card">
+          <h4>🏗️ Use DI Containers for Large Apps</h4>
+          <p>Frameworks like InversifyJS, NestJS, or Angular's injector manage object lifecycles (singleton, transient, scoped) declaratively, giving you Singleton semantics without the anti-patterns.</p>
+        </div>
+        <div class="alt-card">
+          <h4>🎭 Use the Monostate Pattern</h4>
+          <p>Instead of restricting instantiation, make all instance fields static so every instance shares state. Callers can create objects normally, preserving testability while keeping shared state.</p>
+        </div>
+        <div class="alt-card">
+          <h4>🔒 Keep It When Truly Justified</h4>
+          <p>Hardware abstractions, loggers, feature-flag clients, and — as here — a lightweight theme manager are legitimate Singleton use cases where the simplicity genuinely outweighs the trade-offs.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem; padding:1rem; background:var(--accent-light); border-radius:10px; border-left: 4px solid var(--accent);">
+        <p style="font-size:0.9rem; color:var(--text-secondary);">
+          <strong style="color:var(--accent);">Bottom line:</strong>
+          The Singleton pattern is a tool, not a rule. Ask yourself: <em>"Would this be hard to test?"</em>
+          and <em>"Does a consumer need to know about this dependency?"</em>
+          If either answer is yes, reach for dependency injection or a framework-managed store instead.
+          If the resource is genuinely global, stateless, and never needs mocking, a Singleton
+          (or better yet, a simple ES6 module export) is perfectly reasonable.
+        </p>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<!-- ── Footer ── -->
+<footer>
+  <p>
+    Built to demonstrate the <strong>Singleton Design Pattern</strong> ·
+    Theme state managed by <strong>ThemeManager.getInstance()</strong> ·
+    Toggle above to see it in action
+  </p>
+</footer>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<!-- ════════════════════════════════════════════
+     JavaScript — Singleton ThemeManager
+════════════════════════════════════════════ -->
+<script>
+  /* ── ThemeManager Singleton ── */
+  class ThemeManager {
+    static #instance = null;
+
+    constructor() {
+      if (ThemeManager.#instance) {
+        throw new Error("Use ThemeManager.getInstance() — only one instance allowed.");
+      }
+      this.theme       = this._loadTheme();
+      this.subscribers = [];
+      this.toggleCount = 0;
+      this._apply();
+    }
+
+    static getInstance() {
+      if (!ThemeManager.#instance) {
+        ThemeManager.#instance = new ThemeManager();
+      }
+      return ThemeManager.#instance;
+    }
+
+    toggle() {
+      this.theme = this.theme === "light" ? "dark" : "light";
+      this.toggleCount++;
+      this._apply();
+      this._save();
+      this._notify();
+    }
+
+    subscribe(callback) {
+      this.subscribers.push(callback);
+      // Return an unsubscribe function
+      return () => {
+        this.subscribers = this.subscribers.filter(cb => cb !== callback);
+      };
+    }
+
+    _apply()  { document.body.dataset.theme = this.theme; }
+    _save()   { try { localStorage.setItem("theme", this.theme); } catch(e) {} }
+    _notify() { this.subscribers.forEach(cb => cb(this.theme)); }
+
+    _loadTheme() {
+      try {
+        const stored = localStorage.getItem("theme");
+        if (stored === "light" || stored === "dark") return stored;
+      } catch(e) {}
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+  }
+
+  /* ── Bootstrap ── */
+  const tm = ThemeManager.getInstance();
+
+  // Verify singleton — a second call must return the same reference
+  const tm2 = ThemeManager.getInstance();
+  console.assert(tm === tm2, "Singleton violated! Different instances returned.");
+  console.log("Singleton check passed — tm === tm2:", tm === tm2);
+
+  /* ── UI element refs ── */
+  const toggleBtn          = document.getElementById("themeToggle");
+  const toggleKnob         = document.getElementById("toggleKnob");
+  const themeLabel         = document.getElementById("theme-label");
+  const instanceCountEl    = document.getElementById("instanceCount");
+  const toggleCountEl      = document.getElementById("toggleCount");
+  const currentThemeEl     = document.getElementById("currentThemeDisplay");
+  const themeLog           = document.getElementById("theme-log");
+  const instanceCountVis   = document.getElementById("instance-count");
+
+  /* ── Sync UI to current theme ── */
+  function syncUI(theme) {
+    const isDark = theme === "dark";
+    toggleKnob.textContent    = isDark ? "🌙" : "☀️";
+    themeLabel.textContent    = isDark ? "Dark" : "Light";
+    toggleBtn.setAttribute("aria-checked", isDark ? "true" : "false");
+    currentThemeEl.textContent = isDark ? "Dark" : "Light";
+    toggleCountEl.textContent  = tm.toggleCount;
+    instanceCountEl.textContent = "1";      // always 1 — it's a singleton
+    instanceCountVis.textContent = "1 instance";
+
+    // Log entry
+    const entry = document.createElement("p");
+    entry.className = "log-entry";
+    entry.textContent =
+      `▶ theme changed → "${theme}" (toggle #${tm.toggleCount}, ts: ${Date.now()})`;
+    themeLog.appendChild(entry);
+    themeLog.scrollTop = themeLog.scrollHeight;
+  }
+
+  /* ── Subscribe three "components" to demonstrate observer integration ── */
+  // Subscriber 1: NavBar
+  const unsubNav = tm.subscribe(theme => {
+    console.log(`[NavBar] received theme: ${theme}`);
+  });
+
+  // Subscriber 2: Cards
+  const unsubCards = tm.subscribe(theme => {
+    console.log(`[Cards] received theme: ${theme}`);
+  });
+
+  // Subscriber 3: Main UI updater
+  const unsubUI = tm.subscribe(theme => {
+    syncUI(theme);
+  });
+
+  /* ── Toggle button handler ── */
+  toggleBtn.addEventListener("click", () => tm.toggle());
+
+  /* ── Also sync on load (theme may have been restored from localStorage) ── */
+  syncUI(tm.theme);
+
+  /* ── Copy code button ── */
+  function copyCode() {
+    const code = document.querySelector("pre code").textContent;
+    navigator.clipboard.writeText(code)
+      .then(() => showToast("Code copied to clipboard!"))
+      .catch(() => showToast("Copy failed — please select manually."));
+  }
+
+  /* ── Toast helper ── */
+  function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2800);
+  }
+
+  /* ── Demonstrate that getInstance() always returns the same object ── */
+  // Try to instantiate directly (should throw)
+  try {
+    const illegal = new ThemeManager();
+  } catch (e) {
+    console.log("Direct construction blocked:", e.message);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Singly Linked List Visualizer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#2563eb;
+    --danger:#dc2626;
+    --ok:#16a34a;
+    --node-bg:#eef2ff;
+    --node-border:#c7d2fe;
+    --arrow:#374151;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,system-ui,Arial;color:#111827;background:var(--bg)}
+  .app{
+    max-width:1000px;margin:28px auto;padding:20px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.95));
+    border-radius:12px; box-shadow:0 6px 30px rgba(15,23,42,0.08);
+  }
+  h1{margin:0 0 8px;font-size:20px}
+  p.lead{margin:0 0 18px;color:var(--muted)}
+  .controls{
+    display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:center;
+  }
+  .controls .group{display:flex;gap:8px;align-items:center}
+  input[type="text"]{
+    padding:8px 10px;border-radius:8px;border:1px solid #e6e9ef;background:white;outline:none;
+    min-width:120px;
+  }
+  button{
+    padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);
+    background:linear-gradient(180deg,#fff,#f3f4f6);cursor:pointer;
+  }
+  button.primary{background:linear-gradient(180deg,var(--accent),#1e40af);color:white;border:none}
+  button.danger{background:linear-gradient(180deg,var(--danger),#b91c1c);color:white;border:none}
+  button:active{transform:translateY(1px)}
+  .status{margin-left:auto;color:var(--muted);font-size:14px}
+  .visual{
+    padding:18px;border-radius:10px;background:var(--card);min-height:180px;border:1px solid #eef2ff;
+    display:flex;align-items:center;justify-content:center;overflow:auto;
+  }
+  .nodes{
+    display:flex;align-items:center;gap:18px;padding:6px 12px;
+  }
+  .node{
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .box{
+    min-width:68px;height:48px;border-radius:8px;background:var(--node-bg);
+    border:2px solid var(--node-border);display:flex;align-items:center;justify-content:center;
+    font-weight:600;color:#0f172a;position:relative;box-shadow:0 2px 6px rgba(13,23,52,0.04);
+  }
+  .box.empty{background:linear-gradient(90deg,#fff,#f8fafc);color:var(--muted);font-weight:500}
+  .label{font-size:12px;color:var(--muted);margin-top:6px}
+  .arrow{
+    width:48px;height:24px;display:flex;align-items:center;justify-content:center;
+  }
+  /* Arrow using SVG line with marker */
+  svg.arrow-svg{overflow:visible}
+  .highlight{
+    box-shadow:0 0 0 4px rgba(37,99,235,0.12) inset, 0 6px 18px rgba(37,99,235,0.08);
+    border-color:#1e40af;
+    transform:translateY(-4px);
+  }
+  .found{
+    box-shadow:0 0 0 4px rgba(16,185,129,0.12) inset, 0 6px 18px rgba(16,185,129,0.08);
+    border-color:#059669;
+    transform:translateY(-4px);
+  }
+  .fade{
+    opacity:0.4;transform:scale(.98)
+  }
+  .empty-state{
+    color:var(--muted);font-size:15px;text-align:center;padding:12px 18px;border-radius:8px;border:1px dashed #e6e9ef;background:#ffffff;
+  }
+
+  .buttons-row{display:flex;gap:8px;align-items:center}
+  .help{font-size:13px;color:var(--muted);margin-top:10px}
+  @media (max-width:700px){
+    .nodes{gap:12px;padding:6px}
+    .arrow{width:34px}
+    .box{min-width:56px;height:42px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Singly Linked List Visualizer</h1>
+  <p class="lead">Insert, delete, and search nodes. Nodes are shown left-to-right (head on the left).</p>
+
+  <div class="controls">
+    <div class="group">
+      <input id="val-input" type="text" placeholder="Value (string or number)" />
+      <div class="buttons-row">
+        <button id="ins-head" class="primary">Insert at head</button>
+        <button id="ins-tail">Insert at tail</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <input id="del-input" type="text" placeholder="Delete value" />
+      <button id="del-btn" class="danger">Delete</button>
+    </div>
+
+    <div class="group">
+      <input id="search-input" type="text" placeholder="Search value" />
+      <button id="search-btn">Search</button>
+      <button id="clear-search">Clear</button>
+    </div>
+
+    <div class="group">
+      <button id="clear-btn">Clear list</button>
+      <button id="random-btn">Random demo</button>
+    </div>
+
+    <div class="status" id="status">Size: 0</div>
+  </div>
+
+  <div class="visual" id="visual">
+    <div class="empty-state" id="empty-state">List is empty. Insert nodes to begin.</div>
+    <div class="nodes" id="nodes" style="display:none"></div>
+  </div>
+
+  <div class="help">Tip: insert duplicate values allowed. Delete removes first matching value. Search highlights the first match.</div>
+</div>
+
+<script>
+(function(){
+  // Singly linked list data structure (JS objects)
+  function Node(value){
+    this.value = value;
+    this.next = null;
+  }
+  function LinkedList(){
+    this.head = null;
+    this.size = 0;
+  }
+  LinkedList.prototype.insertHead = function(val){
+    var n = new Node(val);
+    n.next = this.head;
+    this.head = n;
+    this.size++;
+  };
+  LinkedList.prototype.insertTail = function(val){
+    var n = new Node(val);
+    if(!this.head){ this.head = n; this.size++; return; }
+    var cur = this.head;
+    while(cur.next) cur = cur.next;
+    cur.next = n;
+    this.size++;
+  };
+  LinkedList.prototype.deleteByValue = function(val){
+    if(!this.head) return false;
+    var cur = this.head, prev = null;
+    while(cur){
+      if(cur.value === val){
+        if(prev) prev.next = cur.next;
+        else this.head = cur.next;
+        this.size--;
+        return true;
+      }
+      prev = cur;
+      cur = cur.next;
+    }
+    return false;
+  };
+  LinkedList.prototype.findIndexOf = function(val){
+    var idx = 0, cur = this.head;
+    while(cur){
+      if(cur.value === val) return idx;
+      cur = cur.next; idx++;
+    }
+    return -1;
+  };
+  LinkedList.prototype.toArray = function(){
+    var arr = []; var cur = this.head;
+    while(cur){ arr.push(cur.value); cur = cur.next; }
+    return arr;
+  };
+  LinkedList.prototype.clear = function(){ this.head = null; this.size = 0; };
+
+  // UI handling
+  var list = new LinkedList();
+  var nodesEl = document.getElementById('nodes');
+  var emptyStateEl = document.getElementById('empty-state');
+  var statusEl = document.getElementById('status');
+  var valInput = document.getElementById('val-input');
+  var insHeadBtn = document.getElementById('ins-head');
+  var insTailBtn = document.getElementById('ins-tail');
+  var delInput = document.getElementById('del-input');
+  var delBtn = document.getElementById('del-btn');
+  var searchInput = document.getElementById('search-input');
+  var searchBtn = document.getElementById('search-btn');
+  var clearSearchBtn = document.getElementById('clear-search');
+  var clearBtn = document.getElementById('clear-btn');
+  var randomBtn = document.getElementById('random-btn');
+
+  function render(highlightIndex, foundIndex){
+    // highlightIndex: index currently being inspected (for search animation)
+    // foundIndex: index that matched (to mark found)
+    var arr = list.toArray();
+    nodesEl.innerHTML = '';
+    if(arr.length === 0){
+      nodesEl.style.display = 'none';
+      emptyStateEl.style.display = 'block';
+      statusEl.textContent = 'Size: 0';
+      return;
+    }
+    nodesEl.style.display = 'flex';
+    emptyStateEl.style.display = 'none';
+    arr.forEach(function(val, i){
+      // node container
+      var node = document.createElement('div');
+      node.className = 'node';
+      // box
+      var box = document.createElement('div');
+      box.className = 'box';
+      box.textContent = String(val);
+      // label for head/tail
+      var lbl = document.createElement('div');
+      lbl.className = 'label';
+      if(i === 0) lbl.textContent = 'head';
+      else if(i === arr.length -1) lbl.textContent = 'tail';
+      else lbl.textContent = '';
+      // apply highlight/animation classes
+      if(typeof highlightIndex === 'number' && i === highlightIndex){
+        box.classList.add('highlight');
+      } else if(typeof foundIndex === 'number' && i === foundIndex){
+        box.classList.add('found');
+      } else if(typeof highlightIndex === 'number'){
+        // dim other nodes while searching
+        box.classList.add('fade');
+      }
+
+      node.appendChild(box);
+      node.appendChild(lbl);
+      nodesEl.appendChild(node);
+
+      // arrow (except after last)
+      if(i < arr.length - 1){
+        var arrow = document.createElement('div');
+        arrow.className = 'arrow';
+        arrow.innerHTML = makeArrowSVG();
+        nodesEl.appendChild(arrow);
+      }
+    });
+
+    statusEl.textContent = 'Size: ' + list.size;
+    // ensure visible scrolled to right place
+    setTimeout(function(){
+      nodesEl.parentElement.scrollLeft = nodesEl.scrollWidth;
+    },50);
+  }
+
+  function makeArrowSVG(){
+    // returns SVG markup for arrow pointing right
+    return '<svg class="arrow-svg" width="100" height="20" viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">' +
+      '<path d="M0,0 L8,4 L0,8" fill="'+getComputedStyle(document.documentElement).getPropertyValue('--arrow').trim()+'" />' +
+      '</marker></defs>' +
+      '<line x1="2" y1="10" x2="92" y2="10" stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--arrow').trim()+'" stroke-width="2" marker-end="url(#arrowhead)" stroke-linecap="round" />' +
+      '</svg>';
+  }
+
+  // Input helpers
+  function parseInputValue(str){
+    // trim. Try to parse numbers; otherwise keep string
+    var s = String(str).trim();
+    if(s === '') return null;
+    // numeric detection: if it's a valid integer or float literal
+    if(!isNaN(s) && s !== '') {
+      // keep numbers as numbers (optional)
+      var n = Number(s);
+      return n;
+    }
+    return s;
+  }
+
+  // Actions
+  insHeadBtn.addEventListener('click', function(){
+    var v = parseInputValue(valInput.value);
+    if(v === null){ flash(emptyStateEl, 'Please enter a value to insert.'); return; }
+    list.insertHead(v);
+    valInput.value = '';
+    render();
+  });
+  insTailBtn.addEventListener('click', function(){
+    var v = parseInputValue(valInput.value);
+    if(v === null){ flash(emptyStateEl, 'Please enter a value to insert.'); return; }
+    list.insertTail(v);
+    valInput.value = '';
+    render();
+  });
+  delBtn.addEventListener('click', function(){
+    var v = parseInputValue(delInput.value);
+    if(v === null){ flash(emptyStateEl, 'Please enter a value to delete.'); return; }
+    var ok = list.deleteByValue(v);
+    if(ok){
+      flashStatus('Deleted first occurrence of "'+String(v)+'".', false);
+    } else {
+      flashStatus('Value "'+String(v)+'" not found.', true);
+    }
+    delInput.value = '';
+    render();
+  });
+
+  searchBtn.addEventListener('click', function(){
+    var v = parseInputValue(searchInput.value);
+    if(v === null){ flash(emptyStateEl, 'Please enter a value to search.'); return; }
+    animateSearch(v);
+  });
+  clearSearchBtn.addEventListener('click', function(){
+    searchInput.value = '';
+    render();
+  });
+
+  clearBtn.addEventListener('click', function(){
+    if(list.size === 0){ flashStatus('List already empty.', true); return; }
+    list.clear();
+    render();
+    flashStatus('List cleared.', false);
+  });
+
+  randomBtn.addEventListener('click', function(){
+    // create a small random demo list
+    var choices = ['A','B','C','D','E','1','2','3','x','y','z'];
+    list.clear();
+    var n = Math.floor(Math.random()*6)+2;
+    for(var i=0;i<n;i++){
+      list.insertTail(choices[Math.floor(Math.random()*choices.length)]);
+    }
+    render();
+    flashStatus('Random list generated.', false);
+  });
+
+  // Small flashing status helper
+  var statusTimer = null;
+  function flashStatus(msg, isError){
+    statusEl.textContent = msg;
+    statusEl.style.color = isError ? getComputedStyle(document.documentElement).getPropertyValue('--danger') : getComputedStyle(document.documentElement).getPropertyValue('--muted');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(function(){
+      statusEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--muted');
+      statusEl.textContent = 'Size: ' + list.size;
+    }, 2200);
+  }
+  function flash(el, msg){
+    // temporarily show message in the visual area (used when inputs are blank)
+    var prev = el.textContent;
+    el.textContent = msg;
+    el.animate([{opacity:1},{opacity:0.6},{opacity:1}],{duration:500,iterations:1});
+    setTimeout(function(){ el.textContent = prev; },1100);
+  }
+
+  // Search animation: step through nodes, highlight each; stop at first match and mark found
+  function animateSearch(target){
+    var arr = list.toArray();
+    if(arr.length === 0){ flashStatus('List is empty.', true); return; }
+    var foundIndex = -1;
+    var i = 0;
+    function step(){
+      if(i >= arr.length){
+        // finished scanning without finding
+        render(); // clear fades
+        flashStatus('Value "'+String(target)+'" not found.', true);
+        return;
+      }
+      // highlight current node
+      render(i, -1);
+      if(arr[i] === target){
+        // match found
+        foundIndex = i;
+        setTimeout(function(){
+          render(-1, foundIndex);
+          flashStatus('Found value at index '+foundIndex+'.', false);
+        }, 300);
+        return;
+      }
+      i++;
+      setTimeout(step, 420);
+    }
+    step();
+  }
+
+  // Initialize
+  render();
+
+  // Optional: allow Enter key to trigger insert at tail for convenience
+  valInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ insTailBtn.click(); }
+  });
+  delInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ delBtn.click(); }
+  });
+  searchInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ searchBtn.click(); }
+  });
+
+  // Expose list for debugging in console (optional)
+  window._ll = list;
+
+})();
+</script>
+</body>
+</html>

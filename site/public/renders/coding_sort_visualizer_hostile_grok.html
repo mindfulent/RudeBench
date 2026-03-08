@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison: Bubble vs. Quick vs. Merge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-around;
+            margin: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            width: 30%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #333;
+        }
+        
+        .bars {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 200px;
+            border-bottom: 2px solid #000;
+            margin: 10px 0;
+        }
+        
+        .bar {
+            width: 20px;
+            background-color: #4CAF50; /* Green by default */
+            margin: 0 2px;
+            transition: height 0.5s ease, background-color 0.5s ease;
+        }
+        
+        .bar.swapping {
+            background-color: #f44336; /* Red when swapping */
+        }
+        
+        .step-counter {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #005f73;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="bubble-container">
+        <h2>Bubble Sort</h2>
+        <div id="bubble-bars" class="bars"></div>
+        <p class="step-counter" id="bubble-steps">Steps: 0</p>
+        <button onclick="startSorting('bubble')">Start Sorting</button>
+    </div>
+
+    <div class="container" id="quick-container">
+        <h2>Quick Sort</h2>
+        <div id="quick-bars" class="bars"></div>
+        <p class="step-counter" id="quick-steps">Steps: 0</p>
+        <button onclick="startSorting('quick')">Start Sorting</button>
+    </div>
+
+    <div class="container" id="merge-container">
+        <h2>Merge Sort</h2>
+        <div id="merge-bars" class="bars"></div>
+        <p class="step-counter" id="merge-steps">Steps: 0</p>
+        <button onclick="startSorting('merge')">Start Sorting</button>
+    </div>
+
+    <script>
+        // Initial array (same for all algorithms)
+        const initialArray = [64, 34, 25, 12, 22, 11, 90, 5, 7, 3, 50, 40, 30, 20, 10, 15, 8, 6, 4, 2];
+
+        // Helper function to render bars
+        function renderBars(containerId, array, swappingIndices = []) {
+            const barsContainer = document.getElementById(containerId + '-bars');
+            barsContainer.innerHTML = ''; // Clear existing bars
+            const maxValue = Math.max(...array);
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                if (swappingIndices.includes(index)) {
+                    bar.classList.add('swapping'); // Highlight swapping bars
+                }
+                bar.style.height = `${(value / maxValue) * 100}%`; // Scale height
+                barsContainer.appendChild(bar);
+            });
+        }
+
+        // Bubble Sort Generator
+        function* bubbleSortGenerator(arr) {
+            let steps = 0;
+            let n = arr.length;
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    steps++; // Increment for comparison
+                    yield { array: [...arr], swapping: [j, j+1] }; // Yield for animation
+                    if (arr[j] > arr[j + 1]) {
+                        steps++; // Increment for swap
+                        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                        yield { array: [...arr], swapping: [j, j+1] }; // Yield after swap
+                    }
+                }
+            }
+            yield { array: arr, swapping: [] }; // Final state
+            return steps; // Return total steps at the end
+        }
+
+        // Quick Sort Generator (with in-place partitioning for visualization)
+        function* quickSortGenerator(arr, low = 0, high = arr.length - 1) {
+            let steps = 0;
+            function* partition(low, high) {
+                let pivot = arr[high];
+                let i = low - 1;
+                for (let j = low; j < high; j++) {
+                    steps++; // Increment for comparison
+                    yield { array: [...arr], swapping: [j, high] }; // Yield for animation
+                    if (arr[j] < pivot) {
+                        i++;
+                        steps++; // Increment for swap
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                        yield { array: [...arr], swapping: [i, j] }; // Yield after swap
+                    }
+                }
+                steps++; // Increment for final swap
+                [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+                yield { array: [...arr], swapping: [i + 1, high] }; // Yield after pivot swap
+                return i + 1;
+            }
+
+            if (low < high) {
+                let pi = yield* partition(low, high);
+                yield* quickSortGenerator(arr, low, pi - 1);
+                yield* quickSortGenerator(arr, pi + 1, high);
+            }
+            yield { array: arr, swapping: [] }; // Final state
+            return steps; // Return total steps at the end
+        }
+
+        // Merge Sort Generator (top-down, with visualization)
+        function* mergeSortGenerator(arr) {
+            let steps = 0;
+            function* merge(arr, l, m, r) {
+                let n1 = m - l + 1;
+                let n2 = r - m;
+                let L = arr.slice(l, m+1);
+                let R = arr.slice(m+1, r+1);
+                
+                let i = 0, j = 0, k = l;
+                while (i < n1 && j < n2) {
+                    steps++; // Increment for comparison
+                    yield { array: [...arr], swapping: [l+i, m+1+j] }; // Yield for animation
+                    if (L[i] <= R[j]) {
+                        arr[k] = L[i];
+                        i++;
+                    } else {
+                        arr[k] = R[j];
+                        j++;
+                    }
+                    steps++; // Increment for assignment
+                    yield { array: [...arr], swapping: [k] }; // Yield after merge step
+                    k++;
+                }
+                
+                while (i < n1) {
+                    arr[k] = L[i];
+                    steps++; // Increment for assignment
+                    yield { array: [...arr], swapping: [k] };
+                    i++;
+                    k++;
+                }
+                
+                while (j < n2) {
+                    arr[k] = R[j];
+                    steps++; // Increment for assignment
+                    yield { array: [...arr], swapping: [k] };
+                    j++;
+                    k++;
+                }
+            }
+
+            function* sort(arr, l, r) {
+                if (l >= r) return;
+                let m = l + Math.floor((r - l) / 2);
+                yield* sort(arr, l, m);
+                yield* sort(arr, m + 1, r);
+                yield* merge(arr, l, m, r);
+            }
+
+            yield* sort(arr, 0, arr.length - 1);
+            yield { array: arr, swapping: [] }; // Final state
+            return steps; // Return total steps at the end
+        }
+
+        // Start sorting function
+        function startSorting(algo) {
+            let arrayCopy = [...initialArray]; // Copy the initial array
+            let generator;
+            let stepsElement = document.getElementById(algo + '-steps');
+            let totalSteps = 0; // Track total steps
+
+            if (algo === 'bubble') generator = bubbleSortGenerator(arrayCopy);
+            else if (algo === 'quick') generator = quickSortGenerator(arrayCopy);
+            else if (algo === 'merge') generator = mergeSortGenerator(arrayCopy);
+
+            function animate() {
+                let result = generator.next();
+                if (!result.done) {
+                    totalSteps++; // Increment per yield for animation steps
+                    stepsElement.textContent = `Steps: ${totalSteps}`; // Update step counter
+                    renderBars(algo, result.value.array, result.value.swapping);
+                    setTimeout(animate, 500); // 500ms delay for visibility
+                } else {
+                    stepsElement.textContent = `Steps: ${result.value}`; // Final total steps
+                    renderBars(algo, result.value.array); // Final render
+                    alert(`Sorting complete for ${algo.toUpperCase()}! Total steps: ${result.value}`);
+                }
+            }
+            animate();
+        }
+
+        // Initial render
+        renderBars('bubble', initialArray);
+        renderBars('quick', initialArray);
+        renderBars('merge', initialArray);
+    </script>
+</body>
+</html>

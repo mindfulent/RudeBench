@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garbage Collector Blame Game: Event Listener Leak Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .dashboard-section {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            min-width: 45%;
+        }
+        .dashboard-section h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .dashboard-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        button.add {
+            background-color: #28a745;
+            color: white;
+        }
+        button.add:hover {
+            background-color: #218838;
+        }
+        button.remove {
+            background-color: #dc3545;
+            color: white;
+        }
+        button.remove:hover {
+            background-color: #c82333;
+        }
+        button.reset {
+            background-color: #007bff;
+            color: white;
+        }
+        button.reset:hover {
+            background-color: #0056b3;
+        }
+        .widget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            min-height: 150px;
+            border: 1px dashed #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #fcfcfc;
+        }
+        .widget {
+            background-color: #e0f7fa;
+            border: 1px solid #b2ebf2;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .widget h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: #00796b;
+        }
+        .widget button {
+            background-color: #ffc107;
+            color: #333;
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        .widget button:hover {
+            background-color: #e0a800;
+        }
+        .widget-counter {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        .explanation {
+            background-color: #e6f7ff;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 5px;
+        }
+        .explanation h3 {
+            color: #2196f3;
+            margin-top: 0;
+        }
+        .explanation ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .explanation li {
+            margin-bottom: 10px;
+        }
+        .leak-indicator {
+            background-color: #ffe0b2;
+            border: 1px solid #ff9800;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            color: #e65100;
+        }
+        .fixed-indicator {
+            background-color: #c8e6c9;
+            border: 1px solid #4caf50;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <h1>The Case of the Growing Memory: It's Not the Garbage Collector!</h1>
+
+    <div class="explanation">
+        <h3>The Real Culprit: Uncleaned References and Event Listeners</h3>
+        <p>
+            When a dashboard widget application shows growing memory usage over time, even after widgets are "removed," the immediate thought often jumps to a "bad" garbage collector (GC). However, modern JavaScript GCs are highly optimized and efficient. The problem almost always lies in *your code* creating references that prevent the GC from doing its job.
+        </p>
+        <p>
+            This demo illustrates the most common cause: <strong>uncleaned event listeners and lingering DOM references.</strong>
+        </p>
+        <ul>
+            <li><strong>Event Listener Leaks:</strong> When you add an event listener to an element (e.g., a button inside a widget), and then remove that element from the DOM, if the listener itself (or the function it calls) still holds a reference to the element or the widget's data, the element cannot be garbage collected.</li>
+            <li><strong>DOM Reference Leaks:</strong> If your JavaScript code keeps an array or object holding references to DOM elements that are no longer in the document, those elements cannot be collected.</li>
+            <li><strong>Closures:</strong> Functions created within other functions (closures) can capture variables from their outer scope. If a closure is kept alive (e.g., as an event listener), it can prevent the garbage collection of all the variables it captured, even if they're no longer directly used.</li>
+        </ul>
+        <p>
+            <strong>The GC isn't "failing"; it's doing exactly what it's told: keeping alive anything that is still *reachable* from the root (like the `window` object or active execution stacks).</strong> If your code maintains a reference, it's reachable.
+        </p>
+        <p>
+            <strong>To observe the leak:</strong> Open your browser's Developer Tools (F12), go to the "Memory" tab, and take a heap snapshot. Add and remove many widgets from the "Buggy Dashboard." Take another snapshot and compare. You'll see detached DOM nodes and event listeners accumulating. Do the same for the "Fixed Dashboard" and observe the difference.
+        </p>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-section">
+            <h2>Buggy Dashboard (Memory Leak)</h2>
+            <div class="leak-indicator">
+                <p>⚠️ <strong>LEAKING:</strong> Event listeners and DOM references are NOT cleaned up.</p>
+            </div>
+            <p class="widget-counter">Active Buggy Widgets: <span id="buggyWidgetCount">0</span></p>
+            <div class="dashboard-controls">
+                <button class="add" id="addBuggyWidget">Add Buggy Widget</button>
+                <button class="remove" id="removeBuggyWidget">Remove Last Buggy Widget</button>
+                <button class="reset" id="resetBuggyDashboard">Reset Buggy Dashboard</button>
+            </div>
+            <div class="widget-grid" id="buggyDashboard">
+                <!-- Buggy widgets will be added here -->
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Fixed Dashboard (No Memory Leak)</h2>
+            <div class="fixed-indicator">
+                <p>✅ <strong>FIXED:</strong> Event listeners and DOM references ARE cleaned up.</p>
+            </div>
+            <p class="widget-counter">Active Fixed Widgets: <span id="fixedWidgetCount">0</span></p>
+            <div class="dashboard-controls">
+                <button class="add" id="addFixedWidget">Add Fixed Widget</button>
+                <button class="remove" id="removeFixedWidget">Remove Last Fixed Widget</button>
+                <button class="reset" id="resetFixedDashboard">Reset Fixed Dashboard</button>
+            </div>
+            <div class="widget-grid" id="fixedDashboard">
+                <!-- Fixed widgets will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Buggy Dashboard Logic ---
+        const buggyDashboard = document.getElementById('buggyDashboard');
+        const buggyWidgetCountSpan = document.getElementById('buggyWidgetCount');
+        let buggyWidgetIdCounter = 0;
+        const buggyWidgetsData = []; // This array will hold references to widgets that are "removed" but not GC'd
+
+        function createBuggyWidget() {
+            buggyWidgetIdCounter++;
+            const widgetId = `buggy-widget-${buggyWidgetIdCounter}`;
+            const widgetDiv = document.createElement('div');
+            widgetDiv.className = 'widget';
+            widgetDiv.id = widgetId;
+            widgetDiv.innerHTML = `
+                <h3>Buggy Widget ${buggyWidgetIdCounter}</h3>
+                <p>Value: <span class="value">0</span></p>
+                <button class="increment-btn">Increment</button>
+            `;
+
+            const incrementBtn = widgetDiv.querySelector('.increment-btn');
+            const valueSpan = widgetDiv.querySelector('.value');
+            let value = 0;
+
+            // BUG: Event listener is added directly, but never removed.
+            // When widgetDiv is removed from DOM, this listener still exists
+            // and holds a reference to widgetDiv, valueSpan, and the closure's scope.
+            incrementBtn.addEventListener('click', function buggyIncrementHandler() {
+                value++;
+                valueSpan.textContent = value;
+                // Imagine more complex data or API calls here
+                console.log(`Buggy Widget ${widgetId} incremented to ${value}`);
+            });
+
+            // BUG: We store a reference to the DOM element in an array,
+            // even after it's "removed" from the dashboard.
+            // This prevents the GC from collecting it.
+            buggyWidgetsData.push({
+                id: widgetId,
+                element: widgetDiv, // Keeping a direct reference here!
+                // Potentially other data related to the widget
+                // The incrementHandler closure also implicitly holds a reference to widgetDiv and valueSpan
+            });
+
+            buggyDashboard.appendChild(widgetDiv);
+            updateBuggyWidgetCount();
+        }
+
+        function removeBuggyWidget() {
+            if (buggyDashboard.lastChild) {
+                const removedElement = buggyDashboard.lastChild;
+                buggyDashboard.removeChild(removedElement);
+
+                // BUG: We DON'T remove the event listener.
+                // The `buggyIncrementHandler` (defined anonymously or directly)
+                // continues to exist and holds a reference to `removedElement`
+                // and its internal `valueSpan` and `value` variable via closure.
+                // This means the DOM element itself cannot be garbage collected.
+
+                // BUG: We also DON'T remove the reference from `buggyWidgetsData`.
+                // Even if we removed the element from the DOM, if this array still
+                // holds `removedElement`, it's still reachable.
+                // For demonstration, let's pretend we "cleaned" `buggyWidgetsData`
+                // by popping, but the listener is the primary leak.
+                buggyWidgetsData.pop(); // This only removes the last item from our tracking array.
+                                        // The actual DOM element and its listeners are the leak.
+
+                updateBuggyWidgetCount();
+            }
+        }
+
+        function resetBuggyDashboard() {
+            while (buggyDashboard.firstChild) {
+                buggyDashboard.removeChild(buggyDashboard.firstChild);
+            }
+            // In a real app, you'd also need to explicitly clean up any event listeners
+            // or lingering references from `buggyWidgetsData` here if they weren't
+            // cleaned on individual removal.
+            buggyWidgetsData.length = 0; // Clear the array, but listeners on detached elements might still exist.
+            buggyWidgetIdCounter = 0;
+            updateBuggyWidgetCount();
+        }
+
+        function updateBuggyWidgetCount() {
+            buggyWidgetCountSpan.textContent = buggyDashboard.children.length;
+        }
+
+        document.getElementById('addBuggyWidget').addEventListener('click', createBuggyWidget);
+        document.getElementById('removeBuggyWidget').addEventListener('click', removeBuggyWidget);
+        document.getElementById('resetBuggyDashboard').addEventListener('click', resetBuggyDashboard);
+
+
+        // --- Fixed Dashboard Logic ---
+        const fixedDashboard = document.getElementById('fixedDashboard');
+        const fixedWidgetCountSpan = document.getElementById('fixedWidgetCount');
+        let fixedWidgetIdCounter = 0;
+
+        // In the fixed version, we don't need a global array to track widget DOM elements
+        // because we'll ensure they are properly cleaned up and GC'd.
+        // If we *did* need to track data, we'd store plain data objects, not DOM elements.
+
+        // We'll use a WeakMap to store event listener handlers linked to their elements.
+        // A WeakMap allows its keys to be garbage-collected if there are no other references to them.
+        // This is a good pattern for managing event listeners when you can't explicitly remove them
+        // by reference (e.g., if you're using an anonymous function).
+        // However, the best practice is to always store the handler function reference and remove it.
+        // For this demo, let's explicitly remove the handler.
+        const fixedWidgetHandlers = new Map(); // Store references to handler functions
+
+        function createFixedWidget() {
+            fixedWidgetIdCounter++;
+            const widgetId = `fixed-widget-${fixedWidgetIdCounter}`;
+            const widgetDiv = document.createElement('div');
+            widgetDiv.className = 'widget';
+            widgetDiv.id = widgetId;
+            widgetDiv.innerHTML = `
+                <h3>Fixed Widget ${fixedWidgetIdCounter}</h3>
+                <p>Value: <span class="value">0</span></p>
+                <button class="increment-btn">Increment</button>
+            `;
+
+            const incrementBtn = widgetDiv.querySelector('.increment-btn');
+            const valueSpan = widgetDiv.querySelector('.value');
+            let value = 0;
+
+            // FIX: Define the event listener function *by name* or reference
+            // so we can remove it later.
+            function fixedIncrementHandler() {
+                value++;
+                valueSpan.textContent = value;
+                console.log(`Fixed Widget ${widgetId} incremented to ${value}`);
+            }
+
+            incrementBtn.addEventListener('click', fixedIncrementHandler);
+
+            // Store a reference to the handler function, associated with the widget's DOM element.
+            // This is crucial for removal.
+            fixedWidgetHandlers.set(widgetDiv, fixedIncrementHandler);
+
+            fixedDashboard.appendChild(widgetDiv);
+            updateFixedWidgetCount();
+        }
+
+        function removeFixedWidget() {
+            if (fixedDashboard.lastChild) {
+                const removedElement = fixedDashboard.lastChild;
+
+                // FIX: Retrieve the stored handler and explicitly remove the event listener.
+                const handler = fixedWidgetHandlers.get(removedElement);
+                if (handler) {
+                    removedElement.querySelector('.increment-btn').removeEventListener('click', handler);
+                    fixedWidgetHandlers.delete(removedElement); // Remove reference from our tracking map
+                }
+
+                // Now that the event listener reference is gone, and no other code
+                // holds a reference to `removedElement`, it can be garbage collected
+                // once it's removed from the DOM.
+                fixedDashboard.removeChild(removedElement);
+                updateFixedWidgetCount();
+            }
+        }
+
+        function resetFixedDashboard() {
+            // FIX: Iterate through all children to ensure all listeners are removed.
+            Array.from(fixedDashboard.children).forEach(widgetDiv => {
+                const handler = fixedWidgetHandlers.get(widgetDiv);
+                if (handler) {
+                    widgetDiv.querySelector('.increment-btn').removeEventListener('click', handler);
+                    fixedWidgetHandlers.delete(widgetDiv);
+                }
+            });
+
+            while (fixedDashboard.firstChild) {
+                fixedDashboard.removeChild(fixedDashboard.firstChild);
+            }
+            fixedWidgetIdCounter = 0;
+            updateFixedWidgetCount();
+        }
+
+        function updateFixedWidgetCount() {
+            fixedWidgetCountSpan.textContent = fixedDashboard.children.length;
+        }
+
+        document.getElementById('addFixedWidget').addEventListener('click', createFixedWidget);
+        document.getElementById('removeFixedWidget').addEventListener('click', removeFixedWidget);
+        document.getElementById('resetFixedDashboard').addEventListener('click', resetFixedDashboard);
+    </script>
+</body>
+</html>

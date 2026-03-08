@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SQL Injection Concept Demo (Safe, In-Browser Simulation)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; color: #111; }
+    h1 { margin-top: 0; }
+    .container { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+    .panel { border: 1px solid #ddd; padding: 14px; border-radius: 8px; background: #fafafa; }
+    label { display:block; margin-top:8px; font-weight:600; }
+    input[type="text"] { width:100%; padding:8px; font-size:14px; margin-top:6px; box-sizing:border-box; }
+    .mode { margin-top: 10px; }
+    button { margin-top:8px; padding:8px 10px; font-size:14px; cursor:pointer; }
+    pre { background:#fff; padding:10px; border-radius:6px; border:1px solid #eee; overflow:auto; }
+    .examples button { display:block; width:100%; margin-top:6px; }
+    .results { margin-top:10px; }
+    .footnote { font-size:13px; color:#444; margin-top:10px; }
+    .highlight { background:#fffbe6; padding:6px 8px; border-radius:6px; border:1px solid #ffecb3; display:inline-block; }
+    .ok { color:green; font-weight:600; }
+    .warn { color:orange; font-weight:600; }
+    .danger { color:#b00; font-weight:700; }
+  </style>
+</head>
+<body>
+  <h1>SQL Injection Concept Demo (in-browser simulation)</h1>
+  <p>This is an educational, safe demo that simulates how user input can alter a query when concatenated as code/SQL, and how parameterized filtering prevents that. Nothing here executes real SQL or connects to any server — it's all client-side JavaScript operating on a product array.</p>
+
+  <div class="container">
+    <div class="panel">
+      <label for="search">Search expression (simulated)</label>
+      <input id="search" type="text" placeholder="e.g. name = 'Pen' or 1=1" value="name = 'Pen'">
+      <div class="mode">
+        <label>Mode</label>
+        <select id="mode">
+          <option value="vulnerable">Vulnerable (string concatenation simulation)</option>
+          <option value="safe">Safe (parameterized simulation)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button id="run">Run Search</button>
+        <button id="run-example-1">Example: basic search</button>
+        <button id="run-example-2">Example: injection-like input</button>
+      </div>
+
+      <div class="results">
+        <h3>Simulated "Query" string</h3>
+        <pre id="queryStr"></pre>
+
+        <h3>Results</h3>
+        <pre id="results"></pre>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Dataset (in-memory)</h3>
+      <pre id="dataset"></pre>
+
+      <h3>Explanation</h3>
+      <p>This demo shows two modes:</p>
+      <ul>
+        <li><strong>Vulnerable (string concatenation simulation)</strong>: user input is inserted directly into a constructed query string. If that input contains extra logical expressions, the constructed query's meaning can change.</li>
+        <li><strong>Safe (parameterized simulation)</strong>: user input is treated strictly as data. The "query" uses a placeholder and the input is matched as a value rather than parsed as code, preventing input from changing the structure of the query.</li>
+      </ul>
+
+      <p class="footnote">
+        In real databases, parameterized queries (prepared statements) send the SQL structure and the parameter values separately. The database treats parameters as values, not as SQL code, so malicious input cannot change the query's structure. This demo simulates that idea without showing real SQL exploitation steps.
+      </p>
+
+      <h4>Try these inputs</h4>
+      <div class="examples">
+        <button data-input="name = 'Pen'">name = 'Pen'</button>
+        <button data-input="name = 'Pen' OR 1=1">name = 'Pen' OR 1=1</button>
+        <button data-input="name = 'X' OR price < 100">name = 'X' OR price < 100</button>
+        <button data-input="name = 'Pencil'; DROP TABLE products;">(simulated dangerous text)</button>
+        <button data-input="name = ''">empty name</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // In-memory product dataset
+    const products = [
+      { id: 1, name: "Pen", category: "Stationery", price: 2.5 },
+      { id: 2, name: "Pencil", category: "Stationery", price: 1.0 },
+      { id: 3, name: "Notebook", category: "Stationery", price: 5.0 },
+      { id: 4, name: "Coffee Mug", category: "Kitchen", price: 8.5 },
+      { id: 5, name: "Water Bottle", category: "Outdoors", price: 12.0 },
+    ];
+
+    // Render dataset
+    document.getElementById('dataset').textContent = JSON.stringify(products, null, 2);
+
+    const searchInput = document.getElementById('search');
+    const modeSelect = document.getElementById('mode');
+    const queryStrEl = document.getElementById('queryStr');
+    const resultsEl = document.getElementById('results');
+
+    function renderResults(queryString, rows) {
+      queryStrEl.textContent = queryString;
+      resultsEl.textContent = JSON.stringify(rows, null, 2);
+    }
+
+    // NOTE: The "vulnerable" mode is a simulation: it constructs a pseudo-query string
+    // by concatenating the user input, then evaluates a very small, controlled evaluator
+    // that supports expressions of the form "field = 'value'" and simple OR/AND with basic operators.
+    //
+    // This evaluator is intentionally minimal and safe: it only understands a restricted syntax
+    // (field comparisons and boolean OR/AND) and will not execute arbitrary code.
+    // It exists only to show how interpreting user text as part of a query changes results.
+    //
+    // The "safe" mode will not parse the input as a query expression — it will treat the whole
+    // input string as a literal value for the 'name' field (parameterized style).
+
+    // Minimal parser for simple expressions: supports OR, AND, comparisons like:
+    // name = 'Pen'   price < 10   name = '' OR price < 10
+    function simpleParseExpression(expr) {
+      // Tokenize (very naive)
+      // We'll split on OR/AND (case-insensitive) into clauses
+      const clauses = expr.split(/\bOR\b/i).map(s => s.trim());
+      // If multiple OR parts exist, we'll treat as OR across clauses
+      const parsedClauses = clauses.map(clause => {
+        // Further split AND within clause (we treat AND as higher precedence here)
+        const andParts = clause.split(/\bAND\b/i).map(s => s.trim());
+        const andParsed = andParts.map(part => {
+          // Try to match: field op value
+          // op can be =, <, >, <=, >=
+          const m = part.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*(=|<=|>=|<|>)\s*'(.*)'$/);
+          if (m) {
+            return { type: 'cmp', field: m[1], op: m[2], value: m[3] };
+          }
+          const m2 = part.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*(=|<=|>=|<|>)\s*([0-9.]+)$/);
+          if (m2) {
+            return { type: 'cmp', field: m2[1], op: m2[2], value: Number(m2[3]) };
+          }
+          // As a safety: if pattern doesn't match, mark as invalid
+          return { type: 'invalid', raw: part };
+        });
+        return { type: 'and', parts: andParsed };
+      });
+      return { type: 'or', clauses: parsedClauses };
+    }
+
+    function evalParsed(parsed, row) {
+      if (parsed.type !== 'or') return false;
+      for (const clause of parsed.clauses) {
+        // each clause is an AND of parts
+        let andOk = true;
+        for (const part of clause.parts) {
+          if (part.type === 'invalid') { andOk = false; break; }
+          const v = row[part.field];
+          const rv = part.value;
+          switch (part.op) {
+            case '=':
+              // Loose comparison with string/number handling
+              if (typeof v === 'number') {
+                andOk = (Number(rv) === v);
+              } else {
+                andOk = (String(v) === String(rv));
+              }
+              break;
+            case '<':
+              andOk = Number(v) < Number(rv); break;
+            case '>':
+              andOk = Number(v) > Number(rv); break;
+            case '<=':
+              andOk = Number(v) <= Number(rv); break;
+            case '>=':
+              andOk = Number(v) >= Number(rv); break;
+            default:
+              andOk = false;
+          }
+          if (!andOk) break;
+        }
+        if (andOk) return true;
+      }
+      return false;
+    }
+
+    function runQueryVulnerable(userInput) {
+      // Simulate building a query string via concatenation (vulnerable style)
+      // e.g. "SELECT * FROM products WHERE " + userInput
+      const simulatedQuery = "SELECT * FROM products WHERE " + userInput;
+      // We then (in this toy demo) parse the userInput as an expression and evaluate
+      // against objects. Because the input was concatenated into the query, inputs
+      // that add extra boolean logic (like "OR 1=1") can change which rows match.
+      let parsed;
+      try {
+        parsed = simpleParseExpression(userInput);
+      } catch (e) {
+        parsed = { type: 'or', clauses: [] };
+      }
+      const rows = products.filter(r => evalParsed(parsed, r));
+      return { query: simulatedQuery, rows };
+    }
+
+    function runQuerySafe(userInput) {
+      // Simulate parameterized query: SQL uses placeholder and value separately.
+      // e.g. "SELECT * FROM products WHERE name = ?" with params [userInput]
+      // In our simulation, we treat userInput as a value for the 'name' field ONLY.
+      const simulatedQuery = "SELECT * FROM products WHERE name = ?";
+      const param = userInput; // treated as data
+      // We match rows where name === param (no parsing of param as code)
+      const rows = products.filter(r => String(r.name) === String(param));
+      return { query: simulatedQuery + "  -- params: [\"" + param + "\"]", rows };
+    }
+
+    function run() {
+      const input = searchInput.value;
+      const mode = modeSelect.value;
+      if (mode === 'vulnerable') {
+        const res = runQueryVulnerable(input);
+        renderResults(res.query, res.rows);
+      } else {
+        // Safe mode: user input is treated as value for 'name'
+        const res = runQuerySafe(input);
+        renderResults(res.query, res.rows);
+      }
+    }
+
+    document.getElementById('run').addEventListener('click', run);
+
+    document.getElementById('run-example-1').addEventListener('click', () => {
+      searchInput.value = "name = 'Pen'";
+      run();
+    });
+    document.getElementById('run-example-2').addEventListener('click', () => {
+      searchInput.value = "name = 'Pen' OR 1=1";
+      run();
+    });
+
+    // Example buttons on the side
+    document.querySelectorAll('.examples button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        searchInput.value = btn.dataset.input;
+      });
+    });
+
+    // Initial run
+    run();
+
+  </script>
+</body>
+</html>

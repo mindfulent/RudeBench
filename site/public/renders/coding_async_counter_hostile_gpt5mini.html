@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Race Condition Demo — Buggy vs Fixed Counters</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 24px; }
+    h1 { margin-bottom: 6px; }
+    .container { display: flex; gap: 24px; align-items: flex-start; }
+    .card { border: 1px solid #ccc; padding: 14px; width: 420px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .big { font-size: 56px; font-weight: 700; margin: 8px 0; text-align: center; }
+    .controls { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+    button { padding: 8px 12px; border-radius: 6px; border: 1px solid #888; background: white; cursor: pointer; }
+    button:active { transform: translateY(1px); }
+    .info { font-size: 13px; color: #333; margin-top: 8px; }
+    .explain { margin-top: 18px; background:#f8faff;border:1px solid #dbeeff;padding:12px;border-radius:6px;font-size:14px; }
+    .log { height: 120px; overflow:auto; background: #111; color: #0f0; padding: 8px; font-family: monospace; font-size: 12px; border-radius: 6px; }
+    label { display:inline-flex; align-items:center; gap:8px; }
+    .row { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:10px; }
+    .bad { color: #a00; font-weight: 600; }
+    .good { color: #077; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Race Condition Demo — Buggy vs Fixed</h1>
+  <p>Click the "Click me" button repeatedly and quickly. Both counters receive the same clicks and the same artificial async delays, but the buggy counter sometimes loses increments because it performs non-atomic read-modify-write across asynchronous tasks.</p>
+
+  <div style="margin-bottom:10px;">
+    <label>
+      <input id="delayToggle" type="checkbox" checked />
+      Enable artificial async delay (makes race easy to see)
+    </label>
+    <span style="margin-left:14px; color:#555; font-size:13px;">Delay range: <input id="minDelay" style="width:48px" type="number" value="30" />–<input id="maxDelay" style="width:48px" type="number" value="150" /> ms</span>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:14px; color:#666;">Buggy counter (loses updates under race)</div>
+        </div>
+        <div class="bad">Buggy</div>
+      </div>
+
+      <div id="buggyValue" class="big">0</div>
+
+      <div class="controls">
+        <button id="buggyClick">Click me</button>
+        <button id="buggyReset">Reset</button>
+      </div>
+
+      <div class="row">
+        <div style="width:100%; text-align:center; font-size:13px; color:#444;">Calls scheduled: <span id="buggyPending">0</span></div>
+      </div>
+
+      <div class="info">
+        Implementation: each click reads the current shared state (the counter), computes new value locally inside an asynchronous callback, then writes that computed value back — without ensuring the read and write are atomic. If two callbacks overlap, the earlier read can be stale and overwrite increments by a later callback.
+      </div>
+
+      <div style="margin-top:12px;">
+        <div style="font-size:13px; margin-bottom:6px;">Event log (most recent at bottom):</div>
+        <div id="buggyLog" class="log"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:14px; color:#666;">Fixed counter (preserves all increments)</div>
+        </div>
+        <div class="good">Fixed</div>
+      </div>
+
+      <div id="fixedValue" class="big">0</div>
+
+      <div class="controls">
+        <button id="fixedClick">Click me</button>
+        <button id="fixedReset">Reset</button>
+      </div>
+
+      <div class="row">
+        <div style="width:100%; text-align:center; font-size:13px; color:#444;">Calls scheduled: <span id="fixedPending">0</span></div>
+      </div>
+
+      <div class="info">
+        Implementation: each click schedules a callback that applies an atomic update: instead of reading once and writing the computed value later, it applies the increment at callback time based on the current state (a functional update), so overlapping callbacks can't overwrite each other.
+      </div>
+
+      <div style="margin-top:12px;">
+        <div style="font-size:13px; margin-bottom:6px;">Event log (most recent at bottom):</div>
+        <div id="fixedLog" class="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="explain">
+    How to reproduce the bug:
+    <ol>
+      <li>Ensure the artificial delay checkbox is checked (default).</li>
+      <li>Quickly click the two "Click me" buttons several times in either column. The buggy counter will often end up lower than the number of clicks you made, because two asynchronous callbacks read the same value and both write back increments based on the stale read — one increment is lost.</li>
+      <li>The fixed counter always adds one per click even under the same timing conditions because each callback uses the current value when applying its increment.</li>
+    </ol>
+  </div>
+
+  <script>
+    // Shared helper: random delay when enabled
+    const delayToggle = document.getElementById('delayToggle');
+    const minDelayInput = document.getElementById('minDelay');
+    const maxDelayInput = document.getElementById('maxDelay');
+
+    function randDelay() {
+      if (!delayToggle.checked) return 0;
+      const min = Math.max(0, parseInt(minDelayInput.value) || 0);
+      const max = Math.max(min, parseInt(maxDelayInput.value) || min);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Utility to keep logs scroll-to-bottom and bounded
+    function appendLog(el, text) {
+      const now = new Date().toLocaleTimeString();
+      el.textContent += `[${now}] ${text}\n`;
+      // keep last 2000 chars
+      if (el.textContent.length > 8000) el.textContent = el.textContent.slice(-8000);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    // BUGGY counter implementation
+    (function(){
+      let value = 0;                    // shared state
+      const valueEl = document.getElementById('buggyValue');
+      const pendingEl = document.getElementById('buggyPending');
+      const logEl = document.getElementById('buggyLog');
+      const clickBtn = document.getElementById('buggyClick');
+      const resetBtn = document.getElementById('buggyReset');
+      let pending = 0;
+
+      function render() {
+        valueEl.textContent = value;
+        pendingEl.textContent = pending;
+      }
+
+      clickBtn.addEventListener('click', () => {
+        // The buggy behavior: capture the current value now,
+        // then schedule an async task that will compute a newValue from that captured read
+        // and write it later. If two tasks read the same value, one overwrite loses an increment.
+        const readAtStart = value; // read shared state synchronously
+        pending++;
+        render();
+        appendLog(logEl, `click -> read=${readAtStart}  (scheduling async update)`);
+
+        const d = randDelay();
+        setTimeout(() => {
+          // compute new value using the stale read
+          const computed = readAtStart + 1;
+          appendLog(logEl, `callback (delay ${d}ms) -> computed=${computed}  writing back`);
+          // write the computed value (overwriting current value blindly)
+          value = computed;
+          pending--;
+          render();
+          appendLog(logEl, `after write -> value=${value}`);
+        }, d);
+      });
+
+      resetBtn.addEventListener('click', () => {
+        value = 0;
+        pending = 0;
+        logEl.textContent = '';
+        render();
+      });
+
+      render();
+    })();
+
+    // FIXED counter implementation
+    (function(){
+      let value = 0;                    // shared state
+      const valueEl = document.getElementById('fixedValue');
+      const pendingEl = document.getElementById('fixedPending');
+      const logEl = document.getElementById('fixedLog');
+      const clickBtn = document.getElementById('fixedClick');
+      const resetBtn = document.getElementById('fixedReset');
+      let pending = 0;
+
+      function render() {
+        valueEl.textContent = value;
+        pendingEl.textContent = pending;
+      }
+
+      clickBtn.addEventListener('click', () => {
+        // Safer approach: don't capture a stale value and blindly overwrite later.
+        // Instead, schedule a callback that, when it runs, applies the increment
+        // based on the current value at that moment (atomic update).
+        pending++;
+        render();
+        appendLog(logEl, `click -> scheduling async increment`);
+
+        const d = randDelay();
+        setTimeout(() => {
+          // functional update: compute based on current value at callback time
+          const before = value;
+          const after = before + 1;
+          appendLog(logEl, `callback (delay ${d}ms) -> before=${before} after=${after} (applying increment)`);
+          value = after;
+          pending--;
+          render();
+          appendLog(logEl, `after write -> value=${value}`);
+        }, d);
+      });
+
+      resetBtn.addEventListener('click', () => {
+        value = 0;
+        pending = 0;
+        logEl.textContent = '';
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

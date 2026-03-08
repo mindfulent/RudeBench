@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Binary Search Visualizer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --box-size:56px;
+    --gap:8px;
+    --bg:#0f172a;
+    --card:#0b1220;
+    --accent:#0ea5ff;
+    --muted:#94a3b8;
+    --found:#10b981;
+    --notfound:#ef4444;
+    --text:#e6eef8;
+  }
+  *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #071423 100%);color:var(--text);}
+  .wrap{max-width:980px;margin:28px auto;padding:22px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.6);}
+  h1{margin:0 0 10px;font-size:20px;color:var(--text);}
+  p.lead{margin:0 0 18px;color:var(--muted);font-size:13px;}
+  .controls{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
+  input[type=number]{width:110px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);outline:none;}
+  button{padding:9px 14px;border-radius:8px;border:0;background:var(--accent);color:#04263a;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(14,165,255,0.12);}
+  button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);box-shadow:none;}
+  .rowwrap{overflow:auto;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));border:1px solid rgba(255,255,255,0.03);}
+  .array{display:flex;gap:var(--gap);align-items:center;padding:18px 10px;min-width:100%;}
+  .cell{
+    width:var(--box-size);height:var(--box-size);display:flex;align-items:center;justify-content:center;border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);color:var(--text);font-weight:700;position:relative;
+    transition:transform .25s ease, box-shadow .2s ease, border-color .2s ease, background .25s ease;
+  }
+  .index{position:absolute;left:6px;top:6px;font-size:11px;color:var(--muted);font-weight:600;}
+  .cell.mid{box-shadow:0 8px 30px rgba(14,165,255,0.12);border-color:var(--accent);transform:translateY(-6px);background:linear-gradient(180deg,#093b59,#06324a);}
+  .cell.in-range{border-color:rgba(99,102,241,0.9);background:linear-gradient(180deg, rgba(99,102,241,0.06), rgba(99,102,241,0.02));}
+  .cell.found{background:linear-gradient(180deg,#064e38,#053c2d);border-color:var(--found);box-shadow:0 10px 28px rgba(16,185,129,0.12);transform:translateY(-6px);}
+  .cell.excluded{opacity:.36;filter:grayscale(.6);transform:scale(.98);border-style:dashed;}
+  .legend{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+  .legend span{display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
+  .sw{width:14px;height:14px;border-radius:4px;border:1px solid rgba(255,255,255,0.06);display:inline-block}
+  .sw.mid{background:linear-gradient(180deg,#093b59,#06324a);border-color:var(--accent);}
+  .sw.range{background:linear-gradient(180deg, rgba(99,102,241,0.06), rgba(99,102,241,0.02));border-color:rgba(99,102,241,0.9);}
+  .sw.found{background:linear-gradient(180deg,#064e38,#053c2d);border-color:var(--found);}
+  .status{margin-top:14px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:var(--muted);display:flex;align-items:center;gap:12px;}
+  .status strong{color:var(--text)}
+  .small{font-size:13px;color:var(--muted)}
+  footer{margin-top:16px;color:var(--muted);font-size:12px;text-align:right}
+  @media(max-width:640px){
+    .array{padding:12px}
+    .cell{width:48px;height:48px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Binary Search Visualizer</h1>
+  <p class="lead">A step-by-step visualization of binary search on a sorted array. Enter a target and press "Step" to advance one iteration at a time.</p>
+
+  <div class="controls">
+    <label class="small">Array:
+      <select id="preset">
+        <option value="1">1,3,5,7,9,11,13,15,17</option>
+        <option value="2">2,4,6,8,10,12,14,16</option>
+        <option value="3">5,7,9,11,13,15,17,19,21,23</option>
+        <option value="4">Custom</option>
+      </select>
+    </label>
+
+    <input type="text" id="customArray" placeholder="Comma-separated (e.g. 1,2,3)" style="display:none"/>
+
+    <label class="small">Target:
+      <input type="number" id="targetInput" value="11">
+    </label>
+
+    <button id="stepBtn">Step</button>
+    <button id="startBtn" class="secondary">Start / Reset</button>
+    <button id="autoBtn" class="secondary">Auto Play</button>
+    <button id="shuffleBtn" class="secondary">Shuffle Values</button>
+  </div>
+
+  <div class="rowwrap" id="rowwrap">
+    <div class="array" id="array"></div>
+  </div>
+
+  <div class="legend">
+    <span><i class="sw range"></i> Current range</span>
+    <span><i class="sw mid"></i> Middle element</span>
+    <span><i class="sw found"></i> Found</span>
+  </div>
+
+  <div class="status" id="status">Status: <strong id="statusText">Ready</strong></div>
+
+  <footer>Use Step to advance one iteration. Auto Play runs steps automatically.</footer>
+</div>
+
+<script>
+(function(){
+  // Initial arrays for presets
+  const presets = {
+    "1":[1,3,5,7,9,11,13,15,17],
+    "2":[2,4,6,8,10,12,14,16],
+    "3":[5,7,9,11,13,15,17,19,21,23]
+  };
+
+  // State
+  let arr = presets["1"].slice();
+  let target = 11;
+  let lo = 0, hi = arr.length - 1, mid = null;
+  let finished = false;
+  let auto = false;
+  let timer = null;
+
+  // DOM
+  const arrayEl = document.getElementById('array');
+  const statusText = document.getElementById('statusText');
+  const targetInput = document.getElementById('targetInput');
+  const stepBtn = document.getElementById('stepBtn');
+  const startBtn = document.getElementById('startBtn');
+  const autoBtn = document.getElementById('autoBtn');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const presetSelect = document.getElementById('preset');
+  const customArray = document.getElementById('customArray');
+
+  function render(){
+    arrayEl.innerHTML = '';
+    for(let i=0;i<arr.length;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.index = i;
+      const idx = document.createElement('div');
+      idx.className = 'index';
+      idx.textContent = i;
+      cell.appendChild(idx);
+      const val = document.createElement('div');
+      val.textContent = arr[i];
+      cell.appendChild(val);
+
+      // Classes based on state
+      if(finished && mid === i && lo <= i && i <= hi && arr[i] === target){
+        cell.classList.add('found');
+      } else {
+        if(mid === i) cell.classList.add('mid');
+        if(i >= lo && i <= hi) cell.classList.add('in-range');
+        if(i < lo || i > hi) cell.classList.add('excluded');
+      }
+
+      arrayEl.appendChild(cell);
+    }
+    // update status
+    if(!finished){
+      if(lo > hi){
+        statusText.textContent = 'Not found';
+        statusText.style.color = 'var(--muted)';
+      } else {
+        statusText.textContent = `Searching: range [${lo}, ${hi}]`;
+        statusText.style.color = '';
+      }
+    } else {
+      // finished true
+      if(lo <= hi && mid !== null && arr[mid] === target){
+        statusText.innerHTML = 'Found at index <strong>' + mid + '</strong>';
+        statusText.style.color = getComputedStyle(document.documentElement).getPropertyValue('--found');
+      } else {
+        statusText.innerHTML = 'Not found';
+        statusText.style.color = getComputedStyle(document.documentElement).getPropertyValue('--notfound');
+      }
+    }
+  }
+
+  function resetState(newArr){
+    arr = newArr.slice();
+    lo = 0;
+    hi = arr.length - 1;
+    mid = null;
+    finished = false;
+    render();
+  }
+
+  function step(){
+    if(finished) return;
+    if(lo > hi){
+      // already exhausted
+      finished = true;
+      mid = null;
+      render();
+      return;
+    }
+    mid = Math.floor((lo + hi)/2);
+    render();
+    // compare
+    const val = arr[mid];
+    if(val === target){
+      finished = true;
+      // leave mid highlighted as found
+      render();
+      return;
+    } else if(val < target){
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+    // if after adjusting range it's impossible, mark finished in next render when invoked or immediately:
+    if(lo > hi){
+      finished = true;
+      // keep mid as last compared for clarity
+    }
+    render();
+  }
+
+  // Wire up controls
+  stepBtn.addEventListener('click', () => {
+    // update target from input
+    const v = Number(targetInput.value);
+    if(Number.isFinite(v)) target = v;
+    step();
+  });
+
+  startBtn.addEventListener('click', () => {
+    // reset using current preset/custom
+    if(presetSelect.value === "4"){
+      // parse custom
+      const text = customArray.value.trim();
+      if(!text){
+        alert('Enter comma-separated numbers for custom array.');
+        return;
+      }
+      const parts = text.split(',').map(s=>s.trim()).filter(s=>s.length);
+      const nums = [];
+      for(const p of parts){
+        const n = Number(p);
+        if(!Number.isFinite(n)){
+          alert('Invalid number: ' + p);
+          return;
+        }
+        nums.push(n);
+      }
+      nums.sort((a,b)=>a-b); // ensure sorted
+      resetState(nums);
+    } else {
+      resetState(presets[presetSelect.value].slice());
+    }
+    // set target
+    const v = Number(targetInput.value);
+    if(Number.isFinite(v)) target = v;
+    finished = false;
+    mid = null;
+    render();
+  });
+
+  autoBtn.addEventListener('click', () => {
+    auto = !auto;
+    autoBtn.textContent = auto ? 'Stop' : 'Auto Play';
+    if(auto){
+      // set interval
+      timer = setInterval(()=>{
+        // if finished stop
+        if(finished){
+          clearInterval(timer);
+          auto = false;
+          autoBtn.textContent = 'Auto Play';
+          return;
+        }
+        // if out-of-range stop
+        if(lo > hi){
+          finished = true;
+          render();
+          clearInterval(timer);
+          auto = false;
+          autoBtn.textContent = 'Auto Play';
+          return;
+        }
+        step();
+      }, 700);
+    } else {
+      clearInterval(timer);
+    }
+  });
+
+  shuffleBtn.addEventListener('click', ()=>{
+    // create shuffled increasing array of same length
+    const n = arr.length;
+    // generate sorted unique-ish numbers
+    const base = Math.floor(Math.random()*6);
+    const newArr = Array.from({length:n}, (_,i)=> base + i*2 + (Math.random()*2<1?0:0) );
+    // ensure integers
+    for(let i=0;i<newArr.length;i++) newArr[i] = Math.floor(newArr[i]*1)+i;
+    newArr.sort((a,b)=>a-b);
+    resetState(newArr);
+  });
+
+  presetSelect.addEventListener('change', ()=>{
+    if(presetSelect.value === "4"){
+      customArray.style.display = 'inline-block';
+    } else {
+      customArray.style.display = 'none';
+      resetState(presets[presetSelect.value].slice());
+    }
+  });
+
+  // Allow clicking a cell to set as target
+  arrayEl.addEventListener('click', (e)=>{
+    const c = e.target.closest('.cell');
+    if(!c) return;
+    const idx = Number(c.dataset.index);
+    targetInput.value = arr[idx];
+    target = arr[idx];
+  });
+
+  // Keyboard: Enter on target triggers start/reset
+  targetInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') startBtn.click();
+  });
+
+  // Initialize
+  resetState(arr);
+  // set initial target from input value
+  target = Number(targetInput.value) || target;
+  render();
+
+})();
+</script>
+</body>
+</html>

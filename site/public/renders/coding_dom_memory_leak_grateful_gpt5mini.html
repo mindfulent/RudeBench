@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Widget Dashboard: Leaking vs Fixed (GC demo)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; color:#111 }
+    h1 { margin: 0 0 12px 0; font-size: 20px }
+    .container { display: flex; gap: 20px; align-items: flex-start }
+    .panel { border: 1px solid #ddd; padding: 12px; border-radius: 6px; width: 48%; box-shadow: 0 1px 2px rgba(0,0,0,0.03) }
+    .controls { margin-bottom: 8px; display:flex; gap:8px; align-items:center }
+    button { padding: 6px 10px; border-radius:4px; border:1px solid #bbb; background:#fafafa; cursor:pointer }
+    button:active { transform: translateY(1px) }
+    .widgets { border-top:1px dashed #eee; margin-top:8px; padding-top:8px; display:flex; flex-wrap:wrap; gap:8px }
+    .widget { background:linear-gradient(180deg,#fff,#f7f7ff); padding:8px; border-radius:6px; border:1px solid #e2e2f0; width: 180px; box-sizing:border-box; box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+    .widget h4 { margin: 0 0 6px 0; font-size:13px }
+    .widget p { margin:0; font-size:12px; color:#333 }
+    .tracker { margin-top:10px; font-size:13px }
+    .muted { color:#666; font-size:13px; margin-top:10px }
+    pre { background:#f6f6f6; padding:8px; border-radius:6px; overflow:auto }
+    .explain { margin-top:12px; font-size:14px; line-height:1.4 }
+    .bad { color:#9b1c1c; font-weight:600 }
+    .good { color:#0a6b0a; font-weight:600 }
+    .stats { display:flex; gap:8px; margin-top:6px; align-items:center }
+    .stat { padding:6px 8px; background:#fff; border:1px solid #eee; border-radius:6px; font-size:13px }
+  </style>
+</head>
+<body>
+  <h1>Widget Dashboard — "Leaking" vs Fixed (demo)</h1>
+  <p class="muted">Add/remove widgets on each side. The left panel contains an intentionally-buggy implementation that keeps JS references & event closures after widget removal. The right panel cleans up properly. Below is a simple tracker that shows how many widget objects are still retained by JavaScript.</p>
+
+  <div class="container">
+    <div class="panel" id="leftPanel">
+      <h2 style="margin:0 0 8px 0">Leaking version <span class="bad">(buggy)</span></h2>
+      <div class="controls">
+        <button id="leftAdd">Add widget</button>
+        <button id="leftRemove">Remove widget</button>
+        <div class="stats">
+          <div class="stat">Visible widgets: <span id="leftVisible">0</span></div>
+          <div class="stat">Retained references: <span id="leftRetained">0</span></div>
+        </div>
+      </div>
+      <div class="widgets" id="leftWidgets"></div>
+      <div class="muted">Note: removed widgets remain referenced by internal structures.</div>
+    </div>
+
+    <div class="panel" id="rightPanel">
+      <h2 style="margin:0 0 8px 0">Fixed version <span class="good">(cleans up)</span></h2>
+      <div class="controls">
+        <button id="rightAdd">Add widget</button>
+        <button id="rightRemove">Remove widget</button>
+        <div class="stats">
+          <div class="stat">Visible widgets: <span id="rightVisible">0</span></div>
+          <div class="stat">Retained references: <span id="rightRetained">0</span></div>
+        </div>
+      </div>
+      <div class="widgets" id="rightWidgets"></div>
+      <div class="muted">Removed widgets have their listeners detached and references cleared.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px" class="explain">
+    <strong>Explanation (short):</strong>
+    <div style="margin-top:6px">
+      If removed widgets appear to release from the DOM but memory (as shown by a dashboard or devtools heap) grows, it typically means something in your JS code is still holding references to those widgets (event listeners, arrays, maps, timers, closures). The garbage collector works when there are no reachable references to an object. This demo shows a common mistake: keeping arrays of widget objects or closures that close over DOM nodes without clearing them when the widget is removed — this prevents GC, so memory appears to "grow" even if DOM nodes are gone.
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Utility: create a widget DOM node with a button and some retained data
+      function createWidgetElement(id, onClick) {
+        var el = document.createElement('div');
+        el.className = 'widget';
+        var h = document.createElement('h4');
+        h.textContent = 'Widget #' + id;
+        var p = document.createElement('p');
+        p.textContent = 'Some stateful content';
+        var btn = document.createElement('button');
+        btn.textContent = 'Action';
+        btn.style.marginTop = '8px';
+        btn.onclick = onClick;
+        el.appendChild(h);
+        el.appendChild(p);
+        el.appendChild(btn);
+        return el;
+      }
+
+      // ---------------------------
+      // Leaking implementation
+      // ---------------------------
+      var leftNextId = 1;
+      var leftVisibleContainer = document.getElementById('leftWidgets');
+      var leftVisibleCounter = document.getElementById('leftVisible');
+      var leftRetainedCounter = document.getElementById('leftRetained');
+
+      // This array intentionally keeps references to removed widgets -> memory leak
+      var leftRetained = [];
+
+      function leftAddWidget() {
+        var id = leftNextId++;
+        // A piece of data that simulates heavier retained memory (string repeated)
+        var heavyString = new Array(2000).join('x') + id; // ~2KB-ish per widget
+        // create DOM element for the widget
+        var el = createWidgetElement(id, function onAction() {
+          // closure captures el and heavyString -> keeps them reachable if onAction remains referenced
+          console.log('Left Widget action', id, el ? el.tagName : null);
+        });
+
+        // Put DOM into visible area
+        leftVisibleContainer.appendChild(el);
+        updateLeftVisibleCount();
+
+        // BUG: we push an object that references both the DOM element and the closure.
+        // Even after we remove el from the DOM, this array still holds references => can't GC.
+        leftRetained.push({
+          id: id,
+          nodeRef: el,
+          heavy: heavyString,
+          action: el.querySelector('button').onclick
+        });
+
+        updateLeftRetainedCount();
+      }
+
+      function leftRemoveWidget() {
+        // remove last visible one from DOM
+        var nodes = leftVisibleContainer.children;
+        if (!nodes.length) return;
+        var last = nodes[nodes.length - 1];
+        leftVisibleContainer.removeChild(last);
+        updateLeftVisibleCount();
+        // Note: we intentionally do NOT remove references from leftRetained.
+        // So although DOM node is removed, JS still holds references in leftRetained.
+        // This simulates a dashboard that keeps inactive widgets in an array for "undo"
+      }
+
+      function updateLeftVisibleCount() {
+        leftVisibleCounter.textContent = leftVisibleContainer.children.length;
+      }
+      function updateLeftRetainedCount() {
+        leftRetainedCounter.textContent = leftRetained.length;
+      }
+
+      document.getElementById('leftAdd').addEventListener('click', leftAddWidget);
+      document.getElementById('leftRemove').addEventListener('click', leftRemoveWidget);
+
+      // ---------------------------
+      // Fixed implementation
+      // ---------------------------
+      var rightNextId = 1;
+      var rightVisibleContainer = document.getElementById('rightWidgets');
+      var rightVisibleCounter = document.getElementById('rightVisible');
+      var rightRetainedCounter = document.getElementById('rightRetained');
+
+      // For the fixed version we will keep a registry of currently-visible widgets
+      // When removing, we will actively detach listeners and clear references.
+      var rightRegistry = []; // tracks current widgets
+
+      function rightAddWidget() {
+        var id = rightNextId++;
+        var heavyString = new Array(2000).join('y') + id; // similar heavy payload
+        // prepare an object to hold references
+        var item = { id: id, heavy: heavyString, node: null, listener: null };
+
+        // create DOM element with a button; we create the listener separately so we can remove it later
+        var el = createWidgetElement(id, function () {}); // placeholder
+        // create listener separately and attach via addEventListener so we can remove it
+        var btn = el.querySelector('button');
+        function onAction() {
+          // small closure, but references are reachable only while node is in registry
+          console.log('Right Widget action', id);
+        }
+        btn.addEventListener('click', onAction);
+
+        // fill registry entry
+        item.node = el;
+        item.listener = onAction;
+
+        // put into DOM and registry
+        rightVisibleContainer.appendChild(el);
+        rightRegistry.push(item);
+        updateRightVisibleCount();
+        updateRightRetainedCount();
+      }
+
+      function rightRemoveWidget() {
+        // remove last visible one from DOM and clean references properly
+        if (!rightRegistry.length) return;
+        var item = rightRegistry.pop(); // take last registry item
+        // detach event listener
+        var btn = item.node.querySelector('button');
+        try {
+          btn.removeEventListener('click', item.listener);
+        } catch (e) {
+          // ignore
+        }
+        // remove node from DOM
+        if (item.node && item.node.parentNode) {
+          item.node.parentNode.removeChild(item.node);
+        }
+        // clear references so GC can collect
+        item.node = null;
+        item.listener = null;
+        item.heavy = null;
+        // item goes out of scope now (not referenced by anyone), so can be collected
+        updateRightVisibleCount();
+        updateRightRetainedCount();
+      }
+
+      function updateRightVisibleCount() {
+        rightVisibleCounter.textContent = rightVisibleContainer.children.length;
+      }
+      function updateRightRetainedCount() {
+        rightRetainedCounter.textContent = rightRegistry.length;
+      }
+
+      document.getElementById('rightAdd').addEventListener('click', rightAddWidget);
+      document.getElementById('rightRemove').addEventListener('click', rightRemoveWidget);
+
+      // ---------------------------
+      // Extra: periodically show simple retained rough memory indicator
+      // ---------------------------
+      // This indicator is simplistic: it counts the number of retained objects we intentionally kept.
+      // In a real app you'd use the browser's heap profiler / devtools for real memory inspection.
+      function refreshStats() {
+        updateLeftRetainedCount();
+        updateLeftVisibleCount();
+        updateRightRetainedCount();
+        updateRightVisibleCount();
+      }
+      setInterval(refreshStats, 500);
+
+      // Pre-populate a few widgets for demo convenience
+      for (var i = 0; i < 3; i++) {
+        leftAddWidget();
+        rightAddWidget();
+      }
+
+      // Expose some internals to console for inspection if desired
+      window.__demo = {
+        leftRetained: leftRetained,
+        rightRegistry: rightRegistry
+      };
+
+    })();
+  </script>
+
+  <hr style="margin-top:18px" />
+  <div style="margin-top:8px">
+    <strong>Why "GC isn't working" is usually the wrong diagnosis</strong>
+    <div style="margin-top:6px">
+      - The JavaScript garbage collector reclaims objects that are unreachable from roots (global variables, currently executing stack frames, DOM/node roots, closures, etc). If an object remains reachable, GC will not collect it.  
+      - Common causes of apparent leaks: arrays/maps that keep references to removed items, failing to call removeEventListener (or using inline handlers kept in other scopes), timers (setInterval/setTimeout), or closures that accidentally capture DOM nodes or large data.  
+      - The correct fix is to find the live references and break them (remove listeners, clear arrays, null out properties) so objects become unreachable. Use DevTools memory snapshots (allocation/retainer graphs) to find what is holding objects alive.  
+    </div>
+  </div>
+
+</body>
+</html>

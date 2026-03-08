@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Race Condition Example</title>
+    <title>Race Condition Bug in Counter Widget</title>
     <style>
+        /* Add some basic styling to make the example look nicer */
+        body {
+            font-family: Arial, sans-serif;
+        }
         .container {
             display: flex;
             gap: 20px;
         }
-        .version {
+        .counter-widget {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -15,47 +19,43 @@
     </style>
 </head>
 <body>
-
-<div class="container">
-    <div class="version">
-        <h2>Buggy Version</h2>
-        <p id="buggy-explanation">This version has a race condition bug. When you rapidly click the button, the <code>setTimeout</code> function calls may overlap, causing the count to be updated incorrectly.</p>
-        <button id="buggy-button">Click Me!</button>
-        <p>Count: <span id="buggy-count">0</span></p>
+    <h1>Race Condition Bug in Counter Widget</h1>
+    <p><strong>Bug Explanation:</strong> The buggy version of the counter widget uses <code>setTimeout</code> to asynchronously update the count variable. When the button is clicked rapidly, multiple timeouts are triggered before the previous one has a chance to finish, causing the count variable to be read, modified, and written multiple times in quick succession. This leads to a race condition where the displayed count falls behind or shows wrong values.</p>
+    <p><strong>Fix Explanation:</strong> To fix the race condition, we use a <code>lock</code> flag to ensure that only one update operation can occur at a time. We also use <code>async/await</code> syntax to make the code easier to read and understand.</p>
+    <div class="container">
+        <div class="counter-widget">
+            <h2>Buggy Version</h2>
+            <p>Count: <span id="buggy-count">0</span></p>
+            <button onclick="buggyIncrement()">Increment</button>
+        </div>
+        <div class="counter-widget">
+            <h2>Corrected Version</h2>
+            <p>Count: <span id="corrected-count">0</span></p>
+            <button onclick="correctedIncrement()">Increment</button>
+        </div>
     </div>
 
-    <div class="version">
-        <h2>Corrected Version</h2>
-        <p id="corrected-explanation">This version fixes the race condition bug by using <code>requestAnimationFrame</code> and ensuring that updates are sequential.</p>
-        <button id="corrected-button">Click Me!</button>
-        <p>Count: <span id="corrected-count">0</span></p>
-    </div>
-</div>
-
-<script>
-    // Buggy Version
-    let buggyCount = 0;
-    document.getElementById('buggy-button').addEventListener('click', () => {
-        setTimeout(() => {
-            buggyCount++;
-            document.getElementById('buggy-count').textContent = buggyCount;
-        }, 100);
-    });
-
-    // Corrected Version
-    let correctedCount = 0;
-    let pendingUpdate = false;
-    document.getElementById('corrected-button').addEventListener('click', () => {
-        if (!pendingUpdate) {
-            pendingUpdate = true;
-            requestAnimationFrame(() => {
-                correctedCount++;
-                document.getElementById('corrected-count').textContent = correctedCount;
-                pendingUpdate = false;
-            });
+    <script>
+        // Buggy version
+        let buggyCount = 0;
+        function buggyIncrement() {
+            setTimeout(() => {
+                buggyCount++;
+                document.getElementById("buggy-count").innerText = buggyCount;
+            }, 100);
         }
-    });
-</script>
 
+        // Corrected version
+        let correctedCount = 0;
+        let correcting = false;
+        async function correctedIncrement() {
+            if (correcting) return;
+            correcting = true;
+            await new Promise(resolve => setTimeout(resolve, 100));
+            correctedCount++;
+            document.getElementById("corrected-count").innerText = correctedCount;
+            correcting = false;
+        }
+    </script>
 </body>
 </html>

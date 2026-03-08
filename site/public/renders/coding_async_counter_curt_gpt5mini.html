@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Race Condition Counter — Buggy vs Fixed</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 24px; color: #222; }
+    h1 { margin-top: 0; }
+    .wrap { display:flex; gap: 20px; align-items: flex-start; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; width: 360px; box-shadow: 4px 6px 18px rgba(0,0,0,0.04); }
+    .card.buggy { border-color: #f5c2c7; background: linear-gradient(180deg, #fff7f8, #fff); }
+    .card.fixed { border-color: #c7f5d8; background: linear-gradient(180deg, #f9fff7, #fff); }
+    .count { font-size: 48px; font-weight: 700; margin: 12px 0; letter-spacing: -1px; }
+    .buttons { display:flex; gap:8px; }
+    button { font-size: 16px; padding: 8px 12px; cursor: pointer; border-radius: 6px; border: 1px solid #bbb; background: #fff; }
+    button.primary { background: #0b78ff; color: white; border-color: #075ec0; }
+    button.warn { background: #ff6b6b; color: white; border-color: #d14949; }
+    .explain { margin-top: 12px; font-size: 13px; color: #333; background: #fff; padding: 10px; border-radius: 6px; border: 1px dashed #ddd; }
+    .log { font-family: monospace; font-size: 13px; height: 120px; overflow:auto; background:#f8f9fb; padding:8px; border-radius:6px; border:1px solid #eee; }
+    .note { font-size:13px; color:#555; margin-top: 8px;}
+    .highlight { font-weight:700; color:#b00; }
+  </style>
+</head>
+<body>
+  <h1>Race Condition Demo: Counter (Buggy vs Fixed)</h1>
+  <p>
+    Click the "+1" button rapidly on both counters. The left ("Buggy") intentionally has a race condition caused by overlapping asynchronous updates.
+    The right ("Fixed") serializes updates so each completes before the next starts.
+  </p>
+
+  <div class="wrap">
+    <div class="card buggy">
+      <h3>Buggy counter</h3>
+      <div>Shared internal count variable: <span id="buggyShared">0</span></div>
+      <div class="count" id="buggyDisplay">0</div>
+      <div class="buttons">
+        <button id="buggyBtn" class="primary">+1 (buggy)</button>
+        <button id="buggyReset" class="warn">Reset</button>
+      </div>
+      <div class="explain">
+        Buggy update steps (simplified):
+        <ol>
+          <li>Read shared count into local variable (synchronous)</li>
+          <li>Start async operation (setTimeout) to simulate delay</li>
+          <li>After delay, compute new value from local variable and write shared count and display</li>
+        </ol>
+        Because multiple clicks start overlapping timeouts, a later timeout can finish after an earlier one but with a stale read, overwriting a newer value with an older calculation.
+      </div>
+      <div class="note">
+        Tip: Click "+1 (buggy)" very fast (hold or spam) to see the wrong count.
+      </div>
+      <div style="margin-top:12px;">
+        <div style="font-weight:700; margin-bottom:4px;">Buggy internal log (latest events):</div>
+        <div id="buggyLog" class="log"></div>
+      </div>
+    </div>
+
+    <div class="card fixed">
+      <h3>Fixed counter</h3>
+      <div>Shared internal count variable: <span id="fixedShared">0</span></div>
+      <div class="count" id="fixedDisplay">0</div>
+      <div class="buttons">
+        <button id="fixedBtn" class="primary">+1 (fixed)</button>
+        <button id="fixedReset" class="warn">Reset</button>
+      </div>
+      <div class="explain">
+        Fix used: serialize updates so each async operation runs after the previous completes.
+        This demo implements a simple promise chain (operation queue / mutex). Each click appends a task to the chain.
+      </div>
+      <div class="note">
+        Because updates are serialized, rapid clicks are all applied in order — no stale overwrites.
+      </div>
+      <div style="margin-top:12px;">
+        <div style="font-weight:700; margin-bottom:4px;">Fixed internal log (latest events):</div>
+        <div id="fixedLog" class="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Utility: append log line and keep last lines visible
+    function appendLog(el, text) {
+      const now = new Date().toLocaleTimeString();
+      el.textContent = now + '  ' + text + '\\n' + el.textContent;
+      // trim to reasonable length
+      const lines = el.textContent.split('\\n').slice(0, 200).join('\\n');
+      el.textContent = lines;
+    }
+
+    // Simulated async increment that takes a small random delay to exaggerate races
+    function simulatedAsyncDelay(fn, label) {
+      const delay = 30 + Math.floor(Math.random() * 120); // 30..150ms
+      return new Promise(resolve => {
+        setTimeout(() => {
+          try { fn(); } catch (e) { console.error(e); }
+          resolve();
+        }, delay);
+      });
+    }
+
+    // -----------------------
+    // Buggy counter implementation
+    // -----------------------
+    (function() {
+      const shared = { count: 0 }; // shared variable
+      const sharedEl = document.getElementById('buggyShared');
+      const display = document.getElementById('buggyDisplay');
+      const btn = document.getElementById('buggyBtn');
+      const reset = document.getElementById('buggyReset');
+      const logEl = document.getElementById('buggyLog');
+
+      function render() {
+        sharedEl.textContent = String(shared.count);
+        display.textContent = String(shared.count);
+      }
+
+      // The buggy update:
+      // 1) read shared.count into local "readValue"
+      // 2) start async work (setTimeout)
+      // 3) when async completes, compute newValue = readValue + 1 and write shared.count = newValue
+      // Because multiple clicks do this in parallel, they can read stale values and later overwrite newer ones.
+      btn.addEventListener('click', () => {
+        const readValue = shared.count;
+        appendLog(logEl, 'CLICK -> read=' + readValue + ' (scheduling async increment)');
+        // start async update that uses the stale readValue
+        simulatedAsyncDelay(() => {
+          const newValue = readValue + 1;
+          shared.count = newValue;               // overwrite shared with value based on stale read
+          appendLog(logEl, 'ASYNC DONE -> wrote=' + newValue + ' (based on read=' + readValue + ')');
+          render();
+        }, 'buggy');
+      });
+
+      reset.addEventListener('click', () => {
+        shared.count = 0;
+        render();
+        logEl.textContent = '';
+      });
+
+      render();
+    })();
+
+    // -----------------------
+    // Fixed counter implementation (operation queue / serialized updates)
+    // -----------------------
+    (function() {
+      const shared = { count: 0 };
+      const sharedEl = document.getElementById('fixedShared');
+      const display = document.getElementById('fixedDisplay');
+      const btn = document.getElementById('fixedBtn');
+      const reset = document.getElementById('fixedReset');
+      const logEl = document.getElementById('fixedLog');
+
+      function render() {
+        sharedEl.textContent = String(shared.count);
+        display.textContent = String(shared.count);
+      }
+
+      // Simple "queue" / promise chain that ensures updates run in sequence.
+      // start with a resolved promise
+      let chain = Promise.resolve();
+
+      function enqueueUpdate(fn) {
+        // Append to the chain. Each fn should return a promise (the async work).
+        chain = chain.then(() => fn()).catch(err => {
+          console.error('Chain error', err);
+          // continue the chain even if error occurs
+        });
+      }
+
+      btn.addEventListener('click', () => {
+        appendLog(logEl, 'CLICK -> enqueue increment task');
+        enqueueUpdate(() => {
+          // Read-modify-write happens inside the serialized task, so no concurrent reads.
+          const readValue = shared.count;
+          appendLog(logEl, 'TASK START -> read=' + readValue);
+          // simulated async work (delay) but it's serialized: next task won't start until this completes
+          return simulatedAsyncDelay(() => {
+            const newValue = readValue + 1;
+            shared.count = newValue;
+            appendLog(logEl, 'TASK DONE -> wrote=' + newValue + ' (based on read=' + readValue + ')');
+            render();
+          }, 'fixed');
+        });
+      });
+
+      reset.addEventListener('click', () => {
+        // resetting should also wait for/push to the chain to avoid races with in-flight tasks.
+        // For demo simplicity we'll clear the chain and reset immediately.
+        chain = Promise.resolve();
+        shared.count = 0;
+        render();
+        logEl.textContent = '';
+      });
+
+      render();
+    })();
+
+    // Initial user guidance: focus on spam clicking
+    document.addEventListener('DOMContentLoaded', () => {
+      // nothing
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Singly Linked List Visualizer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  :root{
+    --bg:#f7f9fc;
+    --panel:#ffffff;
+    --accent:#2b7cff;
+    --accent-2:#0b8a6f;
+    --muted:#6b7280;
+    --danger:#e11d48;
+    --success:#059669;
+    --node-bg:#fff;
+    --node-border:#d1d5db;
+    --arrow:#94a3b8;
+    --shadow: 0 6px 18px rgba(16,24,40,0.06);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%; margin:0; background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 50%); color:#0f172a}
+  .app{
+    max-width:1100px;
+    margin:32px auto;
+    padding:22px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  h1{font-size:20px;margin:0}
+  .controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    background:var(--panel);
+    padding:12px;
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    margin-bottom:18px;
+  }
+  .controls .group{display:flex;gap:8px;align-items:center}
+  input[type="text"]{
+    padding:8px 10px;
+    border:1px solid var(--node-border);
+    border-radius:8px;
+    min-width:120px;
+    font-size:14px;
+    outline:none;
+  }
+  button{
+    background:var(--accent);
+    color:#fff;
+    border:0;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:13px;
+  }
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  button.ghost{background:transparent;color:var(--muted);border:1px dashed #e6e9ef}
+  button.danger{background:var(--danger)}
+  .status{
+    margin-left:auto;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .canvas{
+    background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:var(--shadow);
+    min-height:200px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:auto;
+  }
+  .empty{
+    color:var(--muted);
+    text-align:center;
+  }
+  .list-row{
+    display:flex;
+    align-items:center;
+    gap:22px;
+    padding:12px;
+    transition:all 240ms ease;
+  }
+  .node{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--node-bg);
+    border:1px solid var(--node-border);
+    padding:10px 14px;
+    border-radius:10px;
+    min-width:64px;
+    box-shadow:0 2px 6px rgba(15,23,42,0.04);
+    position:relative;
+    transition:transform 220ms ease, box-shadow 220ms ease, border-color 220ms;
+    user-select:none;
+  }
+  .node .val{font-weight:700; color:#0f172a}
+  .node .next-label{font-size:12px;color:var(--muted)}
+  .node.head{
+    box-shadow:0 8px 22px rgba(43,124,255,0.12);
+    border-color:rgba(43,124,255,0.5);
+  }
+  .node.tail{
+    box-shadow:0 8px 22px rgba(11,138,111,0.08);
+    border-color:rgba(11,138,111,0.35);
+  }
+  .node.found{
+    animation: pulse 1100ms infinite;
+    border-color:rgba(245,158,11,0.9);
+    box-shadow:0 12px 28px rgba(245,158,11,0.12);
+  }
+  @keyframes pulse{
+    0%{transform:translateY(0)}
+    50%{transform:translateY(-6px)}
+    100%{transform:translateY(0)}
+  }
+  .arrow{
+    width:62px;
+    height:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  /* draw arrow using inline svg */
+  .arrow svg{opacity:0.9}
+  .legend{
+    margin-top:12px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .legend .dot{width:12px;height:12px;border-radius:4px}
+  .legend .dot.head{background:rgba(43,124,255,0.14);border:2px solid var(--accent);box-sizing:content-box}
+  .legend .dot.tail{background:rgba(11,138,111,0.08);border:2px solid var(--accent-2);box-sizing:content-box}
+  .actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .small{padding:6px 8px;font-size:13px;border-radius:8px}
+  .notice{
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:rgba(0,0,0,0.04);
+    padding:8px 12px;
+    border-radius:8px;
+    color:var(--muted);
+    font-size:13px;
+  }
+  footer{margin-top:12px;color:var(--muted);font-size:13px}
+  @media (max-width:720px){
+    .controls{flex-direction:column;align-items:stretch}
+    .status{margin-left:0}
+    .list-row{gap:14px;padding:10px}
+    .arrow{width:40px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Singly Linked List Visualizer</h1>
+    <div style="color:var(--muted);font-size:13px">Insert/Delete/Search with live animation</div>
+  </header>
+
+  <div class="controls" role="region" aria-label="controls">
+    <div class="group">
+      <input id="valueInput" type="text" placeholder="Value (text or number)" aria-label="value"/>
+      <button id="insHead">Insert at Head</button>
+      <button id="insTail" class="secondary">Insert at Tail</button>
+    </div>
+
+    <div class="group">
+      <input id="delInput" type="text" placeholder="Value to delete" aria-label="delete-value"/>
+      <button id="delBtn" class="danger">Delete by Value</button>
+    </div>
+
+    <div class="group">
+      <input id="searchInput" type="text" placeholder="Search value" aria-label="search-value"/>
+      <button id="searchBtn" class="ghost">Search</button>
+      <button id="clearSearch" class="secondary">Clear</button>
+    </div>
+
+    <div class="status" id="status">Length: 0</div>
+  </div>
+
+  <div class="canvas" id="canvas" tabindex="0" aria-live="polite">
+    <div class="empty" id="emptyState">
+      The list is empty. Insert nodes to get started.
+    </div>
+
+    <!-- list will be rendered here -->
+    <div id="listContainer" style="display:flex;align-items:center;"></div>
+
+    <div class="notice" id="notice" style="display:none"></div>
+  </div>
+
+  <div class="legend" aria-hidden="true">
+    <div style="display:flex;align-items:center;gap:8px"><div class="dot head"></div> Head</div>
+    <div style="display:flex;align-items:center;gap:8px"><div class="dot tail"></div> Tail</div>
+    <div style="display:flex;align-items:center;gap:8px;color:var(--accent-2)"><svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M5 12h10l-4 4 1.41 1.41L19.83 12 12.41 4.59 11 6 15 10H5z"></path></svg> Next pointer</div>
+  </div>
+
+  <footer>Tip: Values are treated as strings. Deleting removes the first match. Search highlights the first matching node.</footer>
+</div>
+
+<script>
+(function(){
+  // Simple singly linked list model
+  function Node(val){
+    this.val = String(val);
+    this.next = null;
+    this.id = Math.random().toString(36).slice(2,9);
+  }
+
+  function LinkedList(){
+    this.head = null;
+    this.length = 0;
+  }
+  LinkedList.prototype.insertHead = function(val){
+    const n = new Node(val);
+    n.next = this.head;
+    this.head = n;
+    this.length++;
+    return n;
+  };
+  LinkedList.prototype.insertTail = function(val){
+    const n = new Node(val);
+    if(!this.head){ this.head = n; this.length++; return n; }
+    let cur = this.head;
+    while(cur.next) cur = cur.next;
+    cur.next = n;
+    this.length++;
+    return n;
+  };
+  LinkedList.prototype.deleteByValue = function(val){
+    val = String(val);
+    if(!this.head) return null;
+    let cur = this.head, prev = null;
+    while(cur){
+      if(cur.val === val){
+        if(prev) prev.next = cur.next;
+        else this.head = cur.next;
+        this.length--;
+        return cur;
+      }
+      prev = cur;
+      cur = cur.next;
+    }
+    return null;
+  };
+  LinkedList.prototype.find = function(val){
+    val = String(val);
+    let cur = this.head;
+    while(cur){
+      if(cur.val === val) return cur;
+      cur = cur.next;
+    }
+    return null;
+  };
+  LinkedList.prototype.toArray = function(){
+    const arr = [];
+    let cur = this.head;
+    while(cur){ arr.push(cur); cur = cur.next; }
+    return arr;
+  };
+
+  // UI references
+  const list = new LinkedList();
+  const canvas = document.getElementById('canvas');
+  const listContainer = document.getElementById('listContainer');
+  const emptyState = document.getElementById('emptyState');
+  const status = document.getElementById('status');
+  const notice = document.getElementById('notice');
+
+  const valueInput = document.getElementById('valueInput');
+  const insHeadBtn = document.getElementById('insHead');
+  const insTailBtn = document.getElementById('insTail');
+
+  const delInput = document.getElementById('delInput');
+  const delBtn = document.getElementById('delBtn');
+
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const clearSearchBtn = document.getElementById('clearSearch');
+
+  // utilities
+  function showNotice(text, timeout=1800, type){
+    notice.style.display = 'block';
+    notice.textContent = text;
+    if(type === 'err') notice.style.color = getComputedStyle(document.documentElement).getPropertyValue('--danger') || '#e11d48';
+    else notice.style.color = '';
+    clearTimeout(notice._tm);
+    notice._tm = setTimeout(()=>{ notice.style.display='none'; notice.style.color=''; }, timeout);
+  }
+
+  function updateStatus(){
+    status.textContent = 'Length: ' + list.length;
+  }
+
+  // Render functions
+  function makeArrow(){
+    const wrap = document.createElement('span');
+    wrap.className = 'arrow';
+    wrap.innerHTML = `
+      <svg viewBox="0 0 24 24" width="62" height="22" aria-hidden="true">
+        <defs>
+          <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#c7d2fe"/><stop offset="1" stop-color="#94a3b8"/></linearGradient>
+        </defs>
+        <path fill="none" stroke="url(#g)" stroke-width="2" d="M2 12h16" stroke-linecap="round" stroke-linejoin="round"/>
+        <path fill="url(#g)" d="M20.5 12l-4-3v2H4v2h12v2z" opacity="0.98"></path>
+      </svg>
+    `;
+    return wrap;
+  }
+
+  function render(){
+    // clear
+    listContainer.innerHTML = '';
+    const arr = list.toArray();
+    if(arr.length === 0){
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    // create row
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.setAttribute('aria-live','polite');
+
+    arr.forEach((node, idx) => {
+      const nd = document.createElement('div');
+      nd.className = 'node';
+      nd.dataset.id = node.id;
+      // mark head/tail
+      if(idx === 0) nd.classList.add('head');
+      if(idx === arr.length-1) nd.classList.add('tail');
+
+      nd.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="val">${escapeHtml(node.val)}</div>
+          <div class="next-label">${idx === arr.length-1 ? 'null' : 'next'}</div>
+        </div>
+      `;
+
+      // tooltip-like title
+      nd.title = 'Node: ' + node.val;
+
+      row.appendChild(nd);
+
+      if(idx !== arr.length-1){
+        row.appendChild(makeArrow());
+      }
+    });
+
+    listContainer.appendChild(row);
+    updateStatus();
+    // scroll into view nicely
+    setTimeout(()=>{ row.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }, 60);
+  }
+
+  // helpers
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+
+  // Operations with simple animations/highlighting
+  function insertAtHead(val){
+    if(val === '') { showNotice('Enter a value to insert',1500,'err'); return; }
+    const n = list.insertHead(val);
+    render();
+    flashNode(n.id, 'head');
+    showNotice('Inserted at head: ' + val);
+  }
+
+  function insertAtTail(val){
+    if(val === '') { showNotice('Enter a value to insert',1500,'err'); return; }
+    const n = list.insertTail(val);
+    render();
+    flashNode(n.id, 'tail');
+    showNotice('Inserted at tail: ' + val);
+  }
+
+  function deleteByValue(val){
+    if(val === '') { showNotice('Enter a value to delete',1500,'err'); return; }
+    // simple traversal highlight
+    const arr = list.toArray();
+    if(arr.length === 0){ showNotice('List is empty',1500,'err'); return; }
+    // animate traversal
+    traverseHighlight(arr, val, function(foundNode){
+      if(!foundNode){
+        showNotice('Value not found: ' + val,1600,'err');
+        return;
+      }
+      // perform delete and re-render
+      list.deleteByValue(val);
+      render();
+      showNotice('Deleted: ' + val);
+    });
+  }
+
+  function searchValue(val){
+    if(val === '') { showNotice('Enter a value to search',1500,'err'); return; }
+    const arr = list.toArray();
+    if(arr.length === 0){ showNotice('List is empty',1500,'err'); return; }
+    traverseHighlight(arr, val, function(foundNode){
+      if(!foundNode){
+        showNotice('Not found: ' + val,1600,'err');
+        return;
+      }
+      // keep found highlighted
+      const el = listContainer.querySelector('.node[data-id="'+foundNode.id+'"]');
+      if(el){
+        el.classList.add('found');
+        showNotice('Found: ' + val);
+        // remove highlight after some time if user doesn't clear
+        setTimeout(()=>{ if(el) el.classList.remove('found'); }, 5000);
+      }
+    });
+  }
+
+  // Traversal highlight: iterate nodes with timed highlights calling cb(foundNode or null)
+  function traverseHighlight(arr, targetVal, cb){
+    let i = 0;
+    // clear any 'found' classes first
+    listContainer.querySelectorAll('.node.found').forEach(n=>n.classList.remove('found'));
+    const step = ()=>{
+      if(i > 0){
+        // remove previous highlight (unless it was 'found' and we want to keep)
+        const prev = listContainer.querySelector('.node[data-id="'+arr[i-1].id+'"]');
+        if(prev) prev.classList.remove('found');
+      }
+      if(i >= arr.length){
+        cb(null);
+        return;
+      }
+      const curNode = arr[i];
+      const el = listContainer.querySelector('.node[data-id="'+curNode.id+'"]');
+      if(el){
+        el.classList.add('found');
+        // scroll element into view if needed
+        el.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+      }
+      if(curNode.val === String(targetVal)){
+        cb(curNode);
+        return;
+      }
+      i++;
+      setTimeout(step, 700);
+    };
+    step();
+  }
+
+  function flashNode(id, type){
+    const el = listContainer.querySelector('.node[data-id="'+id+'"]');
+    if(!el) return;
+    el.classList.add('found');
+    setTimeout(()=>{ el.classList.remove('found'); }, 1400);
+  }
+
+  // Event bindings
+  insHeadBtn.addEventListener('click', ()=>{ insertAtHead(valueInput.value.trim()); valueInput.focus(); });
+  insTailBtn.addEventListener('click', ()=>{ insertAtTail(valueInput.value.trim()); valueInput.focus(); });
+
+  delBtn.addEventListener('click', ()=>{ deleteByValue(delInput.value.trim()); delInput.focus(); });
+
+  searchBtn.addEventListener('click', ()=>{ searchValue(searchInput.value.trim()); searchInput.focus(); });
+  clearSearchBtn.addEventListener('click', ()=>{
+    // clear found highlights
+    listContainer.querySelectorAll('.node.found').forEach(n=>n.classList.remove('found'));
+    searchInput.value = '';
+    showNotice('Search cleared',1000);
+  });
+
+  // keyboard shortcuts: Enter in relevant inputs triggers corresponding action
+  valueInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ insertAtTail(this.value.trim()); }});
+  delInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ deleteByValue(this.value.trim()); }});
+  searchInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ searchValue(this.value.trim()); }});
+
+  // initial render
+  render();
+
+  // Accessibility: announce operations
+  const originalShowNotice = showNotice;
+  // keep as is
+
+  // expose for debugging in console
+  window._sll = { list: list, render: render };
+
+})();
+</script>
+</body>
+</html>

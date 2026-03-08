@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Email Validation Form</title>
-<style>
-  .valid {
-    border: 2px solid green;
-  }
-  .invalid {
-    border: 2px solid red;
-  }
-  #explanation {
-    margin-top: 20px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Form</title>
+    <style>
+        .valid {
+            border: 2px solid green;
+        }
+        .invalid {
+            border: 2px solid red;
+        }
+        #explanation {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
@@ -22,25 +22,30 @@
 
 <input type="email" id="email" placeholder="Enter your email">
 <div id="explanation">
-  <h3>About Email Validation</h3>
-  <p>Email validation using regular expressions is commonly used but has its limitations. According to <a href="https://tools.ietf.org/html/rfc5322#section-3.4">RFC 5322</a>, the official specification for Internet email, the syntax for email addresses is quite complex and can include a wide range of characters. A fully RFC-compliant regex pattern for validating email addresses is extremely complex and not practical for real-world use.</p>
-  <p>For production environments, consider using a combination of client-side and server-side validation. Client-side validation can provide immediate feedback to the user, but <strong>do not rely solely on client-side validation for security</strong>. Always validate email addresses on the server-side as well to ensure data integrity and security.</p>
-  <p>For client-side validation, you might find libraries like <a href="https://parsleyjs.org/">Parsley</a> or <a href="https://validatejs.org/">Validate.js</a> helpful. For server-side validation, the approach depends on your server-side technology stack.</p>
+    <h3>About Email Validation</h3>
+    <p>Regex-based email validation, like the one used in this form, checks if the input string matches a specific pattern. However, according to <a href="https://tools.ietf.org/html/rfc5322#section-3.4">RFC 5322</a>, the official specification for Internet email, the only way to truly validate an email address is to send a confirmation email to it and have the user reply back.</p>
+    <p>The reason regex-based validation is fundamentally limited is that it cannot verify if an email address actually exists or if the user has access to it. It can only check if the format of the email address is syntactically correct according to the regex pattern used.</p>
+    <p>For production use, consider the following best practices:</p>
+    <ul>
+        <li>Send a confirmation email to the provided email address.</li>
+        <li>Use a two-step verification process.</li>
+        <li>Implement server-side validation in addition to client-side validation like this.</li>
+    </ul>
 </div>
 
 <script>
-  const emailInput = document.getElementById('email');
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailInput = document.getElementById('email');
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  emailInput.addEventListener('input', () => {
-    if (emailRegex.test(emailInput.value)) {
-      emailInput.classList.remove('invalid');
-      emailInput.classList.add('valid');
-    } else {
-      emailInput.classList.remove('valid');
-      emailInput.classList.add('invalid');
-    }
-  });
+    emailInput.addEventListener('input', () => {
+        if (emailRegex.test(emailInput.value)) {
+            emailInput.classList.remove('invalid');
+            emailInput.classList.add('valid');
+        } else {
+            emailInput.classList.remove('valid');
+            emailInput.classList.add('invalid');
+        }
+    });
 </script>
 
 </body>

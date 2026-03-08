@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Documentation</title>
+    <title>REST API Documentation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,7 +19,7 @@
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            background-color: #f9f9f9;
+            margin-top: 10px;
         }
         .section.expanded .content {
             display: block;
@@ -27,58 +27,73 @@
     </style>
 </head>
 <body>
-    <h1>API Documentation</h1>
+    <h1>REST API Documentation</h1>
+
     <div class="section">
-        <h2>Original Endpoints <span style="font-size: 12px; color: red;">(Problematic)</span></h2>
+        <h2 onclick="toggleSection(this)">Original Endpoints <span>&#9662;</span></h2>
         <div class="content">
             <ul>
-                <li><code>GET /getUsers</code></li>
-                <li><code>POST /user/delete/5</code></li>
-                <li><code>GET /createUser?name=Jo</code></li>
-                <li><code>PUT /updateAllUsers</code></li>
+                <li>GET /getUsers</li>
+                <li>POST /user/delete/5</li>
+                <li>GET /createUser?name=Jo</li>
+                <li>PUT /updateAllUsers</li>
             </ul>
         </div>
     </div>
+
     <div class="section">
-        <h2>Design Problems</h2>
+        <h2 onclick="toggleSection(this)">Design Problems <span>&#9662;</span></h2>
         <div class="content">
             <ul>
-                <li><strong>UnRESTful method usage</strong>: Using <code>GET</code> for <code>/getUsers</code> and <code>/createUser</code>, <code>POST</code> for <code>/user/delete/5</code>, and <code>PUT</code> for <code>/updateAllUsers</code>.</li>
-                <li><strong>Inconsistent naming</strong>: Using both singular and plural forms for resources (<code>/user</code> and <code>/getUsers</code>).</li>
-                <li><strong>Query parameters in <code>GET</code> requests</strong>: Using query parameters to pass data in <code>/createUser?name=Jo</code>.</li>
-                <li><strong>Missing resource identifier</strong>: <code>/updateAllUsers</code> does not specify which users to update.</li>
-                <li><strong>Incorrect HTTP method for delete operation</strong>: Using <code>POST</code> instead of <code>DELETE</code> for <code>/user/delete/5</code>.</li>
+                <li><b>Unclear or inconsistent naming:</b> Endpoints use both plural and singular forms (e.g., /getUsers and /user/delete/5).</li>
+                <li><b>Incorrect HTTP methods:</b> 
+                    <ul>
+                        <li>POST /user/delete/5 should be DELETE /users/5 (or DELETE /user/5).</li>
+                        <li>GET /createUser?name=Jo should be POST /users (with a JSON body containing the user data).</li>
+                        <li>PUT /updateAllUsers should be PATCH /users (or PUT /users/{id} for a specific user).</li>
+                    </ul>
+                </li>
+                <li><b>Missing resource identifier:</b> Endpoints like /updateAllUsers should target a specific resource or collection.</li>
+                <li><b>Query parameters for creating resources:</b> GET /createUser?name=Jo uses a query parameter for creating a resource, which is not standard.</li>
             </ul>
         </div>
     </div>
+
     <div class="section">
-        <h2>Corrected Endpoints <span style="font-size: 12px; color: green;">(Following REST best practices)</span></h2>
+        <h2 onclick="toggleSection(this)">Corrected Endpoints <span>&#9662;</span></h2>
         <div class="content">
             <ul>
-                <li><code>GET /users</code> - Retrieve a list of all users.</li>
-                <li><code>POST /users</code> - Create a new user. <code>Request Body: { name: "Jo" }</code></li>
-                <li><code>GET /users/{id}</code> - Retrieve a specific user by ID.</li>
-                <li><code>PUT /users/{id}</code> - Update a specific user by ID. <code>Request Body: { name: "Jo Updated" }</code></li>
-                <li><code>DELETE /users/{id}</code> - Delete a specific user by ID.</li>
-            </ul>
-            <p>Example Status Codes:</p>
-            <ul>
-                <li><code>200 OK</code> - Successful request.</li>
-                <li><code>201 Created</code> - Resource created successfully.</li>
-                <li><code>204 No Content</code> - Resource deleted successfully.</li>
-                <li><code>404 Not Found</code> - Resource not found.</li>
-                <li><code>400 Bad Request</code> - Invalid request data.</li>
+                <li><b>GET /users</b> - Retrieve a list of all users. <i>Status Code: 200 OK</i></li>
+                <li><b>POST /users</b> - Create a new user. <i>Status Code: 201 Created</i>
+                    <ul>
+                        <li>Request Body: <code>{"name": "Jo", "email": "jo@example.com"}</code></li>
+                    </ul>
+                </li>
+                <li><b>GET /users/{id}</b> - Retrieve a user by ID. <i>Status Code: 200 OK</i></li>
+                <li><b>PUT /users/{id}</b> - Update a user. <i>Status Code: 200 OK</i>
+                    <ul>
+                        <li>Request Body: <code>{"name": "Jo Updated", "email": "joupdated@example.com"}</code></li>
+                    </ul>
+                </li>
+                <li><b>PATCH /users/{id}</b> - Partially update a user. <i>Status Code: 200 OK</i>
+                    <ul>
+                        <li>Request Body: <code>{"name": "Jo Partial Update"}</code></li>
+                    </ul>
+                </li>
+                <li><b>DELETE /users/{id}</b> - Delete a user. <i>Status Code: 204 No Content</i></li>
             </ul>
         </div>
     </div>
 
     <script>
-        document.querySelectorAll('.section h2').forEach((header) => {
-            header.addEventListener('click', () => {
-                const section = header.parentNode;
-                section.classList.toggle('expanded');
-            });
-        });
+        function toggleSection(section) {
+            section.parentNode.classList.toggle('expanded');
+            if (section.textContent.includes('&#9662;')) {
+                section.innerHTML = section.innerHTML.replace('&#9662;', '&#9656;');
+            } else {
+                section.innerHTML = section.innerHTML.replace('&#9656;', '&#9662;');
+            }
+        }
     </script>
 </body>
 </html>

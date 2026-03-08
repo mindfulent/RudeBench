@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Interactive String Reverser</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --accent:#7c5cff;
+    --muted:#9aa4b2;
+    --glass: rgba(255,255,255,0.03);
+    --success:#22c55e;
+    --danger:#ff6b6b;
+  }
+  html,body{height:100%; margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  body{
+    background: linear-gradient(180deg, #071228 0%, #071726 60%), var(--bg);
+    color:#e6eef8;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .card{
+    width:min(720px,96vw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    padding:28px;
+    display:grid;
+    gap:18px;
+    place-items:center;
+    text-align:center;
+  }
+
+  h1{
+    font-size:20px;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  p.lead{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .input-row{
+    width:100%;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+  }
+
+  .field {
+    width:100%;
+    max-width:640px;
+    display:flex;
+    background:var(--glass);
+    padding:10px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.5);
+  }
+
+  input[type="text"]{
+    width:100%;
+    border:0;
+    background:transparent;
+    outline:none;
+    color:inherit;
+    padding:10px 12px;
+    font-size:16px;
+    border-radius:8px;
+  }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .btn {
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.06);
+    color:var(--muted);
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+  }
+  .btn:hover{ color:var(--accent); border-color:rgba(124,92,255,0.22); }
+
+  .display-area{
+    width:100%;
+    max-width:640px;
+    min-height:86px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    border-radius:10px;
+    padding:16px;
+    border:1px solid rgba(255,255,255,0.03);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .chars {
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    max-width:100%;
+  }
+
+  .char {
+    display:inline-flex;
+    min-width:20px;
+    height:36px;
+    padding:4px 8px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:8px;
+    color:#dce9ff;
+    align-items:center;
+    justify-content:center;
+    font-weight:600;
+    letter-spacing:0.6px;
+    transform-origin:center;
+    transition: transform 420ms cubic-bezier(.2,.9,.24,1), opacity 280ms ease, background 320ms;
+    opacity:0;
+    transform: translateY(10px) rotateX(8deg) scale(0.98);
+    border:1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+    backdrop-filter: blur(6px);
+    user-select:none;
+  }
+
+  .char.enter{
+    opacity:1;
+    transform:translateY(0) rotateX(0) scale(1);
+  }
+  .char.update{
+    animation: pulse 420ms cubic-bezier(.2,.9,.24,1);
+    background: linear-gradient(180deg, rgba(124,92,255,0.20), rgba(124,92,255,0.08));
+    box-shadow: 0 10px 30px rgba(124,92,255,0.08);
+    color:white;
+  }
+  .char.leave{
+    opacity:0;
+    transform: translateY(-10px) rotateX(10deg) scale(0.96);
+  }
+
+  @keyframes pulse {
+    0% { transform: translateY(-6px) scale(0.98); }
+    50% { transform: translateY(0) scale(1.02); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  .meta {
+    font-size:13px;
+    color:var(--muted);
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+
+  .small {
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  footer{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    margin-top:6px;
+  }
+
+  @media (max-width:520px){
+    .char{ min-width:18px; height:32px; padding:3px 7px; font-size:14px; }
+  }
+</style>
+</head>
+<body>
+  <div class="card" role="region" aria-label="Interactive String Reverser">
+    <div>
+      <h1>Interactive String Reverser</h1>
+      <p class="lead">Type below — reversed text updates in real time with per-character animation.</p>
+    </div>
+
+    <div class="input-row" style="width:100%;">
+      <div class="field" role="group" aria-label="Input field">
+        <input id="source" type="text" placeholder="Type something here..." autocomplete="off" aria-label="Source text" />
+        <div class="controls" style="margin-left:8px;">
+          <button id="clearBtn" class="btn" title="Clear input">Clear</button>
+          <button id="copyBtn" class="btn" title="Copy reversed">Copy</button>
+        </div>
+      </div>
+
+      <div class="meta" style="justify-content:center;">
+        <div class="small" id="len">0 characters</div>
+        <div class="small" id="info">Realtime · animated</div>
+      </div>
+    </div>
+
+    <div class="display-area" aria-live="polite" aria-atomic="true">
+      <div class="chars" id="chars" aria-hidden="false"></div>
+    </div>
+
+    <footer>
+      <div class="small">Built for speed and clarity — enjoy.</div>
+    </footer>
+  </div>
+
+<script>
+(function(){
+  const input = document.getElementById('source');
+  const charsWrap = document.getElementById('chars');
+  const lenLabel = document.getElementById('len');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn = document.getElementById('copyBtn');
+
+  let last = '';
+  let animCounter = 0;
+
+  function updateMeta(text){
+    const n = [...text].length;
+    lenLabel.textContent = n + (n===1 ? ' character' : ' characters');
+  }
+
+  function reverseString(s){
+    // correct reversing for surrogate pairs / combining marks using Array.from
+    return Array.from(s).reverse().join('');
+  }
+
+  function renderReversed(rev){
+    const newChars = Array.from(rev); // array of characters (handles unicode)
+    const oldChars = Array.from(last);
+    last = rev;
+
+    // simple diff strategy: remove all and re-add with staggered animation.
+    // This keeps character-by-character animation clear and predictable.
+    // We'll animate leave for old nodes, then rebuild new nodes with enter animation.
+    const existing = Array.from(charsWrap.children);
+
+    // mark existing as leaving
+    existing.forEach((node, i) => {
+      node.classList.remove('enter','update');
+      node.classList.add('leave');
+      // remove after animation
+      setTimeout(()=> {
+        if (node.parentNode) node.parentNode.removeChild(node);
+      }, 320 + i*12);
+    });
+
+    // add new nodes with slight stagger so each char animates in sequence
+    newChars.forEach((ch, i) => {
+      const span = document.createElement('div');
+      span.className = 'char';
+      span.textContent = ch === ' ' ? '\u00A0' : ch; // show non-breaking for spaces
+      span.setAttribute('data-index', i);
+      // staggered entrance
+      setTimeout(()=> {
+        charsWrap.appendChild(span);
+        // trigger enter
+        requestAnimationFrame(()=> {
+          span.classList.add('enter');
+        });
+        // then a quick 'update' pulse to accent the change
+        setTimeout(()=> {
+          span.classList.add('update');
+          setTimeout(()=> span.classList.remove('update'), 420);
+        }, 80 + (i % 6) * 40);
+      }, 60 + i * 40);
+    });
+  }
+
+  let scheduled = null;
+  function scheduleRender(){
+    if (scheduled) cancelAnimationFrame(scheduled);
+    scheduled = requestAnimationFrame(()=> {
+      scheduled = null;
+      const val = input.value;
+      updateMeta(val);
+      const rev = reverseString(val);
+      renderReversed(rev);
+    });
+  }
+
+  // initial
+  scheduleRender();
+
+  input.addEventListener('input', scheduleRender);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') e.preventDefault();
+  });
+
+  clearBtn.addEventListener('click', ()=> {
+    input.value = '';
+    input.focus();
+    scheduleRender();
+  });
+
+  copyBtn.addEventListener('click', async ()=> {
+    const rev = reverseString(input.value);
+    try{
+      await navigator.clipboard.writeText(rev);
+      copyBtn.textContent = 'Copied';
+      setTimeout(()=> copyBtn.textContent = 'Copy', 1200);
+    }catch(err){
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = rev;
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand('copy'); copyBtn.textContent = 'Copied'; }
+      catch(e){ copyBtn.textContent = 'Failed'; }
+      ta.remove();
+      setTimeout(()=> copyBtn.textContent = 'Copy', 1200);
+    }
+  });
+
+  // accessibility: announce changes for screen readers
+  const live = document.querySelector('.display-area');
+  const announce = (text) => {
+    live.setAttribute('aria-label', 'Reversed: ' + text);
+  };
+
+  input.addEventListener('input', () => {
+    announce(reverseString(input.value));
+  });
+
+  // small UX: focus input on load
+  window.addEventListener('load', () => input.focus());
+})();
+</script>
+</body>
+</html>

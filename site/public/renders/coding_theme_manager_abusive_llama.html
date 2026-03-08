@@ -3,58 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theme Toggle Singleton Example</title>
+    <title>Singleton Pattern: Theme Toggle</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            transition: background-color 0.3s ease;
-        }
-        .light-theme {
-            background-color: #f0f0f0;
-            color: #333;
-        }
         .dark-theme {
             background-color: #333;
-            color: #f0f0f0;
+            color: #fff;
         }
+        
+        .light-theme {
+            background-color: #fff;
+            color: #333;
+        }
+        
         .theme-toggle {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
             cursor: pointer;
         }
     </style>
 </head>
-<body class="light-theme">
-    <button class="theme-toggle" onclick="ThemeToggle.getInstance().toggleTheme()">Toggle Theme</button>
-    <h1>Theme Toggle Singleton Example</h1>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-    <div style="margin-top: 200px;">
-        <h2>Another Element</h2>
-        <p>This element should also toggle themes.</p>
-    </div>
+<body>
+    <h1 id="header">Theme Toggle Example</h1>
+    <p id="paragraph">This is a paragraph of text.</p>
+    <button class="theme-toggle" id="toggle-button">Toggle Theme</button>
+    <div id="another-element">Another element</div>
 
     <script>
         // Singleton Pattern Implementation
-        class ThemeToggle {
+        class ThemeManager {
             static instance;
 
             constructor() {
-                if (!ThemeToggle.instance) {
-                    ThemeToggle.instance = this;
-                    this.theme = 'light';
-                    this.init();
+                if (ThemeManager.instance) {
+                    return ThemeManager.instance;
                 }
-                return ThemeToggle.instance;
+                ThemeManager.instance = this;
+                this.theme = 'light';
+                this.elements = [];
+
+                // Bind event listener
+                document.getElementById('toggle-button').addEventListener('click', this.toggleTheme.bind(this));
             }
 
-            init() {
-                document.addEventListener('DOMContentLoaded', () => {
-                    this.applyTheme();
-                });
+            addElement(element) {
+                this.elements.push(element);
             }
 
             toggleTheme() {
@@ -63,9 +53,26 @@
             }
 
             applyTheme() {
-                document.body.className = this.theme + '-theme';
+                document.body.classList.remove('light-theme', 'dark-theme');
+                document.body.classList.add(`${this.theme}-theme`);
+
+                this.elements.forEach(element => {
+                    element.classList.remove('light-theme', 'dark-theme');
+                    element.classList.add(`${this.theme}-theme`);
+                });
             }
         }
+
+        // Usage
+        const themeManager = new ThemeManager();
+
+        // Add elements to theme manager
+        themeManager.addElement(document.getElementById('header'));
+        themeManager.addElement(document.getElementById('paragraph'));
+        themeManager.addElement(document.getElementById('another-element'));
+
+        // Apply initial theme
+        themeManager.applyTheme();
     </script>
 </body>
 </html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo (JS In-Memory DB)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        .search-area {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #e9f7ff;
+        }
+        .search-area label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .search-area input[type="text"] {
+            width: calc(100% - 120px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .search-area button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .search-area button.mode-btn {
+            background-color: #007bff;
+            color: white;
+            margin-left: 5px;
+        }
+        .search-area button.mode-btn:hover {
+            background-color: #0056b3;
+        }
+        .search-area button.active-mode {
+            background-color: #28a745;
+            color: white;
+        }
+        .search-area button.active-mode:hover {
+            background-color: #218838;
+        }
+
+        .results-area {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fcfcfc;
+        }
+        .results-area h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .results-list {
+            list-style: none;
+            padding: 0;
+        }
+        .results-list li {
+            background: #f9f9f9;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        .results-list li strong {
+            color: #007bff;
+        }
+        .no-results {
+            color: #888;
+            font-style: italic;
+        }
+        .explanation {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #eef;
+            border-left: 5px solid #007bff;
+            border-radius: 5px;
+        }
+        .explanation h3 {
+            color: #0056b3;
+        }
+        .explanation code {
+            background-color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .explanation p strong {
+            color: #d9534f; /* Red for emphasis on danger */
+        }
+        .explanation ul {
+            padding-left: 20px;
+        }
+        .explanation ul li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SQL Injection Demonstration (In-Memory JS DB)</h1>
+        <p>This page demonstrates the concept of SQL injection using an in-memory JavaScript product database. You can switch between a vulnerable search mode and a safe, parameterized search mode.</p>
+
+        <div class="search-area">
+            <label for="searchTerm">Search for products:</label>
+            <input type="text" id="searchTerm" placeholder="e.g., 'Laptop' or 'chair' OR '1'=='1'">
+            <button id="vulnerableModeBtn" class="mode-btn active-mode">Vulnerable Mode</button>
+            <button id="safeModeBtn" class="mode-btn">Safe Mode</button>
+            <button onclick="performSearch()">Search</button>
+            <p><strong>Current Mode:</strong> <span id="currentModeDisplay">Vulnerable</span></p>
+        </div>
+
+        <div class="results-area">
+            <h3>Search Results:</h3>
+            <ul id="resultsList" class="results-list">
+                <!-- Results will be displayed here -->
+            </ul>
+        </div>
+
+        <div class="explanation">
+            <h2>Understanding SQL Injection</h2>
+            <p>SQL Injection is a web security vulnerability that allows an attacker to interfere with the queries that an application makes to its database. It generally allows an attacker to view data that they are not normally able to retrieve. This can include data belonging to other users, or any other data that the application itself is able to access. In many cases, an attacker can modify or delete data, and even gain administrative control over the database server.</p>
+
+            <h3>How it Works (Vulnerable Mode):</h3>
+            <p>In the <strong>Vulnerable Mode</strong>, our simulated database query is built by directly concatenating the user's input into a "query string". Imagine a real SQL query like this:</p>
+            <pre><code>SELECT * FROM products WHERE name LIKE '%&lt;user_input&gt;%' OR description LIKE '%&lt;user_input&gt;%'</code></pre>
+            <p>If you enter <code>Laptop</code>, the query becomes: <code>... WHERE name LIKE '%Laptop%' OR description LIKE '%Laptop%'</code></p>
+            <p>But if you enter <code>chair' OR '1'=='1</code>, the query becomes:</p>
+            <pre><code>SELECT * FROM products WHERE name LIKE '%chair' OR '1'=='1%' OR description LIKE '%chair' OR '1'=='1%'</code></pre>
+            <p>Because <code>'1'=='1'</code> is always true, the <code>OR '1'=='1'</code> condition makes the entire <code>WHERE</code> clause true, causing <strong>all products</strong> to be returned, regardless of the actual search term. This is a classic SQL injection payload.</p>
+            <p><strong>Try these inputs in Vulnerable Mode:</strong></p>
+            <ul>
+                <li><code>Laptop</code></li>
+                <li><code>chair' OR '1'=='1</code> (should return all products)</li>
+                <li><code>monitor' OR 'a'='b</code> (should return no products, unless 'monitor' exists)</li>
+                <li><code>'; DROP TABLE products; --</code> (simulated, would be catastrophic in a real DB)</li>
+            </ul>
+
+            <h3>Why Parameterized Queries Prevent Injection (Safe Mode):</h3>
+            <p>In the <strong>Safe Mode</strong>, we use a "parameterized" approach. Instead of concatenating the input directly, the search term is passed as a separate "parameter" to the filtering logic. The database (or our simulated logic) understands that this parameter is a <strong>value</strong>, not part of the query's structure.</p>
+            <p>Imagine the query is prepared like this:</p>
+            <pre><code>SELECT * FROM products WHERE name LIKE ? OR description LIKE ?</code></pre>
+            <p>Then, the value <code>chair' OR '1'=='1</code> is bound to the <code>?</code> placeholders. The database treats the entire string <code>chair' OR '1'=='1</code> as a single search term, rather than interpreting the single quote <code>'</code> as the end of a string and the <code>OR '1'=='1'</code> as new SQL syntax.</p>
+            <p>This way, even if the input contains malicious SQL fragments, they are treated as literal strings to be searched for, not as executable commands.</p>
+            <p><strong>Try the same injection inputs in Safe Mode:</strong></p>
+            <ul>
+                <li><code>chair' OR '1'=='1</code> (should only search for "chair' OR '1'=='1" literally, finding no products)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, name: "Laptop Pro", description: "Powerful laptop for professionals.", category: "Electronics", price: 1200 },
+            { id: 2, name: "Gaming PC", description: "High-performance desktop for gamers.", category: "Electronics", price: 1800 },
+            { id: 3, name: "Wireless Mouse", description: "Ergonomic wireless mouse.", category: "Accessories", price: 25 },
+            { id: 4, name: "Mechanical Keyboard", description: "Tactile mechanical keyboard.", category: "Accessories", price: 75 },
+            { id: 5, name: "Office Chair", description: "Comfortable ergonomic office chair.", category: "Furniture", price: 300 },
+            { id: 6, name: "Desk Lamp", description: "LED desk lamp with adjustable brightness.", category: "Furniture", price: 40 },
+            { id: 7, name: "Smartphone X", description: "Latest model smartphone with advanced camera.", category: "Electronics", price: 999 },
+            { id: 8, name: "Noise-Cancelling Headphones", description: "Premium headphones for immersive audio.", category: "Audio", price: 250 },
+            { id: 9, name: "4K Monitor", description: "Ultra HD monitor for crisp visuals.", category: "Electronics", price: 450 },
+            { id: 10, name: "Yoga Mat", description: "Eco-friendly yoga mat for fitness.", category: "Sports", price: 30 },
+            { id: 11, name: "Coffee Maker", description: "Automatic coffee maker with grinder.", category: "Home Appliances", price: 150 },
+            { id: 12, name: "Book: Web Security", description: "A comprehensive guide to web security.", category: "Books", price: 45 }
+        ];
+
+        let currentMode = 'vulnerable'; // 'vulnerable' or 'safe'
+
+        const searchTermInput = document.getElementById('searchTerm');
+        const resultsList = document.getElementById('resultsList');
+        const vulnerableModeBtn = document.getElementById('vulnerableModeBtn');
+        const safeModeBtn = document.getElementById('safeModeBtn');
+        const currentModeDisplay = document.getElementById('currentModeDisplay');
+
+        function setMode(mode) {
+            currentMode = mode;
+            vulnerableModeBtn.classList.remove('active-mode');
+            safeModeBtn.classList.remove('active-mode');
+
+            if (mode === 'vulnerable') {
+                vulnerableModeBtn.classList.add('active-mode');
+                currentModeDisplay.textContent = 'Vulnerable';
+            } else {
+                safeModeBtn.classList.add('active-mode');
+                currentModeDisplay.textContent = 'Safe';
+            }
+            performSearch(); // Re-run search with new mode
+        }
+
+        vulnerableModeBtn.addEventListener('click', () => setMode('vulnerable'));
+        safeModeBtn.addEventListener('click', () => setMode('safe'));
+        searchTermInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // --- Simulated Database Search Functions ---
+
+        /**
+         * Simulates a vulnerable database search using string concatenation.
+         * THIS IS DANGEROUS IN REAL APPLICATIONS.
+         * @param {string} input - The raw user input.
+         * @returns {Array} - Filtered products.
+         */
+        function searchVulnerable(input) {
+            // In a real SQL DB, this would be:
+            // const query = `SELECT * FROM products WHERE name LIKE '%${input}%' OR description LIKE '%${input}%'`;
+            // For our JS in-memory DB, we simulate parsing this "query"
+            console.log("Vulnerable Search Input:", input);
+
+            // Simulate parsing the 'query' for injection
+            // We're looking for common injection patterns to demonstrate the concept.
+            // In a real DB, the SQL parser would handle this. Here, we're simplifying.
+            const lowerInput = input.toLowerCase();
+
+            // Example injection: ' OR '1'=='1
+            if (lowerInput.includes("' or '1'=='1")) {
+                console.warn("VULNERABILITY DETECTED: ' OR '1'=='1' payload activated!");
+                // This simulates the database returning ALL records
+                // because the '1'=='1' condition makes the WHERE clause always true.
+                return products;
+            }
+            // Another example: ' OR 'a'='b
+            if (lowerInput.includes("' or 'a'='b")) {
+                console.warn("VULNERABILITY DETECTED: ' OR 'a'='b' payload activated!");
+                // This would return no records unless the search term itself matches
+                // because 'a'=='b' is false. We'll still try to filter based on the 'safe' part.
+                const cleanInput = input.split("' or 'a'='b")[0].trim().toLowerCase();
+                if (cleanInput) {
+                    return products.filter(p =>
+                        p.name.toLowerCase().includes(cleanInput) ||
+                        p.description.toLowerCase().includes(cleanInput)
+                    );
+                }
+                return []; // If clean input is empty, and 'a'='b' is false, return nothing.
+            }
+
+            // Default vulnerable search (string concatenation for filtering)
+            // This is still vulnerable to inputs that break out of the string.
+            return products.filter(product =>
+                product.name.toLowerCase().includes(lowerInput) ||
+                product.description.toLowerCase().includes(lowerInput)
+            );
+        }
+
+        /**
+         * Simulates a safe database search using parameterized queries.
+         * This prevents SQL injection by treating input as a literal value.
+         * @param {string} searchTerm - The user's search term.
+         * @returns {Array} - Filtered products.
+         */
+        function searchSafe(searchTerm) {
+            // In a real SQL DB, this would involve a prepared statement:
+            // const stmt = db.prepare("SELECT * FROM products WHERE name LIKE ? OR description LIKE ?");
+            // const results = stmt.run(`%${searchTerm}%`, `%${searchTerm}%`);
+            // Our JS in-memory DB just uses the searchTerm as a literal value.
+            console.log("Safe Search Term:", searchTerm);
+
+            const lowerSearchTerm = searchTerm.toLowerCase();
+
+            // The key here is that the search term is treated *only* as a value.
+            // No part of it is interpreted as a command or query structure.
+            return products.filter(product =>
+                product.name.toLowerCase().includes(lowerSearchTerm) ||
+                product.description.toLowerCase().includes(lowerSearchTerm)
+            );
+        }
+
+        // --- UI Update Function ---
+
+        function performSearch() {
+            const searchTerm = searchTermInput.value.trim();
+            let results = [];
+
+            if (currentMode === 'vulnerable') {
+                results = searchVulnerable(searchTerm);
+            } else { // safe mode
+                results = searchSafe(searchTerm);
+            }
+
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            resultsList.innerHTML = ''; // Clear previous results
+
+            if (results.length === 0) {
+                resultsList.innerHTML = '<li class="no-results">No products found.</li>';
+                return;
+            }
+
+            results.forEach(product => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${product.name}</strong> (ID: ${product.id})<br>
+                                Description: ${product.description}<br>
+                                Category: ${product.category}<br>
+                                Price: $${product.price.toFixed(2)}`;
+                resultsList.appendChild(li);
+            });
+        }
+
+        // Initial search on load
+        performSearch();
+
+    </script>
+</body>
+</html>

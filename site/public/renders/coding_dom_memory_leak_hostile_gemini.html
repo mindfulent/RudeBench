@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Leak Demonstration: Event Listeners & DOM References</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1, h2 { color: #0056b3; }
+        .container { display: flex; gap: 30px; margin-top: 20px; }
+        .panel { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; flex: 1; }
+        .dashboard { border: 1px solid #ccc; padding: 15px; min-height: 250px; background-color: #f9f9f9; border-radius: 5px; margin-top: 10px; position: relative; }
+        .widget { border: 1px solid #ddd; padding: 10px; margin: 10px; background-color: #e0f7fa; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .widget button { background-color: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .widget button:hover { background-color: #e63946; }
+        button.add-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; }
+        button.add-btn:hover { background-color: #218838; }
+        .counter { font-weight: bold; margin-top: 10px; color: #007bff; }
+        .explanation { background-color: #e2f0fb; border-left: 5px solid #007bff; padding: 15px; margin-top: 20px; border-radius: 5px; }
+        .explanation h3 { margin-top: 0; color: #0056b3; }
+        .explanation p { margin-bottom: 5px; }
+        code { background-color: #eee; padding: 2px 4px; border-radius: 3px; }
+        .highlight { background-color: yellow; }
+        .footer-note { margin-top: 40px; font-size: 0.9em; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Memory Leak Demonstration: Event Listeners & DOM References</h1>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Leaking Dashboard</h2>
+            <p><strong>Problem:</strong> Event listeners and DOM references are *not* removed when widgets are deleted.</p>
+            <button class="add-btn" id="addLeakingWidget">Add Leaking Widget</button>
+            <div class="counter">Total Leaking Widgets Created: <span id="leakingWidgetCount">0</span></div>
+            <div class="counter">Active (visible) Leaking Widgets: <span id="activeLeakingWidgetCount">0</span></div>
+            <div class="dashboard" id="leakingDashboard">
+                <!-- Leaking widgets will be appended here -->
+            </div>
+            <p style="margin-top: 15px; color: red;">
+                Open your browser's developer tools (F12), go to the "Memory" tab, and take heap snapshots.
+                You'll see detached DOM nodes and retained event listeners accumulating even after widgets are "removed".
+            </p>
+        </div>
+
+        <div class="panel">
+            <h2>Fixed Dashboard</h2>
+            <p><strong>Solution:</strong> Event listeners and DOM references are properly cleaned up.</p>
+            <button class="add-btn" id="addFixedWidget">Add Fixed Widget</button>
+            <div class="counter">Total Fixed Widgets Created: <span id="fixedWidgetCount">0</span></div>
+            <div class="counter">Active (visible) Fixed Widgets: <span id="activeFixedWidgetCount">0</span></div>
+            <div class="dashboard" id="fixedDashboard">
+                <!-- Fixed widgets will be appended here -->
+            </div>
+            <p style="margin-top: 15px; color: green;">
+                When taking heap snapshots here, you should observe memory being properly reclaimed for deleted widgets.
+            </p>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>Why the "Garbage Collector Problem" Theory is Wrong</h3>
+        <p>
+            The JavaScript garbage collector (GC) works by identifying and reclaiming memory for objects that are no longer "reachable" from the root of your application (e.g., global scope, active function call stacks).
+        </p>
+        <p>
+            <strong>It's NOT a GC problem when:</strong>
+        </p>
+        <ul>
+            <li>
+                You have an <span class="highlight">unremoved event listener</span>: Even if the DOM element it was attached to is removed from the DOM, if the event listener function itself is still referenced somewhere (e.g., in a global array of listeners, or implicitly by the browser's event system if not detached), it prevents the GC from collecting the listener function *and* any variables it closes over.
+            </li>
+            <li>
+                You store <span class="highlight">references to DOM elements</span> that are no longer needed: If you keep a reference to a DOM node in an array or object in your JavaScript code, even after that node has been removed from the visible document, the GC cannot collect it because it's still "reachable" via your stored reference. This leads to "detached DOM tree" leaks.
+            </li>
+            <li>
+                You create <span class="highlight">closures</span> that capture large scopes and are then kept alive longer than necessary.
+            </li>
+        </ul>
+        <p>
+            In these scenarios, the objects *are* reachable. The GC is doing its job correctly by *not* collecting them, because your code is still holding onto a reference. The problem lies in the application's resource management, not the GC's functionality.
+            The solution is to explicitly break these references when the resource (widget, listener, etc.) is no longer needed.
+        </p>
+    </div>
+
+    <div class="footer-note">
+        <p>
+            <strong>How to observe the leak:</strong>
+            <ol>
+                <li>Open Developer Tools (F12).</li>
+                <li>Go to the "Memory" tab.</li>
+                <li>Select "Heap snapshot" and click "Take snapshot" (the camera icon). This is your baseline.</li>
+                <li>In the "Leaking Dashboard", click "Add Leaking Widget" several times (e.g., 5-10 times).</li>
+                <li>Click the "X" on some of these widgets to remove them from the UI.</li>
+                <li>Take another "Heap snapshot".</li>
+                <li>Compare the two snapshots. Look for "Detached HTMLDivElement" or similar entries, and increasing numbers of event listeners (e.g., "EventListener"). You should see a significant increase in the leaking dashboard, but not in the fixed one.</li>
+                <li>Repeat for the "Fixed Dashboard" and observe the difference.</li>
+            </ol>
+        </p>
+    </div>
+
+    <script>
+        let leakingWidgetCounter = 0;
+        let activeLeakingWidgets = 0;
+        let fixedWidgetCounter = 0;
+        let activeFixedWidgets = 0;
+
+        const leakingDashboard = document.getElementById('leakingDashboard');
+        const fixedDashboard = document.getElementById('fixedDashboard');
+
+        const leakingWidgetCountSpan = document.getElementById('leakingWidgetCount');
+        const activeLeakingWidgetCountSpan = document.getElementById('activeLeakingWidgetCount');
+        const fixedWidgetCountSpan = document.getElementById('fixedWidgetCount');
+        const activeFixedWidgetCountSpan = document.getElementById('activeFixedWidgetCount');
+
+        const leakingWidgetReferences = []; // This array will implicitly leak references for the leaking dashboard
+        const fixedWidgetReferences = []; // This array is just for tracking, and references will be removed
+
+        // --- Leaking Widget Implementation ---
+        document.getElementById('addLeakingWidget').addEventListener('click', () => {
+            leakingWidgetCounter++;
+            activeLeakingWidgets++;
+            leakingWidgetCountSpan.textContent = leakingWidgetCounter;
+            activeLeakingWidgetCountSpan.textContent = activeLeakingWidgets;
+
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Leaking Widget ${leakingWidgetCounter}`;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'X';
+
+            // PROBLEM 1: Event listener is added directly to the button
+            // When the widget is removed from DOM, this listener is NOT explicitly removed.
+            // If the `deleteButton` itself is still referenced somewhere (e.g., in a closure or an array),
+            // or if the browser's event system maintains a strong reference, it can prevent GC.
+            // More importantly, the closure created by this listener (which captures `widget`)
+            // will keep `widget` reachable even if it's detached from the DOM.
+            deleteButton.addEventListener('click', () => {
+                widget.remove(); // Removes from DOM
+                activeLeakingWidgets--;
+                activeLeakingWidgetCountSpan.textContent = activeLeakingWidgets;
+                // PROBLEM 2: No attempt to nullify references or clean up.
+                // The `widget` variable within this closure, and the `deleteButton` itself,
+                // are still "reachable" as long as this event listener function is reachable.
+                // The `leakingWidgetReferences` array, if we were storing widgets there,
+                // would also contribute to the leak if not cleaned.
+                // For this example, the primary leak is the closure's capture of `widget` and `deleteButton`
+                // via the unremoved event listener.
+            });
+
+            widget.appendChild(deleteButton);
+            leakingDashboard.appendChild(widget);
+
+            // If we were explicitly storing references, this would be another leak:
+            // leakingWidgetReferences.push(widget); // If not removed from this array, it's a leak.
+        });
+
+        // --- Fixed Widget Implementation ---
+        document.getElementById('addFixedWidget').addEventListener('click', () => {
+            fixedWidgetCounter++;
+            activeFixedWidgets++;
+            fixedWidgetCountSpan.textContent = fixedWidgetCounter;
+            activeFixedWidgetCountSpan.textContent = activeFixedWidgets;
+
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Fixed Widget ${fixedWidgetCounter}`;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'X';
+
+            // Store references in an object to easily manage them
+            const widgetData = {
+                id: fixedWidgetCounter,
+                domElement: widget,
+                deleteButton: deleteButton,
+                deleteHandler: null // Will store the function reference
+            };
+
+            // Define the event listener function outside or as a named function for easy removal
+            const handleDelete = () => {
+                // SOLUTION 1: Explicitly remove the event listener
+                widgetData.deleteButton.removeEventListener('click', widgetData.deleteHandler);
+                widgetData.domElement.remove(); // Removes from DOM
+                activeFixedWidgets--;
+                activeFixedWidgetCountSpan.textContent = activeFixedWidgets;
+
+                // SOLUTION 2: Nullify references to allow GC
+                widgetData.domElement = null;
+                widgetData.deleteButton = null;
+                widgetData.deleteHandler = null;
+
+                // SOLUTION 3 (if applicable): Remove from any tracking arrays
+                // Find and remove this widgetData from fixedWidgetReferences array
+                const index = fixedWidgetReferences.findIndex(item => item.id === widgetData.id);
+                if (index > -1) {
+                    fixedWidgetReferences.splice(index, 1);
+                }
+            };
+
+            deleteButton.addEventListener('click', handleDelete);
+            widgetData.deleteHandler = handleDelete; // Store reference to the handler
+
+            widget.appendChild(deleteButton);
+            fixedDashboard.appendChild(widget);
+
+            fixedWidgetReferences.push(widgetData); // Store the object containing references
+        });
+
+        // Initial counts
+        leakingWidgetCountSpan.textContent = leakingWidgetCounter;
+        activeLeakingWidgetCountSpan.textContent = activeLeakingWidgets;
+        fixedWidgetCountSpan.textContent = fixedWidgetCounter;
+        activeFixedWidgetCountSpan.textContent = activeFixedWidgets;
+
+    </script>
+</body>
+</html>

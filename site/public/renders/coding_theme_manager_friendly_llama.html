@@ -8,119 +8,125 @@
         /* Global Styles */
         body {
             font-family: Arial, sans-serif;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s;
         }
+
+        /* Light Theme */
+       .light-theme {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        /* Dark Theme */
         .dark-theme {
             background-color: #333;
-            color: #fff;
+            color: #f0f0f0;
         }
-        .light-theme {
-            background-color: #f0f0f0;
-            color: #000;
+
+        /* Element Styles */
+        .header {
+            background-color: #ccc;
+            padding: 1em;
+            text-align: center;
         }
-        /* Element-specific Styles */
-        .container {
-            width: 80%;
-            margin: 40px auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+        .dark-theme .header {
+            background-color: #555;
+            color: #f0f0f0;
         }
-        .dark-theme .container {
-            border-color: #555;
-            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+
+        .light-theme .header {
+            background-color: #ccc;
+            color: #333;
         }
+
         .button {
-            background-color: #007bff;
+            background-color: #4CAF50;
             color: #fff;
+            padding: 0.5em 1em;
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
+            border-radius: 0.5em;
             cursor: pointer;
         }
+
         .dark-theme .button {
-            background-color: #66d9ef;
+            background-color: #666;
+            color: #f0f0f0;
         }
+
         .light-theme .button {
-            background-color: #007bff;
+            background-color: #4CAF50;
+            color: #fff;
+        }
+
+        .paragraph {
+            padding: 1em;
+        }
+
+        .dark-theme .paragraph {
+            background-color: #444;
+            color: #f0f0f0;
+        }
+
+        .light-theme .paragraph {
+            background-color: #fff;
+            color: #333;
         }
     </style>
 </head>
 <body class="light-theme">
-    <div class="container">
-        <h1>Theme Toggle Example</h1>
-        <p>This example demonstrates a dark/light theme toggle using the Singleton pattern.</p>
-        <button class="button" onclick="ThemeState.getInstance().toggleTheme()">Toggle Theme</button>
-    </div>
-    <div class="container">
-        <h2>Another Container</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-    </div>
+    <div class="header">Singleton Theme Toggle</div>
+    <button class="button" id="theme-toggle">Toggle Theme</button>
+    <div class="paragraph">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+    <div class="paragraph">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</div>
 
     <script>
-        // Singleton class for theme state management
+        // Singleton Pattern for State Management
         class ThemeState {
             static instance;
 
-            constructor() {
+            static getInstance() {
                 if (!ThemeState.instance) {
-                    ThemeState.instance = this;
-                    this.theme = 'light';
-                    this.init();
+                    ThemeState.instance = new ThemeState();
                 }
                 return ThemeState.instance;
             }
 
-            init() {
-                const storedTheme = localStorage.getItem('theme');
-                if (storedTheme) {
-                    this.theme = storedTheme;
-                    document.body.classList.add(this.theme + '-theme');
-                } else {
-                    document.body.classList.add(this.theme + '-theme');
-                }
+            constructor() {
+                this.theme = 'light';
+                this.elements = [];
+            }
+
+            addElement(element) {
+                this.elements.push(element);
             }
 
             toggleTheme() {
                 this.theme = this.theme === 'light' ? 'dark' : 'light';
-                document.body.classList.remove('light-theme', 'dark-theme');
-                document.body.classList.add(this.theme + '-theme');
-                localStorage.setItem('theme', this.theme);
+                this.elements.forEach(element => {
+                    element.classList.remove('light-theme', 'dark-theme');
+                    element.classList.add(`${this.theme}-theme`);
+                });
             }
         }
 
-        // Usage
-        // ThemeState.getInstance().toggleTheme();
+        // Get the singleton instance
+        const themeState = ThemeState.getInstance();
+
+        // Get elements and add them to the theme state
+        const body = document.body;
+        themeState.addElement(body);
+        const header = document.querySelector('.header');
+        themeState.addElement(header);
+        const paragraphs = document.querySelectorAll('.paragraph');
+        paragraphs.forEach(paragraph => themeState.addElement(paragraph));
+        const button = document.querySelector('#theme-toggle');
+        themeState.addElement(button);
+
+        // Add event listener to the theme toggle button
+        button.addEventListener('click', () => {
+            themeState.toggleTheme();
+        });
     </script>
-
-    <section style="background-color: #f0f0f0; padding: 20px; margin-top: 40px;">
-        <h2>Singleton Pattern: Pros and Cons</h2>
-        <h3>Pros:</h3>
-        <ul>
-            <li><strong>Global Access:</strong> The Singleton pattern provides a global point of access to the instance, making it easily accessible throughout the application.</li>
-            <li><strong>Resource Sharing:</strong> It can be useful for managing resources that should have a single point of control, such as configuration settings or a logging mechanism.</li>
-            <li><strong>Memory Efficiency:</strong> Only one instance is created, which can be beneficial in terms of memory usage.</li>
-        </ul>
-        <h3>Cons:</h3>
-        <ul>
-            <li><strong>Testing Challenges:</strong> The Singleton pattern can make unit testing more difficult because it introduces a global state.</li>
-            <li><strong>Tight Coupling:</strong> Classes that use the Singleton instance become tightly coupled to it, making it harder to change or replace the Singleton without affecting other parts of the system.</li>
-            <li><strong>Multithreading Issues:</strong> In multithreaded environments, the Singleton pattern can lead to issues if not implemented carefully to ensure thread safety.</li>
-        </ul>
-    </section>
-
-    <section style="background-color: #f0f0f0; padding: 20px; margin-top: 40px;">
-        <h2>When to Choose Dependency Injection Over Singleton</h2>
-        <p>Dependency Injection (DI) is generally a better choice than the Singleton pattern for managing dependencies between objects. Here are scenarios where DI is preferable:</p>
-        <ul>
-            <li><strong>Decoupling:</strong> When you want to decouple objects from specific implementations, making your system more modular and easier to test.</li>
-            <li><strong>Testability:</strong> In unit testing, DI allows you to easily mock dependencies, making your tests more isolated and reliable.</li>
-            <li><strong>Flexibility:</strong> DI provides more flexibility in terms of managing the lifecycle of objects and their dependencies.</li>
-            <li><strong>Reusability:</strong> With DI, components are more reusable because they are not tightly coupled to specific implementations.</li>
-        </ul>
-        <p>In summary, while the Singleton pattern can be useful for certain types of global state management, Dependency Injection offers a more flexible, testable, and maintainable approach to managing dependencies in software systems.</p>
-    </section>
 </body>
 </html>

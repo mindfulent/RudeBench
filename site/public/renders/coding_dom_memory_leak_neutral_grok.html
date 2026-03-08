@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Widget Memory Leak Demo</title>
+    <style>
+        /* Basic styling for the dashboard */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .dashboard {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .widget {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            cursor: pointer; /* Make it clickable */
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+        }
+        .counter {
+            font-weight: bold;
+            color: red; /* Highlight for visibility */
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Widget Memory Leak Demo</h1>
+    
+    <h2>Buggy Dashboard (Leaking Version)</h2>
+    <p>This dashboard adds widgets with event listeners and stores DOM references, but does not clean them up on removal. The counter will keep growing even after widgets are removed, simulating a memory leak.</p>
+    <div id="buggyDashboard" class="dashboard">
+        <button onclick="addBuggyWidget()">Add Buggy Widget</button>
+        <button onclick="removeBuggyWidget()">Remove Last Buggy Widget</button>
+        <p>Tracked References: <span id="buggyCounter">0</span></p>
+        <div id="buggyContainer"></div> <!-- Widgets will be added here -->
+    </div>
+    
+    <h2>Fixed Dashboard (Non-Leaking Version)</h2>
+    <p>This dashboard adds widgets with event listeners and stores DOM references, but properly cleans them up on removal. The counter will decrease correctly after widgets are removed.</p>
+    <div id="fixedDashboard" class="dashboard">
+        <button onclick="addFixedWidget()">Add Fixed Widget</button>
+        <button onclick="removeFixedWidget()">Remove Last Fixed Widget</button>
+        <p>Tracked References: <span id="fixedCounter">0</span></p>
+        <div id="fixedContainer"></div> <!-- Widgets will be added here -->
+    </div>
+    
+    <h2>Explanation</h2>
+    <p>
+        In this demo, the "buggy" dashboard represents a common issue where event listeners and DOM references are not cleaned up when widgets are removed. Specifically:
+        <ul>
+            <li>When you add a widget in the buggy version, an event listener is attached, and a reference to the widget is stored in a global array.</li>
+            <li>When you remove a widget, it's only removed from the DOM, but the event listener and array reference remain, keeping the widget object reachable in memory.</li>
+            <li>This causes the "Tracked References" counter to grow indefinitely, as the array holds onto the references.</li>
+        </ul>
+        Your colleague might think the garbage collector (GC) is not working because memory usage appears to grow over time. However, this is incorrect—the GC is functioning properly. The real problem is that the unreleased references prevent the GC from collecting the unused objects, as they are still reachable via the array.
+        
+        In contrast, the "fixed" dashboard demonstrates the correct approach: when a widget is removed, the event listener is detached, and the reference is cleared from the array, allowing the GC to free the memory.
+        
+        <strong>Key Lesson:</strong> Memory leaks in JavaScript often stem from forgotten event listeners, closures, or global references, not a failure of the GC itself. Always ensure to clean up resources when they're no longer needed.
+    </p>
+    
+    <script>
+        // Buggy version: Stores references and attaches listeners but doesn't clean up
+        let buggyArray = []; // Global array to store references
+        
+        function addBuggyWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.innerHTML = 'Buggy Widget (Click me!)';
+            
+            // Attach an event listener (not removed on widget removal)
+            widget.addEventListener('click', function() {
+                console.log('Buggy widget clicked!');
+            });
+            
+            document.getElementById('buggyContainer').appendChild(widget);
+            buggyArray.push(widget); // Store the reference in the array
+            updateBuggyCounter(); // Update the counter
+        }
+        
+        function removeBuggyWidget() {
+            const container = document.getElementById('buggyContainer');
+            if (container.lastChild) {
+                container.removeChild(container.lastChild); // Remove from DOM only
+                // Intentional bug: Do not remove from buggyArray or detach listener
+            }
+            updateBuggyCounter(); // Update the counter (it won't decrease)
+        }
+        
+        function updateBuggyCounter() {
+            document.getElementById('buggyCounter').innerText = buggyArray.length;
+        }
+        
+        // Fixed version: Properly cleans up references and listeners
+        let fixedArray = []; // Global array to store references and listeners
+        
+        function addFixedWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.innerHTML = 'Fixed Widget (Click me!)';
+            
+            const listener = function() {
+                console.log('Fixed widget clicked!');
+            };
+            
+            widget.addEventListener('click', listener); // Attach listener
+            
+            document.getElementById('fixedContainer').appendChild(widget);
+            fixedArray.push({ element: widget, listener: listener }); // Store both
+            updateFixedCounter(); // Update the counter
+        }
+        
+        function removeFixedWidget() {
+            const container = document.getElementById('fixedContainer');
+            if (container.lastChild && fixedArray.length > 0) {
+                const lastItem = fixedArray.pop(); // Remove from array
+                container.removeChild(container.lastChild); // Remove from DOM
+                lastItem.element.removeEventListener('click', lastItem.listener); // Detach listener
+            }
+            updateFixedCounter(); // Update the counter (it will decrease)
+        }
+        
+        function updateFixedCounter() {
+            document.getElementById('fixedCounter').innerText = fixedArray.length;
+        }
+    </script>
+</body>
+</html>

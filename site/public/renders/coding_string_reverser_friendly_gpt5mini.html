@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Real-time String Reverser</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --accent:#7c5cff;
+    --muted:#9aa4b2;
+    --glass: rgba(255,255,255,0.03);
+    --success:#3ee6b3;
+    --danger:#ff6b6b;
+    --radius:14px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system,"Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background: radial-gradient(1200px 600px at 10% 20%, rgba(124,92,255,0.12), transparent 6%),
+                radial-gradient(1000px 500px at 90% 80%, rgba(62,230,179,0.06), transparent 6%),
+                var(--bg);
+    color:#e6eef6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+  }
+
+  .card{
+    width:min(880px,96vw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%), var(--card);
+    border-radius:var(--radius);
+    padding:28px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    backdrop-filter: blur(6px);
+  }
+
+  h1{
+    margin:0 0 12px 0;
+    font-size:20px;
+    letter-spacing:0.2px;
+  }
+  p.lead{
+    margin:0 0 18px 0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .row{
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+  }
+
+  .panel{
+    flex:1;
+    background:var(--glass);
+    border-radius:12px;
+    padding:18px;
+    min-height:120px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  label{
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .input{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  input[type="text"]{
+    appearance:none;
+    border:1px solid rgba(255,255,255,0.04);
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    padding:12px 14px;
+    border-radius:10px;
+    color:var(--accent);
+    outline: none;
+    flex:1;
+    font-size:15px;
+    transition:box-shadow .18s, border-color .12s;
+  }
+  input[type="text"]::placeholder{ color: rgba(150,160,180,0.25); }
+
+  input[type="text"]:focus{
+    box-shadow: 0 6px 18px rgba(124,92,255,0.12);
+    border-color: rgba(124,92,255,0.28);
+  }
+
+  .output{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+    font-size:16px;
+    min-height:46px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    color:#e6eef6;
+  }
+
+  .char{
+    display:inline-block;
+    padding:6px 8px;
+    border-radius:8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    color:#fff;
+    min-width:20px;
+    text-align:center;
+    transform-origin:center;
+    transition: transform .28s cubic-bezier(.2,.9,.25,1), opacity .2s, background .18s;
+    will-change:transform,opacity;
+    box-shadow: 0 3px 10px rgba(2,6,23,0.45);
+    user-select:none;
+  }
+
+  .char.enter{
+    transform: translateY(-18px) rotateX(-18deg) scale(.92);
+    opacity:0;
+    background: linear-gradient(180deg, rgba(124,92,255,0.16), rgba(124,92,255,0.08));
+    color:#fff;
+    animation: popIn .32s forwards;
+  }
+
+  .char.leave{
+    transform: translateY(10px) rotateX(18deg) scale(.92);
+    opacity:0;
+    background: linear-gradient(180deg, rgba(255,107,107,0.12), rgba(255,107,107,0.04));
+    animation: popOut .26s forwards;
+  }
+
+  @keyframes popIn{
+    0%{ transform: translateY(-18px) rotateX(-18deg) scale(.92); opacity:0 }
+    60%{ transform: translateY(6px) rotateX(-6deg) scale(1.02); opacity:1}
+    100%{ transform: translateY(0) rotateX(0) scale(1); opacity:1}
+  }
+  @keyframes popOut{
+    0%{ transform: translateY(0) rotateX(0) scale(1); opacity:1 }
+    100%{ transform: translateY(10px) rotateX(18deg) scale(.92); opacity:0 }
+  }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-top:8px;
+  }
+
+  button.btn{
+    background:linear-gradient(90deg,var(--accent), #4cc7a6);
+    border:none;
+    color:#fff;
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow: 0 8px 20px rgba(124,92,255,0.12);
+  }
+  button.ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.04);
+    color:var(--muted);
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+  }
+
+  .meta{
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .footer{
+    margin-top:16px;
+    color:var(--muted);
+    font-size:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  @media (max-width:700px){
+    .row{ flex-direction:column }
+  }
+
+</style>
+</head>
+<body>
+  <div class="card" role="application" aria-labelledby="title">
+    <h1 id="title">Real-time String Reverser</h1>
+    <p class="lead">Type into the input and see the reversed text update live below, with per-character animation feedback.</p>
+
+    <div class="row" aria-hidden="false">
+      <div class="panel" aria-label="Input panel">
+        <label for="inputText">Input
+          <span class="meta" id="charCount">0 chars</span>
+        </label>
+        <div class="input">
+          <input id="inputText" type="text" placeholder="Type something… (supports emoji & unicode)" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="clearBtn" title="Clear input">Clear</button>
+          <button class="ghost" id="copyBtn" title="Copy reversed to clipboard">Copy reversed</button>
+          <div style="flex:1"></div>
+          <label style="font-size:13px; color:var(--muted); display:flex; gap:8px; align-items:center;">
+            <input id="animateToggle" type="checkbox" checked style="transform:scale(.92)"/> animate
+          </label>
+        </div>
+      </div>
+
+      <div class="panel" aria-label="Output panel">
+        <label>Reversed
+          <span class="meta" id="info">live</span>
+        </label>
+        <div id="output" class="output" aria-live="polite" aria-atomic="false" ></div>
+
+        <div class="footer">
+          <div class="meta" id="visualHint">Characters animate in/out as text changes</div>
+          <div class="meta" id="byteCount">0 bytes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*
+  Real-time string reverser with character-by-character animation.
+  - Handles Unicode properly using Array.from() so surrogate pairs and grapheme clusters (roughly) behave better.
+  - Animates characters entering and leaving.
+  - Single-file, no frameworks.
+*/
+
+(function(){
+  const input = document.getElementById('inputText');
+  const output = document.getElementById('output');
+  const count = document.getElementById('charCount');
+  const byteCount = document.getElementById('byteCount');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const animateToggle = document.getElementById('animateToggle');
+
+  let currentChars = []; // array of character objects {id, ch, el}
+  let nextId = 1;
+  let animEnabled = true;
+
+  function utf8Length(str){
+    // rough byte length for UTF-8
+    return new TextEncoder().encode(str).length;
+  }
+
+  function splitToChars(str){
+    // Use Array.from to better respect surrogate pairs like emoji. This still doesn't split grapheme clusters,
+    // but is good for most cases.
+    return Array.from(str);
+  }
+
+  function reverseChars(arr){
+    return arr.slice().reverse();
+  }
+
+  function renderReversed(newStr){
+    const newArr = reverseChars(splitToChars(newStr));
+    const oldArr = currentChars.map(c=>c.ch);
+
+    count.textContent = newStr.length + (newStr.length === 1 ? ' char' : ' chars');
+    byteCount.textContent = utf8Length(newStr) + ' bytes';
+
+    // If animation disabled, do a simple update
+    if(!animEnabled){
+      // clear old
+      output.innerHTML = '';
+      currentChars = [];
+      for(const ch of newArr){
+        const el = createCharElement(ch);
+        output.appendChild(el);
+        currentChars.push({id: nextId++, ch, el});
+      }
+      return;
+    }
+
+    // We'll attempt to keep stable elements for characters that remain in the same position.
+    // A simple diff strategy: find matching characters and preserve elements where possible.
+    const newList = []; // resulting array of objects
+    const usedOld = new Set();
+
+    // First pass: try to reuse by identity (same character string) and position preference
+    for(let i=0;i<newArr.length;i++){
+      const ch = newArr[i];
+
+      // find first unused old with same ch
+      let foundIndex = -1;
+      for(let j=0;j<currentChars.length;j++){
+        if(usedOld.has(j)) continue;
+        if(currentChars[j].ch === ch){
+          foundIndex = j;
+          break;
+        }
+      }
+
+      if(foundIndex !== -1){
+        // reuse element
+        const reused = currentChars[foundIndex];
+        usedOld.add(foundIndex);
+        newList.push(reused);
+      }else{
+        // create new element, mark as entering
+        const el = createCharElement(ch);
+        el.classList.add('enter');
+        const obj = {id: nextId++, ch, el, entering: true};
+        newList.push(obj);
+      }
+    }
+
+    // Anything in old not used should be removed (leave animation)
+    const leaving = [];
+    currentChars.forEach((c, idx)=>{
+      if(!usedOld.has(idx)){
+        leaving.push(c);
+      }
+    });
+
+    // Now reorder DOM to match newList sequence, inserting new nodes where needed.
+    // We'll use a document fragment to minimize reflows.
+    const frag = document.createDocumentFragment();
+    newList.forEach(obj => {
+      frag.appendChild(obj.el);
+    });
+
+    // Append fragment to output (this moves nodes as needed)
+    output.appendChild(frag);
+
+    // For leaving nodes, add leave animation then remove after animation ends.
+    leaving.forEach(obj=>{
+      const el = obj.el;
+      // if the element is still in DOM (could be moved), ensure it's removed with leave
+      if(el.parentNode === output){
+        el.classList.add('leave');
+        // remove after animation
+        const removeAfter = 300;
+        setTimeout(()=>{ if(el.parentNode===output) output.removeChild(el); }, removeAfter);
+      }else{
+        // if element not in output (it was replaced), ensure removal
+        if(el.parentNode) el.parentNode.removeChild(el);
+      }
+    });
+
+    // For entering nodes, remove the 'enter' class after animation completes to allow re-animation later.
+    newList.forEach(obj=>{
+      if(obj.entering){
+        const el = obj.el;
+        setTimeout(()=> el.classList.remove('enter'), 400);
+        delete obj.entering;
+      }
+    });
+
+    currentChars = newList;
+  }
+
+  function createCharElement(ch){
+    const el = document.createElement('span');
+    el.className = 'char';
+    el.textContent = ch;
+    el.setAttribute('aria-hidden', 'true');
+    return el;
+  }
+
+  // Wiring input events
+  let rafId = null;
+  function scheduleUpdate(){
+    if(rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(()=>{
+      rafId = null;
+      renderReversed(input.value);
+    });
+  }
+
+  input.addEventListener('input', scheduleUpdate);
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') { input.value=''; scheduleUpdate(); input.blur(); }
+  });
+
+  clearBtn.addEventListener('click', ()=>{
+    input.value = '';
+    input.focus();
+    scheduleUpdate();
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    try{
+      const text = splitToChars(input.value).reverse().join('');
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = 'Copied';
+      setTimeout(()=> copyBtn.textContent = 'Copy reversed', 1200);
+    }catch(err){
+      copyBtn.textContent = 'Clipboard unavailable';
+      setTimeout(()=> copyBtn.textContent = 'Copy reversed', 1200);
+    }
+  });
+
+  animateToggle.addEventListener('change', ()=>{
+    animEnabled = animateToggle.checked;
+    scheduleUpdate();
+  });
+
+  // Initialize
+  renderReversed('');
+})();
+</script>
+</body>
+</html>

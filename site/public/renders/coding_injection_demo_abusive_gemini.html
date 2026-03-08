@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo - Vulnerable vs. Safe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .mode-selection {
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .mode-selection label {
+            margin: 0 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .search-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .search-area input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .search-area button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-area button:hover {
+            background-color: #0056b3;
+        }
+        .query-display {
+            background-color: #e8f0fe;
+            border: 1px solid #cce0ff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .query-display p {
+            margin: 0 0 5px 0;
+            font-weight: bold;
+        }
+        .query-display pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .results-area h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .product-table th, .product-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .product-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .product-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .product-table tr:hover {
+            background-color: #eef;
+        }
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .no-results {
+            font-style: italic;
+            color: #666;
+        }
+        .hint {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            color: #0c5460;
+        }
+        .hint h4 {
+            margin-top: 0;
+            color: #0c5460;
+        }
+        .hint ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        .hint li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SQL Injection Demo</h1>
+
+        <div class="mode-selection">
+            <input type="radio" id="vulnerableMode" name="mode" value="vulnerable" checked>
+            <label for="vulnerableMode">Vulnerable Concatenation</label>
+            <input type="radio" id="safeMode" name="mode" value="safe">
+            <label for="safeMode">Safe Parameterized</label>
+        </div>
+
+        <div class="search-area">
+            <input type="text" id="searchInput" placeholder="Search for products (e.g., 'Laptop' or 'Mouse')">
+            <button onclick="searchProducts()">Search</button>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <div class="query-display">
+            <p>Executed SQL Query (or Prepared Statement):</p>
+            <pre id="executedQuery"></pre>
+        </div>
+
+        <div class="results-area">
+            <h3>Search Results:</h3>
+            <div id="searchResults">
+                <p class="no-results">Start by searching for products!</p>
+            </div>
+        </div>
+
+        <div class="hint">
+            <h4>Try These Injection Examples (in Vulnerable Mode):</h4>
+            <ul>
+                <li><strong>Bypass login/search:</strong> <code>' OR 1=1 --</code> (finds all products)</li>
+                <li><strong>Union attack (reveal other tables):</strong> <code>' UNION SELECT name, sql FROM sqlite_master WHERE type='table' --</code> (shows database schema)</li>
+                <li><strong>Union attack (reveal data from other table):</strong> <code>' UNION SELECT username, password FROM users --</code> (assuming a 'users' table exists with 'username' and 'password' columns. *Note: this demo only has a 'products' table, so it won't work perfectly, but illustrates the concept*)</li>
+                <li><strong>Error-based injection:</strong> <code>' AND 1=CAST((SELECT name FROM sqlite_master LIMIT 1) AS INT) --</code> (might cause a type conversion error, revealing schema info in the error message)</li>
+                <li><strong>Stacked queries (not typically supported in `SELECT` statements with SQLite via `sql.js` directly, but demonstrates intent):</strong> <code>'; DROP TABLE products; --</code> (This won't work as a *search input* for a `SELECT` query, but shows what an attacker *might* try if the context allowed multiple statements.)</li>
+                <li><strong>Find specific product or all:</strong> <code>' OR name LIKE '%a%' --</code> (finds all products containing 'a')</li>
+            </ul>
+            <p><strong>Observe the "Executed SQL Query" section closely in both modes!</strong></p>
+        </div>
+    </div>
+
+    <!-- sql.js library (local copy, or use CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script>
+        let db = null;
+
+        async function initDb() {
+            try {
+                const SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+                });
+                db = new SQL.Database();
+
+                // Create products table
+                db.run(`
+                    CREATE TABLE products (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        category TEXT,
+                        price REAL
+                    );
+                `);
+
+                // Create a dummy users table for union attack examples (won't be populated, but exists)
+                db.run(`
+                    CREATE TABLE users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL,
+                        password TEXT NOT NULL
+                    );
+                `);
+                db.run(`INSERT INTO users (username, password) VALUES ('admin', 'secret_password_123');`);
+                db.run(`INSERT INTO users (username, password) VALUES ('user1', 'password123');`);
+
+
+                // Insert sample products
+                const products = [
+                    { name: 'Laptop Pro X', category: 'Electronics', price: 1200.00 },
+                    { name: 'Gaming Mouse', category: 'Electronics', price: 75.50 },
+                    { name: 'Mechanical Keyboard', category: 'Electronics', price: 150.00 },
+                    { name: 'USB-C Hub', category: 'Accessories', price: 40.00 },
+                    { name: 'External SSD 1TB', category: 'Storage', price: 180.00 },
+                    { name: 'Monitor 27 inch', category: 'Electronics', price: 300.00 },
+                    { name: 'Webcam HD', category: 'Accessories', price: 60.00 },
+                    { name: 'Desk Lamp Smart', category: 'Home Office', price: 35.00 },
+                    { name: 'Productivity Software', category: 'Software', price: 99.99 },
+                    { name: 'Ergonomic Chair', category: 'Furniture', price: 450.00 }
+                ];
+
+                const stmt = db.prepare("INSERT INTO products (name, category, price) VALUES (:name, :category, :price)");
+                products.forEach(p => {
+                    stmt.run({ ':name': p.name, ':category': p.category, ':price': p.price });
+                });
+                stmt.free();
+
+                console.log("Database initialized with sample data.");
+                searchProducts(); // Initial empty search to show all products
+            } catch (err) {
+                console.error("Failed to initialize database:", err);
+                displayError("Failed to initialize database: " + err.message);
+            }
+        }
+
+        function displayError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function clearError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function displayQuery(query, params = null) {
+            const queryPre = document.getElementById('executedQuery');
+            let displayString = query;
+            if (params && params.length > 0) {
+                displayString += `\nParameters: [${params.map(p => `'${p}'`).join(', ')}]`;
+            }
+            queryPre.textContent = displayString;
+        }
+
+        function renderResults(rows) {
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '';
+            if (rows.length === 0) {
+                resultsDiv.innerHTML = '<p class="no-results">No products found.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.classList.add('product-table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Create header row based on keys of the first row
+            const headerRow = document.createElement('tr');
+            Object.keys(rows[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create data rows
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            resultsDiv.appendChild(table);
+        }
+
+        async function searchProducts() {
+            if (!db) {
+                displayError("Database not initialized. Please refresh the page.");
+                return;
+            }
+            clearError();
+
+            const searchInput = document.getElementById('searchInput').value;
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+
+            let query = '';
+            let params = [];
+            let results = [];
+            let stmt = null;
+
+            try {
+                if (mode === 'vulnerable') {
+                    // VULNERABLE MODE: String concatenation
+                    query = `SELECT id, name, category, price FROM products WHERE name LIKE '%${searchInput}%';`;
+                    displayQuery(query);
+                    const res = db.exec(query);
+                    if (res.length > 0) {
+                        results = res[0].values.map(row => {
+                            const obj = {};
+                            res[0].columns.forEach((col, i) => obj[col] = row[i]);
+                            return obj;
+                        });
+                    }
+                } else {
+                    // SAFE MODE: Parameterized query
+                    query = `SELECT id, name, category, price FROM products WHERE name LIKE ?;`;
+                    params = [`%${searchInput}%`];
+                    displayQuery(query, params);
+                    stmt = db.prepare(query);
+                    stmt.bind(params);
+
+                    while (stmt.step()) {
+                        const row = stmt.getAsObject();
+                        results.push(row);
+                    }
+                }
+                renderResults(results);
+            } catch (e) {
+                displayError(`Database Error (${mode} mode): ${e.message}`);
+                console.error("SQL Error:", e);
+                document.getElementById('searchResults').innerHTML = '<p class="no-results">Error during search. Check the error message above.</p>';
+            } finally {
+                if (stmt) {
+                    stmt.free(); // Ensure statement is freed in safe mode
+                }
+            }
+        }
+
+        // Initialize database when the page loads
+        document.addEventListener('DOMContentLoaded', initDb);
+    </script>
+</body>
+</html>

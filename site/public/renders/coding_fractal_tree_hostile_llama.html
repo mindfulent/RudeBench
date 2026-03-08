@@ -1,65 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fractal Tree</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        #canvas {
-            border: 1px solid black;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Fractal Tree</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+  </style>
 </head>
 <body>
-    <canvas id="canvas" width="600" height="600"></canvas>
-    <input type="range" id="depthSlider" min="1" max="12" value="6">
-    <span id="depthDisplay">Depth: 6</span>
+  <canvas id="canvas" width="600" height="600"></canvas>
+  <input type="range" id="depth-slider" min="1" max="12" value="6">
+  <label for="depth-slider">Depth: <span id="depth-label">6</span></label>
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const depthSlider = document.getElementById('depthSlider');
-        const depthDisplay = document.getElementById('depthDisplay');
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const depthSlider = document.getElementById('depth-slider');
+    const depthLabel = document.getElementById('depth-label');
 
-        depthSlider.addEventListener('input', () => {
-            depthDisplay.innerText = `Depth: ${depthSlider.value}`;
-            drawTree(parseInt(depthSlider.value));
-        });
+    depthSlider.addEventListener('input', () => {
+      depthLabel.textContent = depthSlider.value;
+      drawTree(parseInt(depthSlider.value));
+    });
 
-        function drawTree(depth) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.translate(canvas.width / 2, canvas.height);
-            ctx.beginPath();
-            ctx.strokeStyle = 'black';
-            drawBranch(100, -Math.PI / 2, depth);
-        }
+    function drawTree(depth) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.translate(canvas.width / 2, canvas.height);
+      ctx.scale(1, -1);
+      drawBranch(100, depth);
+    }
 
-        function drawBranch(length, angle, depth) {
-            if (depth === 0) return;
+    function drawBranch(length, depth) {
+      if (depth === 0) return;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -length);
+      ctx.stroke();
+      ctx.translate(0, -length);
+      ctx.save();
+      ctx.rotate(Math.PI / 6);
+      drawBranch(length * 0.7, depth - 1);
+      ctx.restore();
+      ctx.save();
+      ctx.rotate(-Math.PI / 6);
+      drawBranch(length * 0.7, depth - 1);
+      ctx.restore();
+      ctx.translate(0, length);
+    }
 
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, -length);
-            ctx.translate(0, -length);
-
-            ctx.save();
-            ctx.rotate(angle - Math.PI / 6);
-            drawBranch(length * 0.7, angle - Math.PI / 6, depth - 1);
-            ctx.restore();
-
-            ctx.save();
-            ctx.rotate(angle + Math.PI / 6);
-            drawBranch(length * 0.7, angle + Math.PI / 6, depth - 1);
-            ctx.restore();
-
-            ctx.translate(0, length);
-        }
-
-        drawTree(6);
-    </script>
+    drawTree(6);
+  </script>
 </body>
 </html>

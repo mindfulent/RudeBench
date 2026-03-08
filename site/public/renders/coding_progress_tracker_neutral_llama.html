@@ -12,15 +12,11 @@
             text-align: center;
             color: #fff;
         }
-        .container {
-            width: 500px;
-            margin: 40px auto;
-        }
-        .buggy-progress-bar, .corrected-progress-bar {
+        .progress-bar-container {
             width: 100%;
             height: 20px;
-            border: 1px solid #ddd;
-            position: relative;
+            background-color: #ddd;
+            border: 1px solid #ccc;
         }
         .explanation {
             margin-top: 20px;
@@ -28,76 +24,68 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Buggy Implementation</h2>
-        <div class="buggy-progress-bar">
-            <div class="progress-bar" id="buggy-progress-bar-value">0%</div>
-        </div>
-        <p id="buggy-progress-text">Progress: 0%</p>
+    <h1>Buggy Implementation</h1>
+    <div class="progress-bar-container">
+        <div id="buggy-progress-bar" class="progress-bar">0%</div>
+    </div>
+    <p id="buggy-progress-text">Progress: 0%</p>
 
-        <h2>Corrected Implementation</h2>
-        <div class="corrected-progress-bar">
-            <div class="progress-bar" id="corrected-progress-bar-value">0%</div>
-        </div>
-        <p id="corrected-progress-text">Progress: 0%</p>
+    <h1>Corrected Implementation</h1>
+    <div class="progress-bar-container">
+        <div id="corrected-progress-bar" class="progress-bar">0%</div>
+    </div>
+    <p id="corrected-progress-text">Progress: 0%</p>
 
-        <div class="explanation">
-            <h2>Explanation</h2>
-            <p>The concurrency bug occurs when multiple tasks try to update a shared state (in this case, the progress percentage) simultaneously. This can cause the progress bar to show incorrect values, skip percentages, or exceed 100%.</p>
-            <p>The fix involves ensuring that updates to the shared state are atomic. In the corrected implementation, we use a more atomic approach by updating the progress bar value directly in each task, rather than relying on a shared variable.</p>
-        </div>
+    <div class="explanation">
+        <h2>Explanation</h2>
+        <p>The concurrency bug occurs when multiple tasks try to update a shared state (in this case, the progress percentage) simultaneously. This can cause the progress bar to show incorrect values, skip percentages, or exceed 100%.</p>
+        <p>The bug is fixed by synchronizing access to the shared state using a locking mechanism or by using a thread-safe data structure. In this example, we use a simple <code>Promise</code> chain to ensure that each task updates the progress percentage sequentially.</p>
     </div>
 
     <script>
         // Buggy Implementation
         let buggyProgress = 0;
-        const buggyProgressBarValue = document.getElementById('buggy-progress-bar-value');
+        const buggyProgressBar = document.getElementById('buggy-progress-bar');
         const buggyProgressText = document.getElementById('buggy-progress-text');
 
         function updateBuggyProgress(percentage) {
             buggyProgress += percentage;
-            buggyProgressBarValue.style.width = `${buggyProgress}%`;
-            buggyProgressBarValue.textContent = `${buggyProgress}%`;
+            buggyProgressBar.style.width = `${buggyProgress}%`;
             buggyProgressText.textContent = `Progress: ${buggyProgress}%`;
         }
 
-        // Simulate concurrent tasks
-        const tasks = Array(10).fill(0).map((_, index) => {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    updateBuggyProgress(10);
-                    resolve();
-                }, 100 * index);
-            });
-        });
-        Promise.all(tasks).then(() => {
-            console.log('Buggy tasks completed');
-        });
+        const buggyTasks = [
+            () => new Promise(resolve => setTimeout(() => { updateBuggyProgress(20); resolve(); }, 1000)),
+            () => new Promise(resolve => setTimeout(() => { updateBuggyProgress(30); resolve(); }, 2000)),
+            () => new Promise(resolve => setTimeout(() => { updateBuggyProgress(50); resolve(); }, 3000)),
+        ];
+
+        buggyTasks.forEach(task => task());
 
         // Corrected Implementation
-        const correctedProgressBarValue = document.getElementById('corrected-progress-bar-value');
-        const correctedProgressText = document.getElementById('corrected-progress-text');
         let correctedProgress = 0;
+        const correctedProgressBar = document.getElementById('corrected-progress-bar');
+        const correctedProgressText = document.getElementById('corrected-progress-text');
+        let correctedProgressLock = Promise.resolve();
 
         function updateCorrectedProgress(percentage) {
-            correctedProgress = Math.min(correctedProgress + percentage, 100);
-            correctedProgressBarValue.style.width = `${correctedProgress}%`;
-            correctedProgressBarValue.textContent = `${correctedProgress}%`;
-            correctedProgressText.textContent = `Progress: ${correctedProgress}%`;
+            return new Promise(resolve => {
+                correctedProgressLock = correctedProgressLock.then(() => {
+                    correctedProgress = Math.min(correctedProgress + percentage, 100);
+                    correctedProgressBar.style.width = `${correctedProgress}%`;
+                    correctedProgressText.textContent = `Progress: ${correctedProgress}%`;
+                    resolve();
+                });
+            });
         }
 
-        // Simulate concurrent tasks
-        const correctedTasks = Array(10).fill(0).map((_, index) => {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    updateCorrectedProgress(10);
-                    resolve();
-                }, 100 * index);
-            });
-        });
-        Promise.all(correctedTasks).then(() => {
-            console.log('Corrected tasks completed');
-        });
+        const correctedTasks = [
+            () => updateCorrectedProgress(20),
+            () => updateCorrectedProgress(30),
+            () => updateCorrectedProgress(50),
+        ];
+
+        correctedTasks.forEach(task => task());
     </script>
 </body>
 </html>

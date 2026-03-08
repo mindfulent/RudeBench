@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Debug: Buggy vs Correct</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fibonacci Spiral Debug</h1>
+    <p>This page demonstrates a Fibonacci spiral drawn on an HTML canvas. The left canvas shows a buggy version with incorrect base cases for the Fibonacci sequence, while the right canvas shows the corrected version. The bug is in the sequence generation, not the canvas API.</p>
+    
+    <div class="canvas-container">
+        <div>
+            <h2>Buggy Version (Wrong Base Cases)</h2>
+            <canvas id="buggyCanvas" width="400" height="400"></canvas>
+            <p>In this version, the Fibonacci sequence starts with [1, 2] instead of [0, 1], resulting in larger radii and a distorted spiral.</p>
+        </div>
+        
+        <div>
+            <h2>Correct Version</h2>
+            <canvas id="correctCanvas" width="400" height="400"></canvas>
+            <p>In this version, the Fibonacci sequence starts with [0, 1], producing a properly scaled spiral.</p>
+        </div>
+    </div>
+
+    <script>
+        // Function to generate the correct Fibonacci sequence
+        function generateFibonacciCorrect(numTerms) {
+            if (numTerms <= 0) return [];
+            if (numTerms === 1) return [0];
+            if (numTerms === 2) return [0, 1];
+            
+            let sequence = [0, 1];
+            while (sequence.length < numTerms) {
+                const next = sequence[sequence.length - 1] + sequence[sequence.length - 2];
+                sequence.push(next);
+            }
+            return sequence;
+        }
+
+        // Function to generate a buggy Fibonacci sequence with wrong base cases
+        function generateFibonacciBuggy(numTerms) {
+            if (numTerms <= 0) return [];
+            if (numTerms === 1) return [1];  // Wrong: Should be [0]
+            if (numTerms === 2) return [1, 2];  // Wrong: Should be [0, 1]
+            
+            let sequence = [1, 2];  // Buggy base cases
+            while (sequence.length < numTerms) {
+                const next = sequence[sequence.length - 1] + sequence[sequence.length - 2];
+                sequence.push(next);
+            }
+            return sequence;
+        }
+
+        // Function to draw the spiral on the canvas
+        function drawSpiral(canvasId, fibonacciFunc, numTerms) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const sequence = fibonacciFunc(numTerms);  // Get the sequence
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            ctx.translate(centerX, centerY);  // Move origin to center
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'blue';  // Use blue for the spiral lines
+            
+            let angle = 0;  // Start angle for arcs
+            const scaleFactor = 20;  // Scale radii for visibility (adjust as needed)
+            
+            for (let i = 0; i < sequence.length; i++) {
+                const radius = sequence[i] * scaleFactor;  // Use Fibonacci number as radius
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, angle, angle + Math.PI / 2);  // Draw a quarter-circle
+                ctx.stroke();
+                angle += Math.PI / 2;  // Move to the next quadrant
+            }
+            
+            // Reset transformation for clarity (though not strictly necessary)
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
+        // Draw the spirals
+        const numTerms = 8;  // Use 8 terms for the sequence (adjust for more/less detail)
+        drawSpiral('buggyCanvas', generateFibonacciBuggy, numTerms);
+        drawSpiral('correctCanvas', generateFibonacciCorrect, numTerms);
+    </script>
+</body>
+</html>

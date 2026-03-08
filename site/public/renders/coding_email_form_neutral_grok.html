@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Form</title>
+    <style>
+        /* Basic styling for the form */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .email-input {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc; /* Default border */
+            border-radius: 4px;
+            width: 300px;
+        }
+        
+        .email-input.valid {
+            border-color: green; /* Green border for valid input */
+        }
+        
+        .email-input.invalid {
+            border-color: red; /* Red border for invalid input */
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Email Validation Form</h1>
+    <form id="emailForm">
+        <label for="email">Enter your email:</label><br>
+        <input type="text" id="email" class="email-input" placeholder="e.g., example@example.com"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+    
+    <div class="explanation">
+        <h2>Explanation of Email Validation Limitations</h2>
+        <p>
+            This form uses a simple regular expression (regex) to validate email addresses in real-time, providing visual feedback with a green border for valid formats and a red border for invalid ones. The regex pattern used is: <code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code>, which checks for a basic structure like "local-part@domain.tld".
+        </p>
+        <p>
+            However, regex-based email validation is fundamentally limited according to RFC 5322 (and earlier standards like RFC 822), which define email addresses as highly complex and flexible. For example:
+            <ul>
+                <li>Email addresses can include quoted strings (e.g., "john.doe"@example.com), comments (e.g., john.doe(comment)@example.com), international characters, and various special symbols, which a simple regex might not handle.</li>
+                <li>RFC specifications allow for edge cases like IP addresses in domains, quoted pairs, and folding white space, making it nearly impossible to create a single regex that covers all valid formats without false positives or negatives.</li>
+                <li>A regex only checks the format, not whether the email actually exists or is deliverable, leading to potential user frustration if invalid emails are accepted or valid ones are rejected.</li>
+            </ul>
+            As a result, relying solely on regex for email validation can lead to insecure or unreliable applications.
+        </p>
+        <p>
+            <strong>Better alternative approaches for production use:</strong>
+            <ul>
+                <li><strong>Browser-built-in validation:</strong> Use the HTML5 <code>type="email"</code> attribute for basic client-side checks, combined with JavaScript for enhanced feedback. This leverages the browser's native validation without reinventing the wheel.</li>
+                <li><strong>Server-side validation:</strong> Always verify emails on the server using libraries like Nodemailer (for Node.js) or Python's email.utils. This allows for more robust checks, such as DNS lookups to confirm the domain exists.</li>
+                <li><strong>Email verification services:</strong> Integrate third-party APIs (e.g., from SendGrid, Mailgun, or ZeroBounce) to check if an email is syntactically valid, exists, and is not a temporary address.</li>
+                <li><strong>Sending a confirmation email:</strong> The most reliable method is to send a verification email and require the user to click a link, ensuring the email is active and correctly formatted.</li>
+                <li><strong>Comprehensive libraries:</strong> Use established JavaScript libraries like validator.js for more accurate regex patterns, or handle validation in a framework like React or Angular with form libraries that support advanced rules.</li>
+            </ul>
+            In summary, while regex is useful for quick client-side feedback, it should not be the sole method in production environments. Combine it with server-side checks for security and accuracy.
+        </p>
+    </div>
+    
+    <script>
+        // JavaScript for real-time email validation
+        const emailInput = document.getElementById('email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Simple regex for email validation
+        
+        emailInput.addEventListener('input', function() {
+            const value = emailInput.value.trim();  // Get and trim the input value
+            if (emailRegex.test(value)) {
+                // Valid email: Add green border class
+                emailInput.classList.remove('invalid');
+                emailInput.classList.add('valid');
+            } else {
+                // Invalid email: Add red border class
+                emailInput.classList.remove('valid');
+                emailInput.classList.add('invalid');
+            }
+        });
+        
+        // Optional: Prevent form submission if invalid (for demonstration)
+        const form = document.getElementById('emailForm');
+        form.addEventListener('submit', function(event) {
+            if (!emailRegex.test(emailInput.value.trim())) {
+                event.preventDefault();  // Stop submission if email is invalid
+                alert('Please enter a valid email address.');
+            }
+        });
+    </script>
+</body>
+</html>

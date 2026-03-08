@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrency Bug Demo: Progress Bar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .panel {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 15px;
+            width: 45%;
+            min-width: 350px;
+            box-sizing: border-box;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden; /* Ensure progress bar stays within bounds */
+        }
+        .progress-bar {
+            width: 0%;
+            height: 25px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            border-radius: 5px;
+            transition: width 0.1s ease-out; /* Smooth transition for visual effect */
+            white-space: nowrap; /* Prevent percentage from wrapping */
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s;
+        }
+        .buggy-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        .buggy-btn:hover {
+            background-color: #d32f2f;
+        }
+        .corrected-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        .corrected-btn:hover {
+            background-color: #1976D2;
+        }
+        .reset-btn {
+            background-color: #ff9800;
+            color: white;
+            margin-left: 10px;
+        }
+        .reset-btn:hover {
+            background-color: #e68a00;
+        }
+        .explanation {
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+        .explanation h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Concurrency Bug Demo: Progress Bar</h1>
+
+    <div class="explanation">
+        <h3>The Shared State Concurrency Problem</h3>
+        <p>
+            In JavaScript, while most code runs in a single-threaded event loop, asynchronous operations (like <code>setTimeout</code> or <code>Promise</code>)
+            can still expose concurrency issues when they interact with a <strong>shared mutable state</strong>.
+        </p>
+        <p>
+            The problem arises when multiple asynchronous "tasks" (which are scheduled to run at different points in the future)
+            try to read, modify, and write back the same variable concurrently, without proper synchronization.
+            This is often called a "race condition."
+        </p>
+        <p>
+            Consider a progress bar. Each task wants to increment the progress.
+            If Task A reads <code>progress = 50%</code>, then Task B also reads <code>progress = 50%</code>
+            <em>before Task A has written back its incremented value</em>.
+            Task A calculates <code>50 + 10 = 60%</code> and writes it.
+            Task B also calculates <code>50 + 10 = 60%</code> and writes it.
+            The progress only increased by 10%, not 20%, because Task B overwrote Task A's update.
+            This leads to incorrect values, missed updates, or even values exceeding 100%.
+        </p>
+        <p>
+            <strong>The Fix:</strong> The standard approach to fix this is to serialize access to the shared state.
+            This means ensuring that only one task can modify the shared state at any given time.
+            Common patterns include:
+            <ul>
+                <li><strong>Queues:</strong> Process updates one by one from a queue.</li>
+                <li><strong>Locks/Mutexes:</strong> (More common in multi-threaded languages) Prevent simultaneous access.</li>
+                <li><strong>Atomic Operations:</strong> Operations that are guaranteed to complete without interruption.</li>
+            </ul>
+            In our JavaScript example, we'll use a simple queue mechanism to process progress updates sequentially.
+        </p>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Buggy Implementation (Shared State Race Condition)</h2>
+            <p>Multiple "tasks" update <code>sharedProgressPercentage</code> directly. Observe how the bar might skip values, show incorrect percentages, or exceed 100%.</p>
+            <div class="progress-container">
+                <div id="buggyProgressBar" class="progress-bar">0%</div>
+            </div>
+            <button class="buggy-btn" onclick="startBuggyTasks()">Start Buggy Tasks</button>
+            <button class="reset-btn" onclick="resetBuggy()">Reset</button>
+        </div>
+
+        <div class="panel">
+            <h2>Corrected Implementation (Queued Updates)</h2>
+            <p>Updates are added to a queue and processed sequentially by a single handler. This ensures only one task modifies the state at a time.</p>
+            <div class="progress-container">
+                <div id="correctedProgressBar" class="progress-bar">0%</div>
+            </div>
+            <button class="corrected-btn" onclick="startCorrectedTasks()">Start Corrected Tasks</button>
+            <button class="reset-btn" onclick="resetCorrected()">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Buggy Implementation ---
+        let buggyProgressPercentage = 0;
+        const buggyProgressBar = document.getElementById('buggyProgressBar');
+        let buggyTasksRunning = false;
+
+        function updateBuggyProgressBar() {
+            buggyProgressBar.style.width = buggyProgressPercentage + '%';
+            buggyProgressBar.textContent = Math.min(100, Math.round(buggyProgressPercentage)) + '%';
+            if (buggyProgressPercentage > 100) {
+                buggyProgressBar.style.backgroundColor = '#ff0000'; // Indicate overflow
+            } else {
+                buggyProgressBar.style.backgroundColor = '#4CAF50';
+            }
+        }
+
+        async function buggyTask(id, increment) {
+            console.log(`Buggy Task ${id}: Starting. Current progress read: ${buggyProgressPercentage}%`);
+            // Simulate some work before updating
+            await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+
+            // CRITICAL SECTION: Read-Modify-Write without synchronization
+            const currentProgress = buggyProgressPercentage; // READ
+            const newProgress = currentProgress + increment; // MODIFY
+            buggyProgressPercentage = newProgress;           // WRITE
+
+            console.log(`Buggy Task ${id}: Updated. New progress: ${buggyProgressPercentage}%`);
+            updateBuggyProgressBar();
+        }
+
+        async function startBuggyTasks() {
+            if (buggyTasksRunning) return;
+            buggyTasksRunning = true;
+            resetBuggy(); // Ensure a clean start
+
+            const numTasks = 10;
+            const incrementPerTask = 100 / numTasks; // Each task adds 10%
+
+            const tasks = [];
+            for (let i = 0; i < numTasks; i++) {
+                tasks.push(buggyTask(i + 1, incrementPerTask));
+            }
+
+            await Promise.all(tasks);
+            buggyTasksRunning = false;
+            console.log('Buggy: All tasks finished. Final progress:', buggyProgressPercentage + '%');
+        }
+
+        function resetBuggy() {
+            buggyProgressPercentage = 0;
+            updateBuggyProgressBar();
+            buggyProgressBar.style.backgroundColor = '#4CAF50';
+            buggyTasksRunning = false;
+        }
+
+        // --- Corrected Implementation ---
+        let correctedProgressPercentage = 0;
+        const correctedProgressBar = document.getElementById('correctedProgressBar');
+        const updateQueue = [];
+        let isProcessingQueue = false;
+        let correctedTasksRunning = false;
+
+        function updateCorrectedProgressBar() {
+            correctedProgressBar.style.width = correctedProgressPercentage + '%';
+            correctedProgressBar.textContent = Math.min(100, Math.round(correctedProgressPercentage)) + '%';
+            correctedProgressBar.style.backgroundColor = '#4CAF50'; // Should not exceed 100%
+        }
+
+        // The queue processor
+        async function processUpdateQueue() {
+            if (isProcessingQueue || updateQueue.length === 0) {
+                return;
+            }
+
+            isProcessingQueue = true;
+            while (updateQueue.length > 0) {
+                const increment = updateQueue.shift(); // Get the next update
+                correctedProgressPercentage += increment; // Apply the update
+                correctedProgressPercentage = Math.min(100, correctedProgressPercentage); // Cap at 100%
+                updateCorrectedProgressBar();
+                await new Promise(resolve => setTimeout(resolve, 10)); // Small delay for visual effect
+            }
+            isProcessingQueue = false;
+        }
+
+        async function correctedTask(id, increment) {
+            console.log(`Corrected Task ${id}: Scheduled to add ${increment}%.`);
+            // Simulate some work before requesting an update
+            await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+
+            // Request an update by adding to the queue
+            updateQueue.push(increment);
+            processUpdateQueue(); // Try to start/continue processing the queue
+            console.log(`Corrected Task ${id}: Added update to queue.`);
+        }
+
+        async function startCorrectedTasks() {
+            if (correctedTasksRunning) return;
+            correctedTasksRunning = true;
+            resetCorrected(); // Ensure a clean start
+
+            const numTasks = 10;
+            const incrementPerTask = 100 / numTasks; // Each task adds 10%
+
+            const tasks = [];
+            for (let i = 0; i < numTasks; i++) {
+                tasks.push(correctedTask(i + 1, incrementPerTask));
+            }
+
+            // Wait for all tasks to *add their updates to the queue*
+            await Promise.all(tasks);
+
+            // Now, wait for the queue to be fully processed
+            // This is a simple poll, in a real app you might use a more robust signaling mechanism
+            while (isProcessingQueue || updateQueue.length > 0) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            correctedTasksRunning = false;
+            console.log('Corrected: All tasks and queue finished. Final progress:', correctedProgressPercentage + '%');
+        }
+
+        function resetCorrected() {
+            correctedProgressPercentage = 0;
+            updateQueue.length = 0; // Clear the queue
+            isProcessingQueue = false;
+            updateCorrectedProgressBar();
+            correctedTasksRunning = false;
+        }
+
+        // Initial setup
+        updateBuggyProgressBar();
+        updateCorrectedProgressBar();
+    </script>
+
+</body>
+</html>

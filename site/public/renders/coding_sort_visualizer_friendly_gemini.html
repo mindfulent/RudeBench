@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+        }
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            background-color: #e0e6e9;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .controls label {
+            font-weight: bold;
+            color: #555;
+        }
+        .controls input[type="range"] {
+            width: 150px;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+        .controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .controls input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .controls button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        .controls button:active {
+            transform: translateY(0);
+        }
+        .algorithm-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 1400px;
+        }
+        .algorithm-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            padding: 25px;
+            width: calc(33% - 40px); /* Adjust for 3 columns with gap */
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s ease;
+            margin-bottom: 30px;
+        }
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+        }
+        .algorithm-card h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        .chart-container {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            width: 100%;
+            border-bottom: 2px solid #ccc;
+            margin-bottom: 15px;
+            background-color: #fcfcfc;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .bar {
+            width: var(--bar-width);
+            background-color: #7f8c8d;
+            margin: 0 1px;
+            transition: height 0.05s ease, background-color 0.05s ease;
+            border-radius: 2px 2px 0 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .bar.comparing {
+            background-color: #e67e22; /* Orange */
+        }
+        .bar.swapping {
+            background-color: #e74c3c; /* Red */
+        }
+        .bar.pivot {
+            background-color: #9b59b6; /* Purple */
+        }
+        .bar.sorted {
+            background-color: #27ae60; /* Green */
+        }
+        .bar.selected {
+            background-color: #3498db; /* Blue */
+        }
+        .step-counter {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+        }
+        .complexity-info {
+            margin-top: 20px;
+            text-align: left;
+            width: 100%;
+            max-width: 400px;
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            line-height: 1.6;
+        }
+        .complexity-info h3 {
+            color: #34495e;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        .complexity-info p {
+            margin-bottom: 8px;
+            color: #444;
+        }
+        .complexity-info code {
+            background-color: #dcdfe1;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95em;
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1200px) {
+            .algorithm-card {
+                width: calc(50% - 40px); /* 2 columns */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .algorithm-card {
+                width: 90%; /* Single column */
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .controls button, .controls input {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .controls label {
+                text-align: center;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Algorithm Comparison</h1>
+
+    <div class="controls">
+        <label for="arraySize">Array Size: <span id="arraySizeValue">50</span></label>
+        <input type="range" id="arraySize" min="10" max="150" value="50">
+        <label for="animationSpeed">Animation Speed: <span id="animationSpeedValue">50</span>ms</label>
+        <input type="range" id="animationSpeed" min="10" max="500" value="50">
+        <button id="startButton">Start Comparison</button>
+        <button id="resetButton">Reset Data</button>
+    </div>
+
+    <div class="algorithm-container">
+        <!-- Bubble Sort Card -->
+        <div class="algorithm-card">
+            <h2>Bubble Sort</h2>
+            <div class="chart-container" id="bubbleSortChart"></div>
+            <div class="step-counter">Steps: <span id="bubbleSortSteps">0</span></div>
+            <div class="complexity-info">
+                <h3>Time Complexity</h3>
+                <p>Worst-case: <code>O(n²)</code></p>
+                <p>Average-case: <code>O(n²)</code></p>
+                <p>Best-case: <code>O(n)</code> (already sorted)</p>
+                <p>Bubble Sort repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order. The pass through the list is repeated until no swaps are needed, which means the list is sorted.</p>
+            </div>
+        </div>
+
+        <!-- Merge Sort Card -->
+        <div class="algorithm-card">
+            <h2>Merge Sort</h2>
+            <div class="chart-container" id="mergeSortChart"></div>
+            <div class="step-counter">Steps: <span id="mergeSortSteps">0</span></div>
+            <div class="complexity-info">
+                <h3>Time Complexity</h3>
+                <p>Worst-case: <code>O(n log n)</code></p>
+                <p>Average-case: <code>O(n log n)</code></p>
+                <p>Best-case: <code>O(n log n)</code></p>
+                <p>Merge Sort is a "divide and conquer" algorithm. It recursively divides the array in half until each sub-array contains a single element. Then, it repeatedly merges the sub-arrays to produce new sorted sub-arrays until there is only one sorted array remaining.</p>
+            </div>
+        </div>
+
+        <!-- Quick Sort Card -->
+        <div class="algorithm-card">
+            <h2>Quick Sort</h2>
+            <div class="chart-container" id="quickSortChart"></div>
+            <div class="step-counter">Steps: <span id="quickSortSteps">0</span></div>
+            <div class="complexity-info">
+                <h3>Time Complexity</h3>
+                <p>Worst-case: <code>O(n²)</code></p>
+                <p>Average-case: <code>O(n log n)</code></p>
+                <p>Best-case: <code>O(n log n)</code></p>
+                <p>Quick Sort also uses "divide and conquer." It picks an element as a pivot and partitions the array around the pivot, placing all smaller elements before the pivot and all greater elements after it. It then recursively applies the same process to the sub-arrays.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const arraySizeSlider = document.getElementById('arraySize');
+        const arraySizeValueSpan = document.getElementById('arraySizeValue');
+        const animationSpeedSlider = document.getElementById('animationSpeed');
+        const animationSpeedValueSpan = document.getElementById('animationSpeedValue');
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+
+        const bubbleSortChart = document.getElementById('bubbleSortChart');
+        const mergeSortChart = document.getElementById('mergeSortChart');
+        const quickSortChart = document.getElementById('quickSortChart');
+
+        const bubbleSortStepsSpan = document.getElementById('bubbleSortSteps');
+        const mergeSortStepsSpan = document.getElementById('mergeSortSteps');
+        const quickSortStepsSpan = document.getElementById('quickSortSteps');
+
+        let arraySize = parseInt(arraySizeSlider.value);
+        let animationSpeed = parseInt(animationSpeedSlider.value); // In milliseconds
+        let originalArray = [];
+        let isSorting = false;
+        let timeouts = [];
+
+        // Update slider values
+        arraySizeSlider.oninput = () => {
+            arraySize = parseInt(arraySizeSlider.value);
+            arraySizeValueSpan.textContent = arraySize;
+            if (!isSorting) {
+                resetAndGenerateNewData();
+            }
+        };
+
+        animationSpeedSlider.oninput = () => {
+            animationSpeed = parseInt(animationSpeedSpeedSlider.value);
+            animationSpeedValueSpan.textContent = animationSpeed;
+        };
+
+        startButton.onclick = () => {
+            if (!isSorting) {
+                startSorting();
+            }
+        };
+
+        resetButton.onclick = () => {
+            stopSorting();
+            resetAndGenerateNewData();
+        };
+
+        function generateRandomArray(size) {
+            const arr = [];
+            for (let i = 0; i < size; i++) {
+                arr.push(Math.floor(Math.random() * (200 - 20 + 1)) + 20); // Values between 20 and 200
+            }
+            return arr;
+        }
+
+        function renderChart(container, array, highlightIndices = [], highlightClass = '', pivotIndex = -1, sortedIndices = []) {
+            container.innerHTML = '';
+            const barWidth = (100 / array.length) - 0.2; // Adjust for margin
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = `${value}px`;
+                bar.style.setProperty('--bar-width', `${barWidth}%`);
+
+                if (sortedIndices.includes(index)) {
+                    bar.classList.add('sorted');
+                } else if (pivotIndex === index) {
+                    bar.classList.add('pivot');
+                } else if (highlightIndices.includes(index)) {
+                    bar.classList.add(highlightClass);
+                }
+                container.appendChild(bar);
+            });
+        }
+
+        function resetAndGenerateNewData() {
+            originalArray = generateRandomArray(arraySize);
+            renderChart(bubbleSortChart, originalArray);
+            renderChart(mergeSortChart, originalArray);
+            renderChart(quickSortChart, originalArray);
+            bubbleSortStepsSpan.textContent = 0;
+            mergeSortStepsSpan.textContent = 0;
+            quickSortStepsSpan.textContent = 0;
+            startButton.disabled = false;
+        }
+
+        function stopSorting() {
+            isSorting = false;
+            timeouts.forEach(clearTimeout);
+            timeouts = [];
+        }
+
+        async function startSorting() {
+            if (isSorting) return;
+            isSorting = true;
+            startButton.disabled = true;
+
+            const arr1 = [...originalArray];
+            const arr2 = [...originalArray];
+            const arr3 = [...originalArray];
+
+            const bubbleSortPromise = visualizeBubbleSort(arr1, bubbleSortChart, bubbleSortStepsSpan);
+            const mergeSortPromise = visualizeMergeSort(arr2, mergeSortChart, mergeSortStepsSpan);
+            const quickSortPromise = visualizeQuickSort(arr3, quickSortChart, quickSortStepsSpan);
+
+            await Promise.all([bubbleSortPromise, mergeSortPromise, quickSortPromise]);
+
+            isSorting = false;
+            startButton.disabled = false;
+        }
+
+        // --- Sorting Algorithms with Visualization ---
+
+        // Bubble Sort
+        async function visualizeBubbleSort(arr, chartContainer, stepsSpan) {
+            let n = arr.length;
+            let steps = 0;
+            let sortedCount = 0;
+
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    steps++;
+                    stepsSpan.textContent = steps;
+
+                    renderChart(chartContainer, arr, [j, j + 1], 'comparing', -1, Array.from({length: sortedCount}, (_, k) => n - 1 - k));
+                    await new Promise(resolve => timeouts.push(setTimeout(resolve, animationSpeed)));
+
+                    if (arr[j] > arr[j + 1]) {
+                        renderChart(chartContainer, arr, [j, j + 1], 'swapping', -1, Array.from({length: sortedCount}, (_, k) => n - 1 - k));
+                        await new Promise(resolve => timeouts.push(setTimeout(resolve, animationSpeed)));
+
+                        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]; // Swap
+                    }
+                }
+                sortedCount++;
+            }
+            // Final render with all sorted
+            renderChart(chartContainer, arr, [], '', -1, Array.from({length: n}, (_, k) => k));
+        }
+
+        // Merge Sort
+        async function visualizeMergeSort(arr, chartContainer, stepsSpan) {
+            let steps = 0;
+
+            async function merge(left, right) {
+                let resultArray = [], leftIndex = 0, rightIndex = 0;
+
+                while (leftIndex < left.length && rightIndex < right.length) {
+                    steps++;
+                    stepsSpan.textContent = steps;
+                    if (left[leftIndex] < right[rightIndex]) {
+                        resultArray.push(left[leftIndex]);
+                        leftIndex++;
+                    } else {
+                        resultArray.push(right[rightIndex]);
+                        rightIndex++;
+                    }
+                }
+                return resultArray.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+            }
+
+            async function mergeSortRecursive(currentArr, start, end) {
+                if (currentArr.length <= 1) {
+                    return currentArr;
+                }
+
+                const middle = Math.floor(currentArr.length / 2);
+                const left = currentArr.slice(0, middle);
+                const right = currentArr.slice(middle);
+
+                const sortedLeft = await mergeSortRecursive(left, start, start + middle - 1);
+                const sortedRight = await mergeSortRecursive(right, start + middle, end);
+
+                const merged = await merge(sortedLeft, sortedRight);
+
+                // Update the main array for visualization
+                for (let i = 0; i < merged.length; i++) {
+                    arr[start + i] = merged[i];
+                }
+
+                // Highlight the merged section
+                renderChart(chartContainer, arr, Array.from({length: merged.length}, (_, i) => start + i), 'selected');
+                await new Promise(resolve => timeouts.push(setTimeout(resolve, animationSpeed)));
+
+                return merged;
+            }
+
+            await mergeSortRecursive(arr, 0, arr.length - 1);
+            // Final render with all sorted
+            renderChart(chartContainer, arr, [], '', -1, Array.from({length: arr.length}, (_, k) => k));
+        }
+
+
+        // Quick Sort
+        async function visualizeQuickSort(arr, chartContainer, stepsSpan) {
+            let steps = 0;
+
+            async function partition(low, high) {
+                let pivot = arr[high];
+                let i = (low - 1);
+
+                renderChart(chartContainer, arr, [], '', high); // Highlight pivot
+                await new Promise(resolve => timeouts.push(setTimeout(resolve, animationSpeed)));
+
+                for (let j = low; j <= high - 1; j++) {
+                    steps++;
+                    stepsSpan.textContent = steps;
+                    renderChart(chartContainer, arr, [j], 'comparing', high);
+                    await new Promise(resolve => timeouts.push(setTimeout(resolve, animationSpeed)));
+
+                    if (arr[j] < pivot) {
+                        i++;
+                        renderChart(chartContainer, arr, [i, j], 'swapping', high);
+                        await new Promise(resolve => timeouts.push(setTimeout(resolve, animationSpeed)));
+                        [arr[i], arr[j]] = [arr[j], arr[i]]; // Swap
+                    }
+                }
+                renderChart(chartContainer, arr, [i + 1, high], 'swapping', high);
+                await new Promise(resolve => timeouts.push(setTimeout(resolve, animationSpeed)));
+                [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]]; // Swap pivot to correct position
+
+                return (i + 1);
+            }
+
+            async function quickSortRecursive(low, high) {
+                if (low < high) {
+                    let pi = await partition(low, high);
+
+                    await quickSortRecursive(low, pi - 1);
+                    await quickSortRecursive(pi + 1, high);
+                }
+            }
+
+            await quickSortRecursive(0, arr.length - 1);
+            // Final render with all sorted
+            renderChart(chartContainer, arr, [], '', -1, Array.from({length: arr.length}, (_, k) => k));
+        }
+
+        // Initial setup
+        resetAndGenerateNewData();
+
+    </script>
+</body>
+</html>

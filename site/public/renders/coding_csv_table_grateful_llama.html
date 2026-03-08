@@ -1,100 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV to Table</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f0f0f0;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        #csv-data {
-            width: 100%;
-            height: 200px;
-            padding: 10px;
-            font-size: 16px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV to Table</title>
+<style>
+  body { font-family: Arial, sans-serif; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #f0f0f0;
+  }
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  .error {
+    color: red;
+  }
+</style>
 </head>
 <body>
 
-<textarea id="csv-data" placeholder="Paste CSV data here..."></textarea>
+<textarea id="csvData" rows="10" cols="50" placeholder="Paste CSV data here..."></textarea>
 <button onclick="parseCSV()">Parse CSV</button>
-<div id="table-container"></div>
+<div id="tableContainer"></div>
 
 <script>
-    function parseCSV() {
-        const csvData = document.getElementById('csv-data').value;
-        const rows = csvData.trim().split('\n');
-        const tableData = [];
+  function parseCSV() {
+    const csvData = document.getElementById('csvData').value;
+    const tableContainer = document.getElementById('tableContainer');
+    tableContainer.innerHTML = ''; // Clear previous table
 
-        rows.forEach(row => {
-            if (row.trim() !== '') {
-                tableData.push(parseRow(row));
-            }
-        });
+    if (!csvData.trim()) return; // No data to parse
 
-        renderTable(tableData);
-    }
+    try {
+      const rows = csvData.trim().split('\n').map(row => row.trim());
+      const table = document.createElement('table');
+      
+      // Find max columns
+      let maxColumns = 0;
+      rows.forEach(row => {
+        const columns = row.split(/,(?=(?:[^"]|"[^"]*")*$)/);
+        maxColumns = Math.max(maxColumns, columns.length);
+      });
 
-    function parseRow(row) {
-        const regex = /("([^"]|"")*"|[^,]*)(,|$)/g;
-        let match;
-        const result = [];
+      // Create table header
+      const thead = document.createElement('thead');
+      const theadRow = document.createElement('tr');
+      for (let i = 0; i < maxColumns; i++) {
+        const th = document.createElement('th');
+        th.textContent = `Column ${i + 1}`;
+        theadRow.appendChild(th);
+      }
+      thead.appendChild(theadRow);
+      table.appendChild(thead);
 
-        while ((match = regex.exec(row)) !== null) {
-            let value = match[1].trim();
-            if (value.startsWith('"') && value.endsWith('"')) {
-                value = value.slice(1, -1).replace(/""/g, '"');
-            }
-            result.push(value);
+      // Create table body
+      const tbody = document.createElement('tbody');
+      rows.forEach(row => {
+        if (!row) return; // Skip empty rows
+        const tr = document.createElement('tr');
+        const columns = row.split(/,(?=(?:[^"]|"[^"]*")*$)/).map(column => column.replace(/"/g, '').trim());
+        
+        for (let i = 0; i < maxColumns; i++) {
+          const td = document.createElement('td');
+          if (columns[i]) {
+            td.textContent = columns[i];
+          }
+          tr.appendChild(td);
         }
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
 
-        return result;
+      tableContainer.appendChild(table);
+    } catch (e) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error';
+      errorDiv.textContent = 'Error parsing CSV: ' + e.message;
+      tableContainer.appendChild(errorDiv);
     }
-
-    function renderTable(tableData) {
-        if (tableData.length === 0) return;
-
-        const maxColumns = Math.max(...tableData.map(row => row.length));
-        const tableRows = [];
-
-        tableData.forEach(row => {
-            // Normalize row length
-            while (row.length < maxColumns) {
-                row.push('');
-            }
-            tableRows.push(row);
-        });
-
-        const tableContainer = document.getElementById('table-container');
-        tableContainer.innerHTML = '';
-
-        const table = document.createElement('table');
-        tableRows.forEach((row, rowIndex) => {
-            const tr = document.createElement('tr');
-            row.forEach((cell, cellIndex) => {
-                const cellElement = document.createElement(rowIndex === 0 ? 'th' : 'td');
-                cellElement.textContent = cell;
-                tr.appendChild(cellElement);
-            });
-            table.appendChild(tr);
-        });
-        tableContainer.appendChild(table);
-    }
+  }
 </script>
 
 </body>

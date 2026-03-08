@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fractal Tree – Recursion Explorer</title>
   <style>
-    /* ── Reset & base ─────────────────────────────────────────── */
+    /* ── Reset & base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -16,133 +16,122 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 48px;
-      gap: 28px;
+      padding: 2rem 1rem 4rem;
+      gap: 2rem;
     }
 
-    /* ── Header ───────────────────────────────────────────────── */
-    header {
-      text-align: center;
-      max-width: 720px;
-    }
+    /* ── Header ── */
+    header { text-align: center; }
     header h1 {
       font-size: clamp(1.6rem, 4vw, 2.4rem);
-      font-weight: 700;
       background: linear-gradient(135deg, #58a6ff, #bc8cff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 8px;
+      letter-spacing: -0.5px;
     }
     header p {
+      margin-top: .4rem;
       color: #8b949e;
-      font-size: 0.95rem;
-      line-height: 1.6;
+      font-size: .95rem;
     }
 
-    /* ── Canvas card ──────────────────────────────────────────── */
+    /* ── Canvas card ── */
     .canvas-card {
       background: #161b22;
       border: 1px solid #30363d;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      border-radius: 14px;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 1.25rem;
       width: 100%;
-      max-width: 720px;
+      max-width: 680px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
     }
 
     canvas {
-      border-radius: 10px;
+      border-radius: 8px;
       background: #0d1117;
       width: 100%;
-      max-width: 680px;
       height: auto;
       display: block;
     }
 
-    /* ── Controls ─────────────────────────────────────────────── */
+    /* ── Controls ── */
     .controls {
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: .6rem;
     }
-    .controls label {
+
+    .control-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-size: 0.9rem;
-      color: #8b949e;
+      gap: .9rem;
+      flex-wrap: wrap;
     }
-    .controls label span {
-      font-weight: 700;
-      font-size: 1.05rem;
-      color: #58a6ff;
-      min-width: 28px;
-      text-align: right;
+
+    .control-row label {
+      font-size: .9rem;
+      color: #8b949e;
+      white-space: nowrap;
+      min-width: 130px;
     }
 
     input[type="range"] {
       -webkit-appearance: none;
-      width: 100%;
+      flex: 1;
+      min-width: 140px;
       height: 6px;
       border-radius: 3px;
-      background: linear-gradient(to right, #58a6ff var(--pct, 0%), #30363d var(--pct, 0%));
+      background: #30363d;
       outline: none;
       cursor: pointer;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 18px; height: 18px;
       border-radius: 50%;
-      background: #58a6ff;
-      box-shadow: 0 0 6px rgba(88,166,255,0.6);
-      transition: transform 0.15s;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(88,166,255,.6);
     }
-    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
     input[type="range"]::-moz-range-thumb {
-      width: 20px; height: 20px; border-radius: 50%;
-      background: #58a6ff; border: none;
-      box-shadow: 0 0 6px rgba(88,166,255,0.6);
+      width: 18px; height: 18px;
+      border: none;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      cursor: pointer;
     }
 
-    .depth-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      color: #484f58;
-      padding: 0 2px;
+    .badge {
+      min-width: 36px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #58a6ff;
+      background: #1f2937;
+      border-radius: 6px;
+      padding: .15rem .45rem;
     }
 
-    /* ── Stats bar ────────────────────────────────────────────── */
     .stats {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
+      font-size: .82rem;
+      color: #6e7681;
+      text-align: right;
     }
-    .stat-chip {
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 20px;
-      padding: 4px 14px;
-      font-size: 0.8rem;
-      color: #8b949e;
-    }
-    .stat-chip strong { color: #e6edf3; }
+    .stats span { color: #bc8cff; font-weight: 600; }
 
-    /* ── Explanation section ──────────────────────────────────── */
+    /* ── Explanation section ── */
     .explanation {
       width: 100%;
-      max-width: 720px;
+      max-width: 680px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 1.25rem;
     }
 
     .section-title {
@@ -150,61 +139,449 @@
       font-weight: 700;
       color: #e6edf3;
       border-left: 4px solid #58a6ff;
-      padding-left: 12px;
+      padding-left: .75rem;
     }
 
     .card {
       background: #161b22;
       border: 1px solid #30363d;
       border-radius: 12px;
-      padding: 20px 24px;
-      line-height: 1.75;
-      font-size: 0.9rem;
-      color: #c9d1d9;
+      padding: 1.25rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: .7rem;
     }
+
     .card h3 {
       font-size: 1rem;
       font-weight: 700;
-      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: .5rem;
     }
     .card h3 .icon {
-      width: 28px; height: 28px;
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.95rem;
-      flex-shrink: 0;
-    }
-    .icon-blue  { background: rgba(88,166,255,0.15); color: #58a6ff; }
-    .icon-red   { background: rgba(248,81,73,0.15);  color: #f85149; }
-    .icon-green { background: rgba(63,185,80,0.15);  color: #3fb950; }
-    .icon-purple{ background: rgba(188,140,255,0.15);color: #bc8cff; }
-
-    .card p + p { margin-top: 10px; }
-
-    code {
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-      font-size: 0.82rem;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 4px;
-      padding: 1px 6px;
-      color: #ff7b72;
+      font-size: 1.2rem;
     }
 
+    .card p, .card li {
+      font-size: .88rem;
+      line-height: 1.7;
+      color: #8b949e;
+    }
+
+    .card ul {
+      padding-left: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+
+    .card li strong { color: #e6edf3; }
+
+    /* colour accents per card */
+    .card.danger  { border-color: #f85149; }
+    .card.danger h3 { color: #f85149; }
+
+    .card.warning { border-color: #d29922; }
+    .card.warning h3 { color: #d29922; }
+
+    .card.success { border-color: #3fb950; }
+    .card.success h3 { color: #3fb950; }
+
+    .card.info    { border-color: #58a6ff; }
+    .card.info h3 { color: #58a6ff; }
+
+    /* ── Code block ── */
     pre {
       background: #0d1117;
       border: 1px solid #30363d;
       border-radius: 8px;
-      padding: 16px;
+      padding: .9rem 1rem;
       overflow-x: auto;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-      font-size: 0.8rem;
+      font-size: .78rem;
       line-height: 1.6;
-      color: #e6edf3;
-      margin-top: 12px;
+      color: #c9d1d9;
     }
     .kw  { color: #ff7b72; }
-    .
+    .fn  { color: #d2a8ff; }
+    .cm  { color: #8b949e; font-style: italic; }
+    .nm  { color: #79c0ff; }
+    .st  { color: #a5d6ff; }
+
+    /* ── Depth warning banner ── */
+    #depth-warning {
+      display: none;
+      background: #2d1b00;
+      border: 1px solid #d29922;
+      border-radius: 8px;
+      padding: .6rem 1rem;
+      font-size: .83rem;
+      color: #d29922;
+      width: 100%;
+      text-align: center;
+    }
+    #depth-warning.visible { display: block; }
+
+    /* ── Footer ── */
+    footer {
+      font-size: .78rem;
+      color: #484f58;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header>
+    <h1>🌳 Fractal Tree – Recursion Explorer</h1>
+    <p>Visualise how recursion depth shapes a self-similar tree — and why limits matter.</p>
+  </header>
+
+  <!-- ══════════════ CANVAS CARD ══════════════ -->
+  <div class="canvas-card">
+    <canvas id="treeCanvas" width="640" height="420"></canvas>
+
+    <div class="controls">
+      <div class="control-row">
+        <label for="depthSlider">Recursion Depth</label>
+        <input type="range" id="depthSlider" min="1" max="12" value="7" />
+        <span class="badge" id="depthBadge">7</span>
+      </div>
+      <div class="control-row">
+        <label for="angleSlider">Branch Angle</label>
+        <input type="range" id="angleSlider" min="10" max="60" value="25" />
+        <span class="badge" id="angleBadge">25°</span>
+      </div>
+      <div class="control-row">
+        <label for="ratioSlider">Length Ratio</label>
+        <input type="range" id="ratioSlider" min="50" max="85" value="68" />
+        <span class="badge" id="ratioBadge">0.68</span>
+      </div>
+      <div id="depth-warning">
+        ⚠️ Depth ≥ 11 — branch count exceeds <strong id="branchCount"></strong>.
+        Real-world stacks would overflow around depth 10 000+ in JS, but rendering slows noticeably here.
+      </div>
+      <p class="stats" id="stats"></p>
+    </div>
+  </div>
+
+  <!-- ══════════════ EXPLANATION ══════════════ -->
+  <section class="explanation">
+    <h2 class="section-title">Understanding Recursion &amp; Its Limits</h2>
+
+    <!-- 1. What is recursion depth -->
+    <div class="card info">
+      <h3><span class="icon">🔢</span> What Does "Recursion Depth" Mean?</h3>
+      <p>
+        Every time a function calls itself, the JavaScript engine pushes a new
+        <strong>stack frame</strong> onto the <em>call stack</em> — a fixed-size
+        region of memory that tracks active function calls.  The recursion depth
+        is simply the maximum number of frames alive at the same moment, i.e. how
+        many nested calls are open simultaneously.
+      </p>
+      <p>
+        For this tree, each branch spawns <strong>two children</strong>, so the
+        call stack grows one frame deeper per level.  At depth <em>d</em> the
+        stack holds at most <em>d</em> frames at once, while the total number of
+        branches drawn is <em>2<sup>d+1</sup> − 1</em>.
+      </p>
+      <pre><span class="cm">// Simplified recursive branch function</span>
+<span class="kw">function</span> <span class="fn">branch</span>(x, y, angle, length, depth) {
+  <span class="kw">if</span> (depth === <span class="nm">0</span>) <span class="kw">return</span>;           <span class="cm">// base case — stop recursing</span>
+
+  <span class="kw">const</span> x2 = x + length * Math.<span class="fn">cos</span>(angle);
+  <span class="kw">const</span> y2 = y - length * Math.<span class="fn">sin</span>(angle);
+  <span class="fn">drawLine</span>(x, y, x2, y2);
+
+  <span class="fn">branch</span>(x2, y2, angle - spread, length * ratio, depth - <span class="nm">1</span>); <span class="cm">// left</span>
+  <span class="fn">branch</span>(x2, y2, angle + spread, length * ratio, depth - <span class="nm">1</span>); <span class="cm">// right</span>
+}</pre>
+    </div>
+
+    <!-- 2. Stack overflow -->
+    <div class="card danger">
+      <h3><span class="icon">💥</span> Why Deep Recursion Causes Stack Overflow</h3>
+      <p>
+        Every JavaScript engine allocates a finite call stack — typically
+        <strong>10 000 – 15 000 frames</strong> in V8 (Node / Chrome) and a
+        similar amount in SpiderMonkey (Firefox).  If a recursive function keeps
+        calling itself without hitting a base case before the stack is full, the
+        engine throws a <code>RangeError: Maximum call stack size exceeded</code>.
+      </p>
+      <ul>
+        <li>
+          <strong>Each frame consumes memory</strong> for local variables, the
+          return address, and references to outer scopes (closures).
+        </li>
+        <li>
+          <strong>The stack is not the heap.</strong>  Even if gigabytes of heap
+          are free, a fixed-size stack will overflow with enough nesting.
+        </li>
+        <li>
+          <strong>Infinite recursion</strong> (missing or unreachable base case)
+          always overflows, regardless of stack size.
+        </li>
+        <li>
+          <strong>Exponential branching</strong> doesn't cause overflow by itself
+          — the maximum <em>depth</em> of the call stack matters, not the total
+          number of calls.  A depth-12 binary tree needs only 12 frames at once.
+        </li>
+      </ul>
+      <pre><span class="cm">// ❌ Classic infinite recursion — no base case</span>
+<span class="kw">function</span> <span class="fn">countDown</span>(n) {
+  <span class="fn">countDown</span>(n - <span class="nm">1</span>);  <span class="cm">// RangeError after ~10 000 calls</span>
+}
+
+<span class="cm">// ❌ Accidental infinite recursion — base case unreachable</span>
+<span class="kw">function</span> <span class="fn">badFactorial</span>(n) {
+  <span class="kw">if</span> (n === <span class="nm">0</span>) <span class="kw">return</span> <span class="nm">1</span>;
+  <span class="kw">return</span> n * <span class="fn">badFactorial</span>(n + <span class="nm">1</span>);  <span class="cm">// grows forever!</span>
+}</pre>
+    </div>
+
+    <!-- 3. Practical limits -->
+    <div class="card warning">
+      <h3><span class="icon">⚠️</span> Practical Depth Limits in Real Projects</h3>
+      <p>
+        Even before hitting a hard overflow, deep recursion creates
+        <strong>performance problems</strong> and makes debugging harder:
+      </p>
+      <ul>
+        <li>
+          <strong>Stack-trace noise:</strong> A 5 000-frame stack trace is almost
+          impossible to read in a debugger.
+        </li>
+        <li>
+          <strong>Memory pressure:</strong> Each frame holds references that
+          prevent garbage collection of intermediate values.
+        </li>
+        <li>
+          <strong>JIT de-optimisation:</strong> Engines may bail out of optimised
+          code paths for very deep call chains.
+        </li>
+        <li>
+          <strong>Rule of thumb:</strong> Keep recursive algorithms below
+          ~1 000 levels of depth for safety.  For deeper problems, switch to an
+          iterative approach.
+        </li>
+      </ul>
+    </div>
+
+    <!-- 4. Solutions -->
+    <div class="card success">
+      <h3><span class="icon">✅</span> Practical Solutions</h3>
+
+      <p><strong>① Iterative conversion with an explicit stack</strong></p>
+      <p>
+        Replace the call stack with a plain array used as a stack.  Push work
+        items onto it and process them in a loop.  This moves the "stack" from
+        the engine's limited call stack to the virtually unlimited heap.
+      </p>
+      <pre><span class="cm">// ✅ Iterative fractal tree — no recursion limit</span>
+<span class="kw">function</span> <span class="fn">drawTreeIterative</span>(startX, startY, startAngle, startLen, maxDepth) {
+  <span class="kw">const</span> stack = [{ x: startX, y: startY,
+                    angle: startAngle, length: startLen, depth: maxDepth }];
+
+  <span class="kw">while</span> (stack.length > <span class="nm">0</span>) {
+    <span class="kw">const</span> { x, y, angle, length, depth } = stack.<span class="fn">pop</span>();
+    <span class="kw">if</span> (depth === <span class="nm">0</span>) <span class="kw">continue</span>;
+
+    <span class="kw">const</span> x2 = x + length * Math.<span class="fn">cos</span>(angle);
+    <span class="kw">const</span> y2 = y - length * Math.<span class="fn">sin</span>(angle);
+    <span class="fn">drawLine</span>(x, y, x2, y2);
+
+    stack.<span class="fn">push</span>({ x: x2, y: y2, angle: angle - spread,
+                  length: length * ratio, depth: depth - <span class="nm">1</span> });
+    stack.<span class="fn">push</span>({ x: x2, y: y2, angle: angle + spread,
+                  length: length * ratio, depth: depth - <span class="nm">1</span> });
+  }
+}</pre>
+
+      <p><strong>② Tail-Call Optimisation (TCO)</strong></p>
+      <p>
+        A function is <em>tail-recursive</em> when the recursive call is the
+        <strong>very last operation</strong> — no pending work remains after it
+        returns.  The ES2015 specification mandates TCO in strict mode, allowing
+        the engine to <em>reuse</em> the current stack frame instead of pushing a
+        new one, making recursion as memory-efficient as a loop.
+      </p>
+      <pre><span class="cm">// ✅ Tail-recursive accumulator pattern (single-branch example)</span>
+<span class="st">"use strict"</span>;
+<span class="kw">function</span> <span class="fn">factorial</span>(n, acc = <span class="nm">1</span>) {
+  <span class="kw">if</span> (n <= <span class="nm">1</span>) <span class="kw">return</span> acc;
+  <span class="kw">return</span> <span class="fn">factorial</span>(n - <span class="nm">1</span>, n * acc);  <span class="cm">// tail call — no work after this</span>
+}
+<span class="cm">// ⚠️  TCO is only guaranteed in Safari as of 2024.
+//     V8 / SpiderMonkey do NOT implement it for binary branches.</span></pre>
+
+      <p><strong>③ Trampolining</strong></p>
+      <p>
+        A <em>trampoline</em> is a higher-order function that repeatedly calls a
+        thunk (a zero-argument function) until a non-function value is returned.
+        This simulates TCO in engines that don't support it natively.
+      </p>
+      <pre><span class="kw">const</span> <span class="fn">trampoline</span> = fn => (...args) => {
+  <span class="kw">let</span> result = <span class="fn">fn</span>(...args);
+  <span class="kw">while</span> (<span class="kw">typeof</span> result === <span class="st">'function'</span>) result = <span class="fn">result</span>();
+  <span class="kw">return</span> result;
+};
+
+<span class="kw">const</span> <span class="fn">factorial</span> = <span class="fn">trampoline</span>(<span class="kw">function</span> <span class="fn">f</span>(n, acc = <span class="nm">1</span>) {
+  <span class="kw">return</span> n <= <span class="nm">1</span> ? acc : () => <span class="fn">f</span>(n - <span class="nm">1</span>, n * acc);  <span class="cm">// return a thunk</span>
+});</pre>
+
+      <p><strong>④ Memoisation &amp; Dynamic Programming</strong></p>
+      <p>
+        When a recursive algorithm re-computes the same sub-problems (e.g.
+        naïve Fibonacci), caching results with a <code>Map</code> or converting
+        to bottom-up DP eliminates redundant calls and dramatically reduces depth.
+      </p>
+    </div>
+
+    <!-- 5. Summary table -->
+    <div class="card">
+      <h3><span class="icon">📊</span> Quick-Reference: Depth vs. Branch Count</h3>
+      <p>For a binary tree where every node spawns two children:</p>
+      <pre>Depth │ Max stack frames │ Total branches drawn
+──────┼──────────────────┼─────────────────────
+  1   │        1         │          1
+  2   │        2         │          3
+  4   │        4         │         15
+  7   │        7         │        127
+ 10   │       10         │      1 023
+ 12   │       12         │      4 095
+ 20   │       20         │  1 048 575   ← rendering bottleneck
+ ~14k │    ~14 000       │  ≫ 10^4000   ← call-stack overflow in V8</pre>
+      <p>
+        Notice that the <strong>stack depth grows linearly</strong> while the
+        total work grows <strong>exponentially</strong>.  Overflow is a depth
+        problem, not a branch-count problem.
+      </p>
+    </div>
+
+  </section>
+
+  <footer>Built with vanilla HTML, CSS &amp; Canvas — no libraries required.</footer>
+
+  <!-- ══════════════ SCRIPT ══════════════ -->
+  <script>
+    'use strict';
+
+    /* ── Canvas setup ── */
+    const canvas  = document.getElementById('treeCanvas');
+    const ctx     = canvas.getContext('2d');
+
+    /* ── Controls ── */
+    const depthSlider = document.getElementById('depthSlider');
+    const angleSlider = document.getElementById('angleSlider');
+    const ratioSlider = document.getElementById('ratioSlider');
+    const depthBadge  = document.getElementById('depthBadge');
+    const angleBadge  = document.getElementById('angleBadge');
+    const ratioBadge  = document.getElementById('ratioBadge');
+    const statsEl     = document.getElementById('stats');
+    const warningEl   = document.getElementById('depth-warning');
+    const branchCountEl = document.getElementById('branchCount');
+
+    /* ── State ── */
+    let totalBranches = 0;
+
+    /* ── Colour palette: trunk → tip ── */
+    function branchColor(depth, maxDepth) {
+      const t = 1 - depth / maxDepth;   // 0 = trunk, 1 = tip
+      // Interpolate: warm brown → green → bright yellow-green
+      const r = Math.round(139 - t * 80);
+      const g = Math.round(90  + t * 120);
+      const b = Math.round(43  - t * 30);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    /* ── Recursive draw ── */
+    function branch(x1, y1, angle, length, depth, maxDepth) {
+      if (depth === 0) return;
+
+      totalBranches++;
+
+      const x2 = x1 + length * Math.cos(angle);
+      const y2 = y1 - length * Math.sin(angle);
+
+      const spread = (parseInt(angleSlider.value, 10) * Math.PI) / 180;
+      const ratio  = parseInt(ratioSlider.value, 10) / 100;
+
+      // Trunk is thicker; tips are thin
+      const lineWidth = Math.max(0.5, (depth / maxDepth) * 6);
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = branchColor(depth, maxDepth);
+      ctx.lineWidth   = lineWidth;
+      ctx.lineCap     = 'round';
+      ctx.stroke();
+
+      const childLen = length * ratio;
+      branch(x2, y2, angle - spread, childLen, depth - 1, maxDepth);
+      branch(x2, y2, angle + spread, childLen, depth - 1, maxDepth);
+    }
+
+    /* ── Main draw ── */
+    function draw() {
+      const depth  = parseInt(depthSlider.value, 10);
+      const W      = canvas.width;
+      const H      = canvas.height;
+      const trunkLen = H * 0.22;
+
+      ctx.clearRect(0, 0, W, H);
+
+      totalBranches = 0;
+      branch(W / 2, H - 10, Math.PI / 2, trunkLen, depth, depth);
+
+      // Stats
+      const totalPossible = Math.pow(2, depth + 1) - 1;
+      statsEl.textContent = `Branches drawn: `;
+      statsEl.innerHTML =
+        `Branches drawn: <span>${totalBranches.toLocaleString()}</span>` +
+        ` &nbsp;|&nbsp; Max stack depth during draw: <span>${depth}</span>` +
+        ` &nbsp;|&nbsp; 2<sup>${depth+1}</sup>−1 = <span>${totalPossible.toLocaleString()}</span>`;
+
+      // Warning banner
+      if (depth >= 11) {
+        branchCountEl.textContent = totalPossible.toLocaleString();
+        warningEl.classList.add('visible');
+      } else {
+        warningEl.classList.remove('visible');
+      }
+    }
+
+    /* ── Slider listeners ── */
+    depthSlider.addEventListener('input', () => {
+      depthBadge.textContent = depthSlider.value;
+      draw();
+    });
+
+    angleSlider.addEventListener('input', () => {
+      angleBadge.textContent = angleSlider.value + '°';
+      draw();
+    });
+
+    ratioSlider.addEventListener('input', () => {
+      ratioBadge.textContent = (parseInt(ratioSlider.value, 10) / 100).toFixed(2);
+      draw();
+    });
+
+    /* ── Responsive canvas ── */
+    function resizeCanvas() {
+      const maxW = Math.min(640, window.innerWidth - 64);
+      canvas.width  = maxW;
+      canvas.height = Math.round(maxW * 0.656);
+      draw();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    /* ── Init ── */
+    resizeCanvas();
+  </script>
+
+</body>
+</html>

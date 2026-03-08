@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Recursive Fractal Tree with Depth Slider</title>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #f4f7fb; color: #222; }
+    .container { display: flex; flex-direction: column; min-height: 100vh; align-items: center; padding: 18px; box-sizing: border-box; }
+    h1 { margin: 8px 0 6px; font-size: 20px; }
+    .controls { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    label { font-size: 14px; }
+    input[type="range"] { width: 320px; }
+    .canvas-wrap { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 4px 14px rgba(30,40,50,0.08); }
+    canvas { display: block; background: linear-gradient(180deg, #eaf2ff, #ffffff); border-radius: 4px; }
+    .explanation { max-width: 900px; margin-top: 16px; padding: 14px; background: #fff; border-radius: 8px; box-shadow: 0 3px 10px rgba(20,30,40,0.06); line-height: 1.45; }
+    .explanation h2 { margin: 4px 0 8px; font-size: 16px; }
+    .explanation p { margin: 8px 0; font-size: 14px; color: #333; }
+    .explanation code { background: #f3f6fb; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size: 13px; }
+    .footer { margin-top: 12px; font-size: 13px; color: #666; }
+    @media (max-width: 520px) {
+      input[type="range"] { width: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Recursive Fractal Tree</h1>
+    <div class="controls" aria-hidden="false">
+      <label for="depthRange">Recursion depth: <strong id="depthLabel">8</strong></label>
+      <input id="depthRange" type="range" min="1" max="12" step="1" value="8" aria-label="Recursion depth slider">
+      <button id="randomizeBtn" title="Randomize branch angles">Randomize Angles</button>
+      <button id="resetBtn" title="Reset angles to default">Reset Angles</button>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="treeCanvas" width="760" height="520" role="img" aria-label="Fractal tree drawing"></canvas>
+    </div>
+
+    <div class="explanation" id="explain">
+      <h2>About recursion depth and stack limits</h2>
+      <p>
+        This fractal tree is created with a recursive function: each branch calls the same function to draw two smaller branches, and so on. The "recursion depth" slider controls how many generations of branching are drawn.
+      </p>
+
+      <p>
+        Why limit recursion depth? Each recursive call consumes some stack space (the local variables and return address). If recursion goes too deep, the program may run out of call stack space and throw a stack overflow error. In JavaScript engines, stack size limits vary by browser and platform. Very deep recursion (thousands or tens of thousands of nested calls) can cause an exception or crash.
+      </p>
+
+      <p>
+        Practical ways to avoid stack overflow:
+      </p>
+      <ul>
+        <li><strong>Iterative rewrite:</strong> Replace recursion with an explicit stack or queue and a loop. Instead of relying on the call stack, manage your own list of "branches to process". This scales to much deeper trees because heap allocations (arrays/objects) are typically larger than the call stack.</li>
+        <li><strong>Tail recursion (limited use):</strong> Some languages/engines optimize tail calls to avoid extra stack frames, but JavaScript generally does not reliably provide tail-call optimization across environments, so it isn't a dependable solution here.</li>
+        <li><strong>Limit depth:</strong> Keep recursion depth small and reasonable (for UI visualizations, depths under a few dozen are typical). The slider above caps at 12 for responsiveness and to avoid heavy rendering and deep stacks.</li>
+        <li><strong>Offload to workers:</strong> For heavy computation, consider Web Workers so a long-running or deeply recursive process won't block the main UI thread. But that does not remove the need to avoid exceeding call-stack limits inside the worker.</li>
+        <li><strong>Increase granularity:</strong> Combine multiple recursive steps into a single iteration when possible, reducing call count while preserving the shape.</li>
+      </ul>
+
+      <p>
+        In this example the recursion is shallow by design (max 12), so stack overflow won't be an issue in normal browsers. If you adapt this to generate thousands of levels, prefer an iterative approach or chunk work into manageable pieces.
+      </p>
+
+      <div class="footer">
+        Tip: try the "Randomize Angles" button to explore different tree shapes. Use smaller depths to render quickly and higher depths to get more detailed branches.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('treeCanvas');
+      const ctx = canvas.getContext('2d');
+      const depthRange = document.getElementById('depthRange');
+      const depthLabel = document.getElementById('depthLabel');
+      const randomizeBtn = document.getElementById('randomizeBtn');
+      const resetBtn = document.getElementById('resetBtn');
+
+      // Canvas sizing for crisp rendering on high-DPI displays
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // keep drawing coordinates in CSS pixels
+      }
+
+      // If canvas has no bounding rect size (initial), set one
+      (function ensureCanvasCSSSize() {
+        if (!canvas.style.width) {
+          canvas.style.width = canvas.width + 'px';
+          canvas.style.height = canvas.height + 'px';
+        }
+      })();
+
+      window.addEventListener('resize', () => {
+        // keep CSS size consistent, then adjust backing store size for crispness
+        resizeCanvas();
+        draw();
+      });
+
+      // Tree parameters (angles in radians)
+      let params = {
+        trunkLength: 120,
+        branchScale: 0.72,      // each branch length relative to parent
+        leftAngle: Math.PI / 6, // 30 degrees
+        rightAngle: Math.PI / 4,// 45 degrees
+        thicknessDecay: 0.7     // thickness multiplier per level
+      };
+
+      // Ensure canvas is sized properly at start
+      // Make canvas visually responsive: set bounding rect width to min(window, fixed)
+      function initCanvasSize() {
+        // choose sensible CSS size
+        const maxWidth = Math.min(880, window.innerWidth - 36);
+        const cssWidth = Math.max(320, maxWidth);
+        const cssHeight = 520;
+        canvas.style.width = cssWidth + 'px';
+        canvas.style.height = cssHeight + 'px';
+        resizeCanvas();
+      }
+      initCanvasSize();
+
+      // draw a branch recursively
+      function drawBranch(x, y, length, angle, thickness, depth, maxDepth) {
+        // base: draw trunk line from (x,y) in direction angle
+        ctx.lineWidth = thickness;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        const x2 = x + length * Math.cos(angle);
+        const y2 = y - length * Math.sin(angle);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        if (depth >= maxDepth) {
+          // Optionally draw leaves at the tip
+          ctx.beginPath();
+          ctx.fillStyle = leafColorForDepth(depth, maxDepth);
+          ctx.arc(x2, y2, Math.max(1.5, 2.6 * (1 - depth / (maxDepth + 1))), 0, Math.PI * 2);
+          ctx.fill();
+          return;
+        }
+
+        // compute next branch properties
+        const nextLength = length * params.branchScale;
+        const nextThickness = thickness * params.thicknessDecay;
+
+        // left branch
+        drawBranch(x2, y2, nextLength, angle + params.leftAngle, nextThickness, depth + 1, maxDepth);
+        // right branch
+        drawBranch(x2, y2, nextLength, angle - params.rightAngle, nextThickness, depth + 1, maxDepth);
+      }
+
+      function leafColorForDepth(depth, maxDepth) {
+        // subtle gradient from green to brown based on depth
+        const t = depth / maxDepth;
+        const r = Math.round(40 + 60 * t);
+        const g = Math.round(150 - 80 * t);
+        const b = Math.round(40 + 20 * t);
+        return 'rgb(' + r + ',' + g + ',' + b + ')';
+      }
+
+      // main draw routine
+      function draw() {
+        const maxDepth = parseInt(depthRange.value, 10) || 1;
+        depthLabel.textContent = String(maxDepth);
+
+        // clear
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        // background gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#eaf2ff');
+        grad.addColorStop(1, '#ffffff');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // trunk starting point: middle bottom
+        const startX = w / 2;
+        const startY = h - 18;
+        const trunkLen = params.trunkLength * Math.min(1, w / 760); // scale with canvas width
+        const trunkThickness = Math.max(2.2, 10 * Math.pow(params.thicknessDecay, 0)); // initial thickness
+
+        // set stroke style for branches
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#4b3b2b';
+
+        // draw main trunk
+        drawBranch(startX, startY, trunkLen, Math.PI / 2, trunkThickness, 0, maxDepth);
+      }
+
+      // slider interaction with throttling for smooth updates
+      let rafId = null;
+      depthRange.addEventListener('input', () => {
+        // request animation frame to avoid too many synchronous redraws
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          draw();
+          rafId = null;
+        });
+      });
+
+      // Randomize angles for different tree shapes
+      randomizeBtn.addEventListener('click', () => {
+        // pick left angle between 10 and 70 degrees, right between 10 and 70
+        const degToRad = (d) => d * Math.PI / 180;
+        params.leftAngle = degToRad(10 + Math.random() * 60);
+        params.rightAngle = degToRad(10 + Math.random() * 60);
+        // randomize scale and thickness slightly
+        params.branchScale = 0.55 + Math.random() * 0.25; // 0.55 - 0.8
+        params.thicknessDecay = 0.58 + Math.random() * 0.25; // 0.58 - 0.83
+        draw();
+      });
+
+      // Reset to defaults
+      resetBtn.addEventListener('click', () => {
+        params.leftAngle = Math.PI / 6;
+        params.rightAngle = Math.PI / 4;
+        params.branchScale = 0.72;
+        params.thicknessDecay = 0.7;
+        draw();
+      });
+
+      // initial draw
+      draw();
+
+      // ensure canvas is crisp if initial resize needed
+      window.setTimeout(() => {
+        resizeCanvas();
+        draw();
+      }, 50);
+    })();
+  </script>
+</body>
+</html>

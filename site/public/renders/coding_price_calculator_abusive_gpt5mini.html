@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Shopping Cart: Floating-point vs Correct Currency Handling</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; margin: 20px; color:#222 }
+  h1 { margin-top: 0 }
+  .container { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap }
+  .panel { flex:1 1 420px; border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa}
+  .panel h2 { margin-top:0 }
+  table { width:100%; border-collapse:collapse; margin:8px 0 12px }
+  th,td { padding:6px 8px; text-align:left; border-bottom:1px solid #eee }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px }
+  button { padding:6px 10px; border-radius:6px; border:1px solid #bbb; background:#fff; cursor:pointer }
+  button.primary { background:#0b74de; color:#fff; border-color:#0b74de }
+  .log { white-space:pre-wrap; background:#111; color:#bfe7ff; padding:8px; border-radius:6px; max-height:160px; overflow:auto; font-family: monospace; font-size:13px }
+  .warning { color:#a33; font-weight:600 }
+  .ok { color:#0a7 }
+  small { color:#555 }
+</style>
+</head>
+<body>
+<h1>Shopping Cart: Floating-point (broken) vs Correct (integer cents / BigInt)</h1>
+<p>This demo shows why using JavaScript Number (IEEE-754 double) for money — and relying on === or direct float comparisons — leads to surprising and incorrect results. Right: two corrected approaches that avoid floating-point rounding errors.</p>
+
+<div class="container">
+  <div class="panel" id="broken">
+    <h2>Broken: Number (floats) and === comparisons</h2>
+    <p>Products use prices like $4.99 (stored as 4.99). You will see totals that look wrong and comparisons that fail unexpectedly.</p>
+
+    <table>
+      <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th></th></tr></thead>
+      <tbody id="broken-items"></tbody>
+    </table>
+
+    <div class="controls">
+      <button id="b-add">Add item ($4.99)</button>
+      <button id="b-add-mix">Add $0.10 item</button>
+      <button id="b-clear">Clear</button>
+      <button id="b-checkout" class="primary">Checkout (compare total === expected)</button>
+    </div>
+
+    <div>
+      <div>Computed total: <strong id="b-total" class="warning"></strong></div>
+      <div>Expected total (sum of exact decimal prices): <strong id="b-exp"></strong></div>
+      <div style="margin-top:8px">
+        <div>Log:</div>
+        <div class="log" id="b-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="fixed">
+    <h2>Fixed: integer cents (BigInt-based) and safe comparisons</h2>
+    <p>Prices are stored and summed as integer cents (499 cents). No rounding surprises. Comparison uses integer equality or BigInt.</p>
+
+    <table>
+      <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th></th></tr></thead>
+      <tbody id="fixed-items"></tbody>
+    </table>
+
+    <div class="controls">
+      <button id="f-add">Add item ($4.99)</button>
+      <button id="f-add-mix">Add $0.10 item</button>
+      <button id="f-clear">Clear</button>
+      <button id="f-checkout" class="primary">Checkout (compare cents equality)</button>
+    </div>
+
+    <div>
+      <div>Computed total: <strong id="f-total" class="ok"></strong></div>
+      <div>Expected total (integer cents math): <strong id="f-exp"></strong></div>
+      <div style="margin-top:8px">
+        <div>Log:</div>
+        <div class="log" id="f-log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Helper formatting */
+function fmtUSD(n) {
+  return '$' + Number(n).toFixed(2);
+}
+function fmtUSDfromCents(cents) {
+  // cents may be BigInt or number
+  let c = typeof cents === 'bigint' ? Number(cents) : cents;
+  return '$' + (c/100).toFixed(2);
+}
+
+/* BROKEN cart (uses floats) */
+const brokenState = { items: [] }; // each item: {name, price: Number, qty}
+const bItemsTbody = document.getElementById('broken-items');
+const bTotalEl = document.getElementById('b-total');
+const bExpEl = document.getElementById('b-exp');
+const bLog = document.getElementById('b-log');
+
+function renderBroken() {
+  bItemsTbody.innerHTML = '';
+  brokenState.items.forEach((it, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${it.name}</td><td>${fmtUSD(it.price)}</td><td>${it.qty}</td><td><button data-i="${i}" class="b-remove">remove</button></td>`;
+    bItemsTbody.appendChild(tr);
+  });
+  const total = brokenState.items.reduce((s, it) => s + it.price * it.qty, 0);
+  // "Expected" calculated by converting decimals using string -> Number with two decimal places (what a naive dev might think)
+  const expected = brokenState.items.reduce((s, it) => s + parseFloat(it.price.toFixed(2)) * it.qty, 0);
+  bTotalEl.textContent = String(total) + '  (' + fmtUSD(total) + ')';
+  bExpEl.textContent = String(expected) + '  (' + fmtUSD(expected) + ')';
+  bLog.textContent = [
+    'Raw totals:',
+    '  IEEE-754 Number total value: ' + total,
+    '  toFixed(17) shows internal representation: ' + total.toFixed(17),
+    '  parseFloat(...toFixed(2)) expected: ' + expected + '  (' + expected.toFixed(17)+')',
+    '',
+    'Items:',
+    ...brokenState.items.map(it => `  - ${it.name} ${fmtUSD(it.price)} x ${it.qty} => ${(it.price*it.qty).toFixed(17)}`)
+  ].join('\\n');
+}
+document.getElementById('b-add').addEventListener('click', () => {
+  brokenState.items.push({name:'Widget', price:4.99, qty:1});
+  renderBroken();
+});
+document.getElementById('b-add-mix').addEventListener('click', () => {
+  // add a ten-cent item to show 0.1 problems
+  brokenState.items.push({name:'Small', price:0.10, qty:1});
+  renderBroken();
+});
+document.getElementById('b-clear').addEventListener('click', () => {
+  brokenState.items = [];
+  renderBroken();
+});
+bItemsTbody.addEventListener('click', (ev) => {
+  if (ev.target.classList.contains('b-remove')) {
+    const i = Number(ev.target.dataset.i);
+    brokenState.items.splice(i,1);
+    renderBroken();
+  }
+});
+document.getElementById('b-checkout').addEventListener('click', () => {
+  const total = brokenState.items.reduce((s, it) => s + it.price * it.qty, 0);
+  // naive expected computed by summing decimal strings parsed as Number with two decimals
+  const expected = brokenState.items.reduce((s, it) => s + parseFloat(it.price.toFixed(2)) * it.qty, 0);
+
+  const message = [];
+  message.push('Comparing total === expected:');
+  message.push('  total (Number)        : ' + total + '  (' + total.toFixed(17) + ')');
+  message.push('  expected (Number)     : ' + expected + '  (' + expected.toFixed(17) + ')');
+  message.push('  total === expected -> ' + (total === expected));
+  message.push('');
+  message.push('Why this fails: because decimal fractions like 0.1 or 4.99 have no exact binary representation.');
+  message.push('You can observe small representation differences that break strict equality and can make totals off by a cent when formatted.');
+  bLog.textContent = message.join('\\n');
+});
+
+/* FIXED cart (use integer cents, BigInt for safety on large totals) */
+const fixedState = { items: [] }; // each item: {name, cents: BigInt, qty}
+const fItemsTbody = document.getElementById('fixed-items');
+const fTotalEl = document.getElementById('f-total');
+const fExpEl = document.getElementById('f-exp');
+const fLog = document.getElementById('f-log');
+
+function renderFixed() {
+  fItemsTbody.innerHTML = '';
+  fixedState.items.forEach((it, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${it.name}</td><td>${fmtUSDfromCents(it.cents)}</td><td>${it.qty}</td><td><button data-i="${i}" class="f-remove">remove</button></td>`;
+    fItemsTbody.appendChild(tr);
+  });
+  const totalCents = fixedState.items.reduce((s, it) => s + BigInt(it.qty) * it.cents, BigInt(0));
+  const expectedCents = totalCents; // here expected is the same because we store exact cents
+  fTotalEl.textContent = fmtUSDfromCents(totalCents);
+  fExpEl.textContent = fmtUSDfromCents(expectedCents);
+  fLog.textContent = [
+    'Integer cents math (BigInt):',
+    '  total cents (BigInt): ' + String(totalCents),
+    '  formatted: ' + fmtUSDfromCents(totalCents),
+    '',
+    'Items:',
+    ...fixedState.items.map(it => `  - ${it.name} ${fmtUSDfromCents(it.cents)} x ${it.qty} => ${String(it.cents * BigInt(it.qty))} cents`)
+  ].join('\\n');
+}
+document.getElementById('f-add').addEventListener('click', () => {
+  fixedState.items.push({name:'Widget', cents: BigInt(499), qty:1});
+  renderFixed();
+});
+document.getElementById('f-add-mix').addEventListener('click', () => {
+  fixedState.items.push({name:'Small', cents: BigInt(10), qty:1});
+  renderFixed();
+});
+document.getElementById('f-clear').addEventListener('click', () => {
+  fixedState.items = [];
+  renderFixed();
+});
+fItemsTbody.addEventListener('click', (ev) => {
+  if (ev.target.classList.contains('f-remove')) {
+    const i = Number(ev.target.dataset.i);
+    fixedState.items.splice(i,1);
+    renderFixed();
+  }
+});
+document.getElementById('f-checkout').addEventListener('click', () => {
+  const totalCents = fixedState.items.reduce((s, it) => s + BigInt(it.qty) * it.cents, BigInt(0));
+  const expectedCents = totalCents;
+  const message = [];
+  message.push('Comparing integer cents equality:');
+  message.push('  total cents: ' + String(totalCents));
+  message.push('  expected cents: ' + String(expectedCents));
+  message.push('  totalCents === expectedCents -> ' + (totalCents === expectedCents));
+  fLog.textContent = message.join('\\n');
+});
+
+/* initial render */
+renderBroken();
+renderFixed();
+
+/* Demo sequence to show failure quickly: add three $4.99 items in broken cart and show total */
+(function demoSequence() {
+  // add 3 widgets in broken cart to show potential rounding accumulation if desired
+  brokenState.items.push({name:'Widget', price:4.99, qty:3});
+  // add a 0.1 item too to show 0.1 + 0.2 style issues
+  brokenState.items.push({name:'Small', price:0.1, qty:2});
+  renderBroken();
+
+  fixedState.items.push({name:'Widget', cents: BigInt(499), qty:3});
+  fixedState.items.push({name:'Small', cents: BigInt(10), qty:2});
+  renderFixed();
+})();
+</script>
+
+<hr>
+<h3>Why this is catastrophically wrong for money</h3>
+<ul>
+  <li>Binary floating-point (IEEE-754 double) cannot exactly represent most decimal fractions (for example, 0.1 and 4.99). Results are approximate. Summing, subtracting, or comparing such approximations accumulates rounding error.</li>
+  <li>Equality comparisons (===) on floats only succeed if the internal binary representations match exactly; tiny rounding differences commonly make strict equality fail even when values “should” be equal to the cent.</li>
+  <li>When formatting to two decimals you may mask the error for display, but any logic that compares totals, computes tax, or decides if a payment covers an amount must use exact arithmetic to avoid off-by-one-cent mistakes or incorrect authorizations/refunds.</li>
+  <li>Correct approaches include: store amounts in the smallest currency unit (cents) as integers (Number for up to ~9e15 cents safely, or BigInt for larger), or use a decimal library / Decimal proposal to perform base-10 decimal arithmetic.</li>
+</ul>
+
+<p>Notes and recommendations:</p>
+<ul>
+  <li>Prefer integer cents (or minor currency units) stored as integers/BigInt for internal accounting and calculations. Convert to formatted strings only for display.</li>
+  <li>Avoid using === or other direct float comparisons for monetary equality; compare integer cents or use appropriate rounding and tolerances if you must use floats (not recommended).</li>
+  <li>Use well-tested libraries (e.g., decimal.js, Dinero.js, or Big.js where appropriate) if you need high-level currency features, rounding modes, or multi-currency support.</li>
+</ul>
+</body>
+</html>

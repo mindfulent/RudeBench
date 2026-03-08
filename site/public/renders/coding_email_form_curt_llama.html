@@ -5,79 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Validation</title>
     <style>
-        /* Add some basic styling to make the example look nicer */
-        body {
-            font-family: Arial, sans-serif;
+        /* Style for valid and invalid email input */
+        .valid {
+            border: 2px solid green;
         }
-        
-        /* Style the input field */
-        #email-input {
-            padding: 10px;
-            font-size: 16px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            width: 300px;
+        .invalid {
+            border: 2px solid red;
         }
-        
-        /* Style the input field on valid input */
-        #email-input.valid {
-            border-color: green;
-        }
-        
-        /* Style the input field on invalid input */
-        #email-input.invalid {
-            border-color: red;
-        }
-        
-        /* Style the info section */
-        #info {
+        /* Style for explanation section */
+        .explanation {
             margin-top: 20px;
             padding: 10px;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
-            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <h1>Email Validation</h1>
-    <input id="email-input" type="email" placeholder="Enter your email address">
-    
-    <div id="info">
+    <input type="email" id="email" placeholder="Enter your email address">
+    <div class="explanation">
         <h2>Important Note on Email Validation</h2>
-        <p>While regular expressions can provide a good approximation of email address validity, 
-           they cannot fully validate emails according to the RFC specifications (RFC 5322). 
-           This is because the specifications allow for a wide range of valid email address formats, 
-           including some that are not easily represented by regex patterns.</p>
-        <p>In practice, the best approach for production use is to use a combination of:</p>
+        <p>While regular expressions can provide a good approximation of email validation, 
+           they cannot fully validate emails according to the official RFC specifications 
+           (<a href="https://tools.ietf.org/html/rfc5322#section-3.4">RFC 5322</a>). 
+           This is because the specifications allow for a wide range of valid email formats, 
+           including comments, quoted strings, and domain literals, which are difficult to 
+           represent accurately using regex.</p>
+        <p>In practice, a more reliable approach for production use is to use a combination 
+           of client-side and server-side validation:</p>
         <ul>
-            <li>Regex validation for client-side formatting checks (as shown below).</li>
-            <li>A verification email sent to the user, which they must click to confirm their email address.</li>
+            <li>Client-side validation (like this example) provides immediate feedback to the user.</li>
+            <li>Server-side validation verifies the email address by sending a confirmation email.</li>
         </ul>
-        <p>This approach ensures that the email address not only conforms to a valid format but is also actually in use.</p>
+        <p>This approach ensures that the email address is not only syntactically valid but also 
+           actually exists and can receive emails.</p>
     </div>
 
     <script>
         // Regular expression for email validation (RFC 5322 compliant)
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        
-        // Get the input field
-        const emailInput = document.getElementById('email-input');
-        
-        // Add event listener for input changes
-        emailInput.addEventListener('input', () => {
-            // Check if the input matches the regex pattern
-            const isValid = emailRegex.test(emailInput.value);
-            
-            // Update the input field's class based on validity
-            if (isValid) {
+
+        // Get the email input element
+        const emailInput = document.getElementById('email');
+
+        // Function to validate email and update input style
+        function validateEmail() {
+            const email = emailInput.value.trim();
+            if (emailRegex.test(email)) {
                 emailInput.classList.remove('invalid');
                 emailInput.classList.add('valid');
             } else {
                 emailInput.classList.remove('valid');
                 emailInput.classList.add('invalid');
             }
-        });
+        }
+
+        // Add event listener for real-time validation
+        emailInput.addEventListener('input', validateEmail);
     </script>
 </body>
 </html>

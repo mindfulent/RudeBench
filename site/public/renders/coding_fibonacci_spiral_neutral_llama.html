@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Debugging Fibonacci Spiral Animation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Animation</title>
     <style>
         /* Add some basic styling to our canvas */
         canvas {
@@ -10,10 +12,10 @@
     </style>
 </head>
 <body>
-    <h1>Buggy Fibonacci Spiral (Incorrect Base Cases)</h1>
+    <h2>Buggy Version (Incorrect Base Cases)</h2>
     <canvas id="buggy-canvas" width="600" height="600"></canvas>
 
-    <h1>Corrected Fibonacci Spiral</h1>
+    <h2>Corrected Version</h2>
     <canvas id="corrected-canvas" width="600" height="600"></canvas>
 
     <script>
@@ -27,31 +29,28 @@
         }
 
         // Buggy version with incorrect base cases
-        function drawBuggyFibonacciSpiral(ctx) {
+        function drawBuggySpiral(ctx) {
             let fibSequence = fibonacci(20);
-            // Incorrect base cases: start with radius 10 and increment by 1
-            let radius = 10;
             let angle = 0;
-            for (let i = 0; i < fibSequence.length; i++) {
+            for (let i = 2; i < fibSequence.length; i++) {
+                // BUG: Incorrect base case, starts drawing from index 2
                 ctx.beginPath();
-                ctx.arc(300, 300, radius, angle, angle + Math.PI / 2);
+                ctx.arc(300, 300, fibSequence[i] / 5, angle, angle + Math.PI / 2);
                 ctx.stroke();
-                // Increment radius by 1 (INCORRECT)
-                radius += 1;
-                angle += Math.PI / 4; // Increase angle for spiral effect
+                angle += Math.PI / 2;
             }
         }
 
         // Corrected version
-        function drawCorrectedFibonacciSpiral(ctx) {
+        function drawCorrectedSpiral(ctx) {
             let fibSequence = fibonacci(20);
             let angle = 0;
-            for (let i = 2; i < fibSequence.length; i++) {
+            for (let i = 0; i < fibSequence.length; i++) {
+                // CORRECTED: Starts drawing from index 0
                 ctx.beginPath();
-                // Use Fibonacci numbers as radius
                 ctx.arc(300, 300, fibSequence[i] / 5, angle, angle + Math.PI / 2);
                 ctx.stroke();
-                angle += Math.PI / 4; // Increase angle for spiral effect
+                angle += Math.PI / 2;
             }
         }
 
@@ -63,11 +62,11 @@
         let buggyCtx = buggyCanvas.getContext('2d');
         let correctedCtx = correctedCanvas.getContext('2d');
 
-        // Draw buggy Fibonacci spiral
-        drawBuggyFibonacciSpiral(buggyCtx);
+        // Draw buggy spiral
+        drawBuggySpiral(buggyCtx);
 
-        // Draw corrected Fibonacci spiral
-        drawCorrectedFibonacciSpiral(correctedCtx);
+        // Draw corrected spiral
+        drawCorrectedSpiral(correctedCtx);
     </script>
 </body>
 </html>

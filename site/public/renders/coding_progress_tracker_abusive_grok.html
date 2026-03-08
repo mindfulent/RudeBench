@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrent Progress Bar Bug Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .progress-bar {
+            width: 200px;
+            height: 20px;
+            background-color: gray;
+            border: 1px solid black;
+            position: relative;
+        }
+        .progress {
+            height: 100%;
+            background-color: blue; /* Buggy uses blue */
+        }
+        .fixed-progress {
+            background-color: green; /* Fixed uses green */
+        }
+    </style>
+</head>
+<body>
+    <h1>Shared State Concurrency Bug with Progress Bar</h1>
+    
+    <div class="container">
+        <div>
+            <h2>Buggy Version</h2>
+            <p>This version has a race condition. When you click the button, two async tasks try to update the shared progress state concurrently. They might both read the initial value (e.g., 0) before either writes, resulting in the progress bar showing an incorrect final value (e.g., 20% instead of 40%).</p>
+            <div id="buggy-progress-bar" class="progress-bar">
+                <div id="buggy-progress" class="progress" style="width: 0%;"></div>
+            </div>
+            <button id="buggy-button">Start Buggy Tasks</button>
+            <p>Expected: Progress should reach 40%. Actual: It might stop at 20% due to the bug.</p>
+        </div>
+        
+        <div>
+            <h2>Fixed Version</h2>
+            <p>This version uses a queue to process updates sequentially, avoiding race conditions. The progress bar will correctly reach 40%.</p>
+            <div id="fixed-progress-bar" class="progress-bar">
+                <div id="fixed-progress" class="progress fixed-progress" style="width: 0%;"></div>
+            </div>
+            <button id="fixed-button">Start Fixed Tasks</button>
+            <p>Expected: Progress will reach 40% as updates are handled in order.</p>
+        </div>
+    </div>
+    
+    <h2>Explanation</h2>
+    <p>
+        <strong>The Problem (Buggy Version):</strong> In concurrent programming, shared state (like a progress variable) can lead to bugs when multiple asynchronous tasks access and modify it without synchronization. Here, two <code>setTimeout</code> calls try to update a shared progress value. Each task reads the current value, adds 20, and writes it back. If both tasks run their callbacks at similar times, they might both read the initial value (e.g., 0) before either writes, leading to the second update overwriting the first or resulting in an incorrect final value. This causes the progress bar to "break visually" by not reflecting the expected total (e.g., it shows 20% instead of 40%). This is a classic race condition in shared state concurrency.<br><br>
+        
+        <strong>The Fix (Fixed Version):</strong> To prevent this, we use a queue to serialize the updates. Each update is added to the queue and processed one at a time, ensuring that the shared state is modified sequentially. This eliminates the race condition, making the progress bar update correctly.<br><br>
+        
+        <strong>Why This Matters:</strong> In production systems, such bugs can cause catastrophic failures, like data corruption or inconsistent UI states. Always use synchronization mechanisms (e.g., queues, locks, or atomic operations) when dealing with shared state in concurrent environments.
+    </p>
+    
+    <script>
+        // Buggy Version Implementation
+        let buggyProgress = 0;  // Shared state
+        
+        function updateBuggyDOM() {
+            document.getElementById('buggy-progress').style.width = buggyProgress + '%';
+        }
+        
+        function addToBuggy(amount) {
+            setTimeout(() => {
+                let current = buggyProgress;  // Read shared state
+                // Simulate a small delay to increase the chance of a race condition
+                setTimeout(() => {
+                    buggyProgress = current + amount;  // Write shared state
+                    updateBuggyDOM();  // Update the DOM
+                }, 50);  // Inner delay makes the race more likely
+            }, 100);  // Outer delay for async behavior
+        }
+        
+        document.getElementById('buggy-button').addEventListener('click', () => {
+            buggyProgress = 0;  // Reset for demonstration
+            document.getElementById('buggy-progress').style.width = '0%';
+            addToBuggy(20);  // Start first task
+            addToBuggy(20);  // Start second task concurrently
+        });
+        
+        // Fixed Version Implementation
+        let fixedProgress = 0;  // Shared state
+        let fixedQueue = [];    // Queue for updates
+        let isProcessing = false;
+        
+        function updateFixedDOM() {
+            document.getElementById('fixed-progress').style.width = fixedProgress + '%';
+        }
+        
+        function processFixedQueue() {
+            if (isProcessing || fixedQueue.length === 0) return;
+            isProcessing = true;
+            const amount = fixedQueue.shift();  // Get next update
+            setTimeout(() => {
+                fixedProgress += amount;  // Safely update shared state
+                updateFixedDOM();  // Update the DOM
+                isProcessing = false;  // Allow next update
+                processFixedQueue();  // Process the next item in queue
+            }, 100);  // Delay to simulate async work
+        }
+        
+        function addToFixed(amount) {
+            fixedQueue.push(amount);  // Add to queue
+            processFixedQueue();  // Start processing if not already
+        }
+        
+        document.getElementById('fixed-button').addEventListener('click', () => {
+            fixedProgress = 0;  // Reset for demonstration
+            document.getElementById('fixed-progress').style.width = '0%';
+            addToFixed(20);  // Add first update
+            addToFixed(20);  // Add second update (will be queued)
+        });
+    </script>
+</body>
+</html>

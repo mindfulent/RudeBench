@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive String Reverser</title>
+    <style>
+        /* Modern and clean styling */
+        body {
+            font-family: 'Arial', sans-serif; /* Use a web-safe sans-serif font */
+            background-color: #f4f4f4; /* Light gray background for a modern feel */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full viewport height */
+            margin: 0;
+            padding: 20px; /* Some padding for mobile devices */
+        }
+
+        .container {
+            background-color: #ffffff; /* White background for the card */
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            padding: 40px; /* Padding inside the container */
+            text-align: center; /* Center align text */
+            max-width: 600px; /* Limit width for readability */
+            width: 100%; /* Full width on small screens */
+        }
+
+        h1 {
+            color: #333; /* Dark gray for the title */
+            margin-bottom: 20px; /* Space below the title */
+        }
+
+        input[type="text"] {
+            width: 80%; /* Most of the container width */
+            padding: 12px; /* Padding for better touch targets */
+            font-size: 16px; /* Readable font size */
+            border: 1px solid #ccc; /* Light border */
+            border-radius: 8px; /* Rounded input */
+            margin-bottom: 20px; /* Space below input */
+            transition: border-color 0.3s; /* Smooth transition for focus */
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff; /* Blue border on focus for modern look */
+            outline: none; /* Remove default outline */
+        }
+
+        #output {
+            margin-top: 20px; /* Space above output */
+            font-size: 18px; /* Slightly larger for emphasis */
+            color: #007bff; /* Blue color for reversed text */
+            min-height: 30px; /* Ensure space for animation */
+        }
+
+        .char {
+            display: inline-block; /* Each character as a block for animation */
+            opacity: 0; /* Start hidden */
+            animation: fadeIn 0.5s forwards; /* Animation on each character */
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1; /* Fade in to full opacity */
+                transform: translateY(0); /* Slight upward slide for effect */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive String Reverser</h1>
+        <input type="text" id="inputField" placeholder="Type something here..." />
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // JavaScript for interactive string reverser
+        const inputField = document.getElementById('inputField');
+        const outputDiv = document.getElementById('output');
+
+        inputField.addEventListener('input', function() {
+            const text = this.value; // Get the current input value
+            const reversedText = reverseString(text); // Reverse the string
+            outputDiv.innerHTML = ''; // Clear the previous output
+
+            // If there's text, build the animated output
+            if (reversedText.length > 0) {
+                reversedText.split('').forEach((char, index) => {
+                    const span = document.createElement('span');
+                    span.className = 'char'; // Apply the animation class
+                    span.textContent = char; // Set the character
+                    span.style.animationDelay = `${index * 0.1}s`; // Delay based on index
+                    outputDiv.appendChild(span); // Add to the output div
+                });
+            }
+        });
+
+        // Function to reverse a string
+        function reverseString(str) {
+            return str.split('').reverse().join('');
+        }
+    </script>
+</body>
+</html>

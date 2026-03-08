@@ -18,17 +18,17 @@
       justify-content: center;
       background: #0f0f13;
       font-family: 'Segoe UI', system-ui, sans-serif;
-      color: #e8e8f0;
+      color: #e2e2e2;
     }
 
     .card {
       width: 100%;
-      max-width: 600px;
+      max-width: 580px;
       padding: 48px 40px;
-      background: #1a1a24;
+      background: #18181f;
       border-radius: 20px;
-      border: 1px solid #2a2a3a;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      border: 1px solid #2a2a35;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
     }
 
     h1 {
@@ -36,7 +36,7 @@
       font-size: 1.6rem;
       font-weight: 700;
       letter-spacing: -0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       background: linear-gradient(135deg, #a78bfa, #60a5fa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -46,7 +46,7 @@
     .subtitle {
       text-align: center;
       font-size: 0.85rem;
-      color: #555570;
+      color: #555566;
       margin-bottom: 36px;
     }
 
@@ -56,39 +56,40 @@
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #6060a0;
-      margin-bottom: 8px;
+      color: #6666aa;
+      margin-bottom: 10px;
     }
 
     textarea {
       width: 100%;
-      padding: 14px 16px;
-      background: #12121a;
-      border: 1.5px solid #2a2a3a;
+      padding: 16px 18px;
+      background: #111118;
+      border: 1px solid #2a2a3a;
       border-radius: 12px;
-      color: #e8e8f0;
+      color: #e2e2e2;
       font-size: 1rem;
       font-family: inherit;
       resize: vertical;
-      min-height: 100px;
-      line-height: 1.6;
-      transition: border-color 0.2s;
+      min-height: 110px;
       outline: none;
-    }
-
-    textarea:focus {
-      border-color: #7c5cfc;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      line-height: 1.6;
     }
 
     textarea::placeholder {
-      color: #33334a;
+      color: #333344;
+    }
+
+    textarea:focus {
+      border-color: #6d5fd4;
+      box-shadow: 0 0 0 3px rgba(109,95,212,0.15);
     }
 
     .divider {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin: 24px 0;
+      gap: 14px;
+      margin: 28px 0;
     }
 
     .divider::before,
@@ -96,43 +97,39 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: #2a2a3a;
+      background: #22222e;
     }
 
-    .arrow {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #7c5cfc, #3b82f6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-      flex-shrink: 0;
-      box-shadow: 0 4px 14px rgba(124,92,252,0.35);
+    .divider-icon {
+      font-size: 1.1rem;
+      color: #444455;
+      user-select: none;
     }
 
     .output-box {
       width: 100%;
-      min-height: 100px;
-      padding: 14px 16px;
-      background: #12121a;
-      border: 1.5px solid #2a2a3a;
+      min-height: 110px;
+      padding: 16px 18px;
+      background: #111118;
+      border: 1px solid #2a2a3a;
       border-radius: 12px;
       font-size: 1rem;
       line-height: 1.6;
       word-break: break-all;
-      transition: border-color 0.3s;
+      overflow-wrap: break-word;
+      position: relative;
     }
 
-    .output-box.has-content {
-      border-color: #2a2a4a;
+    .output-box.empty::after {
+      content: 'Reversed text appears here…';
+      color: #333344;
+      pointer-events: none;
     }
 
     .char {
       display: inline;
       opacity: 0;
-      transform: translateY(4px);
+      transform: translateY(6px);
       animation: popIn 0.18s ease forwards;
     }
 
@@ -149,21 +146,15 @@
     }
 
     @keyframes fadeToWhite {
-      to { color: #e8e8f0; }
-    }
-
-    .empty-hint {
-      color: #33334a;
-      font-size: 0.95rem;
-      user-select: none;
+      to { color: #e2e2e2; }
     }
 
     .stats {
       display: flex;
       justify-content: space-between;
       margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid #1e1e2e;
+      padding-top: 18px;
+      border-top: 1px solid #1e1e28;
     }
 
     .stat {
@@ -179,47 +170,41 @@
 
     .stat-label {
       font-size: 0.7rem;
-      color: #44445a;
       text-transform: uppercase;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.08em;
+      color: #44445a;
       margin-top: 2px;
     }
 
     .stat + .stat {
-      border-left: 1px solid #1e1e2e;
+      border-left: 1px solid #1e1e28;
     }
 
     .copy-btn {
       display: block;
       width: 100%;
-      margin-top: 14px;
-      padding: 11px;
-      background: transparent;
-      border: 1.5px solid #2a2a3a;
-      border-radius: 10px;
-      color: #6060a0;
-      font-size: 0.82rem;
-      font-family: inherit;
+      margin-top: 18px;
+      padding: 13px;
+      background: linear-gradient(135deg, #6d5fd4, #3b82f6);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.9rem;
       font-weight: 600;
-      letter-spacing: 0.05em;
       cursor: pointer;
-      transition: all 0.2s;
+      letter-spacing: 0.03em;
+      transition: opacity 0.2s, transform 0.1s;
     }
 
-    .copy-btn:hover {
-      border-color: #7c5cfc;
-      color: #a78bfa;
-      background: rgba(124,92,252,0.06);
-    }
-
-    .copy-btn:active {
-      transform: scale(0.98);
+    .copy-btn:hover { opacity: 0.88; }
+    .copy-btn:active { transform: scale(0.98); }
+    .copy-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
 
     .copy-btn.copied {
-      border-color: #34d399;
-      color: #34d399;
-      background: rgba(52,211,153,0.06);
+      background: linear-gradient(135deg, #22c55e, #16a34a);
     }
   </style>
 </head>
@@ -227,21 +212,17 @@
 
 <div class="card">
   <h1>String Reverser</h1>
-  <p class="subtitle">Type below and watch your text reverse in real time</p>
+  <p class="subtitle">Type below and watch your text flip in real time</p>
 
   <label for="inputText">Input</label>
-  <textarea id="inputText" placeholder="Start typing here…" spellcheck="false"></textarea>
+  <textarea id="inputText" placeholder="Start typing anything…" spellcheck="false"></textarea>
 
   <div class="divider">
-    <div class="arrow">↓</div>
+    <span class="divider-icon">⇅</span>
   </div>
 
   <label>Reversed Output</label>
-  <div class="output-box" id="outputBox">
-    <span class="empty-hint">Your reversed text will appear here…</span>
-  </div>
-
-  <button class="copy-btn" id="copyBtn" onclick="copyOutput()">Copy Reversed Text</button>
+  <div class="output-box empty" id="outputBox" aria-live="polite"></div>
 
   <div class="stats">
     <div class="stat">
@@ -252,4 +233,127 @@
       <div class="stat-value" id="wordCount">0</div>
       <div class="stat-label">Words</div>
     </div>
+    <div class="stat">
+      <div class="stat-value" id="lineCount">0</div>
+      <div class="stat-label">Lines</div>
+    </div>
+  </div>
+
+  <button class="copy-btn" id="copyBtn" disabled>Copy Reversed Text</button>
+</div>
+
+<script>
+  const inputEl   = document.getElementById('inputText');
+  const outputBox = document.getElementById('outputBox');
+  const copyBtn   = document.getElementById('copyBtn');
+  const charCount = document.getElementById('charCount');
+  const wordCount = document.getElementById('wordCount');
+  const lineCount = document.getElementById('lineCount');
+
+  let animationTimer = null;
+  let previousReversed = '';
+
+  function reverseString(str) {
+    return str.split('').reverse().join('');
+  }
+
+  function updateStats(text) {
+    charCount.textContent = text.length;
+    wordCount.textContent = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    lineCount.textContent = text === '' ? 0 : text.split('\n').length;
+  }
+
+  function animateOutput(reversed) {
+    if (animationTimer) {
+      clearTimeout(animationTimer);
+      animationTimer = null;
+    }
+
+    if (reversed === '') {
+      outputBox.innerHTML = '';
+      outputBox.classList.add('empty');
+      copyBtn.disabled = true;
+      previousReversed = '';
+      return;
+    }
+
+    outputBox.classList.remove('empty');
+    copyBtn.disabled = false;
+
+    const prevLen = previousReversed.length;
+    const newLen  = reversed.length;
+
+    // Find how many leading characters are shared
+    let shared = 0;
+    while (
+      shared < prevLen &&
+      shared < newLen &&
+      previousReversed[shared] === reversed[shared]
+    ) {
+      shared++;
+    }
+
+    // Rebuild only changed portion
+    // Keep existing spans for shared prefix
+    const existingSpans = outputBox.querySelectorAll('.char');
     
+    // Remove spans beyond shared length
+    for (let i = existingSpans.length - 1; i >= shared; i--) {
+      existingSpans[i].remove();
+    }
+
+    // Append new characters with staggered animation
+    const fragment = document.createDocumentFragment();
+    for (let i = shared; i < newLen; i++) {
+      const ch = reversed[i];
+      const span = document.createElement('span');
+      span.className = 'char highlight';
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      span.style.animationDelay = `${(i - shared) * 22}ms`;
+      fragment.appendChild(span);
+    }
+    outputBox.appendChild(fragment);
+
+    previousReversed = reversed;
+  }
+
+  inputEl.addEventListener('input', () => {
+    const text     = inputEl.value;
+    const reversed = reverseString(text);
+    updateStats(text);
+    animateOutput(reversed);
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = previousReversed.replace(/\u00A0/g, ' ');
+    if (!text) return;
+
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.textContent = '✓ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy Reversed Text';
+        copyBtn.classList.remove('copied');
+      }, 1800);
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copyBtn.textContent = '✓ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy Reversed Text';
+        copyBtn.classList.remove('copied');
+      }, 1800);
+    });
+  });
+</script>
+
+</body>
+</html>

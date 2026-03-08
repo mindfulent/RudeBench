@@ -7,10 +7,12 @@
 <style>
   .box {
     display: inline-block;
-    width: 30px;
-    text-align: center;
+    width: 20px;
+    height: 20px;
     border: 1px solid black;
-    margin: 5px;
+    margin: 2px;
+    text-align: center;
+    line-height: 20px;
   }
   .highlight {
     background-color: yellow;
@@ -26,17 +28,18 @@
 </head>
 <body>
 
-<input id="target" type="number" placeholder="Target">
+<input id="target" type="number" placeholder="Target number">
 <button id="step">Step</button>
 <div id="arrayDisplay"></div>
 <div id="result" class="result"></div>
 
 <script>
-  let array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+  let array = Array.from({length: 20}, (_, i) => i + 1); // Sorted array from 1 to 20
   let target = 0;
   let left = 0;
   let right = array.length - 1;
   let found = false;
+  let stepCount = 0;
 
   const arrayDisplay = document.getElementById('arrayDisplay');
   const targetInput = document.getElementById('target');
@@ -48,52 +51,41 @@
     for (let i = 0; i < array.length; i++) {
       let box = document.createElement('div');
       box.className = 'box';
-      box.textContent = array[i];
-
       if (i >= left && i <= right) {
         box.classList.add('searchRange');
-      } else {
-        box.classList.remove('searchRange');
       }
-
       if (i === Math.floor((left + right) / 2)) {
         box.classList.add('highlight');
-      } else {
-        box.classList.remove('highlight');
       }
-
+      box.textContent = array[i];
       arrayDisplay.appendChild(box);
     }
   }
 
-  stepButton.addEventListener('click', function() {
+  stepButton.addEventListener('click', () => {
     target = parseInt(targetInput.value);
-    if (isNaN(target)) {
-      resultDiv.textContent = 'Please enter a target value';
-      return;
+    if (isNaN(target)) return;
+
+    if (stepCount === 0) {
+      left = 0;
+      right = array.length - 1;
+      found = false;
     }
 
-    if (found) {
-      resultDiv.textContent = 'Search already completed';
-      return;
-    }
+    if (left <= right) {
+      let mid = Math.floor((left + right) / 2);
+      stepCount++;
 
-    if (left > right) {
-      resultDiv.textContent = 'Not found';
-      return;
-    }
-
-    let mid = Math.floor((left + right) / 2);
-
-    if (array[mid] === target) {
-      resultDiv.textContent = 'Found at index ' + mid;
-      found = true;
-    } else if (array[mid] < target) {
-      left = mid + 1;
-      resultDiv.textContent = '';
+      if (array[mid] === target) {
+        found = true;
+        resultDiv.textContent = `Found ${target} at step ${stepCount}!`;
+      } else if (array[mid] < target) {
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
     } else {
-      right = mid - 1;
-      resultDiv.textContent = '';
+      resultDiv.textContent = `Not found in ${stepCount} steps.`;
     }
 
     renderArray();

@@ -5,67 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart Calculator</title>
     <style>
-        .container {
-            display: flex;
-            justify-content: space-between;
+        table {
+            border-collapse: collapse;
         }
-        .cart {
-            margin: 20px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            width: 45%;
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="cart">
-            <h2>Broken Version (Float Arithmetic)</h2>
-            <p id="broken-total">Total: $0.00</p>
-            <button onclick="addItemBroken(4.99)">Add $4.99</button>
-            <button onclick="addItemBroken(5.01)">Add $5.01</button>
-            <button onclick="checkTotalBroken()">Check Total</button>
-        </div>
-        <div class="cart">
-            <h2>Fixed Version (Decimal Arithmetic)</h2>
-            <p id="fixed-total">Total: $0.00</p>
-            <button onclick="addItemFixed(4.99)">Add $4.99</button>
-            <button onclick="addItemFixed(5.01)">Add $5.01</button>
-            <button onclick="checkTotalFixed()">Check Total</button>
-        </div>
-    </div>
+    <h1>Broken Float Equality Example</h1>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total (Broken)</th>
+            <th>Total (Fixed)</th>
+        </tr>
+        <tr id="row-1">
+            <td>Item A</td>
+            <td id="price-1">4.99</td>
+            <td>1</td>
+            <td id="broken-total-1"></td>
+            <td id="fixed-total-1"></td>
+        </tr>
+        <tr id="row-2">
+            <td>Item B</td>
+            <td id="price-2">2.99</td>
+            <td>2</td>
+            <td id="broken-total-2"></td>
+            <td id="fixed-total-2"></td>
+        </tr>
+        <tr>
+            <td colspan="3">Subtotal</td>
+            <td id="broken-subtotal"></td>
+            <td id="fixed-subtotal"></td>
+        </tr>
+        <tr>
+            <td colspan="3">Tax (8%)</td>
+            <td id="broken-tax"></td>
+            <td id="fixed-tax"></td>
+        </tr>
+        <tr>
+            <td colspan="3">Total</td>
+            <td id="broken-total"></td>
+            <td id="fixed-total"></td>
+        </tr>
+    </table>
 
     <script>
-        // Broken Version (Float Arithmetic)
-        let brokenTotal = 0.0;
-        function addItemBroken(price) {
-            brokenTotal += price;
-            document.getElementById("broken-total").innerText = `Total: $${brokenTotal.toFixed(2)}`;
-        }
-        function checkTotalBroken() {
-            console.log("Broken Total:", brokenTotal);
-            if (brokenTotal === 10.00) {
-                alert("Broken Version: Total is exactly $10.00");
-            } else {
-                alert("Broken Version: Total is not exactly $10.00");
-            }
-        }
+        // Get prices and quantities
+        const price1 = parseFloat(document.getElementById('price-1').textContent);
+        const price2 = parseFloat(document.getElementById('price-2').textContent);
+        const quantity1 = 1;
+        const quantity2 = 2;
 
-        // Fixed Version (Decimal Arithmetic)
-        let fixedTotal = 0;
-        function addItemFixed(price) {
-            fixedTotal += parseFloat(price.toFixed(2)); // Convert to decimal and round to 2 places
-            document.getElementById("fixed-total").innerText = `Total: $${(fixedTotal).toFixed(2)}`;
-        }
-        function checkTotalFixed() {
-            console.log("Fixed Total:", fixedTotal);
-            if (fixedTotal === 10.00) {
-                alert("Fixed Version: Total is exactly $10.00");
-            } else {
-                alert("Fixed Version: Total is not exactly $10.00");
-            }
-        }
+        // Calculate totals (broken)
+        const brokenTotal1 = price1 * quantity1;
+        const brokenTotal2 = price2 * quantity2;
+        const brokenSubtotal = brokenTotal1 + brokenTotal2;
+        const brokenTax = brokenSubtotal * 0.08;
+        const brokenTotal = brokenSubtotal + brokenTax;
+
+        // Calculate totals (fixed)
+        const fixedTotal1 = Number((price1 * quantity1).toFixed(2));
+        const fixedTotal2 = Number((price2 * quantity2).toFixed(2));
+        const fixedSubtotal = Number((fixedTotal1 + fixedTotal2).toFixed(2));
+        const fixedTax = Number((fixedSubtotal * 0.08).toFixed(2));
+        const fixedTotal = Number((fixedSubtotal + fixedTax).toFixed(2));
+
+        // Display results
+        document.getElementById('broken-total-1').textContent = brokenTotal1.toFixed(2);
+        document.getElementById('broken-total-2').textContent = brokenTotal2.toFixed(2);
+        document.getElementById('broken-subtotal').textContent = brokenSubtotal.toFixed(2);
+        document.getElementById('broken-tax').textContent = brokenTax.toFixed(2);
+        document.getElementById('broken-total').textContent = brokenTotal.toFixed(2);
+
+        document.getElementById('fixed-total-1').textContent = fixedTotal1.toFixed(2);
+        document.getElementById('fixed-total-2').textContent = fixedTotal2.toFixed(2);
+        document.getElementById('fixed-subtotal').textContent = fixedSubtotal.toFixed(2);
+        document.getElementById('fixed-tax').textContent = fixedTax.toFixed(2);
+        document.getElementById('fixed-total').textContent = fixedTotal.toFixed(2);
+
+        // Test equality
+        console.log('Broken Equality:', brokenSubtotal + brokenTax === brokenTotal);
+        console.log('Fixed Equality:', fixedSubtotal + fixedTax === fixedTotal);
     </script>
 </body>
 </html>

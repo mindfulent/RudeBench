@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Binary Search Visualizer</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --panel:#0b1220;
+    --text:#e6eef8;
+    --muted:#98a4b5;
+    --box:#0b2540;
+    --box-border:#163a67;
+    --highlight:#cfe9ff;
+    --mid:#ffb86b;
+    --found:#7ad68a;
+    --notfound:#ff7b7b;
+  }
+  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  body{margin:0; background:linear-gradient(180deg,var(--bg), #071025); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .card{width:900px; max-width:100%; background:linear-gradient(180deg,var(--panel), #071627); border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(2,6,23,0.6);}
+  h1{margin:0 0 8px 0; font-size:20px;}
+  p.lead{margin:0 0 18px 0; color:var(--muted); font-size:13px;}
+  .controls{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:16px;}
+  .controls input[type="number"]{width:120px; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:#071a30; color:var(--text); font-size:14px;}
+  .controls button{padding:8px 12px; border-radius:8px; border:none; background:#0b3a66; color:var(--text); cursor:pointer; font-weight:600;}
+  .controls button.secondary{background:#17486f;}
+  .controls button.danger{background:#6b1f28;}
+  .controls label{color:var(--muted); font-size:13px;}
+  .top-row{display:flex; gap:16px; align-items:center; margin-bottom:14px; flex-wrap:wrap;}
+  .array-wrap{padding:12px; border-radius:10px; background:linear-gradient(180deg,#06142888,#04243a66); border:1px solid rgba(255,255,255,0.03);}
+  .array{display:flex; gap:8px; padding:8px 4px; overflow:auto;}
+  .cell{min-width:52px; height:52px; border-radius:8px; background:var(--box); border:2px solid var(--box-border); display:flex; align-items:center; justify-content:center; color:var(--text); font-weight:700; font-size:16px; position:relative; flex-shrink:0;}
+  .cell .idx{position:absolute; top:4px; left:6px; font-size:11px; color:var(--muted); font-weight:600;}
+  .cell.range{background:linear-gradient(180deg, rgba(207,233,255,0.12), rgba(15,58,96,0.12)); border-color:rgba(207,233,255,0.16);}
+  .cell.mid{background:linear-gradient(180deg, rgba(255,184,107,0.16), rgba(96,42,5,0.06)); border-color:rgba(255,184,107,0.22);}
+  .cell.found{background:linear-gradient(180deg, rgba(122,214,138,0.14), rgba(12,55,12,0.04)); border-color:rgba(122,214,138,0.28);}
+  .cell.notfound{background:linear-gradient(180deg, rgba(255,123,123,0.12), rgba(60,12,12,0.04)); border-color:rgba(255,123,123,0.28);}
+  .legend{display:flex; gap:10px; margin-top:10px; color:var(--muted); font-size:13px; flex-wrap:wrap;}
+  .legend span{display:inline-flex; gap:6px; align-items:center;}
+  .sw{width:14px; height:14px; border-radius:3px; display:inline-block; border:2px solid rgba(255,255,255,0.04);}
+  .sw.range{background:var(--highlight); border-color:rgba(207,233,255,0.3);}
+  .sw.mid{background:var(--mid); border-color:rgba(255,184,107,0.4);}
+  .sw.found{background:var(--found); border-color:rgba(122,214,138,0.4);}
+  .sw.notfound{background:var(--notfound); border-color:rgba(255,123,123,0.4);}
+  .status{margin-top:12px; font-size:15px; min-height:22px; color:var(--muted);}
+  .status strong{color:var(--text);}
+  .footer{display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:12px; flex-wrap:wrap;}
+  .small{font-size:13px; color:var(--muted);}
+  .info{background:rgba(255,255,255,0.02); padding:8px 10px; border-radius:8px; font-size:13px;}
+  @media (max-width:600px){
+    .cell{min-width:44px; height:44px; font-size:14px;}
+  }
+</style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>Binary Search Visualizer</h1>
+    <p class="lead">Enter a target value and step through binary search on a sorted array. The current search range is highlighted, the middle element is marked, and results are shown when it's found or when the search finishes.</p>
+
+    <div class="controls top-row">
+      <label>
+        Target:
+        <input id="targetInput" type="number" value="23" />
+      </label>
+
+      <button id="stepBtn">Step</button>
+      <button id="autoBtn" class="secondary">Auto</button>
+      <button id="resetBtn" class="secondary">Reset</button>
+      <button id="shuffleBtn" class="secondary">Shuffle</button>
+
+      <label style="margin-left:auto;">
+        Array size:
+        <input id="sizeInput" type="number" min="5" max="40" value="13" style="width:78px; padding:6px 8px; border-radius:8px; background:#071a30; color:var(--text); border:1px solid rgba(255,255,255,0.06);" />
+      </label>
+    </div>
+
+    <div class="array-wrap">
+      <div id="array" class="array" aria-live="polite" aria-label="Array elements"></div>
+    </div>
+
+    <div class="legend">
+      <span><i class="sw range"></i> Current search range</span>
+      <span><i class="sw mid"></i> Middle element</span>
+      <span><i class="sw found"></i> Found</span>
+      <span><i class="sw notfound"></i> Not found</span>
+    </div>
+
+    <div class="status" id="status">Ready. Enter a target and press Step or Auto.</div>
+
+    <div class="footer">
+      <div class="small info" id="stats">low: — &nbsp; mid: — &nbsp; high: — &nbsp; steps: 0</div>
+      <div class="small">Tip: You can change array size, shuffle to create a new sorted array, or reset to start the search over.</div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // Utilities
+  function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+  function clamp(v,a,b){return Math.max(a, Math.min(b, v));}
+
+  // DOM
+  const arrayEl = document.getElementById('array');
+  const targetInput = document.getElementById('targetInput');
+  const stepBtn = document.getElementById('stepBtn');
+  const autoBtn = document.getElementById('autoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const sizeInput = document.getElementById('sizeInput');
+  const statusEl = document.getElementById('status');
+  const statsEl = document.getElementById('stats');
+
+  // State
+  let arr = [];
+  let low = 0, high = -1, mid = -1;
+  let steps = 0;
+  let running = false;
+  let autoTimer = null;
+  let finished = false;
+
+  function generateSortedArray(n){
+    // Generate sorted unique-ish numbers
+    const start = randInt(0,6);
+    const a = [];
+    let val = start;
+    for(let i=0;i<n;i++){
+      val += randInt(1,6);
+      a.push(val);
+    }
+    return a;
+  }
+
+  function renderArray(){
+    arrayEl.innerHTML = '';
+    arr.forEach((v,i)=>{
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.setAttribute('data-idx', i);
+      const idxSpan = document.createElement('div');
+      idxSpan.className = 'idx';
+      idxSpan.textContent = i;
+      cell.appendChild(idxSpan);
+      const val = document.createElement('div');
+      val.textContent = v;
+      cell.appendChild(val);
+
+      // apply classes
+      if(low<=i && i<=high && !finished) cell.classList.add('range');
+      if(i===mid && !finished) cell.classList.add('mid');
+      if(finished && i===mid && arr[i] === Number(targetInput.value) && mid>=0 && mid < arr.length) cell.classList.add('found');
+      if(finished && !(low<=i && i<=high) && arr[i] !== Number(targetInput.value) && i===mid && mid>=0 && mid < arr.length) {
+        // no-op; handled above
+      }
+      arrayEl.appendChild(cell);
+    });
+    updateStats();
+  }
+
+  function updateStats(){
+    statsEl.textContent = `low: ${low>=0?low:'—'}  mid: ${mid>=0?mid:'—'}  high: ${high>=0?high:'—'}  steps: ${steps}`;
+  }
+
+  function setStatus(msg, tone){
+    statusEl.textContent = msg;
+    if(tone==='ok') statusEl.style.color = '';
+    else if(tone==='warn') statusEl.style.color = 'var(--muted)';
+    else if(tone==='err') statusEl.style.color = 'var(--notfound)';
+    else statusEl.style.color = '';
+  }
+
+  function startSearch(){
+    steps = 0;
+    low = 0;
+    high = arr.length - 1;
+    mid = -1;
+    finished = false;
+    renderArray();
+    setStatus('Search started. Press Step to iterate or Auto to run.', 'warn');
+  }
+
+  function step(){
+    if(finished) return;
+    if(low>high){
+      finished = true;
+      mid = -1;
+      renderArray();
+      setStatus(`Not found. Target ${targetInput.value} is not in the array.`, 'err');
+      return;
+    }
+    mid = Math.floor((low + high) / 2);
+    steps++;
+    renderArray();
+
+    const target = Number(targetInput.value);
+    if(arr[mid] === target){
+      finished = true;
+      renderArray();
+      // highlight found cell
+      const cell = arrayEl.querySelector(`.cell[data-idx="${mid}"]`);
+      if(cell){ cell.classList.remove('mid'); cell.classList.add('found'); }
+      setStatus(`Found target ${target} at index ${mid} in ${steps} step${steps===1?'':'s'}.`, 'ok');
+      stopAuto();
+      return;
+    } else if (arr[mid] < target){
+      setStatus(`Step ${steps}: arr[${mid}] = ${arr[mid]} < ${target} → move low to ${mid + 1}`, 'warn');
+      low = mid + 1;
+    } else {
+      setStatus(`Step ${steps}: arr[${mid}] = ${arr[mid]} > ${target} → move high to ${mid - 1}`, 'warn');
+      high = mid - 1;
+    }
+
+    // if next step will be impossible, handle not found on next call
+    if(low>high){
+      // show the empty range briefly
+      renderArray();
+    }
+  }
+
+  function stopAuto(){
+    running = false;
+    autoBtn.textContent = 'Auto';
+    if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+  }
+
+  function runAuto(){
+    if(running){
+      stopAuto();
+      return;
+    }
+    if(finished){
+      setStatus('Search already finished. Reset to start again.', 'warn');
+      return;
+    }
+    running = true;
+    autoBtn.textContent = 'Stop';
+    autoTimer = setInterval(()=>{
+      if(finished) { stopAuto(); return; }
+      // if no progress possible, do a final call
+      if(low>high){ step(); stopAuto(); return; }
+      step();
+      if(finished) stopAuto();
+    }, 700);
+  }
+
+  function reset(){
+    stopAuto();
+    startSearch();
+  }
+
+  function shuffle(){
+    stopAuto();
+    const n = clamp(Number(sizeInput.value) || 13, 5, 40);
+    arr = generateSortedArray(n);
+    // adjust target default to a value likely present or not
+    targetInput.value = arr[Math.floor(arr.length/2)];
+    startSearch();
+  }
+
+  // initialize
+  shuffle();
+
+  // events
+  stepBtn.addEventListener('click', ()=>{
+    stopAuto();
+    if(finished){
+      setStatus('Search finished. Reset to start again or Shuffle to create a new array.', 'warn');
+      return;
+    }
+    if(low>high){
+      // call step will mark not found
+      step();
+      return;
+    }
+    step();
+  });
+
+  autoBtn.addEventListener('click', ()=>{
+    runAuto();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    targetInput.value = '';
+    stopAuto();
+    startSearch();
+  });
+
+  shuffleBtn.addEventListener('click', ()=>{
+    shuffle();
+  });
+
+  sizeInput.addEventListener('change', ()=>{
+    const v = clamp(Number(sizeInput.value) || 13, 5, 40);
+    sizeInput.value = v;
+  });
+
+  targetInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      stopAuto();
+      startSearch();
+      // optional: step immediately
+      step();
+    }
+  });
+
+  // Click on a cell to set target quickly
+  arrayEl.addEventListener('click', (e)=>{
+    const cell = e.target.closest('.cell');
+    if(!cell) return;
+    const idx = Number(cell.getAttribute('data-idx'));
+    if(Number.isFinite(idx)){
+      targetInput.value = arr[idx];
+    }
+  });
+
+  // accessibility: focus styles with keyboard
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 's' && (e.ctrlKey || e.metaKey)) { // Ctrl/Cmd+S to step
+      e.preventDefault();
+      stepBtn.click();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -45,7 +45,7 @@
     document.getElementById('fixed-start-button').addEventListener('click', () => {
       for (let i = 0; i < 10; i++) {
         setTimeout(() => {
-          fixedProgress = Math.min(fixedProgress + 10, 100); // ensure progress doesn't exceed 100
+          fixedProgress = Math.min(fixedProgress + 10, 100); // Ensure progress doesn't exceed 100
           document.getElementById('fixed-progress-bar-fill').style.width = `${fixedProgress}%`;
         }, 100 * i);
       }

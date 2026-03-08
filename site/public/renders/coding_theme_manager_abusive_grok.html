@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singleton Theme Toggle</title>
+    <style>
+        /* Basic CSS for light and dark themes */
+        body.light {
+            background-color: white;
+            color: black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark {
+            background-color: black;
+            color: white;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .theme-element {
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid;
+        }
+        
+        header {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="light"> <!-- Default to light theme -->
+    <header class="theme-element">This is a header that changes with the theme.</header>
+    <p class="theme-element">This is a paragraph. It should adapt to the theme across the page.</p>
+    <p class="theme-element">Another element here to show the theme working on multiple items.</p>
+    <button id="toggleButton">Toggle Theme</button>
+    
+    <script>
+        // Singleton Pattern for Theme Manager
+        class ThemeManager {
+            static instance = null;  // Private static field for the single instance
+            
+            static getInstance() {
+                if (!ThemeManager.instance) {
+                    ThemeManager.instance = new ThemeManager();
+                }
+                return ThemeManager.instance;
+            }
+            
+            constructor() {
+                this.theme = 'light';  // Default theme
+            }
+            
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                this.applyTheme();
+            }
+            
+            applyTheme() {
+                // Apply the theme to the body (which affects all elements via CSS)
+                document.body.className = this.theme;
+                // You could extend this to target specific elements if needed
+            }
+        }
+        
+        // Usage: Get the singleton instance and attach it to a button
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeManager = ThemeManager.getInstance();  // Ensures only one instance
+            const toggleButton = document.getElementById('toggleButton');
+            
+            toggleButton.addEventListener('click', () => {
+                themeManager.toggleTheme();  // Toggle and apply the theme
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Reverser Tool</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        #output {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            min-height: 1.5rem; /* Ensures space for output */
+        }
+        
+        .highlight {
+            opacity: 0; /* Start invisible for animation */
+            animation: fadeIn 0.3s forwards; /* Fade in animation */
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>String Reverser</h1>
+        <input type="text" id="inputField" placeholder="Type some text here..." />
+        <div id="output"></div>
+    </div>
+    
+    <script>
+        const inputField = document.getElementById('inputField');
+        const outputDiv = document.getElementById('output');
+        
+        inputField.addEventListener('input', function() {
+            const inputText = inputField.value;
+            const reversedText = inputText.split('').reverse().join('');
+            animateReversed(reversedText);
+        });
+        
+        function animateReversed(reversedStr) {
+            outputDiv.innerHTML = '';  // Clear previous output
+            if (reversedStr.length === 0) return;  // Do nothing if empty
+            
+            reversedStr.split('').forEach((char, index) => {
+                setTimeout(() => {
+                    const span = document.createElement('span');
+                    span.textContent = char;
+                    span.className = 'highlight';  // Apply highlight class for animation
+                    outputDiv.appendChild(span);
+                }, index * 100);  // 100ms delay per character for smooth animation
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Theme Toggle (Singleton) — Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* Base variables: will be overridden by [data-theme] on <html> */
+    :root {
+      --bg: #ffffff;
+      --fg: #111827;
+      --muted: #6b7280;
+      --card-bg: #f3f4f6;
+      --accent: #2563eb;
+      --border: #e5e7eb;
+      --shadow: rgba(2,6,23,0.08);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #0b1220;
+      --fg: #e6eef8;
+      --muted: #9aa7b6;
+      --card-bg: #0f1724;
+      --accent: #60a5fa;
+      --border: rgba(255,255,255,0.06);
+      --shadow: rgba(2,6,23,0.6);
+    }
+
+    /* Layout + visuals */
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 98%, var(--card-bg) 2%));
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(0,0,0,0.02), transparent);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .logo {
+      width: 36px;
+      height: 36px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), color-mix(in srgb,var(--accent) 60%, var(--fg) 40%));
+      box-shadow: 0 6px 18px var(--shadow);
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    main {
+      padding: 1.25rem;
+      max-width: 980px;
+      margin: 1.25rem auto;
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: 1fr 320px;
+    }
+
+    /* Responsive */
+    @media (max-width: 880px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 8px 24px var(--shadow);
+      border: 1px solid var(--border);
+      background-color: var(--card-bg);
+    }
+
+    h1, h2 {
+      margin: 0 0 0.5rem 0;
+    }
+    p { margin: 0 0 1rem 0; color: var(--muted); }
+
+    /* Sidebar */
+    .sidebar .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle .dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-block;
+      background: linear-gradient(180deg, var(--bg), var(--card-bg));
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12) inset;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .toggle[data-on="true"] {
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 22%, transparent), rgba(0,0,0,0.02));
+      border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+    }
+
+    /* Example content */
+    .post-meta {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 40%, var(--fg) 60%), var(--card-bg));
+      display: inline-grid;
+      place-items: center;
+      color: white;
+      font-weight: 700;
+    }
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+    button.btn {
+      border: none;
+      padding: 0.45rem 0.7rem;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    small.code {
+      display: inline-block;
+      padding: 0.15rem 0.4rem;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.04);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size: 0.82rem;
+    }
+
+    footer {
+      max-width: 980px;
+      margin: 0.6rem auto 2rem;
+      padding: 0.6rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* Small helper: theme indicator dot next to headings */
+    .heading-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.6rem;
+      background: var(--accent);
+      box-shadow: 0 6px 18px var(--shadow);
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">T</span>
+      <div>
+        <div>ThemeDemo</div>
+        <small style="color:var(--muted); font-weight:500;">singleton state example</small>
+      </div>
+    </div>
+
+    <div style="display:inline-flex; gap:0.75rem; align-items:center;">
+      <div id="themeToggle" class="toggle" role="button" aria-pressed="false" aria-label="Toggle color theme">
+        <div class="dot" aria-hidden="true"></div>
+        <div style="font-size:0.95rem; color:var(--muted);">Theme</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <article class="card">
+        <div class="post-meta">
+          <div class="avatar">TD</div>
+          <div>
+            <strong>Theme system using a Singleton</strong>
+            <div style="font-size:0.9rem; color:var(--muted);">Demonstrates toggling, persistence, and multiple elements reacting</div>
+          </div>
+        </div>
+
+        <h1 style="margin-top:1rem;"><span class="heading-dot" aria-hidden="true"></span>Welcome</h1>
+        <p>This demo shows how a single theme manager (a singleton) can coordinate theming across varied content: cards, buttons, code blocks, and layout elements. Toggle the control in the header to switch between light and dark modes. The choice is remembered in localStorage.</p>
+
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+          <div class="card" style="flex:1; min-width:220px;">
+            <h2>Interactive</h2>
+            <p class="muted">Buttons inherit styles from the theme.</p>
+            <div class="actions">
+              <button class="btn">Primary</button>
+              <button class="btn">Secondary</button>
+              <button class="btn">Ghost</button>
+            </div>
+          </div>
+
+          <div class="card" style="width:260px;">
+            <h2>Code</h2>
+            <p><small class="code">document.documentElement.dataset.theme = 'dark'</small></p>
+            <p style="font-size:0.85rem; color:var(--muted);">Example of programmatic theme change.</p>
+          </div>
+        </div>
+
+        <h2 style="margin-top:1rem;">Longer Content</h2>
+        <p>Below is example content (lists, table, blockquote) to show theme coverage.</p>
+
+        <ul>
+          <li>List item one — shows accent and text color.</li>
+          <li>List item two — demonstrates muted text color.</li>
+          <li>List item three — consistent background and borders.</li>
+        </ul>
+
+        <blockquote style="margin:0.75rem 0; padding:0.6rem 0.9rem; border-left:3px solid var(--accent); background: linear-gradient(180deg, rgba(0,0,0,0.02), transparent); border-radius:8px;">
+          <small style="color:var(--muted);">“The singleton pattern centralizes shared state. This demo keeps the theme in one manager.”</small>
+        </blockquote>
+
+      </article>
+    </section>
+
+    <aside class="sidebar">
+      <div class="card">
+        <h2>Settings</h2>
+        <div class="controls" style="margin-top:0.5rem;">
+          <label style="display:flex; align-items:center; gap:0.5rem;">
+            <input id="prefersSystem" type="checkbox" />
+            <span style="color:var(--muted);">Follow system preference</span>
+          </label>
+
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button id="setLight" class="btn">Set Light</button>
+            <button id="setDark" class="btn">Set Dark</button>
+          </div>
+
+          <div style="margin-top:0.6rem; font-size:0.9rem; color:var(--muted);">
+            Current theme: <strong id="currentTheme">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1rem;">
+        <h2>Notes</h2>
+        <p style="color:var(--muted); font-size:0.9rem;">This sidebar demonstrates that many independent components read the theme state managed by the singleton; they don't pass theme props around.</p>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    Built for demonstration. Theme preference is stored using localStorage. Try resizing to see responsive behavior.
+  </footer>
+
+  <script>
+    /*
+      ThemeManager singleton
+      - Controls theme state ('light' | 'dark')
+      - Persists selection to localStorage
+      - Exposes subscribe() for components to react to changes
+      - Applies theme by setting document.documentElement.dataset.theme
+      - Optionally follows system preference
+    */
+    const ThemeManager = (function () {
+      // Private variables (enclosed)
+      let instance = null;
+
+      // Create the manager (factory)
+      function createInstance() {
+        const KEY = 'theme.preference.v1';
+        const subscribers = new Set();
+        let theme = 'light';
+        let followSystem = false;
+
+        // Detect system preference
+        const mql = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+        function getSystem() {
+          return (mql && mql.matches) ? 'dark' : 'light';
+        }
+
+        // Load from storage + system fallback
+        function load() {
+          try {
+            const stored = localStorage.getItem(KEY);
+            if (stored === 'light' || stored === 'dark') {
+              theme = stored;
+            } else {
+              theme = getSystem();
+            }
+          } catch (e) {
+            theme = getSystem();
+          }
+        }
+
+        // Apply to document
+        function applyTheme() {
+          // set a data attribute on <html>
+          document.documentElement.dataset.theme = theme;
+          // notify subscribers
+          subscribers.forEach(fn => {
+            try { fn(theme); } catch (err) { console.error('subscriber error', err); }
+          });
+        }
+
+        function setTheme(t, { persist = true } = {}) {
+          if (t !== 'dark' && t !== 'light') return;
+          theme = t;
+          if (persist) {
+            try { localStorage.setItem(KEY, theme); } catch (e) { /* ignore */ }
+          }
+          applyTheme();
+        }
+
+        function toggle() {
+          setTheme(theme === 'dark' ? 'light' : 'dark');
+        }
+
+        function getTheme() {
+          return theme;
+        }
+
+        // system follow toggle: if enabled, listen to mql changes
+        function setFollowSystem(v) {
+          followSystem = !!v;
+          if (followSystem) {
+            // adopt system immediately
+            setTheme(getSystem(), { persist: false });
+            if (mql && mql.addEventListener) {
+              mql.addEventListener('change', onSystemChange);
+            } else if (mql && mql.addListener) {
+              mql.addListener(onSystemChange);
+            }
+          } else {
+            if (mql && mql.removeEventListener) {
+              mql.removeEventListener('change', onSystemChange);
+            } else if (mql && mql.removeListener) {
+              mql.removeListener(onSystemChange);
+            }
+          }
+        }
+
+        function onSystemChange(e) {
+          if (followSystem) {
+            setTheme(e.matches ? 'dark' : 'light', { persist: false });
+          }
+        }
+
+        // subscribe / unsubscribe
+        function subscribe(fn) {
+          if (typeof fn !== 'function') return () => {};
+          subscribers.add(fn);
+          // call immediately with current value
+          try { fn(theme); } catch (e) { /* ignore */ }
+          return () => subscribers.delete(fn);
+        }
+
+        // initialize
+        load();
+        applyTheme();
+
+        return {
+          setTheme,
+          toggle,
+          getTheme,
+          subscribe,
+          setFollowSystem,
+          isFollowingSystem: () => !!followSystem,
+        };
+      }
+
+      return {
+        getInstance: function () {
+          if (!instance) instance = createInstance();
+          return instance;
+        }
+      };
+    })();
+
+    // ------- Example wiring: connect UI to ThemeManager -------
+    (function () {
+      const mgr = ThemeManager.getInstance();
+
+      // Elements
+      const toggle = document.getElementById('themeToggle');
+      const toggleDot = toggle.querySelector('.dot');
+      const currentThemeEl = document.getElementById('currentTheme');
+      const prefersSystem = document.getElementById('prefersSystem');
+      const setLight = document.getElementById('setLight');
+      const setDark = document.getElementById('setDark');
+
+      // subscribe to theme changes to update UI
+      mgr.subscribe((theme) => {
+        const on = theme === 'dark';
+        toggle.dataset.on = on ? 'true' : 'false';
+        toggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+        // change dot color subtly when dark
+        toggleDot.style.boxShadow = on ? '0 2px 6px rgba(255,255,255,0.06) inset' : '0 2px 6px rgba(0,0,0,0.12) inset';
+        currentThemeEl.textContent = theme;
+      });
+
+      // wire click
+      toggle.addEventListener('click', () => {
+        mgr.toggle();
+      });
+
+      // buttons
+      setLight.addEventListener('click', () => mgr.setTheme('light'));
+      setDark.addEventListener('click', () => mgr.setTheme('dark'));
+
+      // prefers system
+      prefersSystem.addEventListener('change', (e) => {
+        mgr.setFollowSystem(e.target.checked);
+      });
+
+      // initialize checkbox from manager state (if it were persisted)
+      prefersSystem.checked = mgr.isFollowingSystem();
+    })();
+  </script>
+</body>
+</html>

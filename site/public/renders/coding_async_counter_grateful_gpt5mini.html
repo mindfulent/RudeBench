@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Race Condition Demo: Buggy vs Fixed Counter</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 24px;
+      background: #f7f9fc;
+      color: #0b1220;
+    }
+    h1 { margin-top: 0; }
+    .container {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #e1e6ef;
+      border-radius: 8px;
+      padding: 16px;
+      width: 420px;
+      box-shadow: 0 6px 18px rgba(14,30,37,0.06);
+    }
+    .panel h2 { margin: 0 0 6px 0; font-size: 18px; }
+    .desc { color: #334155; font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+    .count-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .display {
+      width: 120px;
+      height: 60px;
+      border-radius: 8px;
+      background: linear-gradient(180deg,#ffffff,#f5f8ff);
+      border: 1px solid #e6eefc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: #0b1220;
+      box-shadow: inset 0 -6px 18px rgba(14,30,37,0.02);
+    }
+    button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #cbd8ff;
+      background: linear-gradient(180deg,#4f7cff,#3961db);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:active { transform: translateY(1px); }
+    .log {
+      height: 220px;
+      overflow: auto;
+      font-family: monospace;
+      background: #0f1724;
+      color: #e6eefc;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .controls { margin-bottom: 8px; display:flex; gap:8px; align-items:center; }
+    .small { font-size: 12px; color: #475569; }
+    .explain { margin-top: 10px; font-size: 13px; color: #0b1220; background:#fcfcff; border-left:4px solid #cfe0ff; padding:10px; border-radius:6px; }
+    .fixed-note { color:#065f46; font-weight:600; }
+    .bug-note { color:#7f1d1d; font-weight:600; }
+    footer { margin-top: 18px; color:#475569; font-size:13px; }
+    .speed-range { width: 160px; }
+    .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    .muted { color: #64748b; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>Race Condition Demo: Buggy vs Fixed Counter</h1>
+  <p class="muted">Click the "Increment" buttons rapidly. Each increment uses an asynchronous delayed update (setTimeout) that reads the shared counter, waits, then writes the new value. The left implementation is intentionally buggy and will sometimes lose increments when clicks overlap. The right implementation uses a safe pattern to avoid the race. Adjust the artificial delay to make the race more or less likely.</p>
+
+  <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
+    <label class="small">Artificial delay (ms): <span id="delayVal">120</span></label>
+    <input id="delay" class="speed-range" type="range" min="10" max="800" value="120" />
+    <div style="flex:1"></div>
+    <div class="small">Rapid clicks create overlapping async updates that demonstrate the race.</div>
+  </div>
+
+  <div class="container">
+    <!-- Buggy panel -->
+    <div class="panel" id="buggyPanel">
+      <h2>Buggy Version (race occurs)</h2>
+      <div class="desc">This version reads the shared counter, waits asynchronously, then writes the incremented value back. If you click fast, multiple timeouts read the same old value before previous writes complete, so some increments get lost.</div>
+
+      <div class="count-box">
+        <div class="display" id="buggyDisplay">0</div>
+        <div>
+          <div class="row">
+            <button id="buggyInc">Increment</button>
+            <button id="buggyReset">Reset</button>
+          </div>
+          <div class="small">Shared variable: <code>sharedCount</code></div>
+        </div>
+      </div>
+
+      <div class="small" style="margin-bottom:6px;">Operation log (newest first):</div>
+      <div class="log" id="buggyLog"></div>
+
+      <div class="explain">
+        <div><span class="bug-note">Why the race happens:</span> Each click handler does:
+          1) read sharedCount,
+          2) schedule a delayed function (setTimeout),
+          3) inside the delayed function, compute readValue + 1 and write back to sharedCount.
+        If two handlers read the same value before either delayed function writes, they both compute the same result and one write overwrites the other — one increment is lost.</div>
+      </div>
+    </div>
+
+    <!-- Fixed panel -->
+    <div class="panel" id="fixedPanel">
+      <h2>Fixed Version (atomic update)</h2>
+      <div class="desc">This version avoids the race by performing the update in one place that serializes modifications (acts like an atomic update): the increment request is queued and applied synchronously when the timeout fires, but each queued update uses the then-current shared value rather than a stale read. Two common fixes are: 1) holding the increment logic in a single central updater (apply-once), or 2) using a functional update that uses the latest value at write time. Here we implement a small update queue which ensures each increment uses the most recent value when applied.</div>
+
+      <div class="count-box">
+        <div class="display" id="fixedDisplay">0</div>
+        <div>
+          <div class="row">
+            <button id="fixedInc">Increment</button>
+            <button id="fixedReset">Reset</button>
+          </div>
+          <div class="small">Shared variable: <code>safeSharedCount</code></div>
+        </div>
+      </div>
+
+      <div class="small" style="margin-bottom:6px;">Operation log (newest first):</div>
+      <div class="log" id="fixedLog"></div>
+
+      <div class="explain">
+        <div><span class="fixed-note">How the fix works:</span> Instead of each click capturing a stale read, the click creates a "task" that, when its timeout fires, requests "apply an increment now." The central updater applies that increment atomically using the then-current count. Even if multiple timeouts fire at once, each applies on top of the latest value, so no increments are lost.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Tip: Increase the delay and click rapidly to make the buggy counter lose more increments. The logs show each read/write to make the race visible.
+  </footer>
+
+  <script>
+    // Shared settings
+    const delayInput = document.getElementById('delay');
+    const delayVal = document.getElementById('delayVal');
+    delayVal.textContent = delayInput.value;
+    delayInput.addEventListener('input', () => { delayVal.textContent = delayInput.value; });
+
+    // -----------------------------
+    // Buggy implementation
+    // -----------------------------
+    (function(){
+      let sharedCount = 0; // the shared variable that both reading and writing operations use
+      const display = document.getElementById('buggyDisplay');
+      const logEl = document.getElementById('buggyLog');
+
+      function log(msg) {
+        const time = new Date().toLocaleTimeString();
+        logEl.textContent = `[${time}] ${msg}\n` + logEl.textContent;
+      }
+
+      document.getElementById('buggyInc').addEventListener('click', () => {
+        // read
+        const readValue = sharedCount;
+        log(`read -> ${readValue} (captured by click)`);
+        // schedule async write after artificial delay
+        const d = Number(delayInput.value);
+        setTimeout(() => {
+          // compute and write using the captured readValue
+          const newVal = readValue + 1;
+          sharedCount = newVal; // write back
+          display.textContent = sharedCount;
+          log(`delayed write -> wrote ${newVal} (based on captured ${readValue})`);
+        }, d);
+      });
+
+      document.getElementById('buggyReset').addEventListener('click', () => {
+        sharedCount = 0;
+        display.textContent = 0;
+        log('RESET -> 0');
+      });
+    })();
+
+    // -----------------------------
+    // Fixed implementation (queue + apply using current value)
+    // -----------------------------
+    (function(){
+      let safeSharedCount = 0;
+      const display = document.getElementById('fixedDisplay');
+      const logEl = document.getElementById('fixedLog');
+
+      function log(msg) {
+        const time = new Date().toLocaleTimeString();
+        logEl.textContent = `[${time}] ${msg}\n` + logEl.textContent;
+      }
+
+      // Approach: each click enqueues a "task" that will request an increment when its timeout fires.
+      // When the timeout fires, instead of using a stale captured value, the task calls a central applyIncrement()
+      // that reads the current safeSharedCount and updates it. This ensures increments are applied sequentially
+      // using the latest value.
+      function applyIncrement(sourceTag) {
+        const before = safeSharedCount;
+        const after = before + 1;
+        safeSharedCount = after;
+        display.textContent = safeSharedCount;
+        log(`${sourceTag}: applied +1 -> ${before} -> ${after}`);
+      }
+
+      document.getElementById('fixedInc').addEventListener('click', () => {
+        // schedule a task that, when its timeout fires, asks to apply an increment now.
+        log('click -> queued increment request');
+        const d = Number(delayInput.value);
+        setTimeout(() => {
+          // When this runs, it uses the current safeSharedCount inside applyIncrement(),
+          // so even if other increments applied earlier, this one will build on the latest.
+          applyIncrement('delayed task');
+        }, d);
+      });
+
+      document.getElementById('fixedReset').addEventListener('click', () => {
+        safeSharedCount = 0;
+        display.textContent = 0;
+        log('RESET -> 0');
+      });
+    })();
+
+    // Additional note to help reproduce:
+    // - For the buggy version, each delayed callback uses the captured 'readValue', which may be stale.
+    // - For the fixed version, each delayed callback does not use a previously captured value;
+    //   instead it instructs the central updater to increment the current value when the timeout runs.
+  </script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Singly Linked List Visualizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 20px;
+      background: #f7f9fc;
+      color: #1b1f23;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .controls input[type="text"] {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      width: 120px;
+      font-size: 14px;
+    }
+
+    .controls button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #9aa8b8;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .controls button:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .controls .muted { color: #52606d; font-size: 13px; margin-left: 8px; }
+
+    #canvasWrap {
+      margin-top: 16px;
+      border-radius: 8px;
+      background: linear-gradient(180deg,#ffffff,#fbfdff);
+      padding: 14px;
+      border: 1px solid #e6eef7;
+      min-height: 140px;
+      overflow: auto;
+    }
+
+    /* Node styles (rendered within SVG) */
+    .node-rect {
+      fill: #1f6feb;
+      stroke: #0b57d0;
+      stroke-width: 1;
+      rx: 6;
+    }
+
+    .node-rect.tail {
+      fill: #10b981;
+      stroke: #0f9a6b;
+    }
+
+    .node-text {
+      fill: white;
+      font-weight: 600;
+      font-size: 14px;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .node-label {
+      font-size: 12px;
+      fill: #0f1724;
+    }
+
+    .arrow-path {
+      stroke: #334155;
+      stroke-width: 2;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
+
+    .arrow-path.search {
+      stroke: #ef4444;
+      stroke-width: 3;
+    }
+
+    .node-box {
+      cursor: default;
+    }
+
+    .found-glow {
+      filter: drop-shadow(0px 6px 14px rgba(239,68,68,0.25));
+    }
+
+    .empty-state {
+      color: #475569;
+      padding: 18px;
+      text-align: center;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .legend {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #334155;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .controls { gap: 6px; }
+      .controls input[type="text"] { width: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Singly Linked List Visualizer</h1>
+
+  <div class="controls">
+    <label>
+      Value:
+      <input id="valueInput" type="text" placeholder="value" />
+    </label>
+
+    <button id="insertHeadBtn">Insert at Head</button>
+    <button id="insertTailBtn">Insert at Tail</button>
+
+    <button id="deleteBtn">Delete by Value</button>
+    <button id="searchBtn">Search</button>
+
+    <button id="clearBtn" title="Clear list">Clear</button>
+
+    <div class="muted">Insert strings or numbers. Duplicates allowed.</div>
+  </div>
+
+  <div id="canvasWrap">
+    <!-- SVG will be injected here -->
+    <div id="emptyMessage" class="empty-state" style="display:none;">
+      The list is empty. Insert nodes to get started.
+    </div>
+  </div>
+
+  <div class="legend">
+    Tip: Use "Insert at Head" to push a value to the front, "Insert at Tail" to append. Search highlights node; delete removes first matching node.
+  </div>
+
+  <script>
+    (function () {
+      // Singly linked list logic
+      function Node(value) {
+        this.value = value;
+        this.next = null;
+      }
+
+      function LinkedList() {
+        this.head = null;
+        this.size = 0;
+      }
+
+      LinkedList.prototype.insertHead = function (value) {
+        var n = new Node(value);
+        n.next = this.head;
+        this.head = n;
+        this.size++;
+      };
+
+      LinkedList.prototype.insertTail = function (value) {
+        var n = new Node(value);
+        if (!this.head) {
+          this.head = n;
+        } else {
+          var cur = this.head;
+          while (cur.next) cur = cur.next;
+          cur.next = n;
+        }
+        this.size++;
+      };
+
+      LinkedList.prototype.deleteValue = function (value) {
+        if (!this.head) return false;
+        if (this.head.value === value) {
+          this.head = this.head.next;
+          this.size--;
+          return true;
+        }
+        var prev = this.head;
+        var cur = this.head.next;
+        while (cur) {
+          if (cur.value === value) {
+            prev.next = cur.next;
+            this.size--;
+            return true;
+          }
+          prev = cur;
+          cur = cur.next;
+        }
+        return false;
+      };
+
+      LinkedList.prototype.search = function (value) {
+        var cur = this.head;
+        var index = 0;
+        while (cur) {
+          if (cur.value === value) return { node: cur, index: index };
+          cur = cur.next;
+          index++;
+        }
+        return null;
+      };
+
+      LinkedList.prototype.toArray = function () {
+        var arr = [];
+        var cur = this.head;
+        while (cur) {
+          arr.push(cur.value);
+          cur = cur.next;
+        }
+        return arr;
+      };
+
+      // DOM & rendering
+      var list = new LinkedList();
+
+      var canvasWrap = document.getElementById('canvasWrap');
+      var emptyMessage = document.getElementById('emptyMessage');
+
+      var valueInput = document.getElementById('valueInput');
+      var insertHeadBtn = document.getElementById('insertHeadBtn');
+      var insertTailBtn = document.getElementById('insertTailBtn');
+      var deleteBtn = document.getElementById('deleteBtn');
+      var searchBtn = document.getElementById('searchBtn');
+      var clearBtn = document.getElementById('clearBtn');
+
+      // Basic sizes
+      var NODE_W = 88;
+      var NODE_H = 42;
+      var GAP_X = 36;
+      var START_X = 24;
+      var START_Y = 24;
+
+      function render(highlightIndex) {
+        // clean
+        while (canvasWrap.firstChild) canvasWrap.removeChild(canvasWrap.firstChild);
+
+        var arr = list.toArray();
+        if (arr.length === 0) {
+          emptyMessage.style.display = 'block';
+          canvasWrap.appendChild(emptyMessage);
+          return;
+        }
+
+        emptyMessage.style.display = 'none';
+
+        // Compute svg width
+        var totalWidth = START_X * 2 + arr.length * NODE_W + Math.max(0, arr.length - 1) * GAP_X;
+        var totalHeight = 160;
+
+        var svgNS = "http://www.w3.org/2000/svg";
+        var svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('width', Math.max(totalWidth, 640));
+        svg.setAttribute('height', totalHeight);
+        svg.setAttribute('viewBox', '0 0 ' + Math.max(totalWidth, 640) + ' ' + totalHeight);
+        svg.setAttribute('style', 'display:block;');
+
+        // marker arrowhead
+        var defs = document.createElementNS(svgNS, 'defs');
+        defs.innerHTML = '\
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">\
+            <path d="M0,0 L10,5 L0,10 z" fill="#334155"></path>\
+          </marker>';
+        svg.appendChild(defs);
+
+        // Render "head" label
+        var headLabel = document.createElementNS(svgNS, 'text');
+        headLabel.setAttribute('x', 10);
+        headLabel.setAttribute('y', START_Y + NODE_H / 2 + 6);
+        headLabel.setAttribute('class', 'node-label');
+        headLabel.textContent = 'HEAD →';
+        svg.appendChild(headLabel);
+
+        // draw nodes
+        var x = START_X + 80; // leave space after label
+        var y = START_Y;
+
+        for (var i = 0; i < arr.length; i++) {
+          var g = document.createElementNS(svgNS, 'g');
+          g.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+          g.setAttribute('class', 'node-box');
+
+          // rectangle
+          var rect = document.createElementNS(svgNS, 'rect');
+          rect.setAttribute('width', NODE_W);
+          rect.setAttribute('height', NODE_H);
+          rect.setAttribute('class', 'node-rect');
+          rect.setAttribute('rx', 8);
+          if (i === arr.length - 1) rect.setAttribute('class', 'node-rect tail');
+
+          // value text
+          var txt = document.createElementNS(svgNS, 'text');
+          txt.setAttribute('x', NODE_W / 2);
+          txt.setAttribute('y', NODE_H / 2 + 2);
+          txt.setAttribute('class', 'node-text');
+          txt.textContent = String(arr[i]);
+
+          // index small label
+          var idxLabel = document.createElementNS(svgNS, 'text');
+          idxLabel.setAttribute('x', NODE_W / 2);
+          idxLabel.setAttribute('y', NODE_H + 18);
+          idxLabel.setAttribute('class', 'node-label');
+          idxLabel.textContent = 'index ' + i;
+
+          g.appendChild(rect);
+          g.appendChild(txt);
+          g.appendChild(idxLabel);
+
+          // if this is the highlighted node, add a glow effect
+          if (typeof highlightIndex === 'number' && highlightIndex === i) {
+            rect.classList.add('found-glow');
+            rect.setAttribute('stroke', '#ef4444');
+            rect.setAttribute('stroke-width', 3);
+          }
+
+          svg.appendChild(g);
+
+          // draw arrow to next if not last
+          if (i < arr.length - 1) {
+            var startX = x + NODE_W;
+            var startY = y + NODE_H / 2;
+            var midX = x + NODE_W + GAP_X / 2;
+            var endX = x + NODE_W + GAP_X;
+            var endY = startY;
+
+            // draw straight path
+            var path = document.createElementNS(svgNS, 'path');
+            var d = 'M' + startX + ' ' + startY + ' L' + endX + ' ' + endY;
+            path.setAttribute('d', d);
+            path.setAttribute('class', 'arrow-path');
+            svg.appendChild(path);
+          } else {
+            // mark tail text near the node
+            var tailLabel = document.createElementNS(svgNS, 'text');
+            tailLabel.setAttribute('x', x + NODE_W + 14);
+            tailLabel.setAttribute('y', y + NODE_H / 2 + 5);
+            tailLabel.setAttribute('class', 'node-label');
+            tailLabel.textContent = 'null';
+            svg.appendChild(tailLabel);
+          }
+
+          x += NODE_W + GAP_X;
+        }
+
+        canvasWrap.appendChild(svg);
+      }
+
+      // Actions wiring
+      function readValue() {
+        return valueInput.value.trim();
+      }
+
+      insertHeadBtn.addEventListener('click', function () {
+        var v = readValue();
+        if (v === '') { alert('Please enter a value.'); valueInput.focus(); return; }
+        list.insertHead(v);
+        valueInput.value = '';
+        render();
+      });
+
+      insertTailBtn.addEventListener('click', function () {
+        var v = readValue();
+        if (v === '') { alert('Please enter a value.'); valueInput.focus(); return; }
+        list.insertTail(v);
+        valueInput.value = '';
+        render();
+      });
+
+      deleteBtn.addEventListener('click', function () {
+        var v = readValue();
+        if (v === '') { alert('Please enter the value to delete.'); valueInput.focus(); return; }
+        var ok = list.deleteValue(v);
+        if (ok) {
+          render();
+        } else {
+          alert('Value not found (first match only removed).');
+          render();
+        }
+        valueInput.value = '';
+      });
+
+      searchBtn.addEventListener('click', function () {
+        var v = readValue();
+        if (v === '') { alert('Please enter the value to search.'); valueInput.focus(); return; }
+        var res = list.search(v);
+        if (res) {
+          // animate: highlight the node
+          render(res.index);
+          // scroll into view if needed
+          setTimeout(function () {
+            // find the svg and center the node visually
+            var svg = canvasWrap.querySelector('svg');
+            if (!svg) return;
+            var viewBox = svg.getAttribute('viewBox').split(' ').map(Number);
+            var totalW = viewBox[2];
+            var centerX = START_X + 80 + res.index * (NODE_W + GAP_X) + NODE_W/2;
+            // scroll the wrapper to bring centerX into view
+            var wrapWidth = canvasWrap.clientWidth;
+            var scrollX = Math.max(0, centerX - wrapWidth/2);
+            canvasWrap.scrollLeft = scrollX;
+          }, 0);
+        } else {
+          alert('Value not found.');
+          render();
+        }
+        valueInput.value = '';
+      });
+
+      clearBtn.addEventListener('click', function () {
+        if (!list.head) {
+          render();
+          return;
+        }
+        if (!confirm('Clear the entire list?')) return;
+        list.head = null;
+        list.size = 0;
+        render();
+      });
+
+      // Enter key behavior: Enter triggers insertTail by default
+      valueInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          insertTailBtn.click();
+        }
+      });
+
+      // initial render
+      render();
+    })();
+  </script>
+</body>
+</html>

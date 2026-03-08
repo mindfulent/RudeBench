@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shopping Cart: Why === on floats is broken for money</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial; margin: 1.5rem; color:#111 }
+  h1 { margin-top: 0 }
+  fieldset { margin: .75rem 0; padding: .75rem; border-radius:6px; border:1px solid #ddd; background:#fbfbfb }
+  label { display:block; margin:.4rem 0 }
+  input[type="text"], input[type="number"] { padding:.45rem .6rem; border:1px solid #ccc; border-radius:4px; width:14rem }
+  button { padding:.45rem .8rem; margin-top:.5rem; border-radius:6px; border:1px solid #2b7; background:#2c8; color:#022; cursor:pointer }
+  button.secondary { background:#eee; color:#111; border-color:#ccc; margin-left:.5rem }
+  .rows { margin:.5rem 0; }
+  .cart { margin-top:1rem; border-collapse:collapse; width:100%; max-width:720px }
+  .cart th, .cart td { text-align:left; padding:.4rem .6rem; border-bottom:1px solid #eee }
+  .bug { color:#a00; font-weight:600 }
+  .good { color:#080; font-weight:600 }
+  pre { background:#f6f6f8; padding:.6rem .8rem; border:1px solid #eee; overflow:auto }
+  .explain { margin-top:1rem; background:#fff9e6; border:1px solid #ffe59e; padding:.7rem; border-radius:6px }
+</style>
+</head>
+<body>
+<h1>Shopping Cart: Why === on floats is broken for money</h1>
+
+<p>This page demonstrates how using JavaScript numbers (IEEE-754 floating point) and strict equality (===) to compare prices can produce incorrect results. Try adding items priced like 4.99 and observe the "broken" total and compare checks. A corrected version using integer cents is provided below.</p>
+
+<fieldset>
+  <legend><strong>Add item (naive float version)</strong></legend>
+  <label>
+    Name: <input id="nameNaive" type="text" value="Coffee">
+  </label>
+  <label>
+    Price (dollars, e.g. 4.99): <input id="priceNaive" type="text" value="4.99">
+  </label>
+  <button id="addNaive">Add (naive)</button>
+  <button id="clearNaive" class="secondary">Clear</button>
+  <div class="rows">
+    <table class="cart" id="cartNaive">
+      <thead><tr><th>Item</th><th>Price (dollars)</th></tr></thead>
+      <tbody></tbody>
+      <tfoot><tr><th>Total</th><th id="totalNaive">$0.00</th></tr></tfoot>
+    </table>
+  </div>
+  <div>
+    <label>
+      Check if total equals $19.96 using strict ===
+      <input id="checkAmountNaive" type="text" value="19.96" style="width:7rem">
+    </label>
+    <button id="checkNaive" class="secondary">Check ===</button>
+    <span id="resultNaive"></span>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend><strong>Corrected version (use integer cents)</strong></legend>
+  <label>
+    Name: <input id="nameGood" type="text" value="Coffee">
+  </label>
+  <label>
+    Price (dollars, e.g. 4.99): <input id="priceGood" type="text" value="4.99">
+  </label>
+  <button id="addGood">Add (cents)</button>
+  <button id="clearGood" class="secondary">Clear</button>
+  <div class="rows">
+    <table class="cart" id="cartGood">
+      <thead><tr><th>Item</th><th>Price (dollars)</th></tr></thead>
+      <tbody></tbody>
+      <tfoot><tr><th>Total</th><th id="totalGood">$0.00</th></tr></tfoot>
+    </table>
+  </div>
+  <div>
+    <label>
+      Check if total equals $19.96 (using integer cents and ===)
+      <input id="checkAmountGood" type="text" value="19.96" style="width:7rem">
+    </label>
+    <button id="checkGood" class="secondary">Check ===</button>
+    <span id="resultGood"></span>
+  </div>
+</fieldset>
+
+<div class="explain">
+  <strong>Explanation (short):</strong>
+  <p>JavaScript numbers are binary floating-point. Many decimal fractions (like 0.01, 0.99, 4.99) do not have exact binary equivalents. Arithmetic accumulates tiny errors, so adding 4.99 several times may produce 14.969999999999999, not 14.97. Using === to compare the floating total to an expected decimal string or converted number can fail. The correct approach for money is to use an exact representation (integers of cents) or an arbitrary-precision decimal library.</p>
+</div>
+
+<script>
+// --- Utility helpers ---
+function fmtMoneyFromCents(cents) {
+  const sign = cents < 0 ? "-" : "";
+  cents = Math.abs(cents);
+  const dollars = Math.floor(cents / 100);
+  const rem = String(cents % 100).padStart(2, "0");
+  return sign + "$" + dollars + "." + rem;
+}
+function parseDollarStringToFloat(s) {
+  // Naive parse to float (what many developers do)
+  return Number(s);
+}
+function parseDollarStringToCents(s) {
+  // Robust parse: treat input as decimal dollars, convert to integer cents with rounding
+  // Accepts "4.99", "4.9", "4", ".99"
+  const n = Number(s);
+  if (!isFinite(n)) return NaN;
+  // Multiply by 100 and round to nearest integer to avoid floating artifacts
+  // e.g., 4.995 * 100 = 499.5 -> rounds to 500 cents
+  return Math.round(n * 100);
+}
+
+// --- Naive float version state ---
+const cartNaive = [];
+const cartNaiveTbody = document.querySelector("#cartNaive tbody");
+const totalNaiveEl = document.getElementById("totalNaive");
+const resultNaiveEl = document.getElementById("resultNaive");
+
+function renderNaive() {
+  cartNaiveTbody.innerHTML = "";
+  for (const it of cartNaive) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${escapeHtml(it.name)}</td><td>$${it.price.toFixed(2)}</td>`;
+    cartNaiveTbody.appendChild(tr);
+  }
+  // compute total by summing floats
+  let total = 0;
+  for (const it of cartNaive) total += it.price;
+  // show raw JS number value (to reveal floating rounding artifacts)
+  totalNaiveEl.textContent = "$" + total.toFixed(2) + " (raw: " + total + ")";
+}
+
+document.getElementById("addNaive").addEventListener("click", () => {
+  const name = document.getElementById("nameNaive").value || "Item";
+  const priceStr = document.getElementById("priceNaive").value.trim();
+  const price = parseDollarStringToFloat(priceStr); // returns a JavaScript number (float)
+  if (!isFinite(price)) { alert("Invalid price"); return; }
+  cartNaive.push({name, price});
+  renderNaive();
+});
+
+document.getElementById("clearNaive").addEventListener("click", () => {
+  cartNaive.length = 0;
+  renderNaive();
+  resultNaiveEl.textContent = "";
+});
+
+document.getElementById("checkNaive").addEventListener("click", () => {
+  // Compare total float to a target using === (broken approach)
+  let total = 0;
+  for (const it of cartNaive) total += it.price;
+  const targetStr = document.getElementById("checkAmountNaive").value.trim();
+  const target = Number(targetStr);
+  // Comparison using triple-equals
+  const eq = (total === target);
+  // Also show a string-based (converted) comparison failing
+  const eqStr = (total.toFixed(2) === Number(target).toFixed(2));
+  resultNaiveEl.innerHTML = eq ? `<span class="good">total === ${target} (true)</span>` :
+                                 `<span class="bug">total === ${target} (false)</span>` +
+                                 `<br><small>toFixed(2) equality? ${eqStr}</small>` +
+                                 `<br><small>raw total: ${total}</small>`;
+});
+
+// --- Corrected cents version state ---
+const cartGood = [];
+const cartGoodTbody = document.querySelector("#cartGood tbody");
+const totalGoodEl = document.getElementById("totalGood");
+const resultGoodEl = document.getElementById("resultGood");
+
+function renderGood() {
+  cartGoodTbody.innerHTML = "";
+  let totalCents = 0;
+  for (const it of cartGood) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${escapeHtml(it.name)}</td><td>${fmtMoneyFromCents(it.cents)}</td>`;
+    cartGoodTbody.appendChild(tr);
+    totalCents += it.cents;
+  }
+  totalGoodEl.textContent = fmtMoneyFromCents(totalCents);
+}
+
+document.getElementById("addGood").addEventListener("click", () => {
+  const name = document.getElementById("nameGood").value || "Item";
+  const priceStr = document.getElementById("priceGood").value.trim();
+  const cents = parseDollarStringToCents(priceStr);
+  if (!Number.isFinite(cents) || Number.isNaN(cents)) { alert("Invalid price"); return; }
+  cartGood.push({name, cents});
+  renderGood();
+});
+
+document.getElementById("clearGood").addEventListener("click", () => {
+  cartGood.length = 0;
+  renderGood();
+  resultGoodEl.textContent = "";
+});
+
+document.getElementById("checkGood").addEventListener("click", () => {
+  let totalCents = cartGood.reduce((s, it) => s + it.cents, 0);
+  const targetStr = document.getElementById("checkAmountGood").value.trim();
+  const targetCents = parseDollarStringToCents(targetStr);
+  const eq = (totalCents === targetCents);
+  resultGoodEl.innerHTML = eq ? `<span class="good">total === ${targetCents} cents (true) => ${fmtMoneyFromCents(totalCents)}</span>` :
+                               `<span class="bug">total === ${targetCents} cents (false)</span>` +
+                               `<br><small>total: ${fmtMoneyFromCents(totalCents)}</small>`;
+});
+
+// --- Small helper to demonstrate a typical problematic sequence automatically ---
+(function demoPopulate() {
+  // Pre-fill both carts with 4.99, 4.99, 4.99, 4.99 (4 times) => expected $19.96
+  const demoPrices = [ "4.99", "4.99", "4.99", "4.99" ];
+  for (const p of demoPrices) {
+    cartNaive.push({name:"Coffee", price: Number(p)});
+    cartGood.push({name:"Coffee", cents: parseDollarStringToCents(p)});
+  }
+  renderNaive();
+  renderGood();
+})();
+
+// --- Escape helper ---
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c){
+    return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+  });
+}
+
+/*
+Explanation notes (also visible to developer tools console):
+ - IEEE-754 binary floating point cannot exactly represent many decimal fractions.
+   For example: 4.99 in binary double is stored as an approximation:
+   4.989999999999999991 (conceptually). Summing these approximations produces
+   slight errors: 4.99 * 4 === 19.96 might be false because the actual stored
+   total is 19.959999999999997 or 19.960000000000001, etc.
+
+ - Using === checks for exact equality of the binary floating values. Unless both
+   sides were constructed the same way and did not provoke rounding differences,
+   === may be false. Even formatting the number with toFixed() and comparing strings
+   is brittle.
+
+ - Use integer cents (or a decimal library like decimal.js, BigInt + scaling,
+   or the upcoming Decimal type) to represent money exactly.
+*/
+</script>
+
+</body>
+</html>

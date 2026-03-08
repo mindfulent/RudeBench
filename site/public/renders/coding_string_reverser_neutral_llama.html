@@ -10,33 +10,25 @@
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
+  }
+  .container {
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(to bottom, #f7f7f7, #eaeaea);
+    flex-direction: column;
   }
-  .container {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-  }
-  input {
+  #input-field {
     padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 100%;
-    margin-bottom: 20px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
   }
-  .output {
-    font-size: 16px;
-    letter-spacing: 2px;
+  #reversed-string {
+    font-size: 18px;
+    margin-top: 20px;
   }
-  .highlight {
+  .char-highlight {
     animation: highlight 1s;
   }
   @keyframes highlight {
@@ -52,32 +44,32 @@
 <body>
 
 <div class="container">
-  <input id="inputField" type="text" placeholder="Type something here...">
-  <div id="output" class="output"></div>
+  <input id="input-field" type="text" placeholder="Type something..." oninput="updateReversedString()">
+  <div id="reversed-string"></div>
 </div>
 
 <script>
-  const inputField = document.getElementById('inputField');
-  const outputDiv = document.getElementById('output');
+  function updateReversedString() {
+    const inputField = document.getElementById('input-field');
+    const reversedStringDiv = document.getElementById('reversed-string');
+    const inputText = inputField.value;
+    const reversedText = inputText.split('').reverse().join('');
 
-  inputField.addEventListener('input', function() {
-    const input = inputField.value;
-    const reversed = input.split('').reverse().join('');
-    outputDiv.innerHTML = ''; // Clear previous output
-
-    // Build the output character by character with a delay
-    reversed.split('').forEach((char, index) => {
+    reversedStringDiv.innerHTML = '';
+    for (let i = 0; i < reversedText.length; i++) {
       const span = document.createElement('span');
-      span.textContent = char;
-      outputDiv.appendChild(span);
-      // Apply highlight effect
+      span.textContent = reversedText[i];
+      reversedStringDiv.appendChild(span);
+      if (i < reversedText.length - 1) {
+        const textNode = document.createTextNode('');
+        reversedStringDiv.appendChild(textNode);
+      }
+      // Adding a small delay to highlight each character sequentially
       setTimeout(() => {
-        span.classList.add('highlight');
-        // Remove highlight after animation ends
-        setTimeout(() => span.classList.remove('highlight'), 1000);
-      }, index * 50); // Adjust timing as needed
-    });
-  });
+        span.classList.add('char-highlight');
+      }, i * 100);
+    }
+  }
 </script>
 
 </body>

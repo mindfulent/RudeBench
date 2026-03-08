@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Fibonacci Spiral — Buggy vs Fixed (Canvas)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; display: flex; gap: 20px; padding: 20px; }
+    .panel { border: 1px solid #ccc; padding: 12px; width: 420px; box-sizing: border-box; }
+    canvas { background: #fff; display: block; margin: 8px 0; width: 400px; height: 400px; border: 1px solid #ddd; }
+    h2 { margin: 0 0 8px 0; font-size: 16px; }
+    p { margin: 6px 0; font-size: 13px; color: #333; }
+    .note { font-size: 12px; color: #555; }
+    code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Buggy Fibonacci Spiral</h2>
+    <canvas id="canvas-bug" width="400" height="400"></canvas>
+    <p>This version contains the developer's original calculation bug. The canvas API is fine — the spiral looks wrong because an index/offset mistake makes the arc radii use the wrong Fibonacci numbers.</p>
+    <p class="note">Bug: when laying out arcs, the code used the Fibonacci number for the next square instead of the current one when computing the arc radius/center offsets.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Fixed Fibonacci Spiral</h2>
+    <canvas id="canvas-fixed" width="400" height="400"></canvas>
+    <p>This corrected version uses the proper Fibonacci value for each quadrant/square when computing arc radii and center positions.</p>
+    <p class="note">Look at the code below — the only real change is using the correct fibonacci index when building each square/arc.</p>
+  </div>
+
+<script>
+/*
+Single-file demo showing a buggy Fibonacci spiral and a fixed version.
+
+Explanation of the "real bug":
+- The Fibonacci spiral is usually drawn by placing squares of sizes F0, F1, F2, ...
+  and drawing quarter-arcs inside each square with radius equal to the square's side.
+- The buggy code used an off-by-one choice: when computing the arc for square k it used
+  the Fibonacci number for k+1 (or otherwise mixed indices) for either radius or center offset.
+  That made arcs too large/small and mispositioned them, producing a distorted spiral.
+- The canvas API (arc, stroke, etc.) is not at fault.
+
+This demo draws both versions side-by-side so you can compare.
+*/
+
+function fibSequence(n) {
+  const f = [1, 1]; // start 1,1 (you can start 0,1 but square of size 0 is useless visually)
+  while (f.length < n) f.push(f[f.length-1] + f[f.length-2]);
+  return f;
+}
+
+// Draw a series of squares and quarter-arcs forming the Fibonacci spiral.
+// Mode: "bug" or "fixed"
+function drawSpiral(ctx, mode) {
+  ctx.clearRect(0,0,ctx.canvas.width, ctx.canvas.height);
+  ctx.save();
+  // translate to center-ish and flip y so positive y is down (canvas default)
+  ctx.translate(200, 200);
+
+  // scale down sizes so it fits in canvas
+  const scale = 4; // tune for visibility
+  const fib = fibSequence(10); // 10 squares
+
+  // We'll place squares in order, each new square attaches to the previous.
+  // Directions: 0 = right, 1 = down, 2 = left, 3 = up (clockwise)
+  let x = 0, y = 0; // top-left of current square (relative coords before scaling)
+  let dir = 0;
+
+  // Draw squares outlines lightly
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#ddd';
+  ctx.fillStyle = 'rgba(0,0,0,0)';
+
+  // To make the spiral centered visually, we first compute overall bounding box by simulating positions
+  // (This makes both drawings similarly centered.)
+  let minX = 0, minY = 0, maxX = 0, maxY = 0;
+  (function computeBounds(){
+    let tx = 0, ty = 0, tdir = 0;
+    let size = fib[0];
+    minX = Math.min(minX, tx);
+    minY = Math.min(minY, ty);
+    maxX = Math.max(maxX, tx + size);
+    maxY = Math.max(maxY, ty + size);
+    for (let i=1;i<fib.length;i++){
+      size = fib[i];
+      // move top-left based on direction (attach new square to previous)
+      if (tdir === 0) { tx = tx + fib[i-1]; }       // right: new square to the right of previous
+      else if (tdir === 1) { ty = ty + fib[i-1]; }  // down
+      else if (tdir === 2) { tx = tx - size; }      // left (new square extends left)
+      else if (tdir === 3) { ty = ty - size; }      // up
+      minX = Math.min(minX, tx);
+      minY = Math.min(minY, ty);
+      maxX = Math.max(maxX, tx + size);
+      maxY = Math.max(maxY, ty + size);
+      tdir = (tdir + 1) % 4;
+    }
+  })();
+
+  // center offset to place bounding box centered at origin
+  const totalW = (maxX - minX);
+  const totalH = (maxY - minY);
+  x = -Math.round((minX + maxX)/2);
+  y = -Math.round((minY + maxY)/2);
+
+  // Now actually draw squares and arcs
+  ctx.save();
+  ctx.scale(scale, scale);
+
+  // outline for squares
+  for (let i=0;i<fib.length;i++){
+    const size = fib[i];
+    ctx.strokeStyle = '#eee';
+    ctx.strokeRect(x, y, size, size);
+
+    // Prepare values for arc drawing
+    // Center for arc and radius: depends on the orientation.
+    // For each square we draw a quarter arc that connects the corners.
+    // The correct algorithm uses the current square's size (fib[i]) as the radius.
+    // The buggy algorithm uses the next Fibonacci number (fib[i+1]) for radius/centering (off-by-one).
+
+    // Determine arc center based on direction.
+    // For direction:
+    // 0 (right): arc center is at (x+size, y+size) with radius = size  (arc from 90 to 180 degrees)
+    // 1 (down):  arc center at (x, y+size) with radius = size           (arc from 0 to 90 degrees)
+    // 2 (left):  arc center at (x, y) with radius = size               (arc from 270 to 360 -> -pi/2 to 0)
+    // 3 (up):    arc center at (x+size, y) with radius = size          (arc from 180 to 270 -> pi to 3pi/2)
+
+    // Compute centers for both versions and draw arcs with different styles to show difference.
+    let r_correct = fib[i]; // correct radius for this square
+    let r_bug;
+    if (mode === 'bug') {
+      // BUG: use next fibonacci number (i+1) for radius/centering when available,
+      // falling back to current if not available. This is the off-by-one mistake.
+      r_bug = (i+1 < fib.length) ? fib[i+1] : fib[i];
+    } else {
+      // fixed mode will draw using the correct radius
+      r_bug = fib[i];
+    }
+
+    // Use whichever radius applies for this drawn spiral
+    const r = (mode === 'bug') ? r_bug : r_correct;
+
+    // Compute center depending on dir
+    let cx, cy, startAngle, endAngle;
+    if (dir === 0) { // right
+      // arc connects top-left corner of rightmost square toward center: center at (x+size, y+size)
+      cx = x + size;
+      cy = y + size;
+      startAngle = Math.PI * 0.5;
+      endAngle = Math.PI;
+    } else if (dir === 1) { // down
+      cx = x;
+      cy = y + size;
+      startAngle = 0;
+      endAngle = Math.PI * 0.5;
+    } else if (dir === 2) { // left
+      cx = x;
+      cy = y;
+      startAngle = -Math.PI * 0.5;
+      endAngle = 0;
+    } else { // up
+      cx = x + size;
+      cy = y;
+      startAngle = Math.PI;
+      endAngle = Math.PI * 1.5;
+    }
+
+    // For the buggy mode: if r is taken as fib[i+1] the arc center computed above becomes wrong
+    // because it uses positions based on current square size but radius is larger/smaller.
+    // That mismatch is the true source of the visual defect.
+
+    // Draw the quarter arc
+    ctx.beginPath();
+    ctx.strokeStyle = (mode === 'bug') ? '#d9534f' : '#337ab7';
+    ctx.lineWidth = 2 / scale; // keep stroke visually similar after scaling
+    ctx.arc(cx, cy, r, startAngle, endAngle, false);
+    ctx.stroke();
+
+    // Advance position for next square
+    if (dir === 0) { x = x + size; }            // move right
+    else if (dir === 1) { y = y + size; }       // move down
+    else if (dir === 2) { x = x - fib[i+1] ?? x - size; } // move left: new top-left is shifted by next size (careful with bug)
+    else if (dir === 3) { y = y - fib[i+1] ?? y - size; } // move up
+
+    // The movement logic above intentionally reflects common implementations.
+    // For correctness the next top-left should be adjusted by the current square size and the placement rule.
+    // We'll implement the robust standard movement after this loop to ensure consistent placement for fixed version.
+
+    dir = (dir + 1) % 4;
+  }
+
+  ctx.restore();
+
+  ctx.restore();
+}
+
+// Because the above loop mix of movement may be confusing, we'll provide a clearer, correct drawing function used for the fixed canvas.
+// That way we can be sure the "fixed" canvas is accurate.
+function drawFixed(ctx) {
+  ctx.clearRect(0,0,ctx.canvas.width, ctx.canvas.height);
+  ctx.save();
+  ctx.translate(200,200);
+  const scale = 4;
+  const fib = fibSequence(12);
+
+  // start top-left of first square at (0,0)
+  let x = 0, y = 0;
+  let dir = 0;
+
+  // compute bounding box to center drawing
+  let minX = 0, minY = 0, maxX = 0, maxY = 0;
+  (function computeBounds(){
+    let tx = 0, ty = 0, tdir = 0;
+    let size = fib[0];
+    minX = Math.min(minX, tx);
+    minY = Math.min(minY, ty);
+    maxX = Math.max(maxX, tx + size);
+    maxY = Math.max(maxY, ty + size);
+    for (let i=1;i<fib.length;i++){
+      size = fib[i];
+      if (tdir === 0) { tx = tx + fib[i-1]; }
+      else if (tdir === 1) { ty = ty + fib[i-1]; }
+      else if (tdir === 2) { tx = tx - size; }
+      else if (tdir === 3) { ty = ty - size; }
+      minX = Math.min(minX, tx);
+      minY = Math.min(minY, ty);
+      maxX = Math.max(maxX, tx + size);
+      maxY = Math.max(maxY, ty + size);
+      tdir = (tdir + 1) % 4;
+    }
+  })();
+
+  x = -Math.round((minX + maxX)/2);
+  y = -Math.round((minY + maxY)/2);
+
+  ctx.scale(scale, scale);
+  ctx.lineWidth = 1/scale;
+
+  // draw squares and correct arcs
+  for (let i=0;i<fib.length;i++){
+    const size = fib[i];
+    ctx.strokeStyle = '#eee';
+    ctx.strokeRect(x, y, size, size);
+
+    // correct radius is size (fib[i])
+    const r = size;
+    let cx, cy, startAngle, endAngle;
+
+    if (dir === 0) { // right
+      cx = x + size;
+      cy = y + size;
+      startAngle = Math.PI * 0.5;
+      endAngle = Math.PI;
+    } else if (dir === 1) { // down
+      cx = x;
+      cy = y + size;
+      startAngle = 0;
+      endAngle = Math.PI * 0.5;
+    } else if (dir === 2) { // left
+      cx = x;
+      cy = y;
+      startAngle = -Math.PI * 0.5;
+      endAngle = 0;
+    } else { // up
+      cx = x + size;
+      cy = y;
+      startAngle = Math.PI;
+      endAngle = Math.PI * 1.5;
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#337ab7';
+    ctx.lineWidth = 2/scale;
+    ctx.arc(cx, cy, r, startAngle, endAngle, false);
+    ctx.stroke();
+
+    // move top-left for next square using the correct rule:
+    // when direction is:
+    // 0 (right): next x = x + size
+    // 1 (down):  next y = y + size
+    // 2 (left):  next x = x - fib[i+1]  (since next square extends left by its own size)
+    // 3 (up):    next y = y - fib[i+1]
+    if (i+1 < fib.length) {
+      if (dir === 0) { x = x + size; }
+      else if (dir === 1) { y = y + size; }
+      else if (dir === 2) { x = x - fib[i+1]; }
+      else if (dir === 3) { y = y - fib[i+1]; }
+    }
+
+    dir = (dir + 1) % 4;
+  }
+
+  ctx.restore();
+}
+
+// Initialize canvases
+const cBug = document.getElementById('canvas-bug');
+const cFix = document.getElementById('canvas-fixed');
+const ctxBug = cBug.getContext('2d');
+const ctxFix = cFix.getContext('2d');
+
+// Draw buggy version using the "bug" mode (off-by-one radius)
+(function renderBuggy(){
+  // We'll implement a clearer buggy function to show the exact mistake:
+  ctxBug.clearRect(0,0,cBug.width,cBug.height);
+  ctxBug.save();
+  ctxBug.translate(200,200);
+  const scale = 4;
+  const fib = fibSequence(12);
+
+  // starting top-left
+  let x = 0, y = 0, dir = 0;
+  // compute bounds (same as fixed) to center
+  let minX = 0, minY = 0, maxX = 0, maxY = 0;
+  (function computeBounds(){
+    let tx = 0, ty = 0, tdir = 0;
+    let size = fib[0];
+    minX = Math.min(minX, tx);
+    minY = Math.min(minY, ty);
+    maxX = Math.max(maxX, tx + size);
+    maxY = Math.max(maxY, ty + size);
+    for (let i=1;i<fib.length;i++){
+      size = fib[i];
+      if (tdir === 0) { tx = tx + fib[i-1]; }
+      else if (tdir === 1) { ty = ty + fib[i-1]; }
+      else if (tdir === 2) { tx = tx - size; }
+      else if (tdir === 3) { ty = ty - size; }
+      minX = Math.min(minX, tx);
+      minY = Math.min(minY, ty);
+      maxX = Math.max(maxX, tx + size);
+      maxY = Math.max(maxY, ty + size);
+      tdir = (tdir + 1) % 4;
+    }
+  })();
+
+  x = -Math.round((minX + maxX)/2);
+  y = -Math.round((minY + maxY)/2);
+
+  ctxBug.scale(scale, scale);
+
+  for (let i=0;i<fib.length;i++){
+    const size = fib[i];
+    ctxBug.strokeStyle = '#eee';
+    ctxBug.strokeRect(x, y, size, size);
+
+    // BUG: use fib[i+1] as radius (off-by-one) — this is the common mistake the developer made.
+    const r = (i+1 < fib.length) ? fib[i+1] : fib[i];
+
+    let cx, cy, startAngle, endAngle;
+    if (dir === 0) { cx = x + size; cy = y + size; startAngle = Math.PI*0.5; endAngle = Math.PI; }
+    else if (dir === 1) { cx = x; cy = y + size; startAngle = 0; endAngle = Math.PI*0.5; }
+    else if (dir === 2) { cx = x; cy = y; startAngle = -Math.PI*0.5; endAngle = 0; }
+    else { cx = x + size; cy = y; startAngle = Math.PI; endAngle = Math.PI*1.5; }
+
+    ctxBug.beginPath();
+    ctxBug.strokeStyle = '#d9534f';
+    ctxBug.lineWidth = 2/scale;
+    ctxBug.arc(cx, cy, r, startAngle, endAngle, false);
+    ctxBug.stroke();
+
+    // Move to the next square top-left — the buggy code sometimes also mixed indices when computing this movement.
+    // We'll intentionally reproduce a common mistake: using fib[i+1] vs correct rule.
+    if (i+1 < fib.length) {
+      if (dir === 0) { x = x + size; }
+      else if (dir === 1) { y = y + size; }
+      else if (dir === 2) { x = x - fib[i+1]; }
+      else if (dir === 3) { y = y - fib[i+1]; }
+    }
+
+    dir = (dir + 1) % 4;
+  }
+
+  ctxBug.restore();
+})();
+
+drawFixed(ctxFix);
+
+// Add short explanation text in console for clarity
+console.log("Bug: off-by-one use of Fibonacci index when selecting arc radius/offset (used fib[i+1] instead of fib[i]).");
+console.log("Canvas API arc/stroke are fine; the bug is in the calculation/indices.");
+</script>
+</body>
+</html>

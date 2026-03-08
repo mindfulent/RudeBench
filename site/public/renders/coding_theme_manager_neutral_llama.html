@@ -18,6 +18,7 @@
             background-color: #fff;
             color: #333;
         }
+        /* Component Styles */
         .container {
             max-width: 800px;
             margin: 40px auto;
@@ -25,95 +26,106 @@
             background-color: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         .dark-theme .container {
             background-color: #444;
             border-color: #555;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
-        button {
-            padding: 10px 20px;
+        /* Button Styles */
+        .theme-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        .dark-theme button {
-            background-color: #666;
-            color: #fff;
+        .theme-toggle:hover {
+            background-color: #ccc;
         }
-        .light-theme button {
-            background-color: #4CAF50;
-            color: #fff;
+        /* Discussion Section Styles */
+        .discussion {
+            margin-top: 40px;
+        }
+        .discussion h2 {
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body class="light-theme">
+    <button class="theme-toggle" onclick="ThemeManager.getInstance().toggleTheme()">Toggle Theme</button>
     <div class="container">
-        <h1>Theme Toggle with Singleton</h1>
-        <button id="theme-toggle">Toggle Theme</button>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <h1>Welcome to our website!</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet nulla auctor, vestibulum magna sed, convallis ex.</p>
         <ul>
             <li>Item 1</li>
             <li>Item 2</li>
             <li>Item 3</li>
         </ul>
+        <button>Click me!</button>
+    </div>
+    <div class="discussion">
         <h2>Discussion: Singleton Design Pattern</h2>
         <h3>Advantages:</h3>
         <ul>
-            <li><strong>Global Access:</strong> The singleton pattern provides a global point of access to the theme state, making it easily accessible throughout the application.</li>
-            <li><strong>Memory Efficiency:</strong> Since only one instance of the theme state exists, it can be more memory-efficient than creating multiple instances.</li>
+            <li><strong>Global access</strong>: The singleton pattern provides a global point of access to the theme state, making it easy to manage and retrieve.</li>
+            <li><strong>Memory efficiency</strong>: Since only one instance of the theme state exists, it can be more memory-efficient than creating multiple instances.</li>
         </ul>
         <h3>Disadvantages:</h3>
         <ul>
-            <li><strong>Tight Coupling:</strong> The singleton pattern can lead to tight coupling between classes, making it harder to test and maintain.</li>
-            <li><strong>Testing Challenges:</strong> Singletons can make unit testing more difficult due to their global state.</li>
-            <li><strong>Multithreading Issues:</strong> In multithreaded environments, singletons can lead to issues if not implemented carefully.</li>
+            <li><strong>Tight coupling</strong>: The singleton pattern can lead to tight coupling between components, making it harder to test and maintain.</li>
+            <li><strong>Hidden dependencies</strong>: The singleton pattern can make it difficult to track dependencies between components, leading to unexpected behavior.</li>
+            <li><strong>Limited flexibility</strong>: The singleton pattern can make it harder to change or replace the theme state management system in the future.</li>
         </ul>
         <h3>Alternatives:</h3>
         <ul>
-            <li><strong>Dependency Injection:</strong> Instead of using a singleton, you can use dependency injection to provide the theme state to classes that need it.</li>
-            <li><strong>Observer Pattern:</strong> The observer pattern can be used to notify classes of theme changes, reducing the need for a global theme state.</li>
+            <li><strong>Dependency injection</strong>: Instead of using a singleton, you can use dependency injection to provide the theme state to components that need it.</li>
+            <li><strong>Observer pattern</strong>: You can use the observer pattern to notify components of changes to the theme state, rather than having a global point of access.</li>
         </ul>
     </div>
 
     <script>
-        // ThemeState Singleton
-        let ThemeState = (function() {
-            let instance;
+        // ThemeManager Singleton
+        class ThemeManager {
+            static instance;
 
-            function createInstance() {
-                let theme = localStorage.getItem('theme') || 'light';
-                document.body.classList.add(theme + '-theme');
-                return {
-                    theme,
-                    toggleTheme: function() {
-                        let newTheme = this.theme === 'light' ? 'dark' : 'light';
-                        document.body.classList.remove(this.theme + '-theme');
-                        document.body.classList.add(newTheme + '-theme');
-                        this.theme = newTheme;
-                        localStorage.setItem('theme', newTheme);
-                    }
-                };
+            constructor() {
+                if (ThemeManager.instance) {
+                    return ThemeManager.instance;
+                }
+                ThemeManager.instance = this;
+                this.theme = 'light';
+                this.init();
             }
 
-            return {
-                getInstance: function() {
-                    if (!instance) {
-                        instance = createInstance();
-                    }
-                    return instance;
+            init() {
+                const theme = localStorage.getItem('theme');
+                if (theme) {
+                    this.theme = theme;
+                    document.body.classList.add(theme === 'dark' ? 'dark-theme' : 'light-theme');
                 }
-            };
-        })();
+            }
 
-        // Get the theme state instance
-        let themeState = ThemeState.getInstance();
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                document.body.classList.remove(this.theme === 'light' ? 'dark-theme' : 'light-theme');
+                document.body.classList.add(this.theme === 'dark' ? 'dark-theme' : 'light-theme');
+                localStorage.setItem('theme', this.theme);
+            }
 
-        // Add event listener to theme toggle button
-        document.getElementById('theme-toggle').addEventListener('click', function() {
-            themeState.toggleTheme();
-        });
+            static getInstance() {
+                if (!ThemeManager.instance) {
+                    ThemeManager.instance = new ThemeManager();
+                }
+                return ThemeManager.instance;
+            }
+        }
+
+        // Initialize ThemeManager
+        new ThemeManager();
     </script>
 </body>
 </html>

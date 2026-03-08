@@ -1,266 +1,438 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSV Parser</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV Parser</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #1a1a2e;
-      color: #e0e0e0;
-      min-height: 100vh;
-      padding: 30px 20px;
-    }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 30px 20px;
+  }
 
-    h1 {
-      text-align: center;
-      font-size: 1.8rem;
-      margin-bottom: 6px;
-      color: #a78bfa;
-      letter-spacing: 1px;
-    }
+  h1 {
+    text-align: center;
+    color: #a78bfa;
+    margin-bottom: 24px;
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+  }
 
-    .subtitle {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #888;
-      margin-bottom: 24px;
-    }
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
 
-    .input-section {
-      max-width: 900px;
-      margin: 0 auto 28px auto;
-      background: #16213e;
-      border-radius: 10px;
-      padding: 20px;
-      border: 1px solid #2d2d5e;
-    }
+  .input-section {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 28px;
+    border: 1px solid #2d2d5e;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
 
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: #a78bfa;
-      margin-bottom: 8px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
+  label {
+    display: block;
+    margin-bottom: 10px;
+    color: #a78bfa;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
 
-    textarea {
-      width: 100%;
-      height: 180px;
-      background: #0f3460;
-      color: #e0e0e0;
-      border: 1px solid #3d3d7e;
-      border-radius: 6px;
-      padding: 12px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.88rem;
-      resize: vertical;
-      outline: none;
-      transition: border-color 0.2s;
-      line-height: 1.5;
-    }
+  textarea {
+    width: 100%;
+    height: 180px;
+    background: #0f3460;
+    color: #e0e0e0;
+    border: 1px solid #3d3d7a;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.88rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
 
-    textarea:focus {
-      border-color: #a78bfa;
-    }
+  textarea:focus {
+    border-color: #a78bfa;
+  }
 
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-top: 14px;
-      flex-wrap: wrap;
-    }
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
 
-    button {
-      background: #a78bfa;
-      color: #1a1a2e;
-      border: none;
-      padding: 10px 28px;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      letter-spacing: 0.5px;
-    }
+  button {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
 
-    button:hover {
-      background: #c4b5fd;
-    }
+  #parseBtn {
+    background: #7c3aed;
+    color: #fff;
+  }
 
-    button:active {
-      transform: scale(0.97);
-    }
+  #parseBtn:hover {
+    background: #6d28d9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124,58,237,0.4);
+  }
 
-    .clear-btn {
-      background: transparent;
-      color: #888;
-      border: 1px solid #444;
-      font-weight: 500;
-    }
+  #clearBtn {
+    background: #374151;
+    color: #d1d5db;
+  }
 
-    .clear-btn:hover {
-      background: #2d2d5e;
-      color: #ccc;
-    }
+  #clearBtn:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+  }
 
-    .option-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      color: #aaa;
-      cursor: pointer;
-      text-transform: none;
-      font-weight: normal;
-      letter-spacing: 0;
-    }
+  #sampleBtn {
+    background: #065f46;
+    color: #6ee7b7;
+  }
 
-    .option-label input[type="checkbox"] {
-      accent-color: #a78bfa;
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-    }
+  #sampleBtn:hover {
+    background: #047857;
+    transform: translateY(-1px);
+  }
 
-    .error-box {
-      max-width: 900px;
-      margin: 0 auto 20px auto;
-      background: #3b1a1a;
-      border: 1px solid #7f1d1d;
-      color: #fca5a5;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 0.88rem;
-      display: none;
-    }
+  .error {
+    background: #450a0a;
+    border: 1px solid #991b1b;
+    color: #fca5a5;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
 
-    .stats {
-      max-width: 900px;
-      margin: 0 auto 14px auto;
-      font-size: 0.82rem;
-      color: #888;
-      display: none;
-    }
+  .stats {
+    color: #9ca3af;
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+    padding-left: 2px;
+  }
 
-    .stats span {
-      color: #a78bfa;
-      font-weight: 600;
-    }
+  .stats span {
+    color: #a78bfa;
+    font-weight: 600;
+  }
 
-    .table-wrapper {
-      max-width: 900px;
-      margin: 0 auto;
-      overflow-x: auto;
-      border-radius: 10px;
-      border: 1px solid #2d2d5e;
-      display: none;
-    }
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #2d2d5e;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
-    }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
 
-    thead tr {
-      background: #a78bfa;
-      color: #1a1a2e;
-    }
+  thead tr {
+    background: #4c1d95;
+  }
 
-    thead th {
-      padding: 11px 14px;
-      text-align: left;
-      font-weight: 700;
-      white-space: nowrap;
-      border-right: 1px solid #7c5cdb;
-      letter-spacing: 0.3px;
-    }
+  thead th {
+    padding: 13px 16px;
+    text-align: left;
+    color: #ddd6fe;
+    font-weight: 700;
+    border-right: 1px solid #5b21b6;
+    white-space: nowrap;
+    letter-spacing: 0.4px;
+  }
 
-    thead th:last-child {
-      border-right: none;
-    }
+  thead th:last-child {
+    border-right: none;
+  }
 
-    tbody tr:nth-child(odd) {
-      background: #16213e;
-    }
+  tbody tr:nth-child(odd) {
+    background: #16213e;
+  }
 
-    tbody tr:nth-child(even) {
-      background: #1a2550;
-    }
+  tbody tr:nth-child(even) {
+    background: #1a1a40;
+  }
 
-    tbody tr:hover {
-      background: #0f3460;
-    }
+  tbody tr:hover {
+    background: #1e3a5f;
+  }
 
-    tbody td {
-      padding: 9px 14px;
-      border-right: 1px solid #2d2d5e;
-      border-bottom: 1px solid #2d2d5e;
-      vertical-align: top;
-      word-break: break-word;
-      max-width: 300px;
-    }
+  tbody td {
+    padding: 11px 16px;
+    border-right: 1px solid #2d2d5e;
+    border-top: 1px solid #2d2d5e;
+    color: #d1d5db;
+    word-break: break-word;
+    max-width: 300px;
+  }
 
-    tbody td:last-child {
-      border-right: none;
-    }
+  tbody td:last-child {
+    border-right: none;
+  }
 
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
+  .row-num {
+    color: #6b7280;
+    font-size: 0.78rem;
+    user-select: none;
+    text-align: center;
+    padding: 11px 10px;
+    min-width: 40px;
+  }
 
-    .empty-cell {
-      color: #555;
-      font-style: italic;
-      font-size: 0.8rem;
-    }
+  .empty-cell {
+    color: #4b5563;
+    font-style: italic;
+    font-size: 0.8rem;
+  }
 
-    .row-num {
-      color: #555;
-      font-size: 0.78rem;
-      text-align: center !important;
-      padding: 9px 8px !important;
-      white-space: nowrap;
-      user-select: none;
-      width: 36px;
-    }
-
-    thead .row-num-header {
-      background: #8b6fd4;
-      text-align: center;
-      width: 36px;
-      font-size: 0.75rem;
-    }
-  </style>
+  #output {
+    min-height: 10px;
+  }
+</style>
 </head>
 <body>
-
-  <h1>⚡ CSV Parser</h1>
-  <p class="subtitle">Handles quoted fields, commas inside quotes, and escaped quotes — correctly.</p>
+<div class="container">
+  <h1>⚙ CSV Parser</h1>
 
   <div class="input-section">
-    <label for="csvInput">Paste CSV Data</label>
-    <textarea id="csvInput" placeholder='Name,Age,Bio,Location
-"Smith, John",34,"Loves hiking, camping, and ""outdoor adventures""","New York, NY"
-"Jane ""The Ace"" Doe",29,"Software engineer at a startup","San Francisco, CA"
-Alice,22,Simple field,Boston'></textarea>
-    <div class="controls">
-      <button onclick="parseAndRender()">Parse CSV</button>
-      <button class="clear-btn" onclick="clearAll()">Clear</button>
-      <label class="option-label">
-        <input type="checkbox" id="firstRowHeader" checked>
-        First row is header
-      </label>
-      <label class="option-label">
-        <input type="checkbox" id
+    <label for="csvInput">Paste your CSV data below:</label>
+    <textarea id="csvInput" spellcheck="false" placeholder='name,age,bio&#10;"Smith, John",30,"Loves hiking, camping"&#10;"Jane ""The Boss"" Doe",28,"Developer at ""Acme Corp"""'></textarea>
+    <div class="btn-row">
+      <button id="parseBtn">▶ Parse CSV</button>
+      <button id="sampleBtn">⬇ Load Sample</button>
+      <button id="clearBtn">✕ Clear</button>
+    </div>
+  </div>
+
+  <div id="output"></div>
+</div>
+
+<script>
+  // ─── Core parser ────────────────────────────────────────────────────────────
+  // Implements RFC 4180 properly:
+  //   • Fields may be enclosed in double-quotes.
+  //   • A double-quote inside a quoted field is escaped as two double-quotes ("").
+  //   • Commas inside quoted fields are treated as literal characters.
+  //   • Newlines inside quoted fields are preserved.
+  function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let i = 0;
+    const len = text.length;
+
+    while (i < len) {
+      // ── quoted field ──────────────────────────────────────────────────────
+      if (text[i] === '"') {
+        i++; // skip opening quote
+        let field = '';
+
+        while (i < len) {
+          if (text[i] === '"') {
+            // peek ahead: two double-quotes → escaped quote
+            if (i + 1 < len && text[i + 1] === '"') {
+              field += '"';
+              i += 2;
+            } else {
+              // closing quote
+              i++;
+              break;
+            }
+          } else {
+            field += text[i];
+            i++;
+          }
+        }
+
+        row.push(field);
+
+        // after closing quote, expect comma, CR, LF, or end-of-string
+        if (i < len) {
+          if (text[i] === ',') {
+            i++; // consume comma, next iteration reads next field
+          } else if (text[i] === '\r') {
+            i++;
+            if (i < len && text[i] === '\n') i++;
+            rows.push(row);
+            row = [];
+          } else if (text[i] === '\n') {
+            i++;
+            rows.push(row);
+            row = [];
+          }
+          // anything else (malformed) — just continue
+        }
+
+      // ── unquoted field ────────────────────────────────────────────────────
+      } else {
+        let field = '';
+
+        while (i < len && text[i] !== ',' && text[i] !== '\n' && text[i] !== '\r') {
+          field += text[i];
+          i++;
+        }
+
+        row.push(field);
+
+        if (i < len) {
+          if (text[i] === ',') {
+            i++;
+          } else if (text[i] === '\r') {
+            i++;
+            if (i < len && text[i] === '\n') i++;
+            rows.push(row);
+            row = [];
+          } else if (text[i] === '\n') {
+            i++;
+            rows.push(row);
+            row = [];
+          }
+        }
+      }
+    }
+
+    // push last row if it has content
+    if (row.length > 0) {
+      rows.push(row);
+    }
+
+    return rows;
+  }
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
+  function render(rows) {
+    const output = document.getElementById('output');
+
+    if (!rows || rows.length === 0) {
+      output.innerHTML = '<div class="error">No data found. Please check your input.</div>';
+      return;
+    }
+
+    // filter out completely empty trailing rows
+    while (rows.length > 0 && rows[rows.length - 1].every(c => c === '')) {
+      rows.pop();
+    }
+
+    if (rows.length === 0) {
+      output.innerHTML = '<div class="error">No data found. Please check your input.</div>';
+      return;
+    }
+
+    const headers = rows[0];
+    const dataRows = rows.slice(1);
+
+    // normalise: pad shorter rows to header length
+    const colCount = headers.length;
+    dataRows.forEach(r => {
+      while (r.length < colCount) r.push('');
+    });
+
+    let html = `<div class="stats">
+      Parsed <span>${dataRows.length}</span> row${dataRows.length !== 1 ? 's' : ''}
+      across <span>${colCount}</span> column${colCount !== 1 ? 's' : ''}
+    </div>
+    <div class="table-wrapper"><table>
+      <thead><tr>
+        <th class="row-num">#</th>`;
+
+    headers.forEach(h => {
+      html += `<th>${escHtml(h)}</th>`;
+    });
+
+    html += `</tr></thead><tbody>`;
+
+    dataRows.forEach((row, idx) => {
+      html += `<tr><td class="row-num">${idx + 1}</td>`;
+      for (let c = 0; c < colCount; c++) {
+        const val = row[c] !== undefined ? row[c] : '';
+        html += val === ''
+          ? `<td><span class="empty-cell">empty</span></td>`
+          : `<td>${escHtml(val)}</td>`;
+      }
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    output.innerHTML = html;
+  }
+
+  function escHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+  }
+
+  // ─── Sample data ─────────────────────────────────────────────────────────────
+  const SAMPLE = `name,age,city,notes
+"Smith, John",30,"New York","Loves hiking, camping, and ""extreme"" sports"
+"Jane ""The Boss"" Doe",28,London,"Works at ""Acme Corp""; enjoys coding"
+Alice,25,"San Francisco","Simple row, no tricks"
+Bob,35,Berlin,"""Quoted"" from the start"
+"Multi
+Line",42,Paris,"This field
+spans two lines"
+Charlie,,,"All empty fields after name"`;
+
+  // ─── Events ──────────────────────────────────────────────────────────────────
+  document.getElementById('parseBtn').addEventListener('click', () => {
+    const raw = document.getElementById('csvInput').value;
+    if (!raw.trim()) {
+      document.getElementById('output').innerHTML =
+        '<div class="error">Please enter some CSV data first.</div>';
+      return;
+    }
+    try {
+      const rows = parseCSV(raw);
+      render(rows);
+    } catch (e) {
+      document.getElementById('output').innerHTML =
+        `<div class="error">Parse error: ${escHtml(e.message)}</div>`;
+    }
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('csvInput').value = '';
+    document.getElementById('output').innerHTML = '';
+  });
+
+  document.getElementById('sampleBtn').addEventListener('click', () => {
+    document.getElementById('csvInput').value = SAMPLE;
+    document.getElementById('output').innerHTML = '';
+  });
+
+  // parse on Ctrl+Enter
+  document.getElementById('csvInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      document.getElementById('parseBtn').click();
+    }
+  });
+</script>
+</body>
+</html>

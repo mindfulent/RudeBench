@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Memory Leak Demo — Leaking vs Fixed (event listeners & retained DOM refs)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; margin: 20px; color: #222; }
+  h1 { margin-top: 0; }
+  .container { display: flex; gap: 20px; align-items: flex-start; }
+  .column { flex: 1 1 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+  .controls { display:flex; gap:8px; margin-bottom:10px; }
+  button { padding:6px 10px; border-radius:4px; border:1px solid #bbb; background:white; cursor:pointer;}
+  button.danger { background:#ffe8e8; border-color:#f5bcbc; }
+  .widgets { margin-top:8px; display:flex; flex-direction:column; gap:6px; }
+  .widget { padding:8px 10px; background:#fff; border-radius:6px; border:1px solid #eee; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .log { margin-top:10px; max-height:180px; overflow:auto; font-family: monospace; font-size:12px; background:#111; color:#bcd; padding:8px; border-radius:6px; }
+  .status { margin-top:8px; font-weight:600; }
+  .counter { font-size:20px; color:#b33; }
+  .fixed .counter { color: #197619; }
+  .note { font-size:13px; color:#555; margin-top:8px; }
+  .explain { margin-top:18px; padding:12px; background:#f4f8ff; border:1px solid #d4e4ff; border-radius:8px; }
+  .small { font-size:13px; color:#444; }
+</style>
+</head>
+<body>
+  <h1>Memory Leak Demo: Event listeners & retained DOM refs (not GC bug)</h1>
+  <div class="small">
+    Two side-by-side demos. Left: "Leaking version" — widgets are removed visually but internal references & event listeners are not cleaned, causing retained objects. Right: "Fixed version" — listeners and references are removed properly.
+  </div>
+
+  <div class="container" style="margin-top:14px;">
+    <div class="column leaking">
+      <h2>Leaking version</h2>
+      <div class="controls">
+        <button id="leak-add">Add widget</button>
+        <button id="leak-remove" class="danger">Remove last</button>
+        <button id="leak-clear" class="danger">Remove all</button>
+      </div>
+      <div class="status">Tracked widget objects: <span id="leak-count" class="counter">0</span></div>
+      <div class="note">Open DevTools -> Console to inspect retained objects. This page simulates retained references counter for demonstration.</div>
+      <div class="widgets" id="leak-widgets"></div>
+      <div class="log" id="leak-log"></div>
+    </div>
+
+    <div class="column fixed">
+      <h2>Fixed version</h2>
+      <div class="controls">
+        <button id="fix-add">Add widget</button>
+        <button id="fix-remove" class="danger">Remove last</button>
+        <button id="fix-clear" class="danger">Remove all</button>
+      </div>
+      <div class="status">Tracked widget objects: <span id="fix-count" class="counter">0</span></div>
+      <div class="note">This version removes event listeners and clears references correctly on deletion.</div>
+      <div class="widgets" id="fix-widgets"></div>
+      <div class="log" id="fix-log"></div>
+    </div>
+  </div>
+
+  <div class="explain">
+    <strong>Why the GC-is-broken theory is wrong:</strong>
+    <ul>
+      <li>JavaScript garbage collectors free objects that are no longer reachable from roots (global variables, DOM, closures, etc.).</li>
+      <li>If you keep references (stored variables, closures capturing DOM, or event listeners that reference objects), the GC will correctly keep them alive — this looks like a "leak" but is actually your code holding the references.</li>
+      <li>Common leaks: event listeners attached to DOM nodes that outlive intended lifetime; arrays/Maps that accumulate objects; closures capturing DOM nodes; DOM nodes referenced from long-lived structures.</li>
+      <li>Proper fix: remove event listeners, null out references, and avoid storing DOM nodes in long-lived caches unless you manage lifecycle explicitly.</li>
+    </ul>
+  </div>
+
+<script>
+/*
+  Demo implementation notes:
+
+  - We maintain a "registry" array that simulates long-lived storage of widget objects.
+  - The leaking version pushes widget objects into registry but never removes them on deletion.
+  - The fixed version removes objects from registry and explicitly removes event listeners and DOM references.
+  - Each widget instance also attaches a click listener on window that references the widget; if the listener isn't removed,
+    that window-scoped listener keeps the widget reachable, preventing GC.
+  - For demo purposes we also increment/decrement a visible counter to demonstrate retained objects.
+*/
+
+(function () {
+  // Utilities
+  function el(tag, attrs) {
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(k => e.setAttribute(k, attrs[k]));
+    return e;
+  }
+  function log(elem, msg) {
+    var p = document.createElement('div');
+    p.textContent = (new Date()).toLocaleTimeString() + '  ' + msg;
+    elem.appendChild(p);
+    elem.scrollTop = elem.scrollHeight;
+  }
+
+  // Shared "global" registry to simulate long-lived storage/retained objects
+  // In real apps this might be a cache, a module-level map, or closures in long-lived components.
+  var globalRegistry = {
+    leaking: [],
+    fixed: []
+  };
+
+  // Counter updaters
+  function updateCount(which) {
+    var countEl = document.getElementById(which + '-count');
+    var val = globalRegistry[which].length;
+    countEl.textContent = val;
+  }
+
+  // ------------------------------
+  // Leaking Widget Implementation
+  // ------------------------------
+  function LeakingWidget(id, container, logEl) {
+    this.id = id;
+    this.container = container; // DOM reference stored on object
+    // Create DOM
+    this.node = document.createElement('div');
+    this.node.className = 'widget';
+    this.node.textContent = 'Widget #' + id;
+    var btn = document.createElement('button');
+    btn.textContent = 'Do work';
+    this.node.appendChild(btn);
+    container.appendChild(this.node);
+
+    // This listener captures `this` and is added to window.
+    // Because we never remove this listener in the leaking version, it keeps the object reachable.
+    this._onWindowClick = (function(self) {
+      return function() {
+        // referencing self keeps it live
+        // do trivial operation
+        // note: uses closure-captured object (self)
+        // In a leaking app this is how a global subscription can retain widget state.
+        // No visible effect here; just simulates a retained function reference.
+        // (In real apps the handler might update UI, etc.)
+        void self.id;
+      };
+    })(this);
+    window.addEventListener('click', this._onWindowClick);
+
+    // Also store the object in a global registry (simulates caching)
+    globalRegistry.leaking.push(this);
+
+    log(logEl, 'Created widget ' + this.id + ' (listener attached, stored in registry)');
+    updateCount('leaking');
+  }
+
+  // Deletion for leaking widget — intentionally incomplete!
+  LeakingWidget.prototype.destroy = function(logEl) {
+    // Remove node from DOM visually, but DON'T remove event listener and DON'T remove from registry.
+    if (this.node && this.node.parentNode) this.node.parentNode.removeChild(this.node);
+    log(logEl, 'Removed DOM for widget ' + this.id + ' (BUT listener & registry retained)');
+
+    // Intentionally not:
+    // - window.removeEventListener('click', this._onWindowClick)
+    // - removing from globalRegistry.leaking
+    // - nulling this.node or this.container
+  };
+
+  // ------------------------------
+  // Fixed Widget Implementation
+  // ------------------------------
+  function FixedWidget(id, container, logEl) {
+    this.id = id;
+    this.container = container;
+    this.node = document.createElement('div');
+    this.node.className = 'widget';
+    this.node.textContent = 'Widget #' + id;
+    var btn = document.createElement('button');
+    btn.textContent = 'Do work';
+    this.node.appendChild(btn);
+    container.appendChild(this.node);
+
+    // Attach a listener but we'll remove it on destroy.
+    this._onWindowClick = (function(self) {
+      return function() {
+        // small usage to make it realistic
+        void self.id;
+      };
+    })(this);
+    window.addEventListener('click', this._onWindowClick);
+
+    // Also store in registry (like an app cache)
+    globalRegistry.fixed.push(this);
+
+    log(logEl, 'Created widget ' + this.id + ' (listener attached, stored in registry)');
+    updateCount('fixed');
+  }
+
+  FixedWidget.prototype.destroy = function(logEl) {
+    // Remove DOM
+    if (this.node && this.node.parentNode) this.node.parentNode.removeChild(this.node);
+
+    // Remove window listener so no global reference remains
+    if (this._onWindowClick) {
+      window.removeEventListener('click', this._onWindowClick);
+      log(logEl, 'Removed window listener for widget ' + this.id);
+      this._onWindowClick = null;
+    }
+
+    // Remove from global registry (ensures no further strong references)
+    var reg = globalRegistry.fixed;
+    var idx = reg.indexOf(this);
+    if (idx >= 0) {
+      reg.splice(idx, 1);
+      log(logEl, 'Removed widget ' + this.id + ' from registry');
+    } else {
+      log(logEl, 'Widget ' + this.id + ' not found in registry!?');
+    }
+
+    // Clear references on the object to make it collectible
+    this.node = null;
+    this.container = null;
+
+    updateCount('fixed');
+    log(logEl, 'Destroyed widget ' + this.id + ' (cleaned up)');
+  };
+
+  // ------------------------------
+  // Wiring UI
+  // ------------------------------
+  var leakWidgetsContainer = document.getElementById('leak-widgets');
+  var fixWidgetsContainer = document.getElementById('fix-widgets');
+  var leakLog = document.getElementById('leak-log');
+  var fixLog = document.getElementById('fix-log');
+
+  var leakNextId = 1;
+  var fixNextId = 1;
+
+  var leakInstances = []; // DOM-level list of created instances for UI removal
+  var fixInstances = [];
+
+  document.getElementById('leak-add').addEventListener('click', function() {
+    var w = new LeakingWidget(leakNextId++, leakWidgetsContainer, leakLog);
+    leakInstances.push(w);
+  });
+  document.getElementById('fix-add').addEventListener('click', function() {
+    var w = new FixedWidget(fixNextId++, fixWidgetsContainer, fixLog);
+    fixInstances.push(w);
+  });
+
+  document.getElementById('leak-remove').addEventListener('click', function() {
+    var w = leakInstances.pop();
+    if (!w) { log(leakLog, 'No widget to remove'); return; }
+    w.destroy(leakLog);
+    // Intentionally not removing from the global registry
+    updateCount('leaking');
+  });
+  document.getElementById('fix-remove').addEventListener('click', function() {
+    var w = fixInstances.pop();
+    if (!w) { log(fixLog, 'No widget to remove'); return; }
+    w.destroy(fixLog);
+  });
+
+  document.getElementById('leak-clear').addEventListener('click', function() {
+    while (leakInstances.length) {
+      var w = leakInstances.pop();
+      w.destroy(leakLog);
+    }
+    log(leakLog, 'Cleared visible widgets (registry still holds objects)');
+    updateCount('leaking');
+  });
+  document.getElementById('fix-clear').addEventListener('click', function() {
+    while (fixInstances.length) {
+      var w = fixInstances.pop();
+      w.destroy(fixLog);
+    }
+    log(fixLog, 'Cleared visible widgets and cleaned registry');
+    updateCount('fixed');
+  });
+
+  // For demonstration, add a few to start
+  document.getElementById('leak-add').click();
+  document.getElementById('leak-add').click();
+  document.getElementById('fix-add').click();
+  document.getElementById('fix-add').click();
+
+  // Tip: open DevTools -> Console -> type the following to inspect retained objects arrays:
+  //   globalRegistry.leaking
+  //   globalRegistry.fixed
+  //
+  // In this demo globalRegistry.leaking still contains widget objects after removal,
+  // and each widget has an active window listener. That combination ensures the GC
+  // cannot collect them. There's nothing wrong with the garbage collector here.
+})();
+</script>
+
+</body>
+</html>

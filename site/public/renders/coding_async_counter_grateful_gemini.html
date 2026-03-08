@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Counter Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .widget {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            width: 380px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+        h2 {
+            color: #0056b3;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .counter-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 25px;
+            padding: 10px 20px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            min-width: 80px;
+            display: inline-block;
+            background-color: #eaf6ff;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            max-width: 200px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        button:active {
+            background-color: #1e7e34;
+        }
+        .explanation {
+            background-color: #e6f7ff;
+            border-left: 5px solid #007bff;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.95em;
+            line-height: 1.6;
+            width: 100%;
+            max-width: 850px;
+            box-sizing: border-box;
+        }
+        .explanation h3 {
+            color: #0056b3;
+            margin-top: 0;
+        }
+        .explanation code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #c7254e;
+        }
+        .explanation strong {
+            color: #d9534f; /* For emphasis on "bug" or "problem" */
+        }
+        .explanation .fix {
+            color: #5cb85c; /* For emphasis on "fix" or "solution" */
+        }
+        .explanation ul {
+            padding-left: 20px;
+        }
+        .explanation li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Race Condition Counter Demo</h1>
+
+    <p>Rapidly click the "Increment" buttons to observe the behavior. The "Buggy Counter" will often show a value less than the number of clicks due to the race condition, especially when clicked very quickly. The "Fixed Counter" will always be accurate.</p>
+
+    <div class="container">
+        <!-- Buggy Counter Widget -->
+        <div class="widget">
+            <h2>Buggy Counter (Race Condition)</h2>
+            <div id="buggyCounterDisplay" class="counter-display">0</div>
+            <button id="buggyIncrementButton">Increment (Buggy)</button>
+        </div>
+
+        <!-- Corrected Counter Widget -->
+        <div class="widget">
+            <h2>Fixed Counter (No Race Condition)</h2>
+            <div id="fixedCounterDisplay" class="counter-display">0</div>
+            <button id="fixedIncrementButton">Increment (Fixed)</button>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>Understanding the Race Condition and Its Fix</h3>
+
+        <h4>The Buggy Counter: Why it Fails</h4>
+        <ul>
+            <li><strong>Shared Resource:</strong> Both counters operate on a shared variable (<code>buggyCount</code> and <code>fixedCount</code> respectively).</li>
+            <li><strong>Asynchronous Operation:</strong> When you click the button, instead of incrementing immediately, we simulate an asynchronous operation using <code>setTimeout(..., 100)</code>. This delay is crucial.</li>
+            <li><strong>Read-Modify-Write Cycle:</strong>
+                <ol>
+                    <li>A click event handler <strong>reads</strong> the current value of the counter (e.g., <code>0</code>).</li>
+                    <li>It then schedules a task (via <code>setTimeout</code>) to <strong>modify</strong> that value (add 1).</li>
+                    <li>Finally, the scheduled task <strong>writes</strong> the new value back to the display.</li>
+                </ol>
+            </li>
+            <li><strong>The Race:</strong> If you click the button rapidly, say twice, within the 100ms delay:
+                <ul>
+                    <li><strong>Click 1:</strong> Reads <code>buggyCount = 0</code>. Schedules to update to <code>0 + 1 = 1</code>.</li>
+                    <li><strong>Click 2 (happens before Click 1's update finishes):</strong> Reads <code>buggyCount = 0</code> (it's still 0 because Click 1 hasn't written its result yet!). Schedules to update to <code>0 + 1 = 1</code>.</li>
+                </ul>
+            </li>
+            <li><strong>The Result:</strong> Both operations end up calculating <code>1</code> and writing <code>1</code> to the display. You clicked twice, but the counter only shows <code>1</code>, missing one increment. This is a <strong>race condition</strong> because the outcome depends on the unpredictable timing or "race" of multiple operations trying to access and modify the shared resource.</li>
+        </ul>
+
+        <h4>The Fixed Counter: How it Works</h4>
+        <ul>
+            <li><strong>The Problem:</strong> The core issue in the buggy version is that the "read" operation happens *before* the asynchronous operation completes, leading to outdated information.</li>
+            <li><strong>The Fix (Queuing/Synchronization):</strong> The corrected version introduces a simple form of synchronization by using a **promise chain** (or more simply, by processing one update at a time).
+                <ul>
+                    <li>Instead of directly incrementing <code>fixedCount</code>, each click adds a task to a queue.</li>
+                    <li>A mechanism ensures that only one increment operation (the <code>setTimeout</code>) is active at any given time.</li>
+                    <li>The <code>isUpdating</code> flag acts as a **mutex** (mutual exclusion lock). When an update starts, <code>isUpdating</code> is set to <code>true</code>, preventing new updates from starting until the current one finishes.</li>
+                    <li>Subsequent clicks just increment <code>pendingIncrements</code>, which acts as a queue. Once the current update finishes, it checks <code>pendingIncrements</code> and processes the next one if available.</li>
+                </ul>
+            </li>
+            <li><strong>Guaranteed Order:</strong> This ensures that each increment operation reads the *latest* value of <code>fixedCount</code> after the previous operation has completed and written its result. No increments are "lost."</li>
+            <li><strong>Alternative Fix (Simpler for this case):</strong> A simpler fix for *just this specific counter* would be to simply remove the `setTimeout` and increment immediately, but the purpose here is to demonstrate how to handle asynchronous operations that *must* read and write a shared state without race conditions. The `isUpdating` flag and `pendingIncrements` demonstrate a basic queuing mechanism.</li>
+        </ul>
+    </div>
+
+    <script>
+        // --- Buggy Counter Logic ---
+        let buggyCount = 0;
+        const buggyCounterDisplay = document.getElementById('buggyCounterDisplay');
+        const buggyIncrementButton = document.getElementById('buggyIncrementButton');
+
+        buggyIncrementButton.addEventListener('click', () => {
+            // Simulate an async operation (e.g., fetching data, complex calculation)
+            // It reads the current count, then after a delay, writes the new count.
+            const valueBeforeAsync = buggyCount; // READ operation
+            console.log(`Buggy: Clicked. Reading count: ${valueBeforeAsync}`);
+
+            setTimeout(() => {
+                buggyCount = valueBeforeAsync + 1; // MODIFY & WRITE operation
+                buggyCounterDisplay.textContent = buggyCount;
+                console.log(`Buggy: Update finished. New count: ${buggyCount}`);
+            }, 100); // 100ms delay to allow clicks to overlap
+        });
+
+        // --- Fixed Counter Logic ---
+        let fixedCount = 0;
+        let isUpdating = false; // Flag to indicate if an update is in progress
+        let pendingIncrements = 0; // Queue for pending increments
+        const fixedCounterDisplay = document.getElementById('fixedCounterDisplay');
+        const fixedIncrementButton = document.getElementById('fixedIncrementButton');
+
+        function processFixedIncrement() {
+            if (isUpdating) {
+                // If an update is already in progress, just queue this increment
+                pendingIncrements++;
+                console.log(`Fixed: Update in progress. Queuing increment. Pending: ${pendingIncrements}`);
+                return;
+            }
+
+            isUpdating = true; // Set flag: an update is now in progress
+            pendingIncrements++; // Account for the current increment being processed
+
+            // Simulate an async operation
+            const valueBeforeAsync = fixedCount; // READ operation
+            console.log(`Fixed: Starting update. Reading count: ${valueBeforeAsync}`);
+
+            setTimeout(() => {
+                fixedCount = valueBeforeAsync + 1; // MODIFY & WRITE operation
+                fixedCounterDisplay.textContent = fixedCount;
+                console.log(`Fixed: Update finished. New count: ${fixedCount}`);
+
+                isUpdating = false; // Clear flag: update is complete
+                pendingIncrements--; // This increment is now done
+
+                // If there are pending increments, start processing the next one
+                if (pendingIncrements > 0) {
+                    console.log(`Fixed: More pending increments found. Processing next.`);
+                    processFixedIncrement(); // Recursively call to process the next item in the queue
+                } else {
+                    console.log(`Fixed: No more pending increments.`);
+                }
+            }, 100); // Same 100ms delay
+        }
+
+        fixedIncrementButton.addEventListener('click', () => {
+            processFixedIncrement();
+        });
+
+    </script>
+</body>
+</html>

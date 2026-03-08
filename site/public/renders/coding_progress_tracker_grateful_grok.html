@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Bar Concurrency Bug Demo</title>
+    <style>
+        /* Basic styling for the progress bar */
+        .progress-container {
+            width: 100%;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+        
+        /* Layout for sections */
+        section {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Progress Bar Concurrency Bug Demonstration</h1>
+    
+    <section id="buggy-section">
+        <h2>Buggy Version</h2>
+        <p><strong>Explanation of the Problem:</strong> In this version, multiple concurrent tasks (simulated with <code>setTimeout</code> and <code>Promise</code>) directly access and update a shared progress variable without synchronization. This leads to a race condition, where tasks might read the same outdated value, overwrite each other's changes, or cause the progress to exceed 100% or display incorrect values. For example, if two tasks try to add to the progress at the same time, one might add based on an old state, resulting in inconsistencies.</p>
+        
+        <div id="buggy-progress-container" class="progress-container">
+            <div id="buggy-progress-bar" class="progress-bar">0%</div>
+        </div>
+        
+        <button id="buggy-start-button">Start Buggy Simulation</button>
+    </section>
+    
+    <section id="corrected-section">
+        <h2>Corrected Version</h2>
+        <p><strong>Explanation of the Fix:</strong> In this version, we use a simple queue to synchronize access to the shared progress variable. Each task adds its update to a queue, and updates are processed one by one using a promise-based loop. This ensures that modifications are atomic and sequential, preventing race conditions. As a result, the progress bar accurately reflects the total (e.g., it will reach exactly 100% without errors). This mimics a basic mutex or lock in a single-threaded environment like JavaScript.</p>
+        
+        <div id="corrected-progress-container" class="progress-container">
+            <div id="corrected-progress-bar" class="progress-bar">0%</div>
+        </div>
+        
+        <button id="corrected-start-button">Start Corrected Simulation</button>
+    </section>
+    
+    <script>
+        // Buggy Version Variables
+        let buggyProgress = 0;  // Shared state
+        const buggyUpdateProgressBar = () => {
+            const bar = document.getElementById('buggy-progress-bar');
+            bar.style.width = buggyProgress + '%';
+            bar.textContent = buggyProgress + '%';
+        };
+        
+        const buggySimulateTask = (id, delay) => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    console.log(`Buggy Task ${id} starting... Current progress: ${buggyProgress}%`);
+                    // Simulate work by adding 20% (buggy: direct update without sync)
+                    buggyProgress += 20;  // Race condition here!
+                    buggyUpdateProgressBar();
+                    console.log(`Buggy Task ${id} completed. New progress: ${buggyProgress}%`);
+                    resolve();
+                }, delay);
+            });
+        };
+        
+        document.getElementById('buggy-start-button').addEventListener('click', () => {
+            buggyProgress = 0;  // Reset
+            buggyUpdateProgressBar();  // Reset bar
+            console.log('Starting Buggy Simulation');
+            // Launch 5 concurrent tasks with random delays to simulate concurrency
+            Promise.all([
+                buggySimulateTask(1, 100),
+                buggySimulateTask(2, 200),
+                buggySimulateTask(3, 300),
+                buggySimulateTask(4, 400),
+                buggySimulateTask(5, 500)
+            ]).then(() => {
+                console.log('Buggy Simulation Ended. Final progress should be 100%, but may be incorrect.');
+            });
+        });
+        
+        // Corrected Version Variables
+        let correctedProgress = 0;  // Shared state
+        const correctedUpdateProgressBar = () => {
+            const bar = document.getElementById('corrected-progress-bar');
+            bar.style.width = correctedProgress + '%';
+            bar.textContent = correctedProgress + '%';
+        };
+        
+        const correctedTaskQueue = [];  // Queue for synchronized tasks
+        const processQueue = () => {
+            if (correctedTaskQueue.length > 0) {
+                const task = correctedTaskQueue.shift();  // Get next task
+                task().then(processQueue);  // Process next after this one finishes
+            }
+        };
+        
+        const correctedSimulateTask = (id, delay) => {
+            return () => new Promise(resolve => {
+                setTimeout(() => {
+                    console.log(`Corrected Task ${id} starting... Current progress: ${correctedProgress}%`);
+                    // Add 20% (corrected: update is queued and processed sequentially)
+                    correctedProgress += 20;
+                    correctedUpdateProgressBar();
+                    console.log(`Corrected Task ${id} completed. New progress: ${correctedProgress}%`);
+                    resolve();
+                }, delay);
+            });
+        };
+        
+        document.getElementById('corrected-start-button').addEventListener('click', () => {
+            correctedProgress = 0;  // Reset
+            correctedUpdateProgressBar();  // Reset bar
+            correctedTaskQueue.length = 0;  // Clear queue
+            console.log('Starting Corrected Simulation');
+            // Add tasks to the queue
+            correctedTaskQueue.push(correctedSimulateTask(1, 100));
+            correctedTaskQueue.push(correctedSimulateTask(2, 200));
+            correctedTaskQueue.push(correctedSimulateTask(3, 300));
+            correctedTaskQueue.push(correctedSimulateTask(4, 400));
+            correctedTaskQueue.push(correctedSimulateTask(5, 500));
+            
+            processQueue();  // Start processing the queue
+        });
+    </script>
+</body>
+</html>

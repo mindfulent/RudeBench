@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>String Reverser</title>
+<title>String Reverser Tool</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -11,7 +11,6 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
     background-color: #f0f0f0;
   }
   .container {
@@ -20,60 +19,51 @@
   #input-field {
     padding: 10px;
     font-size: 18px;
-    border: 2px solid #ccc;
-    border-radius: 5px;
+    border: 1px solid #ddd;
   }
-  #reversed-output {
+  #output-field {
     font-size: 18px;
-    margin-top: 20px;
+    white-space: pre;
   }
   .highlight {
     background-color: #dff0d8;
-    animation: highlight 2s;
-  }
-  @keyframes highlight {
-    0% {
-      background-color: #dff0d8;
-    }
-    100% {
-      background-color: transparent;
-    }
+    padding: 0 2px;
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <input id="input-field" type="text" placeholder="Type text here">
-  <div id="reversed-output"></div>
+  <input id="input-field" type="text" placeholder="Type text here...">
+  <div id="output-field"></div>
 </div>
 
 <script>
   const inputField = document.getElementById('input-field');
-  const reversedOutput = document.getElementById('reversed-output');
+  const outputField = document.getElementById('output-field');
 
-  inputField.addEventListener('input', () => {
+  inputField.addEventListener('input', updateReversedText);
+
+  function updateReversedText() {
     const inputText = inputField.value;
     const reversedText = inputText.split('').reverse().join('');
-    
-    // Clear previous output
-    reversedOutput.innerHTML = '';
-    
-    // Add characters one by one with a highlight effect
-    reversedText.split('').forEach((char, index) => {
-      const span = document.createElement('span');
-      span.textContent = char;
-      reversedOutput.appendChild(span);
-      
-      // Apply highlight effect
-      setTimeout(() => {
+    outputField.innerHTML = ''; // Clear previous output
+
+    // Function to add highlighted characters one by one
+    function addHighlightedText(text, index = 0) {
+      if (index < text.length) {
+        const span = document.createElement('span');
+        span.textContent = text[index];
         span.classList.add('highlight');
-        // Remove highlight after animation is done
+        outputField.appendChild(span);
         setTimeout(() => {
           span.classList.remove('highlight');
-        }, 2000); // Match the animation duration
-      }, index * 50); // Delay each character by 50ms
-    });
-  });
+          addHighlightedText(text, index + 1);
+        }, 50); // Adjust speed here
+      }
+    }
+
+    addHighlightedText(reversedText);
+  }
 </script>
 </body>
 </html>

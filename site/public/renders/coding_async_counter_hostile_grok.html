@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demo: Buggy vs Fixed Counter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-around;
+            margin: 20px;
+        }
+        .section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 45%;
+            text-align: center;
+        }
+        .counter-display {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .buggy-warning {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        h2 {
+            color: #333;
+        }
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="section" id="buggy-section">
+        <h2>Buggy Counter (Race Condition)</h2>
+        <div id="buggy-counter-display" class="counter-display">0</div>
+        <div id="buggy-warning" class="buggy-warning" style="display: none;">Race condition detected! Counter may be incorrect.</div>
+        <button id="buggy-increment-btn">Increment</button>
+        <button id="buggy-rapid-btn">Simulate Rapid Clicks (5x)</button>
+        <div class="explanation">
+            <p>This version demonstrates a race condition. When you click "Increment" rapidly, multiple asynchronous operations overlap. Each click reads the current counter value, adds 1, and schedules a write-back using setTimeout. If clicks overlap, they might read the same value before any writes occur, leading to lost updates. For example, if the counter is 0 and you click twice quickly:</p>
+            <ul>
+                <li>First click: Reads 0, plans to set to 1 after a delay.</li>
+                <li>Second click: Reads 0 (before the first write), plans to set to 1 after a delay.</li>
+                <li>Result: Counter ends up as 1 instead of 2.</li>
+            </ul>
+            <p>Check the console for logs of the operations and any errors.</p>
+        </div>
+    </div>
+
+    <div class="section" id="fixed-section">
+        <h2>Fixed Counter (No Race Condition)</h2>
+        <div id="fixed-counter-display" class="counter-display">0</div>
+        <button id="fixed-increment-btn">Increment</button>
+        <button id="fixed-rapid-btn">Simulate Rapid Clicks (5x)</button>
+        <div class="explanation">
+            <p>This version fixes the race condition by using a promise-based queue to ensure updates are processed sequentially. Each increment waits for the previous one to complete before reading, modifying, and writing the shared state. This prevents overlapping operations, so the counter always increments correctly, even with rapid clicks.</p>
+            <p>In the code, a promise chain serializes the asynchronous updates, making them atomic.</p>
+        </div>
+    </div>
+
+    <script>
+        // Buggy Counter Logic
+        let buggyCounter = 0;
+        const buggyDisplay = document.getElementById('buggy-counter-display');
+        const buggyWarning = document.getElementById('buggy-warning');
+        const buggyIncrementBtn = document.getElementById('buggy-increment-btn');
+        const buggyRapidBtn = document.getElementById('buggy-rapid-btn');
+
+        function updateBuggyDisplay() {
+            buggyDisplay.textContent = buggyCounter;
+            console.log('Buggy Counter updated to:', buggyCounter);
+        }
+
+        function incrementBuggy() {
+            console.log('Buggy: Reading counter value...', buggyCounter);
+            let temp = buggyCounter;  // Read shared state
+            setTimeout(() => {
+                buggyCounter = temp + 1;  // Modify and write shared state
+                updateBuggyDisplay();
+                console.log('Buggy: Wrote counter as', buggyCounter);
+                // Simulate detecting a potential issue (for demo purposes)
+                if (buggyCounter < expectedBuggyClicks) {  // Simple heuristic for demo
+                    buggyWarning.style.display = 'block';
+                    console.error('Race condition likely occurred!');
+                } else {
+                    buggyWarning.style.display = 'none';
+                }
+            }, 100);  // Asynchronous delay to simulate overlap
+        }
+
+        let expectedBuggyClicks = 0;  // For demo: Track expected clicks
+
+        buggyIncrementBtn.addEventListener('click', () => {
+            expectedBuggyClicks++;
+            incrementBuggy();
+        });
+
+        buggyRapidBtn.addEventListener('click', () => {
+            expectedBuggyClicks += 5;  // Expect 5 increments
+            for (let i = 0; i < 5; i++) {
+                incrementBuggy();  // Trigger 5 quick increments
+            }
+        });
+
+        // Fixed Counter Logic
+        let fixedCounter = 0;
+        const fixedDisplay = document.getElementById('fixed-counter-display');
+        const fixedIncrementBtn = document.getElementById('fixed-increment-btn');
+        const fixedRapidBtn = document.getElementById('fixed-rapid-btn');
+        let updateQueue = Promise.resolve();  // Start with a resolved promise
+
+        function updateFixedDisplay() {
+            fixedDisplay.textContent = fixedCounter;
+            console.log('Fixed Counter updated to:', fixedCounter);
+        }
+
+        function incrementFixed() {
+            updateQueue = updateQueue.then(() => {
+                return new Promise(resolve => {
+                    console.log('Fixed: Reading counter value...', fixedCounter);
+                    setTimeout(() => {
+                        fixedCounter++;  // Read, modify, and write shared state atomically via queue
+                        updateFixedDisplay();
+                        console.log('Fixed: Wrote counter as', fixedCounter);
+                        resolve();  // Resolve after completion
+                    }, 100);  // Same asynchronous delay
+                });
+            });
+        }
+
+        fixedIncrementBtn.addEventListener('click', incrementFixed);
+
+        fixedRapidBtn.addEventListener('click', () => {
+            for (let i = 0; i < 5; i++) {
+                incrementFixed();  // Trigger 5 quick increments, but they'll queue
+            }
+        });
+    </script>
+</body>
+</html>

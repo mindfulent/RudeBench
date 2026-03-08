@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualization</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        /* Container for the array boxes */
+        #array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px auto;
+            border: 2px solid #ccc;
+            padding: 10px;
+            width: fit-content;
+        }
+        
+        /* Individual array boxes */
+        .array-box {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #000;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: background-color 0.3s; /* Smooth highlight transition */
+        }
+        
+        /* Highlight classes */
+        .highlight-range {
+            background-color: yellow; /* Highlights the search range */
+        }
+        
+        .highlight-mid {
+            background-color: red; /* Highlights the mid element */
+        }
+        
+        /* Input and button styling */
+        #controls {
+            margin: 20px;
+        }
+        
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        
+        /* Status and result messages */
+        #status {
+            font-size: 18px;
+            margin: 10px;
+            color: blue;
+        }
+        
+        #result {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualization</h1>
+    <p>Array: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]</p>
+    
+    <div id="controls">
+        <label for="target">Enter target number:</label>
+        <input type="number" id="target" placeholder="e.g., 7">
+        <button id="start-button">Start Search</button>
+        <button id="next-button" disabled>Next Step</button>
+    </div>
+    
+    <div id="status">Status: Enter a target and click 'Start Search'.</div>
+    <div id="result"></div>
+    
+    <div id="array-container">
+        <!-- Array boxes will be generated here via JavaScript -->
+    </div>
+    
+    <script>
+        // Sorted array
+        const array = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
+        let low = 0;
+        let high = array.length - 1;
+        let mid = null;
+        let target = null;
+        let searchInProgress = false;
+        let foundIndex = -1;  // To track if the element is found
+        
+        // Function to render the array with highlights
+        function renderArray() {
+            const container = document.getElementById('array-container');
+            container.innerHTML = '';  // Clear existing boxes
+            
+            array.forEach((value, index) => {
+                const box = document.createElement('div');
+                box.className = 'array-box';  // Base class
+                box.textContent = value;
+                
+                // Add highlight classes based on current state
+                if (searchInProgress && index >= low && index <= high) {
+                    box.classList.add('highlight-range');  // Highlight search range
+                }
+                if (index === mid) {
+                    box.classList.add('highlight-mid');  // Highlight mid element
+                }
+                
+                container.appendChild(box);
+            });
+        }
+        
+        // Event listener for Start button
+        document.getElementById('start-button').addEventListener('click', () => {
+            target = parseInt(document.getElementById('target').value);
+            if (isNaN(target)) {
+                document.getElementById('status').textContent = 'Status: Please enter a valid number.';
+                return;
+            }
+            
+            low = 0;
+            high = array.length - 1;
+            mid = null;
+            foundIndex = -1;
+            searchInProgress = true;
+            document.getElementById('next-button').disabled = false;  // Enable Next button
+            document.getElementById('status').textContent = `Status: Search started for target ${target}. Click 'Next Step'.`;
+            renderArray();  // Initial render
+        });
+        
+        // Event listener for Next button
+        document.getElementById('next-button').addEventListener('click', () => {
+            if (!searchInProgress || low > high) {
+                return;  // Search is done or not started
+            }
+            
+            mid = Math.floor((low + high) / 2);
+            document.getElementById('status').textContent = `Status: Low: ${low}, High: ${high}, Mid: ${mid} (Value: ${array[mid]})`;
+            
+            if (array[mid] === target) {
+                foundIndex = mid;
+                document.getElementById('result').textContent = `Target ${target} found at index ${mid}!`;
+                searchInProgress = false;  // End search
+                document.getElementById('next-button').disabled = true;
+            } else if (array[mid] > target) {
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+            
+            if (low > high && foundIndex === -1) {
+                document.getElementById('result').textContent = `Target ${target} not found in the array.`;
+                searchInProgress = false;
+                document.getElementById('next-button').disabled = true;
+            }
+            
+            renderArray();  // Update the array display
+        });
+        
+        // Initial render of the array
+        renderArray();
+    </script>
+</body>
+</html>

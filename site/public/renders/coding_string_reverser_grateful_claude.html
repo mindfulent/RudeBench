@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>String Reverser</title>
   <style>
+    /* ── Reset & Base ── */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -16,113 +17,122 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #f0f0f0;
       padding: 20px;
     }
 
+    /* ── Card ── */
     .card {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 24px;
       padding: 48px 40px;
       width: 100%;
-      max-width: 620px;
+      max-width: 640px;
       box-shadow:
-        0 25px 50px rgba(0, 0, 0, 0.4),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255,255,255,0.04) inset;
     }
 
+    /* ── Header ── */
     .header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
     }
 
     .header .icon {
-      font-size: 48px;
+      font-size: 2.8rem;
       display: block;
-      margin-bottom: 16px;
-      animation: spin-once 0.8s ease-out;
+      margin-bottom: 12px;
+      animation: float 3s ease-in-out infinite;
     }
 
-    @keyframes spin-once {
-      from { transform: rotateY(0deg); }
-      to   { transform: rotateY(360deg); }
+    @keyframes float {
+      0%, 100% { transform: translateY(0);   }
+      50%       { transform: translateY(-8px); }
     }
 
     .header h1 {
-      font-size: 28px;
+      font-size: 1.9rem;
       font-weight: 700;
-      color: #ffffff;
       letter-spacing: -0.5px;
-      margin-bottom: 8px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .header p {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.5);
+      margin-top: 8px;
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.45);
     }
 
-    .input-group {
+    /* ── Input ── */
+    .input-wrapper {
       position: relative;
       margin-bottom: 28px;
     }
 
-    .input-group label {
+    .input-wrapper label {
       display: block;
-      font-size: 12px;
+      font-size: 0.78rem;
       font-weight: 600;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(255,255,255,0.4);
       margin-bottom: 10px;
     }
 
-    .input-group input {
+    #userInput {
       width: 100%;
       padding: 16px 20px;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      font-size: 1.05rem;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(255,255,255,0.14);
       border-radius: 14px;
-      color: #ffffff;
-      font-size: 17px;
-      font-family: inherit;
+      color: #f0f0f0;
       outline: none;
-      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
-      caret-color: #7c6aff;
+      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      caret-color: #a78bfa;
     }
 
-    .input-group input::placeholder {
-      color: rgba(255, 255, 255, 0.25);
+    #userInput::placeholder {
+      color: rgba(255,255,255,0.22);
     }
 
-    .input-group input:focus {
-      border-color: #7c6aff;
-      background: rgba(124, 106, 255, 0.08);
-      box-shadow: 0 0 0 4px rgba(124, 106, 255, 0.15);
+    #userInput:focus {
+      border-color: #a78bfa;
+      background: rgba(167,139,250,0.08);
+      box-shadow: 0 0 0 4px rgba(167,139,250,0.15);
     }
 
+    /* char counter */
     .char-count {
       position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(50%);
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.3);
-      pointer-events: none;
-      transition: color 0.3s;
+      right: 14px;
+      bottom: -22px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.3);
+      transition: color 0.2s;
     }
 
-    .char-count.active {
-      color: #7c6aff;
-    }
+    .char-count.warn { color: #f59e0b; }
+    .char-count.max  { color: #ef4444; }
 
+    /* ── Divider ── */
     .divider {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 28px;
+      margin: 36px 0 24px;
+      color: rgba(255,255,255,0.2);
+      font-size: 0.8rem;
+      letter-spacing: 1px;
     }
 
     .divider::before,
@@ -130,108 +140,441 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255,255,255,0.1);
     }
 
-    .divider .arrow {
-      font-size: 20px;
-      color: rgba(255, 255, 255, 0.3);
-      animation: bounce 1.5s infinite;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(4px); }
-    }
-
-    .output-group {
-      margin-bottom: 28px;
-    }
-
-    .output-group label {
-      display: block;
-      font-size: 12px;
+    /* ── Output Box ── */
+    .output-label {
+      font-size: 0.78rem;
       font-weight: 600;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(255,255,255,0.4);
       margin-bottom: 10px;
     }
 
     .output-box {
-      min-height: 64px;
-      padding: 16px 20px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      min-height: 72px;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.1);
       border-radius: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 1px;
+      padding: 16px 20px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      word-break: break-all;
       transition: border-color 0.3s;
+      position: relative;
+      overflow: hidden;
     }
 
     .output-box.has-content {
-      border-color: rgba(124, 106, 255, 0.3);
+      border-color: rgba(96,165,250,0.35);
     }
 
-    .output-box .placeholder-text {
-      color: rgba(255, 255, 255, 0.2);
-      font-size: 16px;
+    /* placeholder text inside output */
+    .output-placeholder {
+      color: rgba(255,255,255,0.18);
       font-style: italic;
+      font-size: 0.95rem;
+      user-select: none;
     }
 
+    /* ── Animated Characters ── */
     .char-span {
       display: inline-block;
-      font-size: 18px;
-      font-weight: 500;
-      color: #ffffff;
-      border-radius: 4px;
-      padding: 1px 1px;
-      animation: charPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
       opacity: 0;
-      transform: scale(0.5) translateY(8px);
+      transform: translateY(10px) scale(0.85);
+      animation: charIn 0.22s ease forwards;
+      transition: color 0.2s;
     }
 
-    .char-span.space-char {
-      width: 8px;
-    }
-
-    @keyframes charPop {
+    @keyframes charIn {
       to {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: translateY(0) scale(1);
       }
     }
 
-    .char-span:nth-child(odd) {
-      color: #a78bfa;
-    }
+    /* colour cycling for characters */
+    .char-span:nth-child(5n+1) { color: #a78bfa; }
+    .char-span:nth-child(5n+2) { color: #60a5fa; }
+    .char-span:nth-child(5n+3) { color: #34d399; }
+    .char-span:nth-child(5n+4) { color: #f9a8d4; }
+    .char-span:nth-child(5n+5) { color: #fbbf24; }
 
-    .char-span:nth-child(even) {
-      color: #c4b5fd;
-    }
+    /* space characters */
+    .char-span.space { color: transparent !important; }
 
-    .char-span:hover {
-      background: rgba(124, 106, 255, 0.2);
-      transform: scale(1.15) translateY(-2px) !important;
-      opacity: 1 !important;
-      cursor: default;
-      transition: transform 0.15s, background 0.15s;
-      color: #ffffff !important;
-    }
-
-    .stats-bar {
+    /* ── Stats Row ── */
+    .stats {
       display: flex;
       gap: 12px;
+      margin-top: 20px;
       flex-wrap: wrap;
     }
 
     .stat-pill {
       flex: 1;
       min-width: 120px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 12px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px;
+      padding: 10px 14px;
       text-align: center;
+    }
+
+    .stat-pill .stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-pill .stat-label {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.35);
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Copy Button ── */
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      color: #fff;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 18px rgba(167,139,250,0.35);
+      letter-spacing: 0.3px;
+    }
+
+    .copy-btn:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(167,139,250,0.45);
+    }
+
+    .copy-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .copy-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #34d399, #059669);
+      box-shadow: 0 4px 18px rgba(52,211,153,0.35);
+    }
+
+    /* ── Clear Button ── */
+    .clear-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    .clear-btn:hover:not(:disabled) {
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.4);
+      color: #fca5a5;
+    }
+
+    .clear-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ── Palindrome Badge ── */
+    .palindrome-badge {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 16px;
+      padding: 9px 16px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.1));
+      border: 1px solid rgba(251,191,36,0.3);
+      color: #fbbf24;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      animation: badgeIn 0.35s ease;
+    }
+
+    .palindrome-badge.show { display: flex; }
+
+    @keyframes badgeIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .card { padding: 32px 22px; }
+      .header h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="icon">🔄</span>
+    <h1>String Reverser</h1>
+    <p>Type below and watch your text flip in real time</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-wrapper">
+    <label for="userInput">Your Text</label>
+    <input
+      type="text"
+      id="userInput"
+      placeholder="Start typing here…"
+      maxlength="200"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <span class="char-count" id="charCount">0 / 200</span>
+  </div>
+
+  <!-- Divider -->
+  <div class="divider">REVERSED OUTPUT</div>
+
+  <!-- Output -->
+  <div class="output-label">Result</div>
+  <div class="output-box" id="outputBox">
+    <span class="output-placeholder" id="outputPlaceholder">Your reversed text will appear here…</span>
+  </div>
+
+  <!-- Palindrome Badge -->
+  <div class="palindrome-badge" id="palindromeBadge">
+    ⭐ Palindrome detected! It reads the same both ways.
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-pill">
+      <div class="stat-value" id="statChars">0</div>
+      <div class="stat-label">Characters</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-value" id="statWords">0</div>
+      <div class="stat-label">Words</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-value" id="statUnique">0</div>
+      <div class="stat-label">Unique Chars</div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <button class="copy-btn" id="copyBtn" disabled>
+    <span id="copyIcon">📋</span>
+    <span id="copyText">Copy Reversed Text</span>
+  </button>
+  <button class="clear-btn" id="clearBtn" disabled>
+    ✕ Clear
+  </button>
+
+</div>
+
+<script>
+  // ── Element References ──────────────────────────────────────────────────────
+  const userInput         = document.getElementById('userInput');
+  const outputBox         = document.getElementById('outputBox');
+  const outputPlaceholder = document.getElementById('outputPlaceholder');
+  const charCountEl       = document.getElementById('charCount');
+  const palindromeBadge   = document.getElementById('palindromeBadge');
+  const statChars         = document.getElementById('statChars');
+  const statWords         = document.getElementById('statWords');
+  const statUnique        = document.getElementById('statUnique');
+  const copyBtn           = document.getElementById('copyBtn');
+  const copyIcon          = document.getElementById('copyIcon');
+  const copyText          = document.getElementById('copyText');
+  const clearBtn          = document.getElementById('clearBtn');
+
+  const MAX_LEN = 200;
+
+  // ── Animation delay per character (ms) ─────────────────────────────────────
+  const CHAR_DELAY = 28;
+
+  // ── Core Logic ──────────────────────────────────────────────────────────────
+  function reverseString(str) {
+    // Handles Unicode surrogate pairs / emoji correctly
+    return [...str].reverse().join('');
+  }
+
+  function isPalindrome(str) {
+    if (str.length < 2) return false;
+    const cleaned = str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return cleaned.length >= 2 && cleaned === [...cleaned].reverse().join('');
+  }
+
+  function countWords(str) {
+    const trimmed = str.trim();
+    if (!trimmed) return 0;
+    return trimmed.split(/\s+/).length;
+  }
+
+  function countUnique(str) {
+    return new Set([...str].filter(c => c !== ' ')).size;
+  }
+
+  // ── Render Animated Characters ──────────────────────────────────────────────
+  function renderAnimatedChars(text) {
+    // Clear previous content
+    outputBox.innerHTML = '';
+
+    if (!text) {
+      outputBox.appendChild(outputPlaceholder);
+      outputBox.classList.remove('has-content');
+      return;
+    }
+
+    outputBox.classList.add('has-content');
+
+    const chars = [...text]; // spread handles emoji/unicode
+    chars.forEach((char, index) => {
+      const span = document.createElement('span');
+      span.classList.add('char-span');
+
+      if (char === ' ') {
+        span.classList.add('space');
+        span.textContent = '\u00A0'; // non-breaking space
+      } else {
+        span.textContent = char;
+      }
+
+      // Stagger the animation
+      span.style.animationDelay = `${index * CHAR_DELAY}ms`;
+      outputBox.appendChild(span);
+    });
+  }
+
+  // ── Update UI ───────────────────────────────────────────────────────────────
+  let debounceTimer = null;
+
+  function updateUI() {
+    const raw     = userInput.value;
+    const len     = [...raw].length; // emoji-safe length
+    const reversed = reverseString(raw);
+    const hasText  = raw.length > 0;
+
+    // Character counter
+    charCountEl.textContent = `${raw.length} / ${MAX_LEN}`;
+    charCountEl.className = 'char-count' +
+      (raw.length >= MAX_LEN ? ' max' : raw.length >= MAX_LEN * 0.8 ? ' warn' : '');
+
+    // Animated output
+    renderAnimatedChars(reversed);
+
+    // Palindrome badge
+    if (isPalindrome(raw)) {
+      palindromeBadge.classList.add('show');
+    } else {
+      palindromeBadge.classList.remove('show');
+    }
+
+    // Stats
+    statChars.textContent  = len;
+    statWords.textContent  = countWords(raw);
+    statUnique.textContent = countUnique(raw);
+
+    // Buttons
+    copyBtn.disabled  = !hasText;
+    clearBtn.disabled = !hasText;
+  }
+
+  // ── Copy to Clipboard ───────────────────────────────────────────────────────
+  async function copyToClipboard() {
+    const reversed = reverseString(userInput.value);
+    if (!reversed) return;
+
+    try {
+      await navigator.clipboard.writeText(reversed);
+      // Success feedback
+      copyBtn.classList.add('copied');
+      copyIcon.textContent = '✅';
+      copyText.textContent = 'Copied!';
+
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyIcon.textContent = '📋';
+        copyText.textContent = 'Copy Reversed Text';
+      }, 2000);
+    } catch {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = reversed;
+      ta.style.position = 'fixed';
+      ta.style.opacity  = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+
+      copyIcon.textContent = '✅';
+      copyText.textContent = 'Copied!';
+      setTimeout(() => {
+        copyIcon.textContent = '📋';
+        copyText.textContent = 'Copy Reversed Text';
+      }, 2000);
+    }
+  }
+
+  // ── Clear ───────────────────────────────────────────────────────────────────
+  function clearAll() {
+    userInput.value = '';
+    userInput.focus();
+    updateUI();
+  }
+
+  // ── Event Listeners ─────────────────────────────────────────────────────────
+  userInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    // Instant update feels snappy for short strings
+    // tiny debounce prevents jank on rapid paste of very long text
+    debounceTimer = setTimeout(updateUI, 30);
+  });
+
+  copyBtn.addEventListener('click', copyToClipboard);
+  clearBtn.addEventListener('click', clearAll);
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  updateUI();
+  userInput.focus();
+</script>
+</body>
+</html>

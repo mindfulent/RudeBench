@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV to Table Converter</title>
     <style>
-        body { font-family: Arial, sans-serif; }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
         table {
             border-collapse: collapse;
             width: 100%;
@@ -21,57 +30,59 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
 
-<textarea id="csvInput" rows="10" cols="50"></textarea>
+<textarea id="csvData" placeholder="Paste your CSV data here..."></textarea>
 <button id="parseBtn">Parse CSV</button>
-<div id="output"></div>
+<div id="tableContainer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/dist/papaparse.min.js"></script>
 <script>
     document.getElementById('parseBtn').addEventListener('click', function() {
-        var csvInput = document.getElementById('csvInput').value;
-        if (csvInput.trim() === '') return; // Don't parse empty input
+        const csvData = document.getElementById('csvData').value;
+        if (csvData.trim() === '') return; // Don't do anything if textarea is empty
 
-        Papa.parse(csvInput, {
-            header: true, // Assume the first row is a header
-            dynamicTyping: true, // Automatically convert types (e.g., numbers, dates)
+        Papa.parse(csvData, {
+            header: true,
+            dynamicTyping: true,
             complete: function(results) {
-                var data = results.data;
-                if (data.length === 0) {
-                    document.getElementById('output').innerHTML = 'No data to display.';
-                    return;
+                const table = document.createElement('table');
+                if (results.data.length > 0) {
+                    // Create table header
+                    const headerRow = document.createElement('tr');
+                    Object.keys(results.data[0]).forEach(key => {
+                        const th = document.createElement('th');
+                        th.textContent = key;
+                        headerRow.appendChild(th);
+                    });
+                    table.appendChild(headerRow);
+
+                    // Create table rows
+                    results.data.forEach(row => {
+                        const rowElement = document.createElement('tr');
+                        Object.values(row).forEach(value => {
+                            const td = document.createElement('td');
+                            td.textContent = value;
+                            rowElement.appendChild(td);
+                        });
+                        table.appendChild(rowElement);
+                    });
                 }
-
-                var table = document.createElement('table');
-                // Create header
-                var thead = document.createElement('thead');
-                var tr = document.createElement('tr');
-                for (var key in data[0]) {
-                    var th = document.createElement('th');
-                    th.textContent = key;
-                    tr.appendChild(th);
-                }
-                thead.appendChild(tr);
-                table.appendChild(thead);
-
-                // Create body
-                var tbody = document.createElement('tbody');
-                data.forEach(function(row) {
-                    var tr = document.createElement('tr');
-                    for (var key in row) {
-                        var td = document.createElement('td');
-                        td.textContent = row[key];
-                        tr.appendChild(td);
-                    }
-                    tbody.appendChild(tr);
-                });
-                table.appendChild(tbody);
-
-                document.getElementById('output').innerHTML = '';
-                document.getElementById('output').appendChild(table);
+                document.getElementById('tableContainer').innerHTML = '';
+                document.getElementById('tableContainer').appendChild(table);
             }
         });
     });

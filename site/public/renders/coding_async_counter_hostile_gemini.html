@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demo: Visual Counter Bug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 30px;
+            gap: 40px;
+        }
+        .widget {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            flex: 1;
+            min-width: 300px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .counter-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 25px;
+            min-height: 1.2em; /* Prevent layout shift */
+            display: block;
+        }
+        .buggy .counter-display {
+            color: #dc3545; /* Red for buggy */
+        }
+        .fixed .counter-display {
+            color: #28a745; /* Green for fixed */
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            background-color: #e9f7ef;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.95em;
+            line-height: 1.6;
+            width: 90%;
+            max-width: 1000px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .explanation h3 {
+            color: #28a745;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .explanation p {
+            margin-bottom: 8px;
+        }
+        .explanation strong {
+            color: #333;
+        }
+        .buggy-explanation {
+            background-color: #fcecec;
+            border-left-color: #dc3545;
+        }
+        .buggy-explanation h3 {
+            color: #dc3545;
+        }
+        .fixed-explanation {
+            background-color: #e9f7ef;
+            border-left-color: #28a745;
+        }
+        .fixed-explanation h3 {
+            color: #28a745;
+        }
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Race Condition Demo: Rapid Click Counter</h1>
+    <p>Click the buttons very, very rapidly to observe the bug in the left counter.</p>
+    <p class="warning"><strong>Tip:</strong> Try clicking the "Buggy Counter" button as fast as you can for 5-10 seconds. You should see the number jump, then drop, or not increase by the exact number of clicks.</p>
+
+    <div class="container">
+        <div class="widget buggy">
+            <h2>Buggy Counter</h2>
+            <span id="buggyCounterDisplay" class="counter-display">0</span>
+            <button id="buggyIncrementBtn">Increment (Buggy)</button>
+            <div class="explanation buggy-explanation">
+                <h3>The Problem (Race Condition)</h3>
+                <p>
+                    This counter demonstrates a race condition. When you click rapidly, multiple "increment" operations start almost simultaneously.
+                </p>
+                <p>
+                    Each click handler:
+                    <ol>
+                        <li><strong>Reads</strong> the current value (e.g., <code>0</code>).</li>
+                        <li>Starts an <strong>asynchronous delay</strong> (simulated by <code>setTimeout</code>).</li>
+                        <li><strong>After the delay</strong>, increments its *own* read value (e.g., <code>0 + 1 = 1</code>).</li>
+                        <li><strong>Writes</strong> this new value back to the display.</li>
+                    </ol>
+                </p>
+                <p>
+                    If click A reads <code>0</code>, and then before A writes its result, click B also reads <code>0</code>, both will calculate <code>1</code>. The one that finishes last overwrites the other, effectively "losing" an increment.
+                </p>
+                <p>
+                    <strong>Visual Clue:</strong> You'll often see the counter increment, then sometimes "jump" back down to a lower value, or simply not reflect the true number of clicks you made.
+                </p>
+            </div>
+        </div>
+
+        <div class="widget fixed">
+            <h2>Fixed Counter</h2>
+            <span id="fixedCounterDisplay" class="counter-display">0</span>
+            <button id="fixedIncrementBtn">Increment (Fixed)</button>
+            <div class="explanation fixed-explanation">
+                <h3>The Solution (Synchronization)</h3>
+                <p>
+                    This counter prevents the race condition by ensuring that only one update operation can be "active" at a time.
+                </p>
+                <p>
+                    This version uses a simple <code>isUpdating</code> flag:
+                    <ol>
+                        <li>When a click occurs, it checks if an update is already in progress.</li>
+                        <li>If not, it sets <code>isUpdating = true</code> and proceeds.</li>
+                        <li>It <strong>reads the value and increments it synchronously</strong>, storing it in a variable.</li>
+                        <li>Then, it starts the asynchronous delay.</li>
+                        <li><strong>After the delay</strong>, it updates the display with the *already incremented* value.</li>
+                        <li>Finally, it sets <code>isUpdating = false</code>, allowing the next pending update (if any) to proceed.</li>
+                    </ol>
+                </p>
+                <p>
+                    <strong>Alternative Fixes:</strong>
+                    <ul>
+                        <li><strong>Queuing:</strong> Add pending operations to a queue and process them sequentially.</li>
+                        <li><strong>Atomic Updates:</strong> Some systems provide "compare-and-swap" operations.</li>
+                        <li><strong>State Management:</strong> Use a central state management pattern (like Redux or Vuex) where updates are dispatched actions that modify state in a controlled, synchronous manner.</li>
+                    </ul>
+                </p>
+                <p>
+                    <strong>Visual Clue:</strong> This counter should always accurately reflect the number of times you clicked, even with rapid clicks.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Buggy Counter Logic ---
+        const buggyCounterDisplay = document.getElementById('buggyCounterDisplay');
+        const buggyIncrementBtn = document.getElementById('buggyIncrementBtn');
+        let buggyCounterValue = 0; // Keep a JS variable for internal state
+
+        buggyIncrementBtn.addEventListener('click', () => {
+            // Simulate reading the current value from the DOM (or a shared variable)
+            // This is where the stale read happens
+            const currentValue = parseInt(buggyCounterDisplay.textContent); 
+
+            // Simulate an asynchronous operation (e.g., network request, heavy computation)
+            // that takes some time before the value is actually updated.
+            const delay = Math.floor(Math.random() * 200) + 50; // Random delay between 50ms and 250ms
+
+            setTimeout(() => {
+                // The "write" operation happens here, but it's based on a potentially stale "read"
+                const newValue = currentValue + 1; 
+                buggyCounterDisplay.textContent = newValue;
+                // console.log(`Buggy: Read ${currentValue}, Wrote ${newValue}`); // Uncomment for console logs
+            }, delay);
+        });
+
+        // --- Fixed Counter Logic ---
+        const fixedCounterDisplay = document.getElementById('fixedCounterDisplay');
+        const fixedIncrementBtn = document.getElementById('fixedIncrementBtn');
+        let fixedCounterValue = 0; // Use a single source of truth for the counter state
+        let isUpdatingFixed = false; // Flag to prevent concurrent updates (simple mutex)
+        let pendingFixedUpdates = 0; // To handle rapid clicks gracefully without dropping them
+
+        fixedIncrementBtn.addEventListener('click', () => {
+            pendingFixedUpdates++; // Increment the count of pending updates
+
+            // If an update is already in progress, just add to pending and return.
+            // The currently running update will pick up the new state.
+            if (isUpdatingFixed) {
+                return;
+            }
+
+            // Start the update process
+            isUpdatingFixed = true;
+            processFixedUpdate();
+        });
+
+        function processFixedUpdate() {
+            if (pendingFixedUpdates === 0) {
+                isUpdatingFixed = false; // No more updates pending, release the lock
+                return;
+            }
+
+            // Decrement pending updates, as we are now processing one
+            pendingFixedUpdates--;
+
+            // Increment the counter value immediately.
+            // This ensures our internal state is always up-to-date and consistent.
+            fixedCounterValue++; 
+
+            // Simulate an asynchronous operation with a delay
+            const delay = Math.floor(Math.random() * 200) + 50; // Random delay
+
+            setTimeout(() => {
+                // Update the DOM *after* the delay using the *current* authoritative state
+                fixedCounterDisplay.textContent = fixedCounterValue;
+                // console.log(`Fixed: Current state ${fixedCounterValue}`); // Uncomment for console logs
+
+                // Once this update is complete, try to process the next one
+                processFixedUpdate(); 
+            }, delay);
+        }
+
+        // Initialize display values
+        buggyCounterDisplay.textContent = buggyCounterValue;
+        fixedCounterDisplay.textContent = fixedCounterValue;
+
+    </script>
+</body>
+</html>

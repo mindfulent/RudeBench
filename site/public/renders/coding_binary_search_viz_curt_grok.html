@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualizer</title>
+    <style>
+        /* CSS for styling the array and highlights */
+        #array-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .box {
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px;
+            background-color: white;
+            font-weight: bold;
+        }
+
+        .in-range {
+            background-color: yellow; /* Highlight for the active search range */
+        }
+
+        .middle {
+            background-color: green; /* Highlight for the middle element */
+        }
+
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+        }
+
+        #result {
+            font-size: 18px;
+            font-weight: bold;
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualization</h1>
+    <p>Sorted Array: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]</p>
+    <div id="array-container"></div> <!-- Container for the array boxes -->
+    <input type="number" id="target" placeholder="Enter target number">
+    <button id="stepButton">Start/Next Step</button>
+    <div id="result"></div> <!-- Area to display the result -->
+
+    <script>
+        // JavaScript for binary search logic and visualization
+        const sortedArray = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]; // Fixed sorted array
+        let low, high, mid, targetValue, isSearching = false;
+        const arrayContainer = document.getElementById('array-container');
+        const boxes = []; // Array to hold the box elements for easy access
+
+        // Create the array boxes
+        sortedArray.forEach((num, index) => {
+            const box = document.createElement('div');
+            box.className = 'box';
+            box.textContent = num;
+            box.id = 'box-' + index;
+            arrayContainer.appendChild(box);
+            boxes.push(box);
+        });
+
+        // Function to update highlights on the boxes
+        function updateHighlights(lowIdx, highIdx, midIdx) {
+            // Remove previous highlights
+            boxes.forEach(box => {
+                box.classList.remove('in-range', 'middle');
+            });
+
+            // Highlight the active search range (low to high)
+            for (let i = lowIdx; i <= highIdx; i++) {
+                if (i >= 0 && i < boxes.length) {
+                    boxes[i].classList.add('in-range');
+                }
+            }
+
+            // Highlight the middle element
+            if (midIdx >= 0 && midIdx < boxes.length) {
+                boxes[midIdx].classList.add('middle');
+            }
+        }
+
+        // Event listener for the step button
+        document.getElementById('stepButton').addEventListener('click', () => {
+            if (!isSearching) {
+                // Initialize the search on the first click
+                targetValue = parseInt(document.getElementById('target').value);
+                if (isNaN(targetValue)) {
+                    document.getElementById('result').textContent = 'Please enter a valid number';
+                    return;
+                }
+                low = 0;
+                high = sortedArray.length - 1;
+                isSearching = true;
+                document.getElementById('result').textContent = ''; // Clear previous result
+            }
+
+            if (low <= high) {
+                mid = Math.floor((low + high) / 2);
+                updateHighlights(low, high, mid); // Highlight the current range and middle
+
+                if (sortedArray[mid] === targetValue) {
+                    // Target found
+                    document.getElementById('result').textContent = 'Found at index ' + mid;
+                    isSearching = false; // End search
+                } else if (sortedArray[mid] > targetValue) {
+                    high = mid - 1; // Update high for next step
+                } else {
+                    low = mid + 1; // Update low for next step
+                }
+            } else {
+                // Search completed, target not found
+                document.getElementById('result').textContent = 'Not found';
+                isSearching = false; // End search
+            }
+        });
+    </script>
+</body>
+</html>

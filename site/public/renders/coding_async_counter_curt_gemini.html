@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Counter Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1200px;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .widget-box {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            flex: 1;
+            min-width: 350px;
+            border: 1px solid #e0e0e0;
+        }
+        .widget-box.buggy {
+            border-left: 5px solid #e74c3c;
+        }
+        .widget-box.fixed {
+            border-left: 5px solid #2ecc71;
+        }
+        h2 {
+            margin-top: 0;
+            color: #34495e;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        .counter-display {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #3498db;
+            min-height: 1.2em; /* To prevent layout shift */
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        .explanation {
+            background-color: #ecf0f1;
+            border-left: 5px solid #f39c12;
+            padding: 25px;
+            margin: 0 auto;
+            max-width: 1000px;
+            border-radius: 8px;
+            line-height: 1.6;
+            color: #34495e;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .explanation h3 {
+            color: #e67e22;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+        .explanation code {
+            background-color: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 0.9em;
+            color: #c0392b;
+        }
+        .explanation strong {
+            color: #d35400;
+        }
+    </style>
+</head>
+<body>
+    <h1>Race Condition Counter Demo</h1>
+
+    <div class="container">
+        <!-- Buggy Counter -->
+        <div class="widget-box buggy">
+            <h2>Buggy Counter (Race Condition)</h2>
+            <div id="buggyCounterDisplay" class="counter-display">0</div>
+            <button id="buggyIncrementBtn">Increment (Async)</button>
+            <button id="buggyResetBtn">Reset</button>
+        </div>
+
+        <!-- Fixed Counter -->
+        <div class="widget-box fixed">
+            <h2>Fixed Counter (No Race Condition)</h2>
+            <div id="fixedCounterDisplay" class="counter-display">0</div>
+            <button id="fixedIncrementBtn">Increment (Async)</button>
+            <button id="fixedResetBtn">Reset</button>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>Understanding the Race Condition</h3>
+        <p>
+            A <strong>race condition</strong> occurs when multiple asynchronous operations try to access and modify a shared resource (in this case, the <code>count</code> variable) concurrently, and the final outcome depends on the non-deterministic order in which these operations complete.
+        </p>
+        <p>
+            In the <strong>Buggy Counter</strong>, each click on "Increment (Async)" triggers an asynchronous operation using <code>setTimeout</code>. The operation does three things:
+            <ol>
+                <li><strong>Reads</strong> the current value of <code>count</code>.</li>
+                <li><strong>Calculates</strong> the new value (<code>count + 1</code>).</li>
+                <li><strong>Writes</strong> the new value back to <code>count</code>.</li>
+            </ol>
+            When you click rapidly, multiple such operations start almost simultaneously. If one operation reads the count (e.g., 5), and before it writes its incremented value (6), another operation also reads the count (which is still 5), then both operations will independently calculate 6 and write 6. This means one increment is effectively "lost."
+        </p>
+        <p>
+            Look at the console output (F12) for the buggy counter to see the intermediate reads and writes. You'll often see:
+            <ul>
+                <li>Read: 5</li>
+                <li>Read: 5</li>
+                <li>Write: 6</li>
+                <li>Write: 6</li>
+            </ul>
+            Instead of the expected 7, the count ends up as 6.
+        </p>
+
+        <h3>The Fix: Serialization with a Promise Queue</h3>
+        <p>
+            The <strong>Fixed Counter</strong> solves this by ensuring that only one update operation can modify the <code>count</code> at any given time. It uses a simple <strong>promise queue</strong> pattern:
+            <ul>
+                <li>A <code>currentPromise</code> variable holds a promise representing the currently pending or last completed update.</li>
+                <li>When a new increment request comes in, it's chained to <code>currentPromise</code> using <code>.then()</code>. This ensures that the new update will only start after the previous one has finished.</li>
+                <li>The <code>currentPromise</code> is then updated to be the promise of the newly chained operation.</li>
+            </ul>
+            This effectively "serializes" the asynchronous updates, preventing them from overlapping and clobbering each other's changes. Each increment operation now waits for the previous one to complete, ensuring that it reads the most up-to-date value of <code>count</code>.
+        </p>
+        <p>
+            The core of the fix is to replace direct asynchronous operations with a chain:
+            <br><code>currentPromise = currentPromise.then(() => performUpdate());</code>
+        </p>
+    </div>
+
+    <script>
+        // --- Buggy Counter Logic ---
+        let buggyCount = 0;
+        const buggyCounterDisplay = document.getElementById('buggyCounterDisplay');
+        const buggyIncrementBtn = document.getElementById('buggyIncrementBtn');
+        const buggyResetBtn = document.getElementById('buggyResetBtn');
+
+        function updateBuggyDisplay() {
+            buggyCounterDisplay.textContent = buggyCount;
+        }
+
+        buggyIncrementBtn.addEventListener('click', () => {
+            console.log('BUGGY: Increment requested. Current count (before async read):', buggyCount);
+            // Simulate an async operation (e.g., network request, complex calculation)
+            setTimeout(() => {
+                const valueBeforeIncrement = buggyCount; // READ
+                console.log(`BUGGY: Async operation started. Read count: ${valueBeforeIncrement}`);
+                buggyCount = valueBeforeIncrement + 1; // MODIFY & WRITE
+                updateBuggyDisplay();
+                console.log(`BUGGY: Async operation finished. Wrote count: ${buggyCount}`);
+            }, Math.random() * 200 + 50); // Random delay between 50ms and 250ms
+        });
+
+        buggyResetBtn.addEventListener('click', () => {
+            buggyCount = 0;
+            updateBuggyDisplay();
+            console.clear(); // Clear console for a fresh start
+            console.log('BUGGY: Counter reset.');
+        });
+
+        updateBuggyDisplay(); // Initial display
+
+
+        // --- Fixed Counter Logic ---
+        let fixedCount = 0;
+        const fixedCounterDisplay = document.getElementById('fixedCounterDisplay');
+        const fixedIncrementBtn = document.getElementById('fixedIncrementBtn');
+        const fixedResetBtn = document.getElementById('fixedResetBtn');
+
+        // This promise will always represent the completion of the *last* scheduled update.
+        // Initialize with a resolved promise so the first update can chain to it immediately.
+        let currentFixedUpdatePromise = Promise.resolve();
+
+        function updateFixedDisplay() {
+            fixedCounterDisplay.textContent = fixedCount;
+        }
+
+        fixedIncrementBtn.addEventListener('click', () => {
+            console.log('FIXED: Increment requested. Queueing update.');
+
+            // Chain the new increment operation to the existing promise chain.
+            // This ensures that this new operation will only execute after the previous one finishes.
+            currentFixedUpdatePromise = currentFixedUpdatePromise.then(() => {
+                return new Promise(resolve => {
+                    // Simulate an async operation
+                    setTimeout(() => {
+                        const valueBeforeIncrement = fixedCount; // READ
+                        console.log(`FIXED: Async operation started. Read count: ${valueBeforeIncrement}`);
+                        fixedCount = valueBeforeIncrement + 1; // MODIFY & WRITE
+                        updateFixedDisplay();
+                        console.log(`FIXED: Async operation finished. Wrote count: ${fixedCount}`);
+                        resolve(); // Resolve this promise to allow the next chained operation to proceed
+                    }, Math.random() * 200 + 50); // Random delay between 50ms and 250ms
+                });
+            });
+        });
+
+        fixedResetBtn.addEventListener('click', () => {
+            // Resetting also needs to be handled carefully if there are pending operations.
+            // For simplicity in this demo, we'll reset *after* any pending ops,
+            // or immediately if none are pending.
+            currentFixedUpdatePromise = currentFixedUpdatePromise.then(() => {
+                fixedCount = 0;
+                updateFixedDisplay();
+                console.log('FIXED: Counter reset.');
+            });
+            // Also clear buggy console output for clarity
+            console.clear();
+        });
+
+        updateFixedDisplay(); // Initial display
+    </script>
+</body>
+</html>

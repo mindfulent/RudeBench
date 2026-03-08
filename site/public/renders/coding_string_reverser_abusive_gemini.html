@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive String Reverser</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+            overflow: hidden; /* Prevent scrollbar from animation */
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 40px 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            letter-spacing: -0.5px;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 40px);
+            padding: 18px 20px;
+            margin-bottom: 30px;
+            border: 2px solid #aebfd0;
+            border-radius: 10px;
+            font-size: 1.2em;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box; /* Ensure padding doesn't expand width */
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+        }
+
+        .output-label {
+            display: block;
+            text-align: left;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            color: #555;
+            font-weight: bold;
+        }
+
+        #reversedOutput {
+            min-height: 50px; /* Ensure space even when empty */
+            background: #e9f0f6;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid #cdd8e6;
+            text-align: left;
+            font-size: 1.3em;
+            color: #007bff;
+            word-wrap: break-word; /* Ensure long strings wrap */
+            overflow-x: auto; /* Allow horizontal scrolling for very long lines */
+            display: flex; /* For character animation */
+            flex-wrap: wrap; /* Allow characters to wrap */
+            align-items: center;
+            gap: 2px; /* Small gap between animated characters */
+        }
+
+        .char-wrapper {
+            display: inline-block;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+            transform-origin: center bottom;
+            opacity: 1;
+            animation: popIn 0.3s ease-out; /* Initial pop-in for new chars */
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .char-wrapper.highlight {
+            animation: bounceIn 0.4s ease-out;
+            color: #dc3545; /* Highlight color */
+            font-weight: bold;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* Optional: Add a subtle hover effect to characters */
+        .char-wrapper:hover {
+            transform: translateY(-2px) scale(1.05);
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>String Reverser</h1>
+        <input type="text" id="stringInput" placeholder="Type something here...">
+        <span class="output-label">Reversed Output:</span>
+        <div id="reversedOutput"></div>
+    </div>
+
+    <script>
+        const stringInput = document.getElementById('stringInput');
+        const reversedOutput = document.getElementById('reversedOutput');
+        let previousReversedChars = []; // To track characters for animation
+
+        stringInput.addEventListener('input', () => {
+            const inputValue = stringInput.value;
+            const reversedValue = inputValue.split('').reverse().join('');
+
+            // Clear previous output
+            reversedOutput.innerHTML = '';
+
+            // Get current and previous reversed characters
+            const currentReversedChars = reversedValue.split('');
+
+            // Animate character by character
+            currentReversedChars.forEach((char, index) => {
+                const charWrapper = document.createElement('span');
+                charWrapper.classList.add('char-wrapper');
+                charWrapper.textContent = char;
+
+                // Determine if this character is "new" or changed its position significantly
+                // This is a simplified heuristic for highlighting
+                let isNewOrChanged = true;
+                if (previousReversedChars[index] === char) {
+                    isNewOrChanged = false; // Same character in the same position
+                }
+
+                if (isNewOrChanged) {
+                    // Add highlight class for a brief animation
+                    charWrapper.classList.add('highlight');
+                    setTimeout(() => {
+                        charWrapper.classList.remove('highlight');
+                    }, 400); // Duration of the bounceIn animation
+                }
+
+                reversedOutput.appendChild(charWrapper);
+            });
+
+            // Update previous characters for the next input event
+            previousReversedChars = currentReversedChars;
+        });
+
+        // Initialize with an empty state or a default message
+        stringInput.dispatchEvent(new Event('input')); // Trigger initial render
+    </script>
+</body>
+</html>

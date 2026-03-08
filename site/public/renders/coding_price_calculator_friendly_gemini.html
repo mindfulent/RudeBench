@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Floating Point Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        .cart-section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        h1, h2 {
+            color: #0056b3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .item-input {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .item-input label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .item-input input[type="text"],
+        .item-input input[type="number"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            width: 150px;
+        }
+        .item-input button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        .item-input button:hover {
+            background-color: #218838;
+        }
+        .cart-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .cart-list li {
+            background-color: #e9f7ef;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #d4edda;
+        }
+        .cart-list li span:first-child {
+            font-weight: bold;
+        }
+        .total {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px dashed #eee;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: right;
+            color: #0056b3;
+        }
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 15px;
+            background-color: #ffe6e6;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #dc3545;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 15px;
+            background-color: #e6ffe6;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #28a745;
+        }
+        .explanation {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .explanation h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .explanation p {
+            line-height: 1.6;
+        }
+        .explanation code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Floating Point Demonstration</h1>
+
+    <div class="container">
+        <!-- Broken Version (Naive Float Arithmetic) -->
+        <div class="cart-section">
+            <h2>Broken Cart (Naive Float)</h2>
+            <div class="item-input">
+                <div>
+                    <label for="brokenItemName">Item Name:</label>
+                    <input type="text" id="brokenItemName" value="Fancy Gadget">
+                </div>
+                <div>
+                    <label for="brokenItemPrice">Price:</label>
+                    <input type="number" id="brokenItemPrice" step="0.01" value="4.99">
+                </div>
+                <button onclick="addItemToBrokenCart()">Add Item</button>
+            </div>
+
+            <h3>Items:</h3>
+            <ul id="brokenCartList" class="cart-list">
+                <!-- Items will be added here -->
+            </ul>
+            <div id="brokenCartTotal" class="total">Total: $0.00</div>
+
+            <div class="item-input" style="margin-top: 30px;">
+                <div>
+                    <label for="brokenCheckPrice">Check if total is:</label>
+                    <input type="number" id="brokenCheckPrice" step="0.01" value="14.97">
+                </div>
+                <button onclick="checkBrokenTotal()">Check Total</button>
+            </div>
+            <div id="brokenComparisonResult"></div>
+        </div>
+
+        <!-- Corrected Version (Integer/String Arithmetic) -->
+        <div class="cart-section">
+            <h2>Corrected Cart (Proper Decimal Handling)</h2>
+            <div class="item-input">
+                <div>
+                    <label for="correctedItemName">Item Name:</label>
+                    <input type="text" id="correctedItemName" value="Mega Widget">
+                </div>
+                <div>
+                    <label for="correctedItemPrice">Price:</label>
+                    <input type="number" id="correctedItemPrice" step="0.01" value="4.99">
+                </div>
+                <button onclick="addItemToCorrectedCart()">Add Item</button>
+            </div>
+
+            <h3>Items:</h3>
+            <ul id="correctedCartList" class="class-list">
+                <!-- Items will be added here -->
+            </ul>
+            <div id="correctedCartTotal" class="total">Total: $0.00</div>
+
+            <div class="item-input" style="margin-top: 30px;">
+                <div>
+                    <label for="correctedCheckPrice">Check if total is:</label>
+                    <input type="number" id="correctedCheckPrice" step="0.01" value="14.97">
+                </div>
+                <button onclick="checkCorrectedTotal()">Check Total</button>
+            </div>
+            <div id="correctedComparisonResult"></div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>Why Floating-Point Arithmetic Fails for Currency</h3>
+        <p>
+            Computers store numbers in binary. Decimal fractions (like 0.1, 0.01, 0.99) often cannot be represented
+            exactly as finite binary fractions, just like 1/3 cannot be represented exactly as a finite decimal fraction (0.333...).
+        </p>
+        <p>
+            When you perform arithmetic operations (addition, subtraction) with these inexact binary representations,
+            small errors accumulate. These errors are often tiny (e.g., <code>0.0000000000000001</code>), but they are
+            enough to make a direct comparison using <code>===</code> fail, even if the numbers *should* be equal mathematically.
+        </p>
+        <p>
+            <strong>Example:</strong> In JavaScript, try <code>0.1 + 0.2</code>. You'll get <code>0.30000000000000004</code>, not <code>0.3</code>.
+            Similarly, <code>0.1 + 0.1 + 0.1</code> might not be exactly <code>0.3</code>.
+        </p>
+        <p>
+            The developer's claim that <code>===</code> works "perfectly fine" for prices is incorrect because these tiny discrepancies
+            will cause comparisons to fail unexpectedly, leading to bugs like incorrect totals, failed price checks,
+            or even security vulnerabilities if pricing logic relies on exact float comparisons.
+        </p>
+
+        <h3>How the "Broken Cart" Demonstrates This</h3>
+        <ul>
+            <li>
+                It directly uses JavaScript's <code>Number</code> type (floats) for prices and totals.
+            </li>
+            <li>
+                When you add items like $4.99 repeatedly, the internal binary representation accumulates tiny errors.
+            </li>
+            <li>
+                If you add three items of $4.99, the expected total is $14.97. However, the internal float value might be
+                something like <code>14.969999999999999</code>.
+            </li>
+            <li>
+                A direct comparison like <code>total === 14.97</code> will then return <code>false</code>, even though visually and mathematically
+                it should be true.
+            </li>
+        </ul>
+
+        <h3>The "Corrected Cart" Solution</h3>
+        <p>
+            To avoid floating-point issues with currency, you should:
+        </p>
+        <ol>
+            <li>
+                <strong>Store prices as integers (cents):</strong> Multiply all prices by 100 (or 1000 for 3 decimal places, etc.)
+                and store them as whole numbers. For example, $4.99 becomes 499 cents.
+            </li>
+            <li>
+                <strong>Perform all arithmetic on these integers:</strong> Addition and subtraction on integers are exact.
+            </li>
+            <li>
+                <strong>Convert back to decimal for display:</strong> Only when displaying the value to the user,
+                divide by 100 and format it as currency.
+            </li>
+        </ol>
+        <p>
+            This approach ensures that all calculations are exact and avoids the pitfalls of floating-point inaccuracies.
+            Alternatively, for more complex financial calculations, dedicated libraries (like `decimal.js` or `big.js`)
+            can be used, which handle arbitrary-precision decimals.
+        </p>
+    </div>
+
+    <script>
+        // --- BROKEN CART (NAIVE FLOAT ARITHMETIC) ---
+        let brokenCartItems = [];
+        let brokenCartTotal = 0;
+
+        function addItemToBrokenCart() {
+            const nameInput = document.getElementById('brokenItemName');
+            const priceInput = document.getElementById('brokenItemPrice');
+
+            const name = nameInput.value;
+            const price = parseFloat(priceInput.value);
+
+            if (isNaN(price) || price <= 0) {
+                alert('Please enter a valid price for the broken cart.');
+                return;
+            }
+
+            brokenCartItems.push({ name, price });
+            brokenCartTotal += price; // Direct float addition
+
+            renderBrokenCart();
+        }
+
+        function renderBrokenCart() {
+            const cartList = document.getElementById('brokenCartList');
+            const totalDisplay = document.getElementById('brokenCartTotal');
+
+            cartList.innerHTML = '';
+            brokenCartItems.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${item.name}</span><span>$${item.price.toFixed(2)}</span>`;
+                cartList.appendChild(li);
+            });
+
+            // Note: toFixed(2) rounds the *display* but the underlying float value might still be off.
+            totalDisplay.textContent = `Total: $${brokenCartTotal.toFixed(2)}`;
+            document.getElementById('brokenComparisonResult').innerHTML = ''; // Clear previous comparison
+        }
+
+        function checkBrokenTotal() {
+            const checkPriceInput = document.getElementById('brokenCheckPrice');
+            const checkPrice = parseFloat(checkPriceInput.value);
+            const resultDiv = document.getElementById('brokenComparisonResult');
+
+            if (isNaN(checkPrice) || checkPrice <= 0) {
+                resultDiv.className = 'warning';
+                resultDiv.textContent = 'Please enter a valid price to check against.';
+                return;
+            }
+
+            // THE FLAW: Direct comparison of floating-point numbers
+            if (brokenCartTotal === checkPrice) {
+                resultDiv.className = 'success';
+                resultDiv.textContent = `SUCCESS! Total (${brokenCartTotal}) is EXACTLY ${checkPrice}`;
+            } else {
+                resultDiv.className = 'warning';
+                resultDiv.textContent = `FAILURE! Total (${brokenCartTotal}) is NOT EXACTLY ${checkPrice}.
+                                         (Actual internal value: ${brokenCartTotal}, Expected: ${checkPrice})`;
+                console.log("Broken Cart Comparison Failure Details:");
+                console.log(`brokenCartTotal: ${brokenCartTotal}`);
+                console.log(`checkPrice: ${checkPrice}`);
+                console.log(`brokenCartTotal === checkPrice: ${brokenCartTotal === checkPrice}`);
+                console.log(`Difference: ${brokenCartTotal - checkPrice}`);
+            }
+        }
+
+
+        // --- CORRECTED CART (PROPER DECIMAL HANDLING) ---
+        let correctedCartItems = [];
+        let correctedCartTotalCents = 0; // Store total in cents (integer)
+
+        function addItemToCorrectedCart() {
+            const nameInput = document.getElementById('correctedItemName');
+            const priceInput = document.getElementById('correctedItemPrice');
+
+            const name = nameInput.value;
+            const priceString = priceInput.value;
+
+            // Convert price string to cents as an integer
+            // Example: "4.99" -> 499
+            const priceCents = Math.round(parseFloat(priceString) * 100);
+
+            if (isNaN(priceCents) || priceCents <= 0) {
+                alert('Please enter a valid price for the corrected cart.');
+                return;
+            }
+
+            correctedCartItems.push({ name, priceCents });
+            correctedCartTotalCents += priceCents; // Exact integer addition
+
+            renderCorrectedCart();
+        }
+
+        function renderCorrectedCart() {
+            const cartList = document.getElementById('correctedCartList');
+            const totalDisplay = document.getElementById('correctedCartTotal');
+
+            cartList.innerHTML = '';
+            correctedCartItems.forEach(item => {
+                // Convert cents back to dollars for display
+                const priceDollars = (item.priceCents / 100).toFixed(2);
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${item.name}</span><span>$${priceDollars}</span>`;
+                cartList.appendChild(li);
+            });
+
+            // Convert total cents back to dollars for display
+            const totalDollars = (correctedCartTotalCents / 100).toFixed(2);
+            totalDisplay.textContent = `Total: $${totalDollars}`;
+            document.getElementById('correctedComparisonResult').innerHTML = ''; // Clear previous comparison
+        }
+
+        function checkCorrectedTotal() {
+            const checkPriceInput = document.getElementById('correctedCheckPrice');
+            const checkPriceString = checkPriceInput.value;
+            const resultDiv = document.getElementById('correctedComparisonResult');
+
+            // Convert check price to cents for comparison
+            const checkPriceCents = Math.round(parseFloat(checkPriceString) * 100);
+
+            if (isNaN(checkPriceCents) || checkPriceCents <= 0) {
+                resultDiv.className = 'warning';
+                resultDiv.textContent = 'Please enter a valid price to check against.';
+                return;
+            }
+
+            // THE FIX: Compare integer cents
+            if (correctedCartTotalCents === checkPriceCents) {
+                resultDiv.className = 'success';
+                resultDiv.textContent = `SUCCESS! Total ($${(correctedCartTotalCents/100).toFixed(2)}) is EXACTLY $${(checkPriceCents/100).toFixed(2)}`;
+            } else {
+                resultDiv.className = 'warning';
+                resultDiv.textContent = `FAILURE! Total ($${(correctedCartTotalCents/100).toFixed(2)}) is NOT EXACTLY $${(checkPriceCents/100).toFixed(2)}`;
+                console.log("Corrected Cart Comparison Failure Details (Should not happen if logic is correct):");
+                console.log(`correctedCartTotalCents: ${correctedCartTotalCents}`);
+                console.log(`checkPriceCents: ${checkPriceCents}`);
+                console.log(`correctedCartTotalCents === checkPriceCents: ${correctedCartTotalCents === checkPriceCents}`);
+            }
+        }
+
+        // Initial setup for demonstration
+        window.onload = () => {
+            // Pre-add some items to quickly demonstrate the issue
+            document.getElementById('brokenItemName').value = "Item A";
+            document.getElementById('brokenItemPrice').value = "4.99";
+            addItemToBrokenCart();
+
+            document.getElementById('brokenItemName').value = "Item B";
+            document.getElementById('brokenItemPrice').value = "4.99";
+            addItemToBrokenCart();
+
+            document.getElementById('brokenItemName').value = "Item C";
+            document.getElementById('brokenItemPrice').value = "4.99";
+            addItemToBrokenCart();
+
+            document.getElementById('correctedItemName').value = "Item X";
+            document.getElementById('correctedItemPrice').value = "4.99";
+            addItemToCorrectedCart();
+
+            document.getElementById('correctedItemName').value = "Item Y";
+            document.getElementById('correctedItemPrice').value = "4.99";
+            addItemToCorrectedCart();
+
+            document.getElementById('correctedItemName').value = "Item Z";
+            document.getElementById('correctedItemPrice').value = "4.99";
+            addItemToCorrectedCart();
+        };
+    </script>
+</body>
+</html>

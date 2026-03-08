@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Demo: Float vs. Fixed Arithmetic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        
+        h1, h2 {
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .section {
+            width: 48%;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: -10px -10px 20px -10px;
+        }
+        
+        input, button {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        
+        .cart-display {
+            margin-top: 10px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        .explanation {
+            margin-top: 40px;
+            border-top: 2px solid #333;
+            padding-top: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Demo: Why Float Arithmetic Breaks Financial Calculations</h1>
+    <p>This demo lets you add items to a shopping cart with decimal prices (e.g., $4.99). It shows two versions side by side:</p>
+    <ul>
+        <li><strong>Broken Version</strong>: Uses floating-point numbers, demonstrating precision errors in totals and comparisons (e.g., with ===).</li>
+        <li><strong>Fixed Version</strong>: Uses integer arithmetic (in cents) to ensure accurate calculations.</li>
+    </ul>
+    
+    <div class="container">
+        <div class="section" id="broken-section">
+            <h2>Broken Version (Using Floats)</h2>
+            <p>This version uses JavaScript's floating-point numbers for prices and totals. Watch how totals might not add up exactly, and equality checks (e.g., total === expected value) fail due to precision errors.</p>
+            
+            <label for="broken-item-name">Item Name:</label>
+            <input type="text" id="broken-item-name" placeholder="e.g., Apple">
+            
+            <label for="broken-item-price">Price (e.g., 4.99):</label>
+            <input type="text" id="broken-item-price" placeholder="e.g., 4.99">
+            
+            <button onclick="addBrokenItem()">Add Item</button>
+            
+            <div class="cart-display" id="broken-cart-display">
+                <h3>Cart Items:</h3>
+                <ul id="broken-cart-list"></ul>
+                <h3>Total: <span id="broken-total">0.00</span></h3>
+                <p>Equality Check: Is total exactly equal to 0.30? <span id="broken-equality-check">Not calculated</span></p>
+            </div>
+            
+            <button onclick="calculateBrokenTotal()">Calculate Total</button>
+        </div>
+        
+        <div class="section" id="fixed-section">
+            <h2>Fixed Version (Using Integers in Cents)</h2>
+            <p>This version converts prices to integers (e.g., $4.99 becomes 499 cents) for all calculations, avoiding precision errors. Equality checks work reliably here.</p>
+            
+            <label for="fixed-item-name">Item Name:</label>
+            <input type="text" id="fixed-item-name" placeholder="e.g., Apple">
+            
+            <label for="fixed-item-price">Price (e.g., 4.99):</label>
+            <input type="text" id="fixed-item-price" placeholder="e.g., 4.99">
+            
+            <button onclick="addFixedItem()">Add Item</button>
+            
+            <div class="cart-display" id="fixed-cart-display">
+                <h3>Cart Items:</h3>
+                <ul id="fixed-cart-list"></ul>
+                <h3>Total: <span id="fixed-total">0.00</span></h3>
+                <p>Equality Check: Is total exactly equal to 0.30? <span id="fixed-equality-check">Not calculated</span></p>
+            </div>
+            
+            <button onclick="calculateFixedTotal()">Calculate Total</button>
+        </div>
+    </div>
+    
+    <div class="explanation">
+        <h2>Why Float Equality Fails for Financial Calculations</h2>
+        <p>Floating-point numbers (like JavaScript's Number type) are used for decimal values, but they have inherent precision limitations. Computers store these numbers in binary format, which can't perfectly represent all decimal fractions (e.g., 0.1 or 0.99). This leads to rounding errors:</p>
+        <ul>
+            <li>For example, adding 0.1 + 0.2 might result in 0.30000000000000004 instead of exactly 0.3.</li>
+            <li>In the broken version above, if you add items priced at $0.10 and $0.20, the total might not be exactly 0.30, so a comparison like total === 0.30 will fail (even though it should be true).</li>
+            <li>This is problematic for financial calculations because money requires exact precision. Even small errors can lead to incorrect totals, failed transactions, or financial discrepancies.</li>
+            <li><strong>Solution</strong>: As shown in the fixed version, use integers for calculations (e.g., store $4.99 as 499 cents). This avoids floating-point errors entirely. Alternatively, libraries like Big.js can handle arbitrary-precision decimals, but for simple cases, integers work well.</li>
+        </ul>
+        <p>In this demo, try adding items like $0.10 and $0.20, then calculate the total in both versions to see the difference!</p>
+    </div>
+    
+    <script>
+        // Broken Version (Using Floats)
+        let brokenCart = [];
+        
+        function addBrokenItem() {
+            const name = document.getElementById('broken-item-name').value;
+            const priceStr = document.getElementById('broken-item-price').value;
+            const price = parseFloat(priceStr);  // Uses floating-point number
+            if (name && !isNaN(price)) {
+                brokenCart.push({ name, price });
+                updateBrokenCartDisplay();
+            } else {
+                alert('Please enter a valid name and price.');
+            }
+        }
+        
+        function updateBrokenCartDisplay() {
+            const list = document.getElementById('broken-cart-list');
+            list.innerHTML = '';
+            brokenCart.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.name}: $${item.price.toFixed(2)}`;
+                list.appendChild(li);
+            });
+        }
+        
+        function calculateBrokenTotal() {
+            let total = 0;
+            brokenCart.forEach(item => {
+                total += item.price;  // Floating-point addition
+            });
+            document.getElementById('broken-total').textContent = total.toFixed(2);  // Display with 2 decimals
+            const equalityCheck = (total === 0.30) ? 'Yes (but it might fail due to precision!)' : 'No';
+            document.getElementById('broken-equality-check').textContent = equalityCheck;
+        }
+        
+        // Fixed Version (Using Integers in Cents)
+        let fixedCart = [];
+        
+        function addFixedItem() {
+            const name = document.getElementById('fixed-item-name').value;
+            const priceStr = document.getElementById('fixed-item-price').value;
+            const priceInDollars = parseFloat(priceStr);
+            if (name && !isNaN(priceInDollars)) {
+                const priceInCents = Math.round(priceInDollars * 100);  // Convert to cents as integer
+                fixedCart.push({ name, priceInCents });
+                updateFixedCartDisplay();
+            } else {
+                alert('Please enter a valid name and price.');
+            }
+        }
+        
+        function updateFixedCartDisplay() {
+            const list = document.getElementById('fixed-cart-list');
+            list.innerHTML = '';
+            fixedCart.forEach(item => {
+                const priceInDollars = (item.priceInCents / 100).toFixed(2);  // Convert back for display
+                const li = document.createElement('li');
+                li.textContent = `${item.name}: $${priceInDollars}`;
+                list.appendChild(li);
+            });
+        }
+        
+        function calculateFixedTotal() {
+            let totalInCents = 0;
+            fixedCart.forEach(item => {
+                totalInCents += item.priceInCents;  // Integer addition
+            });
+            const totalInDollars = (totalInCents / 100).toFixed(2);  // Convert back to dollars
+            document.getElementById('fixed-total').textContent = totalInDollars;
+            
+            // For demo, check if total is exactly 0.30 (in dollars)
+            const exactTotalInCentsForDemo = 30;  // 0.30 dollars in cents
+            const equalityCheck = (totalInCents === exactTotalInCentsForDemo) ? 'Yes' : 'No';
+            document.getElementById('fixed-equality-check').textContent = equalityCheck;
+        }
+    </script>
+</body>
+</html>

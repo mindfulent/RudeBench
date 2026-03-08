@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Singleton State</title>
+    <style>
+        /* Basic Reset & Body Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark Theme Styles */
+        body.dark-theme {
+            background-color: #1a1a2e; /* Dark background */
+            color: #e0e0e0; /* Light text */
+        }
+        body.dark-theme a {
+            color: #8aa8f8; /* Lighter link color */
+        }
+        body.dark-theme .card {
+            background-color: #2e2e4a;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+        body.dark-theme button {
+            background-color: #4a4a6e;
+            color: #e0e0e0;
+            border: 1px solid #6a6a8e;
+        }
+        body.dark-theme button:hover {
+            background-color: #5a5a7e;
+        }
+        body.dark-theme .header-section {
+            background-color: #2e2e4a;
+            border-bottom: 1px solid #4a4a6e;
+        }
+
+        /* Light Theme Styles (Default) */
+        body.light-theme, body:not(.dark-theme) { /* Explicitly light or default */
+            background-color: #f0f2f5; /* Light background */
+            color: #333; /* Dark text */
+        }
+        body.light-theme a, body:not(.dark-theme) a {
+            color: #007bff; /* Standard blue link */
+        }
+        body.light-theme .card, body:not(.dark-theme) .card {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        body.light-theme button, body:not(.dark-theme) button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+        body.light-theme button:hover, body:not(.dark-theme) button:hover {
+            background-color: #0056b3;
+        }
+        body.light-theme .header-section, body:not(.dark-theme) .header-section {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* General Layout & Components */
+        .header-section {
+            padding: 15px 20px;
+            margin: -20px -20px 20px -20px; /* Extend to edges */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .header-section h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            padding: 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 40px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+        .cta-section h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+        .cta-section p {
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-section">
+        <h1>My Awesome App</h1>
+        <button id="theme-toggle">Toggle Theme</button>
+    </div>
+
+    <div class="container">
+        <section class="intro-section">
+            <h2>Welcome to Our Platform!</h2>
+            <p>This page demonstrates a theme toggle feature implemented using the **Singleton pattern** for state management. Notice how the theme persists across different sections and content types, providing a consistent user experience.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p>Check out our <a href="#">amazing features</a> and learn more about us!</p>
+        </section>
+
+        <section class="card-grid-section">
+            <h2>Our Services</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Service One</h3>
+                    <p>Providing top-notch solutions for all your needs. We focus on innovation and customer satisfaction.</p>
+                    <a href="#">Learn More</a>
+                </div>
+                <div class="card">
+                    <h3>Service Two</h3>
+                    <p>Dedicated support and reliable performance are at the core of what we do every day.</p>
+                    <a href="#">Learn More</a>
+                </div>
+                <div class="card">
+                    <h3>Service Three</h3>
+                    <p>Experience the future with our cutting-edge technology and expert team.</p>
+                    <a href="#">Learn More</a>
+                </div>
+                <div class="card">
+                    <h3>Service Four</h3>
+                    <p>Customizable options to fit your unique requirements, ensuring a perfect match.</p>
+                    <a href="#">Learn More</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <h2>Ready to Get Started?</h2>
+            <p>Join thousands of happy customers today and transform your experience!</p>
+            <button>Sign Up Now</button>
+        </section>
+
+        <section class="about-us-section">
+            <h2>About Us</h2>
+            <p>Founded in 2023, we've been committed to delivering excellence. Our mission is to empower users with intuitive and powerful tools.</p>
+            <p>Our team comprises passionate individuals dedicated to pushing boundaries and creating impactful solutions. We believe in transparency, collaboration, and continuous improvement.</p>
+            <p>Feel free to <a href="#">contact us</a> if you have any questions or feedback.</p>
+            <ul>
+                <li>Innovative Solutions</li>
+                <li>Customer-Centric Approach</li>
+                <li>Reliable Support</li>
+                <li>Scalable Technologies</li>
+            </ul>
+        </section>
+
+        <section class="footer-section">
+            <p>&copy; 2023 My Awesome App. All rights reserved.</p>
+        </section>
+    </div>
+
+    <script>
+        // --- Singleton Theme Manager ---
+        const ThemeManager = (function() {
+            let instance; // Holds the single instance
+
+            function init() {
+                // Private variables and methods
+                const THEME_KEY = 'app-theme';
+                const DARK_THEME_CLASS = 'dark-theme';
+                const LIGHT_THEME_CLASS = 'light-theme';
+                let currentTheme;
+
+                // Function to apply the theme to the body
+                function applyTheme(theme) {
+                    const body = document.body;
+                    if (theme === 'dark') {
+                        body.classList.add(DARK_THEME_CLASS);
+                        body.classList.remove(LIGHT_THEME_CLASS);
+                    } else {
+                        body.classList.add(LIGHT_THEME_CLASS);
+                        body.classList.remove(DARK_THEME_CLASS);
+                    }
+                    currentTheme = theme;
+                    localStorage.setItem(THEME_KEY, theme); // Persist theme
+                    console.log(`Theme set to: ${theme}`);
+                }
+
+                // Function to initialize theme from localStorage or system preference
+                function initializeTheme() {
+                    const savedTheme = localStorage.getItem(THEME_KEY);
+                    if (savedTheme) {
+                        applyTheme(savedTheme);
+                    } else {
+                        // Check for system preference
+                        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        applyTheme(prefersDark ? 'dark' : 'light');
+                    }
+                }
+
+                // Public interface
+                return {
+                    toggleTheme: function() {
+                        const newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+                        applyTheme(newTheme);
+                    },
+                    getCurrentTheme: function() {
+                        return currentTheme;
+                    },
+                    // This method is called once to set up the initial theme
+                    setup: function() {
+                        initializeTheme();
+                    }
+                };
+            }
+
+            return {
+                // Get the singleton instance
+                getInstance: function() {
+                    if (!instance) {
+                        instance = init();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        // --- Application Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the singleton instance of ThemeManager
+            const themeManager = ThemeManager.getInstance();
+
+            // Initialize the theme based on saved preference or system default
+            themeManager.setup();
+
+            // Attach event listener to the toggle button
+            const themeToggleButton = document.getElementById('theme-toggle');
+            if (themeToggleButton) {
+                themeToggleButton.addEventListener('click', () => {
+                    themeManager.toggleTheme();
+                });
+            }
+
+            // Optional: Listen for system theme changes (though our current setup
+            // only applies on first load or manual toggle, not dynamically)
+            // For a truly dynamic system preference change, you'd need to
+            // re-evaluate and apply the theme here if no explicit user preference
+            // is set. Our current `initializeTheme` handles this on initial load.
+            // window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            //     if (!localStorage.getItem('app-theme')) { // Only if user hasn't explicitly chosen
+            //         themeManager.setup(); // Re-evaluate and apply system preference
+            //     }
+            // });
+        });
+    </script>
+</body>
+</html>

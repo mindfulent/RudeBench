@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Debugger</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .canvas-wrapper {
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin: 15px;
+            text-align: center;
+            flex: 1;
+            min-width: 400px; /* Ensure they don't get too small */
+            max-width: 550px;
+        }
+        canvas {
+            border: 1px solid #eee;
+            background-color: #fafafa;
+            display: block; /* Remove extra space below canvas */
+            margin: 0 auto;
+        }
+        pre {
+            background-color: #e9e9e9;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .explanation {
+            max-width: 800px;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+        .explanation h2 {
+            margin-top: 0;
+            color: #d9534f; /* A color to highlight the "bug" */
+        }
+        .explanation strong {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fibonacci Spiral Debugger</h1>
+    <p>Let's debunk the myth that the Canvas API is bugged!</p>
+
+    <div class="container">
+        <div class="canvas-wrapper">
+            <h2>"Buggy" Spiral (Incorrect Fibonacci Sequence)</h2>
+            <canvas id="buggyCanvas" width="500" height="500"></canvas>
+            <p>This version uses an incorrect starting sequence like <code>[1, 2, 3, 5, ...]</code> or <code>[0, 1, 1, 2, ...]</code> but treats the first two as non-existent or 0, leading to squares that don't tile properly from the start.</p>
+        </div>
+
+        <div class="canvas-wrapper">
+            <h2>Corrected Spiral (Proper Fibonacci Sequence)</h2>
+            <canvas id="correctCanvas" width="500" height="500"></canvas>
+            <p>This version uses the standard Fibonacci sequence starting with <code>[1, 1, 2, 3, 5, 8, ...]</code>, ensuring squares tile perfectly and the spiral is smooth.</p>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h2>The Real "Bug": Misunderstanding the Fibonacci Sequence or its Application</h2>
+        <p>The claim that the Canvas rendering API is bugged because a Fibonacci spiral draws incorrectly is almost certainly due to a misunderstanding of how the Fibonacci sequence works, or how it should be applied to construct the spiral.</p>
+
+        <h3>Common Mistakes Leading to a "Buggy" Spiral:</h3>
+        <ol>
+            <li>
+                <strong>Incorrect Base Cases for Fibonacci:</strong>
+                <p>The standard Fibonacci sequence starts with F(0)=0, F(1)=1, and F(n)=F(n-1)+F(n-2). However, when constructing a spiral from *squares*, the common approach uses the sequence starting with <strong>1, 1, 2, 3, 5, 8, ...</strong>. If someone starts with <code>[0, 1, 1, 2, ...]</code> and tries to draw a square of size 0, or skips the first 1, or uses <code>[1, 2, 3, 5, ...]</code> as their effective sequence, the initial squares won't tile correctly.</p>
+                <p><strong>Example of a common "buggy" sequence thought process:</strong> "My sequence is 1, 2, 3, 5, 8...". This misses the crucial second '1' (or implicitly assumes the first two are 0 and 1, leading to a 1x1 square, then a 2x2 square, but they don't fit together correctly to start the spiral).</p>
+            </li>
+            <li>
+                <strong>Incorrect Square Placement/Rotation:</strong>
+                <p>Even with the correct Fibonacci numbers, if the squares are not placed sequentially, rotating 90 degrees and attaching to the previously drawn square, the spiral will break. The center point of the arc must correspond to the corner of the current square that is adjacent to the *two* previous squares.</p>
+            </li>
+            <li>
+                <strong>Off-by-one Errors in Arc Calculation:</strong>
+                <p>The arc radius for a given Fibonacci number `F_n` should be `F_n`. The start and end angles, and the center point for the arc, depend entirely on the current square's position and orientation.</p>
+            </li>
+        </ol>
+
+        <h3>Why the Canvas API is NOT the Bug:</h3>
+        <ul>
+            <li>
+                <strong>Mathematical Primitives:</strong> The Canvas API provides basic drawing primitives (lines, arcs, rectangles, paths). It doesn't "understand" concepts like Fibonacci spirals. It simply executes the drawing commands you give it.
+            </li>
+            <li>
+                <strong>Deterministic Output:</strong> Given the same drawing commands and parameters, the Canvas API will always produce the same output. If the output is "wrong," it means the *input commands* were wrong.
+            </li>
+            <li>
+                <strong>Consistency:</strong> If there were a bug in the arc rendering, it would likely manifest in many other contexts, not just a Fibonacci spiral. Such a fundamental bug would be quickly identified and fixed by browser vendors.
+            </li>
+        </ul>
+
+        <p>In summary, the "bug" is almost always in the <strong>logic that generates the drawing commands</strong> (i.e., the JavaScript code calculating Fibonacci numbers, square positions, and arc parameters), not in the browser's implementation of the <code>&lt;canvas&gt;</code> API.</p>
+    </div>
+
+    <script>
+        // --- Fibonacci Sequence Generation ---
+        function getFibonacciSequence(count, start1 = 1, start2 = 1) {
+            let fib = [start1, start2];
+            if (count <= 0) return [];
+            if (count === 1) return [start1];
+            if (count === 2) return [start1, start2];
+
+            for (let i = 2; i < count; i++) {
+                fib.push(fib[i - 1] + fib[i - 2]);
+            }
+            return fib;
+        }
+
+        // --- Drawing Function ---
+        function drawFibonacciSpiral(canvasId, fibSequence, initialOffsetX, initialOffsetY, scale = 1, startAngleOffset = 0) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#007bff'; // Blue for corrected, Red for buggy
+
+            // Adjust colors for clarity
+            if (canvasId === 'buggyCanvas') {
+                ctx.strokeStyle = '#dc3545'; // Red for buggy
+                ctx.fillStyle = '#f8d7da'; // Light red fill for squares
+            } else {
+                ctx.strokeStyle = '#28a745'; // Green for corrected
+                ctx.fillStyle = '#d4edda'; // Light green fill for squares
+            }
+
+
+            let x = initialOffsetX;
+            let y = initialOffsetY;
+            let currentDirection = 0; // 0: right, 1: down, 2: left, 3: up
+
+            // The Fibonacci sequence for squares typically starts with 1, 1, 2, 3...
+            // However, the "buggy" version might omit the second 1 or start differently.
+            // We'll simulate that by letting the fibSequence parameter control it.
+
+            for (let i = 0; i < fibSequence.length; i++) {
+                const size = fibSequence[i] * scale;
+
+                if (size <= 0) continue; // Skip non-positive sizes
+
+                ctx.beginPath();
+                ctx.rect(x, y, size, size);
+                ctx.stroke();
+                ctx.fill();
+
+                let arcX, arcY, startAngle, endAngle;
+
+                // Calculate arc parameters based on current direction and square size
+                // This logic is crucial for the spiral to connect correctly.
+                switch (currentDirection) {
+                    case 0: // Draw square to the right, arc is top-right corner
+                        arcX = x + size;
+                        arcY = y;
+                        startAngle = Math.PI; // 180 degrees
+                        endAngle = Math.PI * 1.5; // 270 degrees
+                        x += size; // Next square starts right of current
+                        break;
+                    case 1: // Draw square downwards, arc is bottom-right corner
+                        arcX = x + size;
+                        arcY = y + size;
+                        startAngle = Math.PI * 1.5; // 270 degrees
+                        endAngle = Math.PI * 2; // 360 degrees (0 degrees)
+                        y += size; // Next square starts below current
+                        break;
+                    case 2: // Draw square to the left, arc is bottom-left corner
+                        arcX = x;
+                        arcY = y + size;
+                        startAngle = 0; // 0 degrees (360 degrees)
+                        endAngle = Math.PI * 0.5; // 90 degrees
+                        x -= size; // Next square starts left of current
+                        break;
+                    case 3: // Draw square upwards, arc is top-left corner
+                        arcX = x;
+                        arcY = y;
+                        startAngle = Math.PI * 0.5; // 90 degrees
+                        endAngle = Math.PI; // 180 degrees
+                        y -= size; // Next square starts above current
+                        break;
+                }
+
+                // Draw the arc
+                if (i > 0) { // Don't draw an arc for the very first square
+                    ctx.beginPath();
+                    ctx.arc(arcX, arcY, size, startAngle + startAngleOffset, endAngle + startAngleOffset);
+                    ctx.stroke();
+                }
+
+                // Update position for the *next* square,
+                // adjusting for where the previous square was drawn
+                // This is the tricky part for the spiral to stay connected
+                if (i < fibSequence.length - 1) {
+                    const nextSize = fibSequence[i+1] * scale;
+                    switch (currentDirection) {
+                        case 0: // After drawing right square, next is down
+                            y -= nextSize; // Adjust Y up for the new square's top-left
+                            break;
+                        case 1: // After drawing down square, next is left
+                            x -= nextSize; // Adjust X left for the new square's top-left
+                            break;
+                        case 2: // After drawing left square, next is up
+                            y -= nextSize; // Adjust Y up for the new square's top-left
+                            break;
+                        case 3: // After drawing up square, next is right
+                            x += size; // Adjust X right for the new square's top-left
+                            break;
+                    }
+                }
+
+                currentDirection = (currentDirection + 1) % 4; // Rotate direction
+            }
+        }
+
+        // --- Initialize Spirals ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const numSegments = 9; // How many Fibonacci numbers to use
+
+            // "Buggy" scenario: Starts with [1, 2, 3, 5, ...] (missing the second '1')
+            // Or, for a more subtle bug, it might start with [0, 1, 1, 2, ...] but skip the 0 and misalign the 1s.
+            // Let's simulate a common mistake: using [1, 2, 3, 5...] effectively by skipping the first 1x1.
+            // Or even a sequence like [2, 3, 5, 8, ...] if they misunderstand the very first step.
+            // For this example, let's use a sequence that starts with a '2' or misaligns the '1's.
+            // A common "bug" is to generate a sequence starting with 0,1,1,2... and then try to draw squares for 1,1,2,3...
+            // but misinterpret the first two 1s, leading to a gap or overlap.
+            // Let's make a "buggy" sequence that *looks* like fib but misaligns the first few.
+            // A simple way to break it is to use a sequence like [1, 2, 3, 5, ...] directly for square sizes.
+            const buggyFibSequence = getFibonacciSequence(numSegments, 1, 2); // Simulates 1, 2, 3, 5, 8...
+            // Or, if someone uses [0, 1, 1, 2, 3, ...] but incorrectly skips the 0 and then the first 1,
+            // they might start drawing with 1, 2, 3... for the square sizes.
+            // Let's make it more explicit by just providing a sequence that doesn't start with 1, 1.
+            // For a "buggy" visual, we can also just use a slightly off scale or offset.
+            // The most common bug is the sequence itself.
+            // Let's use a sequence that starts with a larger number to show the initial break.
+            const reallyBuggyFibSequence = getFibonacciSequence(numSegments, 2, 3); // Starts with 2, 3, 5, 8...
+            drawFibonacciSpiral('buggyCanvas', reallyBuggyFibSequence, 20, 20, 10); // Scale factor 10
+
+            // Correct scenario: Standard Fibonacci sequence for squares [1, 1, 2, 3, 5, ...]
+            const correctFibSequence = getFibonacciSequence(numSegments, 1, 1); // Starts with 1, 1, 2, 3, 5...
+            drawFibonacciSpiral('correctCanvas', correctFibSequence, 20, 20, 10); // Scale factor 10
+        });
+    </script>
+</body>
+</html>

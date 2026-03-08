@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Theme Toggle - Singleton Example</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #111111;
+      --card-bg: #f4f4f4;
+      --accent: #0066cc;
+    }
+
+    .dark {
+      --bg: #111317;
+      --fg: #e8eef6;
+      --card-bg: #1a1f24;
+      --accent: #36a3ff;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      transition: background 220ms ease, color 220ms ease;
+    }
+
+    header {
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.4rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease;
+    }
+    .toggle-btn:hover { background: rgba(0,0,0,0.04); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+      transition: background 220ms ease, color 220ms ease, box-shadow 220ms ease;
+    }
+
+    footer {
+      margin-top: 2rem;
+      padding: 1rem 0;
+      color: var(--fg);
+      opacity: 0.8;
+    }
+
+    .accent {
+      color: var(--accent);
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <strong>Theme Demo (Singleton State)</strong>
+      <div style="font-size:0.9rem; opacity:0.8">Multiple elements listen to a single global store</div>
+    </div>
+    <div>
+      <button id="toggleBtn" class="toggle-btn">Toggle Theme</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="grid">
+      <div class="card" id="card1">
+        <h3>Card A</h3>
+        <p>This card reacts to the shared theme state.</p>
+      </div>
+      <div class="card" id="card2">
+        <h3>Card B</h3>
+        <p>Another card using the same singleton store.</p>
+      </div>
+      <div class="card" id="card3">
+        <h3>Card C</h3>
+        <p>All elements toggle together.</p>
+      </div>
+      <div class="card" id="card4">
+        <h3>Card D</h3>
+        <p>Local elements may also query the store.</p>
+      </div>
+    </section>
+
+    <footer>
+      <div>Current theme: <span id="currentTheme" class="accent">light</span></div>
+    </footer>
+  </main>
+
+  <script>
+    /*
+      Simple singleton-style theme store.
+      - Single instance exported from an IIFE
+      - Keeps theme state and a list of subscribers
+      - Exposes methods: get(), toggle(), set(), subscribe(), unsubscribe()
+      This is intentionally minimal for demo/educational use.
+    */
+
+    const ThemeStore = (function createThemeStore() {
+      // private state
+      let instance; // ensure only one instance
+      function init() {
+        let theme = (localStorage.getItem('demo-theme') === 'dark') ? 'dark' : 'light';
+        const subscribers = new Set();
+
+        function notify() {
+          for (const s of subscribers) {
+            try { s(theme); } catch (e) { console.error('subscriber error', e); }
+          }
+        }
+
+        return {
+          get() { return theme; },
+          set(newTheme) {
+            if (newTheme !== 'light' && newTheme !== 'dark') return;
+            if (theme === newTheme) return;
+            theme = newTheme;
+            localStorage.setItem('demo-theme', theme);
+            notify();
+          },
+          toggle() {
+            this.set(theme === 'light' ? 'dark' : 'light');
+          },
+          subscribe(fn) {
+            if (typeof fn !== 'function') return;
+            subscribers.add(fn);
+            // immediately call to initialize
+            try { fn(theme); } catch (e) { console.error('subscriber init error', e); }
+            // return unsubscribe helper
+            return () => subscribers.delete(fn);
+          },
+          // for debugging
+          _subCount() { return subscribers.size; }
+        };
+      }
+
+      return {
+        getInstance() {
+          if (!instance) instance = init();
+          return instance;
+        }
+      };
+    })();
+
+    // App wiring
+    (function main() {
+      const store = ThemeStore.getInstance();
+
+      // Apply theme to <html> element for CSS vars to switch
+      function applyTheme(t) {
+        const html = document.documentElement;
+        if (t === 'dark') html.classList.add('dark'); else html.classList.remove('dark');
+        document.getElementById('currentTheme').textContent = t;
+        // Update toggle button label for clarity
+        const btn = document.getElementById('toggleBtn');
+        btn.textContent = t === 'dark' ? 'Switch to Light' : 'Switch to Dark';
+      }
+
+      // Subscribe global apply
+      store.subscribe(applyTheme);
+
+      // Button toggles the singleton store
+      document.getElementById('toggleBtn').addEventListener('click', () => store.toggle());
+
+      // Demonstrate local components subscribing individually
+      function mountCard(cardId) {
+        const el = document.getElementById(cardId);
+        if (!el) return;
+        // Each card subscribes to the same singleton store.
+        const unsub = store.subscribe(t => {
+          el.style.border = t === 'dark' ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.04)';
+          el.querySelector('h3').style.color = t === 'dark' ? '#aee3ff' : '#0056a6';
+        });
+        // Example of potential cleanup — not used in this demo.
+        // return unsub;
+      }
+
+      ['card1','card2','card3','card4'].forEach(mountCard);
+
+      // For demonstration: log subscriber count every few seconds
+      // (to show there is a central list of subscribers)
+      setInterval(() => {
+        console.debug('ThemeStore subscribers:', store._subCount());
+      }, 60000);
+    })();
+  </script>
+</body>
+</html>

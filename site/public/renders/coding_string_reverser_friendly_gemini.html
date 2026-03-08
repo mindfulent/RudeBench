@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time String Reverser</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;700&display=swap');
+
+        :root {
+            --primary-color: #6200EE;
+            --primary-light: #BB86FC;
+            --primary-dark: #3700B3;
+            --background-color: #121212;
+            --surface-color: #1E1E1E;
+            --on-background: #E0E0E0;
+            --on-surface: #E0E0E0;
+            --input-border: #424242;
+            --input-focus-border: var(--primary-light);
+            --animation-duration: 0.15s;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--background-color);
+            color: var(--on-background);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden; /* Prevent scrollbar from animation */
+        }
+
+        .container {
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid var(--input-border);
+        }
+
+        h1 {
+            color: var(--primary-light);
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            letter-spacing: -0.5px;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        #textInput {
+            width: calc(100% - 40px);
+            padding: 18px 20px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            background-color: var(--background-color);
+            color: var(--on-surface);
+            font-size: 1.1em;
+            font-family: 'Roboto Mono', monospace;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        #textInput::placeholder {
+            color: #888;
+        }
+
+        #textInput:focus {
+            border-color: var(--input-focus-border);
+            box-shadow: 0 0 0 3px rgba(var(--primary-light-rgb), 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Define RGB values for primary-light for box-shadow rgba */
+        :root {
+            --primary-light-rgb: 187, 134, 252; /* Corresponds to #BB86FC */
+        }
+
+        .output-group {
+            margin-top: 30px;
+            min-height: 60px; /* Give some space even when empty */
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow characters to wrap */
+            align-items: center;
+        }
+
+        #reversedOutput {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary-light);
+            word-break: break-all; /* Ensure long words break */
+            line-height: 1.4;
+            display: flex; /* Use flex to allow individual character styling */
+            justify-content: center;
+            flex-wrap: wrap;
+            text-align: center;
+        }
+
+        .reversed-char {
+            display: inline-block; /* Essential for transform/animation */
+            opacity: 0;
+            transform: scale(0.8);
+            animation: fadeInScale var(--animation-duration) forwards ease-out;
+            margin: 0 1px; /* Small spacing between characters */
+            white-space: pre; /* Preserve spaces as individual characters */
+        }
+
+        /* Animation for individual characters */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>String Reverser</h1>
+
+        <div class="input-group">
+            <input type="text" id="textInput" placeholder="Type something here...">
+        </div>
+
+        <div class="output-group">
+            <div id="reversedOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const reversedOutput = document.getElementById('reversedOutput');
+        let previousReversedString = '';
+
+        textInput.addEventListener('input', () => {
+            const originalString = textInput.value;
+            const reversedString = originalString.split('').reverse().join('');
+
+            // Only update and animate if the string has actually changed
+            if (reversedString !== previousReversedString) {
+                updateReversedOutput(reversedString);
+                previousReversedString = reversedString;
+            }
+        });
+
+        function updateReversedOutput(newReversedString) {
+            // Clear existing content
+            reversedOutput.innerHTML = '';
+
+            if (newReversedString.length === 0) {
+                // Optionally display a placeholder if empty
+                // reversedOutput.innerHTML = '<span style="color: #888; font-size: 0.8em;">Output will appear here</span>';
+                return;
+            }
+
+            // Create a span for each character and append it
+            for (let i = 0; i < newReversedString.length; i++) {
+                const char = newReversedString[i];
+                const charSpan = document.createElement('span');
+                charSpan.className = 'reversed-char';
+                charSpan.textContent = char;
+                // Add a slight delay for a staggered animation effect
+                charSpan.style.animationDelay = `${i * 0.03}s`; // Staggered delay
+                reversedOutput.appendChild(charSpan);
+            }
+        }
+
+        // Initial update in case there's pre-filled input (though not in this example)
+        updateReversedOutput(textInput.value.split('').reverse().join(''));
+    </script>
+</body>
+</html>

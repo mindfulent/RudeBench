@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrency Bug: Shared State Progress Bar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            width: 45%;
+            min-width: 350px;
+            box-sizing: border-box;
+        }
+        h2 {
+            color: #d9534f; /* Buggy */
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .section.fixed h2 {
+            color: #5cb85c; /* Fixed */
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            height: 30px;
+            margin-bottom: 15px;
+            overflow: hidden; /* Ensure text doesn't spill */
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #f0ad4e; /* Warning-like */
+            width: 0%;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.1s ease-out; /* Smooth transition for visual effect */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            color: #333; /* Darker text for visibility */
+            font-weight: bold;
+            z-index: 1; /* Above the bar */
+        }
+        .section.fixed .progress-bar {
+            background-color: #5cb85c; /* Success-like */
+        }
+        .explanation {
+            background-color: #e7f3ff;
+            border-left: 6px solid #2196F3;
+            margin: 25px 0;
+            padding: 20px;
+            font-size: 1.1em;
+            line-height: 1.6;
+            clear: both; /* Clear floats from the sections */
+        }
+        .explanation h3 {
+            color: #2196F3;
+            margin-top: 0;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .task-list {
+            list-style-type: decimal;
+            margin-left: 20px;
+            padding-left: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .task-list li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .task-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Concurrency Bug: Shared State Progress Tracker</h1>
+
+    <div class="explanation">
+        <h3>The Shared State Concurrency Problem Explained</h3>
+        <p>
+            This demonstration illustrates a common concurrency bug known as a "race condition" due to "shared mutable state."
+            In JavaScript, even though it's single-threaded, asynchronous operations (like `setTimeout` or `Promise` callbacks)
+            can interleave their execution.
+        </p>
+        <p>
+            When multiple asynchronous tasks try to read and update the *same global variable* (the `sharedProgress` in the buggy example)
+            concurrently, they can step on each other's toes:
+        </p>
+        <ol>
+            <li><strong>Task A reads `sharedProgress` (e.g., 50%).</strong></li>
+            <li><strong>Task B reads `sharedProgress` (e.g., still 50%)</strong> because Task A hasn't updated it yet.</li>
+            <li><strong>Task A calculates its new value (50% + 10% = 60%)</strong> and writes it back.</li>
+            <li><strong>Task B calculates its new value (50% + 10% = 60%)</strong> based on its *stale* read, and writes it back, effectively overwriting Task A's update and losing a 10% increment.</li>
+        </ol>
+        <p>
+            This leads to incorrect results: the progress bar might skip percentages, show values that don't add up, or even exceed 100%
+            if multiple increments happen before the display updates.
+        </p>
+        <p>
+            The <strong>Fixed Implementation</strong> avoids this by either:
+            <ul>
+                <li>Using a local variable within an immediate scope (though harder for a truly shared progress).</li>
+                <li>Ensuring each task increments a *separate* counter, and the *total* progress is calculated by summing these individual counters, or</li>
+                <li>Using a mechanism that ensures only one update can happen at a time (like a queue or a lock, though more complex for this specific UI example).</li>
+            </ul>
+            In our fixed example, we simulate each task contributing its "share" to a total, and then calculate the overall percentage based on completed shares.
+            Alternatively, a simpler fix is to ensure each "increment" operation is atomic, meaning it reads the current value, adds to it, and writes it back
+            as a single, uninterrupted operation. However, the true fix for a "total progress" from multiple tasks is often to track *completed sub-tasks* rather than
+            directly incrementing a global percentage.
+        </p>
+    </div>
+
+    <div class="container">
+        <!-- Buggy Implementation -->
+        <div class="section buggy">
+            <h2>Buggy Implementation (Shared State)</h2>
+            <p>Multiple tasks update a single global `sharedProgress` variable directly.</p>
+            <div class="progress-container">
+                <div id="buggyProgressBar" class="progress-bar"></div>
+                <div id="buggyProgressText" class="progress-text">0%</div>
+            </div>
+            <button onclick="startBuggyTasks()">Start Buggy Tasks</button>
+            <h3>Task Log:</h3>
+            <ul id="buggyTaskList" class="task-list"></ul>
+        </div>
+
+        <!-- Fixed Implementation -->
+        <div class="section fixed">
+            <h2>Fixed Implementation (Controlled State)</h2>
+            <p>Each task updates its own status, and total progress is calculated from these statuses.</p>
+            <div class="progress-container">
+                <div id="fixedProgressBar" class="progress-bar"></div>
+                <div id="fixedProgressText" class="progress-text">0%</div>
+            </div>
+            <button onclick="startFixedTasks()">Start Fixed Tasks</button>
+            <h3>Task Log:</h3>
+            <ul id="fixedTaskList" class="task-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const NUM_TASKS = 10;
+        const TASK_DURATION_MIN = 300; // ms
+        const TASK_DURATION_MAX = 1500; // ms
+        const UPDATE_INTERVAL = 50; // ms, how often to update the UI
+
+        // --- Buggy Implementation Variables ---
+        let buggySharedProgress = 0; // The problematic shared state
+        let buggyTaskCount = 0;
+        let buggyTaskLog = document.getElementById('buggyTaskList');
+        let buggyProgressBar = document.getElementById('buggyProgressBar');
+        let buggyProgressText = document.getElementById('buggyProgressText');
+
+        function updateBuggyProgressBar() {
+            const percentage = Math.min(100, Math.max(0, buggySharedProgress)); // Clamp values
+            buggyProgressBar.style.width = `${percentage}%`;
+            buggyProgressText.textContent = `${Math.round(percentage)}%`;
+            buggyProgressBar.style.backgroundColor = percentage > 100 ? '#dc3545' : '#f0ad4e'; // Red if over 100
+            if (buggySharedProgress >= 100) {
+                 buggyProgressBar.style.backgroundColor = '#d9534f';
+            }
+        }
+
+        async function buggyTask(id) {
+            const duration = Math.random() * (TASK_DURATION_MAX - TASK_DURATION_MIN) + TASK_DURATION_MIN;
+            logBuggy(`Task ${id}: Starting... (duration: ${duration.toFixed(0)}ms)`);
+
+            await new Promise(resolve => setTimeout(resolve, duration));
+
+            // BUG: Multiple tasks will read buggySharedProgress, increment it, and write it back.
+            // If two tasks read 50%, both will calculate 60% and write it, effectively losing one 10% increment.
+            buggySharedProgress += (100 / NUM_TASKS);
+            logBuggy(`Task ${id}: Completed. Current progress: ${buggySharedProgress.toFixed(2)}%`);
+            updateBuggyProgressBar();
+        }
+
+        function logBuggy(message) {
+            const li = document.createElement('li');
+            li.textContent = message;
+            buggyTaskLog.appendChild(li);
+            buggyTaskLog.scrollTop = buggyTaskLog.scrollHeight; // Auto-scroll
+        }
+
+        function startBuggyTasks() {
+            buggySharedProgress = 0;
+            buggyTaskCount = 0;
+            buggyTaskLog.innerHTML = '';
+            updateBuggyProgressBar();
+            buggyProgressBar.style.backgroundColor = '#f0ad4e'; // Reset color
+            logBuggy('Starting buggy tasks...');
+
+            for (let i = 0; i < NUM_TASKS; i++) {
+                buggyTask(i + 1);
+            }
+        }
+
+        // --- Fixed Implementation Variables ---
+        let fixedTaskStates = new Array(NUM_TASKS).fill(false); // Track individual task completion
+        let fixedTaskLog = document.getElementById('fixedTaskList');
+        let fixedProgressBar = document.getElementById('fixedProgressBar');
+        let fixedProgressText = document.getElementById('fixedProgressText');
+
+        function updateFixedProgressBar() {
+            const completedTasks = fixedTaskStates.filter(state => state).length;
+            const percentage = (completedTasks / NUM_TASKS) * 100;
+            fixedProgressBar.style.width = `${percentage}%`;
+            fixedProgressText.textContent = `${Math.round(percentage)}%`;
+            fixedProgressBar.style.backgroundColor = percentage >= 100 ? '#5cb85c' : '#5cb85c'; // Always green when fixed
+        }
+
+        async function fixedTask(id) {
+            const duration = Math.random() * (TASK_DURATION_MAX - TASK_DURATION_MIN) + TASK_DURATION_MIN;
+            logFixed(`Task ${id}: Starting... (duration: ${duration.toFixed(0)}ms)`);
+
+            await new Promise(resolve => setTimeout(resolve, duration));
+
+            // FIX: Each task updates its *own* state in the fixedTaskStates array.
+            // The overall progress is then calculated by summing up the completed states.
+            // This avoids direct concurrent modification of a single global percentage variable.
+            fixedTaskStates[id - 1] = true; // Mark this specific task as complete
+            logFixed(`Task ${id}: Completed. Total completed tasks: ${fixedTaskStates.filter(state => state).length}`);
+            updateFixedProgressBar();
+        }
+
+        function logFixed(message) {
+            const li = document.createElement('li');
+            li.textContent = message;
+            fixedTaskLog.appendChild(li);
+            fixedTaskLog.scrollTop = fixedTaskLog.scrollHeight; // Auto-scroll
+        }
+
+        function startFixedTasks() {
+            fixedTaskStates.fill(false); // Reset all task states
+            fixedTaskLog.innerHTML = '';
+            updateFixedProgressBar();
+            logFixed('Starting fixed tasks...');
+
+            for (let i = 0; i < NUM_TASKS; i++) {
+                fixedTask(i + 1);
+            }
+        }
+
+        // Initial display update
+        updateBuggyProgressBar();
+        updateFixedProgressBar();
+    </script>
+</body>
+</html>

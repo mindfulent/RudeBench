@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Reverser</title>
+    <style>
+        /* Modern styling for the page */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Clean sans-serif font */
+            background-color: #f0f4f8; /* Light, modern background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full viewport height for centering */
+            overflow: hidden; /* Prevent scrolling if content fits */
+        }
+
+        #container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px; /* Rounded corners for a modern look */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            text-align: center;
+            width: 90%; /* Responsive width */
+            max-width: 500px; /* Limit width for better readability */
+        }
+
+        h1 {
+            color: #2c3e50; /* Dark blue for heading */
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #3498db; /* Modern blue border */
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease; /* Smooth border color change on focus */
+        }
+
+        input[type="text"]:focus {
+            border-color: #2980b9; /* Darker blue on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        #output {
+            font-size: 1.2rem;
+            color: #34495e; /* Subtle text color */
+            margin-top: 1rem;
+            line-height: 1.6; /* Better readability */
+        }
+
+        .char {
+            opacity: 0; /* Start hidden for animation */
+            animation: fadeIn 0.3s forwards; /* Fade-in animation */
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1; /* Fade to fully visible */
+                transform: translateY(0); /* Slight slide effect */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>String Reverser</h1>
+        <input type="text" id="inputField" placeholder="Type something here...">
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // JavaScript to handle real-time reversing and animation
+        const inputField = document.getElementById('inputField');
+        const outputDiv = document.getElementById('output');
+
+        inputField.addEventListener('input', function(e) {
+            const inputText = e.target.value; // Get the current input
+            const reversedText = inputText.split('').reverse().join(''); // Reverse the string
+
+            // Clear the output div
+            outputDiv.innerHTML = '';
+
+            // Create a span for each character and add it to the output
+            reversedText.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char; // Set the character
+                span.className = 'char'; // Add class for animation
+                span.style.animationDelay = `${index * 0.1}s`; // Delay each character by 0.1 seconds
+                outputDiv.appendChild(span); // Add to the DOM
+            });
+        });
+    </script>
+</body>
+</html>

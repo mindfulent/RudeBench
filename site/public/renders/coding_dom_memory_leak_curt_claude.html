@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Memory Leak Demo: It's Not the GC's Fault</title>
+<title>Memory Leak Demo: GC is Not the Problem</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -29,14 +29,14 @@
     margin-bottom: 24px;
   }
 
-  /* ── Explanation Banner ── */
+  /* ── Explanation banner ── */
   .explanation {
     background: #1e293b;
     border: 1px solid #334155;
     border-left: 4px solid #f59e0b;
     border-radius: 8px;
     padding: 18px 22px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
     max-width: 1100px;
     margin-left: auto;
     margin-right: auto;
@@ -53,26 +53,25 @@
 
   .explanation p {
     color: #cbd5e1;
-    font-size: 0.85rem;
-    line-height: 1.65;
+    font-size: 0.875rem;
+    line-height: 1.7;
     margin-bottom: 8px;
   }
 
   .explanation p:last-child { margin-bottom: 0; }
 
-  .highlight { color: #f87171; font-weight: 600; }
-  .good      { color: #4ade80; font-weight: 600; }
+  .explanation strong { color: #fbbf24; }
 
-  /* ── Layout ── */
+  /* ── Two-panel layout ── */
   .panels {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     max-width: 1100px;
-    margin: 0 auto 28px;
+    margin: 0 auto 24px;
   }
 
-  @media (max-width: 700px) {
+  @media (max-width: 750px) {
     .panels { grid-template-columns: 1fr; }
   }
 
@@ -91,158 +90,831 @@
     border-bottom: 1px solid #334155;
   }
 
-  .panel-header h3 {
-    font-size: 0.95rem;
+  .panel-header h2 {
+    font-size: 1rem;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .badge-buggy { color: #f87171; }
-  .badge-fixed { color: #4ade80; }
+  .buggy .panel-header  { background: #2d1515; border-bottom-color: #7f1d1d; }
+  .buggy .panel-header h2 { color: #fca5a5; }
+  .fixed .panel-header  { background: #0f2d1a; border-bottom-color: #14532d; }
+  .fixed .panel-header h2 { color: #86efac; }
 
-  .add-btn {
-    background: #3b82f6;
-    color: #fff;
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .buggy .badge { background: #7f1d1d; color: #fca5a5; }
+  .fixed .badge { background: #14532d; color: #86efac; }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #334155;
+  }
+
+  .stat {
+    flex: 1;
+    padding: 10px 14px;
+    text-align: center;
+    border-right: 1px solid #334155;
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    margin-bottom: 3px;
+  }
+
+  .stat-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-value.danger  { color: #f87171; }
+  .stat-value.safe    { color: #4ade80; }
+  .stat-value.neutral { color: #94a3b8; }
+  .stat-value.warn    { color: #fbbf24; }
+
+  /* ── Controls ── */
+  .controls {
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #334155;
+  }
+
+  button {
+    padding: 7px 16px;
     border: none;
     border-radius: 6px;
-    padding: 6px 14px;
     font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: opacity 0.15s, transform 0.1s;
   }
-  .add-btn:hover { background: #2563eb; }
 
+  button:active { transform: scale(0.96); }
+  button:hover  { opacity: 0.85; }
+
+  .btn-add    { background: #3b82f6; color: #fff; }
+  .btn-remove { background: #ef4444; color: #fff; }
+  .btn-stress { background: #8b5cf6; color: #fff; }
+  .btn-reset  { background: #475569; color: #fff; }
+
+  /* ── Widget grid ── */
   .widget-grid {
     padding: 14px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 10px;
     min-height: 180px;
+    max-height: 320px;
+    overflow-y: auto;
   }
 
-  /* ── Widget Card ── */
-  .widget-card {
+  .widget-grid::-webkit-scrollbar { width: 6px; }
+  .widget-grid::-webkit-scrollbar-track { background: #0f1117; }
+  .widget-grid::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+  .widget {
     background: #0f1117;
     border: 1px solid #334155;
     border-radius: 8px;
     padding: 10px;
     position: relative;
-    animation: fadeIn 0.25s ease;
+    transition: border-color 0.2s;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.92); }
-    to   { opacity: 1; transform: scale(1); }
-  }
+  .widget:hover { border-color: #4b5563; }
 
-  .widget-card .w-title {
+  .widget-title {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: #64748b;
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .widget-card .w-value {
-    font-size: 1.4rem;
+  .widget-value {
+    font-size: 1.3rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: #e2e8f0;
+    font-variant-numeric: tabular-nums;
   }
 
-  .widget-card .w-bar {
+  .widget-bar {
+    margin-top: 6px;
     height: 4px;
     background: #1e293b;
     border-radius: 2px;
-    margin-top: 8px;
     overflow: hidden;
   }
 
-  .widget-card .w-bar-fill {
+  .widget-bar-fill {
     height: 100%;
     border-radius: 2px;
-    transition: width 0.4s ease;
+    transition: width 0.3s ease;
   }
 
-  .remove-btn {
+  .widget-remove {
     position: absolute;
     top: 5px;
     right: 5px;
-    background: transparent;
-    border: none;
-    color: #475569;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #374151;
+    color: #9ca3af;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 0.75rem;
+    padding: 0;
     line-height: 1;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: color 0.15s, background 0.15s;
+    transition: background 0.15s;
   }
-  .remove-btn:hover { color: #f87171; background: #1e293b; }
 
-  /* ── Memory Monitor ── */
-  .monitor {
+  .widget-remove:hover { background: #ef4444; color: #fff; }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #475569;
+    font-size: 0.85rem;
+    padding: 40px 0;
+  }
+
+  /* ── Leak log ── */
+  .leak-log {
+    border-top: 1px solid #334155;
+    padding: 10px 14px;
+    max-height: 130px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+  }
+
+  .leak-log::-webkit-scrollbar { width: 4px; }
+  .leak-log::-webkit-scrollbar-thumb { background: #334155; }
+
+  .log-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    gap: 8px;
+  }
+
+  .log-time { color: #475569; flex-shrink: 0; }
+  .log-msg.leak  { color: #f87171; }
+  .log-msg.clean { color: #4ade80; }
+  .log-msg.info  { color: #94a3b8; }
+
+  /* ── Global memory meter ── */
+  .memory-meter {
     max-width: 1100px;
-    margin: 0 auto 28px;
+    margin: 0 auto 24px;
     background: #1e293b;
     border: 1px solid #334155;
     border-radius: 10px;
     padding: 18px 22px;
   }
 
-  .monitor h3 {
-    font-size: 0.9rem;
+  .memory-meter h3 {
+    font-size: 0.85rem;
     color: #94a3b8;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.07em;
   }
 
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  .meter-row {
+    display: flex;
+    align-items: center;
     gap: 14px;
-    margin-bottom: 18px;
+    margin-bottom: 8px;
   }
 
-  .stat-card {
+  .meter-label {
+    width: 160px;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+
+  .meter-label.buggy-label { color: #fca5a5; }
+  .meter-label.fixed-label { color: #86efac; }
+
+  .meter-track {
+    flex: 1;
+    height: 14px;
     background: #0f1117;
+    border-radius: 7px;
+    overflow: hidden;
     border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 12px 14px;
   }
 
-  .stat-card .s-label {
-    font-size: 0.7rem;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
+  .meter-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.4s ease;
+    min-width: 2px;
   }
 
-  .stat-card .s-value {
-    font-size: 1.2rem;
+  .meter-fill.buggy-fill { background: linear-gradient(90deg, #ef4444, #f97316); }
+  .meter-fill.fixed-fill { background: linear-gradient(90deg, #22c55e, #10b981); }
+
+  .meter-count {
+    width: 80px;
+    text-align: right;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
     font-weight: 700;
   }
 
-  .s-value.red    { color: #f87171; }
-  .s-value.green  { color: #4ade80; }
-  .s-value.yellow { color: #fbbf24; }
-  .s-value.blue   { color: #60a5fa; }
+  .meter-count.buggy-count { color: #f87171; }
+  .meter-count.fixed-count { color: #4ade80; }
 
-  /* ── Listener Log ── */
-  .log-grid {
+  /* ── Code diff ── */
+  .code-section {
+    max-width: 1100px;
+    margin: 0 auto 24px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .code-section-header {
+    padding: 12px 18px;
+    background: #0f1117;
+    border-bottom: 1px solid #334155;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .code-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    gap: 0;
   }
 
-  @media (max-width: 700px) {
-    .log-grid { grid-template-columns: 1fr; }
+  @media (max-width: 750px) { .code-grid { grid-template-columns: 1fr; } }
+
+  .code-col { padding: 16px; }
+  .code-col:first-child { border-right: 1px solid #334155; }
+
+  .code-col h4 {
+    font-size: 0.78rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
-  .log-box {
-    background: #0f1117;
-    border: 1px solid #334155;
-    border-
+  .code-col.buggy-code h4 { color: #f87171; }
+  .code-col.fixed-code h4 { color: #4ade80; }
+
+  pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .line-bad  { color: #fca5a5; background: rgba(239,68,68,0.08); display: block; border-radius: 2px; }
+  .line-good { color: #86efac; background: rgba(34,197,94,0.08); display: block; border-radius: 2px; }
+  .line-neu  { color: #94a3b8; display: block; }
+  .line-comment { color: #475569; display: block; }
+</style>
+</head>
+<body>
+
+<h1>🔍 Memory Leak Detective</h1>
+<p class="subtitle">The garbage collector is innocent — your forgotten references are the real culprits</p>
+
+<!-- ── Explanation ── -->
+<div class="explanation">
+  <h2>⚠️ Why blaming the GC is wrong</h2>
+  <p>
+    JavaScript uses <strong>mark-and-sweep garbage collection</strong>. The GC can only free objects that have
+    <strong>zero reachable references</strong>. When you remove a widget from the DOM but forget to call
+    <code>removeEventListener</code>, the listener callback holds a <strong>closure reference</strong> back to the
+    widget object. The GC sees that reference and correctly keeps the object alive — it is not a bug in the GC,
+    it is a bug in <em>your</em> code.
+  </p>
+  <p>
+    Every "removed" widget in the buggy version still has: (1) an active <strong>setInterval</strong> timer ticking
+    in the background, (2) a <strong>mousemove</strong> listener on <code>document</code> capturing the widget
+    object in its closure, and (3) a <strong>resize</strong> listener on <code>window</code>. These three roots
+    keep the entire widget object — and its DOM subtree reference — <strong>permanently reachable</strong>. The
+    GC never collects them because it should not.
+  </p>
+  <p>
+    The fix is simple: store every listener and timer handle, then call
+    <strong>clearInterval / removeEventListener</strong> before removing the DOM node.
+  </p>
+</div>
+
+<!-- ── Memory meter ── -->
+<div class="memory-meter">
+  <h3>📊 Simulated retained-object counter (updates live)</h3>
+  <div class="meter-row">
+    <span class="meter-label buggy-label">🐛 Buggy — leaked refs</span>
+    <div class="meter-track">
+      <div class="meter-fill buggy-fill" id="buggyMeter" style="width:0%"></div>
+    </div>
+    <span class="meter-count buggy-count" id="buggyMeterCount">0 objects</span>
+  </div>
+  <div class="meter-row">
+    <span class="meter-label fixed-label">✅ Fixed — clean refs</span>
+    <div class="meter-track">
+      <div class="meter-fill fixed-fill" id="fixedMeter" style="width:0%"></div>
+    </div>
+    <span class="meter-count fixed-count" id="fixedMeterCount">0 objects</span>
+  </div>
+</div>
+
+<!-- ── Two panels ── -->
+<div class="panels">
+
+  <!-- BUGGY panel -->
+  <div class="panel buggy">
+    <div class="panel-header">
+      <h2>🐛 Buggy Version</h2>
+      <span class="badge">Leaking</span>
+    </div>
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-label">Active Widgets</div>
+        <div class="stat-value neutral" id="buggyActive">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Leaked Listeners</div>
+        <div class="stat-value danger" id="buggyListeners">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Zombie Timers</div>
+        <div class="stat-value danger" id="buggyTimers">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Created</div>
+        <div class="stat-value warn" id="buggyTotal">0</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn-add"    onclick="buggyAdd()">+ Add Widget</button>
+      <button class="btn-remove" onclick="buggyRemoveLast()">− Remove Last</button>
+      <button class="btn-stress" onclick="buggyStress()">⚡ Stress ×10</button>
+      <button class="btn-reset"  onclick="buggyReset()">↺ Reset</button>
+    </div>
+    <div class="widget-grid" id="buggyGrid">
+      <div class="empty-state">No widgets yet — click Add Widget</div>
+    </div>
+    <div class="leak-log" id="buggyLog"></div>
+  </div>
+
+  <!-- FIXED panel -->
+  <div class="panel fixed">
+    <div class="panel-header">
+      <h2>✅ Fixed Version</h2>
+      <span class="badge">Clean</span>
+    </div>
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-label">Active Widgets</div>
+        <div class="stat-value neutral" id="fixedActive">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Leaked Listeners</div>
+        <div class="stat-value safe" id="fixedListeners">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Zombie Timers</div>
+        <div class="stat-value safe" id="fixedTimers">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Created</div>
+        <div class="stat-value warn" id="fixedTotal">0</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn-add"    onclick="fixedAdd()">+ Add Widget</button>
+      <button class="btn-remove" onclick="fixedRemoveLast()">− Remove Last</button>
+      <button class="btn-stress" onclick="fixedStress()">⚡ Stress ×10</button>
+      <button class="btn-reset"  onclick="fixedReset()">↺ Reset</button>
+    </div>
+    <div class="widget-grid" id="fixedGrid">
+      <div class="empty-state">No widgets yet — click Add Widget</div>
+    </div>
+    <div class="leak-log" id="fixedLog"></div>
+  </div>
+
+</div>
+
+<!-- ── Code diff ── -->
+<div class="code-section">
+  <div class="code-section-header">📋 Code Comparison — spot the difference</div>
+  <div class="code-grid">
+    <div class="code-col buggy-code">
+      <h4>🐛 Buggy removeWidget()</h4>
+      <pre><span class="line-comment">// Widget object with live references</span>
+<span class="line-neu">const widget = {</span>
+<span class="line-neu">  id, element,</span>
+<span class="line-neu">  data: new Array(500).fill(Math.random())</span>
+<span class="line-neu">};</span>
+<span class="line-neu"></span>
+<span class="line-comment">// Three listeners attached on creation</span>
+<span class="line-bad">setInterval(() => {</span>
+<span class="line-bad">  widget.value = Math.random(); // ← holds widget</span>
+<span class="line-bad">}, 200);</span>
+<span class="line-bad"></span>
+<span class="line-bad">document.addEventListener('mousemove', () => {</span>
+<span class="line-bad">  widget.lastMove = Date.now(); // ← holds widget</span>
+<span class="line-bad">});</span>
+<span class="line-bad"></span>
+<span class="line-bad">window.addEventListener('resize', () => {</span>
+<span class="line-bad">  widget.width = window.innerWidth; // ← holds widget</span>
+<span class="line-bad">});</span>
+<span class="line-neu"></span>
+<span class="line-comment">// "Removal" — only removes from DOM!</span>
+<span class="line-neu">function removeWidget(widget) {</span>
+<span class="line-bad">  widget.element.remove(); // DOM gone…</span>
+<span class="line-bad">  // …but interval still ticking ❌</span>
+<span class="line-bad">  // …but mousemove still firing ❌</span>
+<span class="line-bad">  // …but resize still listening ❌</span>
+<span class="line-bad">  // GC CANNOT collect widget ❌</span>
+<span class="line-neu">}</span></pre>
+    </div>
+    <div class="code-col fixed-code">
+      <h4>✅ Fixed removeWidget()</h4>
+      <pre><span class="line-comment">// Widget object — same structure</span>
+<span class="line-neu">const widget = {</span>
+<span class="line-neu">  id, element,</span>
+<span class="line-neu">  data: new Array(500).fill(Math.random())</span>
+<span class="line-neu">};</span>
+<span class="line-neu"></span>
+<span class="line-comment">// Store ALL handles at creation time</span>
+<span class="line-good">widget.intervalId = setInterval(() => {</span>
+<span class="line-good">  widget.value = Math.random();</span>
+<span class="line-good">}, 200);</span>
+<span class="line-good"></span>
+<span class="line-good">widget.onMouseMove = () => {</span>
+<span class="line-good">  widget.lastMove = Date.now();</span>
+<span class="line-good">};</span>
+<span class="line-good">document.addEventListener('mousemove', widget.onMouseMove);</span>
+<span class="line-good"></span>
+<span class="line-good">widget.onResize = () => { widget.width = window.innerWidth; };</span>
+<span class="line-good">window.addEventListener('resize', widget.onResize);</span>
+<span class="line-neu"></span>
+<span class="line-comment">// Proper cleanup before DOM removal</span>
+<span class="line-neu">function removeWidget(widget) {</span>
+<span class="line-good">  clearInterval(widget.intervalId);          // ✅</span>
+<span class="line-good">  document.removeEventListener(              // ✅</span>
+<span class="line-good">    'mousemove', widget.onMouseMove);</span>
+<span class="line-good">  window.removeEventListener(               // ✅</span>
+<span class="line-good">    'resize', widget.onResize);</span>
+<span class="line-good">  widget.element.remove(); // NOW GC can collect ✅</span>
+<span class="line-neu">}</span></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+//  Shared helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#f97316'];
+let widgetCounter = 0;
+
+function makeWidgetId() { return ++widgetCounter; }
+
+function randomColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
+
+function now() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:` +
+         `${String(d.getMinutes()).padStart(2,'0')}:` +
+         `${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
+function log(logEl, msg, type = 'info') {
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${now()}</span><span class="log-msg ${type}">${msg}</span>`;
+  logEl.prepend(entry);
+  // keep log from growing forever in the demo
+  while (logEl.children.length > 60) logEl.removeChild(logEl.lastChild);
+}
+
+function renderGrid(gridEl, widgets) {
+  gridEl.innerHTML = '';
+  if (widgets.length === 0) {
+    gridEl.innerHTML = '<div class="empty-state">No widgets — click Add Widget</div>';
+    return;
+  }
+  widgets.forEach(w => gridEl.appendChild(w.element));
+}
+
+function buildWidgetElement(id, color, onRemove) {
+  const el = document.createElement('div');
+  el.className = 'widget';
+  el.dataset.id = id;
+  el.innerHTML = `
+    <button class="widget-remove" title="Remove">✕</button>
+    <div class="widget-title">Widget #${id}</div>
+    <div class="widget-value" id="wv-${id}">0.00</div>
+    <div class="widget-bar"><div class="widget-bar-fill" id="wb-${id}" style="width:0%;background:${color}"></div></div>
+  `;
+  el.querySelector('.widget-remove').addEventListener('click', onRemove);
+  return el;
+}
+
+function updateWidgetDisplay(widget) {
+  const v = document.getElementById(`wv-${widget.id}`);
+  const b = document.getElementById(`wb-${widget.id}`);
+  if (v) v.textContent = widget.value.toFixed(2);
+  if (b) b.style.width = (widget.value * 100).toFixed(1) + '%';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  BUGGY version — leaks everything
+// ─────────────────────────────────────────────────────────────────────────────
+const buggyState = {
+  widgets: [],          // active (in DOM)
+  leaked:  [],          // removed from DOM but still referenced by closures
+  totalCreated: 0,
+  leakedListenerCount: 0,
+  leakedTimerCount: 0,
+};
+
+const buggyLogEl = document.getElementById('buggyLog');
+
+function buggyCreateWidget() {
+  const id    = makeWidgetId();
+  const color = randomColor();
+
+  const widget = {
+    id,
+    color,
+    value: Math.random(),
+    data:  new Array(500).fill(Math.random()), // simulate real data payload
+    lastMove: 0,
+    width: window.innerWidth,
+  };
+
+  // ── BUGGY: we never store these handles ──────────────────────────────────
+  // Each closure captures `widget` — keeping it alive forever after removal.
+
+  // 1. Interval — fires every 200 ms, forever
+  setInterval(() => {
+    widget.value    = Math.random();
+    widget.lastTick = Date.now();
+    updateWidgetDisplay(widget); // also tries to touch the (possibly removed) DOM
+  }, 200);
+
+  // 2. Document mousemove — fires on every mouse movement, forever
+  document.addEventListener('mousemove', () => {
+    widget.lastMove = Date.now();
+  });
+
+  // 3. Window resize — fires on every resize, forever
+  window.addEventListener('resize', () => {
+    widget.width = window.innerWidth;
+  });
+  // ── end of leak sources ──────────────────────────────────────────────────
+
+  widget.element = buildWidgetElement(id, color, () => buggyRemoveWidget(widget));
+
+  buggyState.widgets.push(widget);
+  buggyState.totalCreated++;
+  // Each widget adds 3 listeners + 1 timer
+  buggyState.leakedListenerCount += 0; // starts at 0; increments on removal
+  buggyState.leakedTimerCount    += 0;
+
+  log(buggyLogEl, `Created widget #${id}`, 'info');
+  buggyRefresh();
+}
+
+function buggyRemoveWidget(widget) {
+  // ── BUGGY removal: only removes the DOM node ─────────────────────────────
+  widget.element.remove();
+  // The interval, mousemove, and resize listeners are STILL active.
+  // They hold a reference to `widget` in their closure.
+  // The GC sees: interval → closure → widget  ∴ widget is reachable → NOT collected.
+
+  buggyState.widgets = buggyState.widgets.filter(w => w.id !== widget.id);
+  buggyState.leaked.push(widget);           // track for demo purposes
+  buggyState.leakedListenerCount += 2;      // mousemove + resize still attached
+  buggyState.leakedTimerCount    += 1;      // interval still running
+
+  log(buggyLogEl,
+    `⚠ Removed widget #${widget.id} from DOM — but interval & 2 listeners still LIVE`,
+    'leak');
+  buggyRefresh();
+}
+
+function buggyRemoveLast() {
+  if (buggyState.widgets.length === 0) return;
+  buggyRemoveWidget(buggyState.widgets[buggyState.widgets.length - 1]);
+}
+
+function buggyStress() {
+  for (let i = 0; i < 10; i++) buggyCreateWidget();
+  setTimeout(() => {
+    const toRemove = Math.min(10, buggyState.widgets.length);
+    for (let i = 0; i < toRemove; i++) buggyRemoveLast();
+  }, 300);
+}
+
+function buggyReset() {
+  // Even reset can't fully clean up — the intervals are still running!
+  // We do our best to stop them for the demo's own sanity,
+  // but in a real app you'd have no handle to call clearInterval with.
+  log(buggyLogEl,
+    `↺ Reset attempted — ${buggyState.leakedTimerCount} zombie timers CANNOT be stopped (no handles saved)`,
+    'leak');
+  buggyState.widgets = [];
+  buggyState.leaked  = [];
+  buggyState.leakedListenerCount = 0;
+  buggyState.leakedTimerCount    = 0;
+  buggyState.totalCreated        = 0;
+  buggyRefresh();
+}
+
+function buggyAdd() { buggyCreateWidget(); }
+
+function buggyRefresh() {
+  document.getElementById('buggyActive').textContent    = buggyState.widgets.length;
+  document.getElementById('buggyListeners').textContent = buggyState.leakedListenerCount;
+  document.getElementById('buggyTimers').textContent    = buggyState.leakedTimerCount;
+  document.getElementById('buggyTotal').textContent     = buggyState.totalCreated;
+  renderGrid(document.getElementById('buggyGrid'), buggyState.widgets);
+  updateMeters();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FIXED version — cleans up properly
+// ─────────────────────────────────────────────────────────────────────────────
+const fixedState = {
+  widgets:      [],
+  totalCreated: 0,
+};
+
+const fixedLogEl = document.getElementById('fixedLog');
+
+function fixedCreateWidget() {
+  const id    = makeWidgetId();
+  const color = randomColor();
+
+  const widget = {
+    id,
+    color,
+    value: Math.random(),
+    data:  new Array(500).fill(Math.random()),
+    lastMove: 0,
+    width: window.innerWidth,
+  };
+
+  // ── FIXED: store every handle so we can clean up later ───────────────────
+
+  // 1. Store interval ID
+  widget.intervalId = setInterval(() => {
+    widget.value    = Math.random();
+    widget.lastTick = Date.now();
+    updateWidgetDisplay(widget);
+  }, 200);
+
+  // 2. Store named function reference for mousemove
+  widget.onMouseMove = () => {
+    widget.lastMove = Date.now();
+  };
+  document.addEventListener('mousemove', widget.onMouseMove);
+
+  // 3. Store named function reference for resize
+  widget.onResize = () => {
+    widget.width = window.innerWidth;
+  };
+  window.addEventListener('resize', widget.onResize);
+  // ── end of setup ─────────────────────────────────────────────────────────
+
+  widget.element = buildWidgetElement(id, color, () => fixedRemoveWidget(widget));
+
+  fixedState.widgets.push(widget);
+  fixedState.totalCreated++;
+
+  log(fixedLogEl, `Created widget #${id} (handles stored)`, 'info');
+  fixedRefresh();
+}
+
+function fixedRemoveWidget(widget) {
+  // ── FIXED removal: clean up ALL references before touching the DOM ────────
+
+  // 1. Stop the interval — timer handle is gone
+  clearInterval(widget.intervalId);
+
+  // 2. Remove the exact same function reference we added
+  document.removeEventListener('mousemove', widget.onMouseMove);
+
+  // 3. Remove the resize listener
+  window.removeEventListener('resize', widget.onResize);
+
+  // 4. Now remove from DOM — GC can collect the widget object freely
+  widget.element.remove();
+
+  fixedState.widgets = fixedState.widgets.filter(w => w.id !== widget.id);
+
+  log(fixedLogEl,
+    `✓ Removed widget #${widget.id} — interval cleared, 2 listeners removed, GC-eligible`,
+    'clean');
+  fixedRefresh();
+}
+
+function fixedRemoveLast() {
+  if (fixedState.widgets.length === 0) return;
+  fixedRemoveWidget(fixedState.widgets[fixedState.widgets.length - 1]);
+}
+
+function fixedStress() {
+  for (let i = 0; i < 10; i++) fixedCreateWidget();
+  setTimeout(() => {
+    const toRemove = Math.min(10, fixedState.widgets.length);
+    for (let i = 0; i < toRemove; i++) fixedRemoveLast();
+  }, 300);
+}
+
+function fixedReset() {
+  // Clean reset: we CAN properly tear everything down because we saved handles
+  [...fixedState.widgets].forEach(w => fixedRemoveWidget(w));
+  fixedState.totalCreated = 0;
+  log(fixedLogEl, '↺ Full clean reset — all timers stopped, all listeners removed', 'clean');
+  fixedRefresh();
+}
+
+function fixedAdd() { fixedCreateWidget(); }
+
+function fixedRefresh() {
+  document.getElementById('fixedActive').textContent    = fixedState.widgets.length;
+  document.getElementById('fixedListeners').textContent = 0;
+  document.getElementById('fixedTimers').textContent    = 0;
+  document.getElementById('fixedTotal').textContent     = fixedState.totalCreated;
+  renderGrid(document.getElementById('fixedGrid'), fixedState.widgets);
+  updateMeters();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Memory meter — simulated retained-object count
+//  Each leaked widget retains: itself + data array + element ref + 3 closures
+//  We model this as 6 "objects" per leak.
+// ─────────────────────────────────────────────────────────────────────────────
+const OBJECTS_PER_LEAK   = 6;
+const OBJECTS_PER_ACTIVE = 3; // active widgets in both panels
+const METER_MAX          = 120;
+
+function updateMeters() {
+  // Buggy: active widgets + leaked widgets (all still retained)
+  const buggyActive  = buggyState.widgets.length;
+  const buggyLeaked  = buggyState.leaked.length;
+  const buggyObjects = (buggyActive + buggyLeaked) * OBJECTS_PER_LEAK;
+
+  // Fixed: only active widgets; removed ones are GC-eligible
+  const fixedObjects = fixedState.widgets.length * OBJECTS_PER_ACTIVE;
+
+  const buggyPct = Math.min(100, (buggyObjects / METER_MAX) * 100);
+  const fixedPct = Math.min(100, (fixedObjects / METER_MAX) * 100);
+
+  document.getElementById('buggyMeter').style.width      = buggyPct + '%';
+  document.getElementById('fixedMeter').style.width      = fixedPct + '%';
+  document.getElementById('buggyMeterCount').textContent = buggyObjects + ' objects';
+  document.getElementById('fixedMeterCount').textContent = fixedObjects + ' objects';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Bootstrap — seed both panels with a couple of widgets
+// ─────────────────────────────────────────────────────────────────────────────
+(function init() {
+  for (let i = 0; i < 3; i++) buggyCreateWidget();
+  for (let i = 0; i < 3; i++) fixedCreateWidget();
+  log(buggyLogEl, '— Demo started — try removing widgets and watch the leak counters —', 'info');
+  log(fixedLogEl, '— Demo started — remove widgets freely, counters stay at zero —', 'info');
+})();
+</script>
+</body>
+</html>

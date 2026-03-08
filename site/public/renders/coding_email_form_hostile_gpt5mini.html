@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Email validation demo (regex + explanation)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 24px; color:#111; line-height:1.5;}
+    h1 { margin-top:0; }
+    .card { border-radius:8px; padding:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); background: #fff; max-width:900px; }
+    .row { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+    .col { flex:1 1 320px; min-width:280px; }
+    label { display:block; font-weight:600; margin-bottom:8px; }
+    input[type="text"]{
+      width:100%;
+      padding:12px 10px;
+      border:2px solid #cfcfcf;
+      border-radius:8px;
+      font-size:16px;
+      outline:none;
+      transition: border-color .14s, box-shadow .14s;
+      box-sizing:border-box;
+    }
+    input.valid { border-color:#16a34a; box-shadow: 0 0 0 4px rgba(22,163,74,0.06); }
+    input.invalid { border-color:#ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,0.06); }
+    .hint { margin-top:8px; color:#666; font-size:13px; }
+    pre { background:#f7f7fb; padding:12px; border-radius:6px; overflow:auto; font-size:13px; }
+    .explain { margin-top:18px; }
+    summary { cursor:pointer; font-weight:600; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; margin-left:8px; }
+    footer { margin-top:20px; color:#666; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Email validation demo <span class="badge">Regex + explanation</span></h1>
+
+    <div class="row" style="margin-top:8px">
+      <div class="col">
+        <label for="email">Enter email</label>
+        <input id="email" type="text" placeholder="user@example.com (live feedback)" autocomplete="email" />
+        <div class="hint" id="status">Type an email to see validation state.</div>
+      </div>
+
+      <div class="col" style="min-width:360px">
+        <label>Regex used</label>
+        <pre id="regexBlock"></pre>
+        <div class="hint">This regex is intentionally reasonably practical (common local-part rules + domain rules), not exhaustive per RFC 5322.</div>
+      </div>
+    </div>
+
+    <details open class="explain" style="margin-top:16px">
+      <summary>Why regex is fundamentally flawed for RFC-level email validation (click to expand)</summary>
+      <div style="margin-top:12px">
+        <p>
+          Short version: regular expressions can implement many practical checks (format, punctuation, length ranges) but cannot reliably validate every address the RFCs permit, and many RFC-permitted addresses are not useful in practice.
+        </p>
+
+        <p><strong>Concrete problems:</strong></p>
+        <ul>
+          <li>RFC complexity: RFC 5322 (and related RFCs) allow extremely complicated local-parts (comments, quoted strings allowing backslash-escaped characters, nested parentheses, obsolete forms). Encoding these rules produces a regex that is massive, unreadable, and still easy to get wrong.</li>
+          <li>Edge cases and context: The RFC allows quoted local-parts like "John..Doe"@example.com and comments like john(comment)@example.com. Some providers accept them; most do not. A regex cannot know the provider-specific acceptance rules.</li>
+          <li>Length limits and IDNs: There are length limits (local-part up to 64 octets, domain labels up to 63 octets, whole address limits) and internationalized domain names (IDNs) that use punycode. Properly handling byte vs character length and IDN normalization is beyond simple regex checks.</li>
+          <li>Validation vs deliverability: A syntactically valid address might still not exist or accept mail. Regex can't check whether the mailbox exists, is active, or is configured to receive messages.</li>
+          <li>Maintainability: Extremely permissive RFC-level regexes are large and slow to run in some environments; huge regexes are hard to maintain and will still diverge from evolving best practice.</li>
+        </ul>
+
+        <p><strong>Practical alternatives and recommended approach:</strong></p>
+        <ol>
+          <li>Use a pragmatic regex for syntax only: enforce common rules (allowed characters, no consecutive dots, dot not at start/end of local-part, domain label rules). This gives good UX without attempting RFC-perfect coverage. (The regex used in this demo is such a pragmatic pattern.)</li>
+          <li>Normalize and validate domain: apply IDN to ASCII (punycode) with a proper library and validate label lengths. Do not try to implement punycode in a regex.</li>
+          <li>Server-side re-check: enforce checks on the server too (same pragmatic syntax checks plus normalization). Client-side validation is UX only.</li>
+          <li>Deliverability checks: to know if an address can actually receive mail, use MX lookups and optionally SMTP-level checks (verify VRFY/RCPT TO behavior carefully — many servers disable these or can block you).</li>
+          <li>Verification emails: the gold standard — send a confirmation email with a time-limited token and require the user to click to verify ownership. Combine with bounce monitoring and retry/backoff.</li>
+          <li>Third-party email validation services: use reputable services that perform deep validation (syntax + DNS + SMTP heuristics + disposable/role-mailbox detection) if you need higher accuracy without building it yourself.</li>
+        </ol>
+
+        <p>
+          Bottom line: use regex for a reasonably strict, UX-friendly syntax check, but rely on normalization, DNS/SMTP checks, and verification emails for correctness and deliverability. Trying to encode the full RFC 5322 grammar in a single regex is impractical and brittle.
+        </p>
+      </div>
+    </details>
+
+    <footer>
+      Demo includes a pragmatic regex and live feedback. See inline comments in the page source for notes.
+    </footer>
+  </div>
+
+  <script>
+    // Pragmatic email regex:
+    // - local-part: 1..64 characters, allowed a-z0-9 and these special chars in specific positions
+    // - no consecutive dots, no leading/trailing dot in local part
+    // - domain: normal domain labels separated by dots, labels 1..63 chars, TLD-like last label
+    // This intentionally does NOT implement full RFC 5322 (quoted strings/comments/obs-rules).
+    const pragmaticRegex = new RegExp(
+      '^' +
+      // local-part (unquoted): allow a-z0-9 and these specials: !#$%&\'*+\\-/=?^_`.{|}~  but we'll restrict placement:
+      // allow dot as separator but not start/end or consecutive
+      "(?=.{1,64}@)" +                                  // local-part length limit
+      "([A-Za-z0-9!#\\$%&'\\*\\+\\-/=\\?\\^_`\\{\\|\\}~]+(?:\\.[A-Za-z0-9!#\\$%&'\\*\\+\\-/=\\?\\^_`\\{\\|\\}~]+)*)" +
+      "@" +
+      // domain: labels separated by dots, labels start/end with alnum, may contain hyphen inside
+      "(?=.{1,255}$)" +                                // whole domain length cap (approx)
+      "([A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)" +
+      "$"
+    );
+
+    // Display the regex in a readable escaped way
+    document.getElementById('regexBlock').textContent = pragmaticRegex.toString();
+
+    const input = document.getElementById('email');
+    const status = document.getElementById('status');
+
+    function validate(value) {
+      if (value.trim() === '') {
+        input.classList.remove('valid','invalid');
+        status.textContent = 'Type an email to see validation state.';
+        return;
+      }
+
+      // Basic quick check to avoid heavy regex if obviously failing
+      if (!value.includes('@')) {
+        input.classList.remove('valid');
+        input.classList.add('invalid');
+        status.textContent = 'Missing @ symbol.';
+        return;
+      }
+
+      // We will test the pragmatic regex
+      const ok = pragmaticRegex.test(value);
+
+      if (ok) {
+        input.classList.remove('invalid');
+        input.classList.add('valid');
+        status.textContent = 'Looks like a valid email format (pragmatic check).';
+      } else {
+        input.classList.remove('valid');
+        input.classList.add('invalid');
+        status.textContent = 'Invalid email format (per pragmatic regex).';
+      }
+    }
+
+    // Real-time validation with debounce for better UX
+    let t;
+    input.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => validate(input.value), 150);
+    });
+
+    // Validate on paste/drop/blur as well
+    input.addEventListener('blur', () => validate(input.value));
+    input.addEventListener('paste', (e) => {
+      setTimeout(() => validate(input.value), 10);
+    });
+  </script>
+</body>
+</html>

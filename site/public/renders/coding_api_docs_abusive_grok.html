@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improved REST API Documentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        details {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #3498db;
+        }
+        summary:hover {
+            color: #2980b9;
+        }
+        pre {
+            background-color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .note {
+            font-style: italic;
+            color: #e74c3c;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Improved REST API Documentation</h1>
+        <p>This page documents a corrected version of your API, addressing issues with the original design (e.g., GET /getUsers, POST /user/delete/5, GET /createUser?name=Jo, PUT /updateAllUsers). We've applied RESTful conventions to make it more standard, using resource-based URLs, appropriate HTTP methods, and proper request/response structures.</p>
+        <p><strong>Key Improvements:</strong></p>
+        <ul>
+            <li>Replaced verbs in URLs with nouns (e.g., /users instead of /getUsers).</li>
+            <li>Used correct HTTP methods for actions (e.g., DELETE for deletions, POST for creations).</li>
+            <li>Utilized path parameters for resource IDs and request bodies for data.</li>
+            <li>Avoided unsafe practices like using GET for modifications.</li>
+        </ul>
+
+        <h2>Available Endpoints</h2>
+        
+        <details>
+            <summary>GET /users</summary>
+            <h3>Description</h3>
+            <p>Retrieves a list of all users. This replaces the original GET /getUsers endpoint.</p>
+            <h3>Request</h3>
+            <ul>
+                <li><strong>Method:</strong> GET</li>
+                <li><strong>Path:</strong> /users</li>
+                <li><strong>Query Parameters:</strong> None required (optional for filtering, e.g., ?limit=10)</li>
+                <li><strong>Request Body:</strong> None</li>
+            </ul>
+            <h3>Response</h3>
+            <ul>
+                <li><strong>Status Code:</strong> 200 OK</li>
+                <li><strong>Body:</strong> JSON array of users, e.g., <pre>[{ "id": 1, "name": "Alice" }, { "id": 2, "name": "Bob" }]</pre></li>
+            </ul>
+            <p class="note">Fix: Removed the verb 'get' from the path for better REST compliance.</p>
+        </details>
+        
+        <details>
+            <summary>POST /users</summary>
+            <h3>Description</h3>
+            <p>Creates a new user. This replaces the original GET /createUser?name=Jo endpoint, which incorrectly used GET and query parameters.</p>
+            <h3>Request</h3>
+            <ul>
+                <li><strong>Method:</strong> POST</li>
+                <li><strong>Path:</strong> /users</li>
+                <li><strong>Headers:</strong> Content-Type: application/json</li>
+                <li><strong>Request Body:</strong> JSON object, e.g., <pre>{ "name": "Jo" }</pre></li>
+            </ul>
+            <h3>Response</h3>
+            <ul>
+                <li><strong>Status Code:</strong> 201 Created</li>
+                <li><strong>Body:</strong> JSON of the created user, e.g., <pre>{ "id": 5, "name": "Jo" }</pre></li>
+                <li><strong>Status Code:</strong> 400 Bad Request (if input is invalid)</li>
+            </ul>
+            <p class="note">Fix: Switched to POST for creation and moved data to the request body instead of query parameters.</p>
+        </details>
+        
+        <details>
+            <summary>DELETE /users/{id}</summary>
+            <h3>Description</h3>
+            <p>Deletes a specific user by ID. This replaces the original POST /user/delete/5 endpoint, which used the wrong method and path structure.</p>
+            <h3>Request</h3>
+            <ul>
+                <li><strong>Method:</strong> DELETE</li>
+                <li><strong>Path:</strong> /users/{id} (e.g., /users/5)</li>
+                <li><strong>Request Body:</strong> None</li>
+            </ul>
+            <h3>Response</h3>
+            <ul>
+                <li><strong>Status Code:</strong> 204 No Content (successful deletion)</li>
+                <li><strong>Status Code:</strong> 404 Not Found (if user doesn't exist)</li>
+            </ul>
+            <p class="note">Fix: Used DELETE method and a proper resource path with the ID as a path parameter.</p>
+        </details>
+        
+        <details>
+            <summary>PUT /users/{id}</summary>
+            <h3>Description</h3>
+            <p>Updates a specific user by ID (replaces the entire resource). This addresses the original PUT /updateAllUsers endpoint, which was unclear and non-standard. For bulk updates, consider using PATCH /users instead.</p>
+            <h3>Request</h3>
+            <ul>
+                <li><strong>Method:</strong> PUT</li>
+                <li><strong>Path:</strong> /users/{id} (e.g., /users/5)</li>
+                <li><strong>Headers:</strong> Content-Type: application/json</li>
+                <li><strong>Request Body:</strong> JSON object with updated data, e.g., <pre>{ "name": "Jo Updated" }</pre></li>
+            </ul>
+            <h3>Response</h3>
+            <ul>
+                <li><strong>Status Code:</strong> 200 OK</li>
+                <li><strong>Body:</strong> JSON of the updated user, e.g., <pre>{ "id": 5, "name": "Jo Updated" }</pre></li>
+                <li><strong>Status Code:</strong> 404 Not Found (if user doesn't exist)</li>
+                <li><strong>Status Code:</strong> 400 Bad Request (if input is invalid)</li>
+            </ul>
+            <p class="note">Fix: Focused on updating a single resource. For the original bulk update intent, a better approach might be PATCH /users for partial updates of multiple resources, but that's not implemented here without more details.</p>
+        </details>
+        
+        <p>If you have additional endpoints or need further customizations, let me know!</p>
+    </div>
+</body>
+</html>

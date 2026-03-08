@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to HTML Table Parser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.95em;
+            box-sizing: border-box; /* Include padding in width */
+            resize: vertical;
+            font-family: monospace; /* Good for data entry */
+        }
+        button {
+            display: block;
+            width: 200px;
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 0 auto 30px auto;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #outputTable {
+            margin-top: 30px;
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            overflow: hidden; /* Ensures rounded corners apply to content */
+        }
+        #outputTable th, #outputTable td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        #outputTable th {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        #outputTable tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        #outputTable tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        #outputTable tr:hover {
+            background-color: #e8f4f8;
+        }
+        #outputTable td {
+            font-size: 0.9em;
+            word-break: break-word; /* Prevents long words from breaking layout */
+        }
+        .error-message {
+            color: #e74c3c;
+            background-color: #fce8e6;
+            border: 1px solid #e74c3c;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CSV to HTML Table Parser</h1>
+
+        <p>Paste your CSV data below and click "Parse CSV" to see it as an HTML table.</p>
+
+        <textarea id="csvInput" placeholder="Paste your CSV data here...
+Example:
+Name,Age,City
+"John Doe",30,"New York"
+"Jane Smith",25,"London, UK"
+"Bob ""The Builder"" Johnson",40,"Paris""></textarea>
+
+        <button onclick="parseCSV()">Parse CSV</button>
+
+        <div id="tableContainer">
+            <!-- The parsed table will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        function parseCSV() {
+            const csvText = document.getElementById('csvInput').value;
+            const tableContainer = document.getElementById('tableContainer');
+            tableContainer.innerHTML = ''; // Clear previous output
+
+            if (!csvText.trim()) {
+                tableContainer.innerHTML = '<p class="error-message">Please paste some CSV data.</p>';
+                return;
+            }
+
+            const lines = csvText.split(/\r?\n/);
+            const parsedRows = [];
+            let maxColumns = 0;
+
+            // Simple state machine for parsing
+            lines.forEach(line => {
+                let currentRow = [];
+                let inQuote = false;
+                let field = '';
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+
+                    if (char === '"') {
+                        // If we're in a quote and the next char is also a quote, it's an escaped quote
+                        if (inQuote && line[i + 1] === '"') {
+                            field += '"';
+                            i++; // Skip the next quote
+                        } else {
+                            inQuote = !inQuote;
+                        }
+                    } else if (char === ',' && !inQuote) {
+                        currentRow.push(field);
+                        field = '';
+                    } else {
+                        field += char;
+                    }
+                }
+                currentRow.push(field); // Add the last field of the line
+
+                // Only add non-empty rows
+                if (currentRow.some(cell => cell.trim() !== '')) {
+                    parsedRows.push(currentRow);
+                    if (currentRow.length > maxColumns) {
+                        maxColumns = currentRow.length;
+                    }
+                }
+            });
+
+            if (parsedRows.length === 0) {
+                tableContainer.innerHTML = '<p class="error-message">No valid CSV data found after parsing.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.id = 'outputTable';
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Determine if the first row should be a header
+            // A simple heuristic: if there's more than one row and the first row looks like headers (e.g., no numbers, mixed case)
+            // This is a simplification; a real-world scenario might have a checkbox for "has header"
+            const hasHeader = parsedRows.length > 1 &&
+                              parsedRows[0].every(cell => !/^\d+$/.test(cell.trim())); // Check if all cells in first row are not just numbers
+
+            let headerRowData = [];
+            let dataRows = parsedRows;
+
+            if (hasHeader) {
+                headerRowData = parsedRows[0];
+                dataRows = parsedRows.slice(1);
+            } else {
+                // If no header, create generic headers (Col 1, Col 2, etc.)
+                for (let i = 0; i < maxColumns; i++) {
+                    headerRowData.push(`Column ${i + 1}`);
+                }
+            }
+
+            // Create header row
+            const trHead = document.createElement('tr');
+            headerRowData.forEach(cellData => {
+                const th = document.createElement('th');
+                th.textContent = cellData.trim();
+                trHead.appendChild(th);
+            });
+            thead.appendChild(trHead);
+            table.appendChild(thead);
+
+            // Create data rows
+            dataRows.forEach(rowData => {
+                const tr = document.createElement('tr');
+                // Ensure all rows have the same number of columns as the max found, filling with empty strings if needed
+                for (let i = 0; i < maxColumns; i++) {
+                    const td = document.createElement('td');
+                    td.textContent = (rowData[i] || '').trim(); // Use empty string if cell doesn't exist
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+
+            tableContainer.appendChild(table);
+        }
+    </script>
+</body>
+</html>

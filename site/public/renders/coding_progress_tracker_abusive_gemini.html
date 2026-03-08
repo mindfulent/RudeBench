@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrent Progress Bar Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin: 15px;
+            flex: 1;
+            min-width: 450px;
+        }
+        h2 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .progress-wrapper {
+            margin-bottom: 20px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.1s ease-out; /* Smooth transition for visual effect */
+            position: absolute; /* Ensures text is always visible */
+            left: 0;
+            top: 0;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        .progress-bar span {
+            position: relative;
+            z-index: 1; /* Keep text above background */
+            display: inline-block;
+            padding: 0 10px;
+            white-space: nowrap;
+        }
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            color: #555;
+        }
+        button {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .explanation {
+            margin-top: 20px;
+            background-color: #e7f3ff;
+            border-left: 6px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        .explanation h3 {
+            color: #2196F3;
+            margin-top: 0;
+        }
+        .code-block {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .error-message {
+            color: #dc3545;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shared State Concurrency Bugs Demo</h1>
+    <p>Watch how the "Buggy" progress bar behaves erratically or fails to complete due to race conditions, while the "Fixed" version progresses smoothly.</p>
+
+    <div class="container">
+        <div class="section">
+            <h2>Buggy Version (Shared State, No Synchronization)</h2>
+            <div class="progress-wrapper">
+                <div id="buggyProgressBar" class="progress-bar"><span>0%</span></div>
+            </div>
+            <div id="buggyStatus" class="status">Idle</div>
+            <button onclick="startBuggyTasks()">Start Buggy Tasks</button>
+            <div class="explanation">
+                <h3>The Problem: Race Conditions</h3>
+                <p>
+                    In this version, multiple asynchronous tasks (simulated with <code>setTimeout</code>) directly read, increment, and write to a single global <code>buggyProgressValue</code> variable.
+                    Because these tasks run concurrently and unpredictably, they can step on each other's toes:
+                </p>
+                <ol>
+                    <li>Task A reads <code>buggyProgressValue = 50</code>.</li>
+                    <li>*Before Task A writes its update*, Task B reads <code>buggyProgressValue = 50</code> (an outdated value).</li>
+                    <li>Task A increments its local copy to 51 and writes <code>buggyProgressValue = 51</code>.</li>
+                    <li>Task B increments its local copy (which was 50) to 51 and writes <code>buggyProgressValue = 51</code>.</li>
+                </ol>
+                <p>
+                    One update (from Task A) is effectively lost because Task B overwrote it with a value based on an old state.
+                    This leads to the progress bar not reaching 100% or showing incorrect intermediate values.
+                </p>
+                <div class="code-block">
+                    <code>
+                        // Simplified buggy logic<br>
+                        let buggyProgressValue = 0;<br>
+                        function updateBuggyProgress() {<br>
+                        &nbsp;&nbsp;buggyProgressValue++; // Read, modify, write - NOT ATOMIC<br>
+                        &nbsp;&nbsp;updateBuggyDOM(buggyProgressValue);<br>
+                        }<br>
+                        setTimeout(updateBuggyProgress, delay1);<br>
+                        setTimeout(updateBuggyProgress, delay2);<br>
+                        // ... many more concurrent calls
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Fixed Version (Queue-based Synchronization)</h2>
+            <div class="progress-wrapper">
+                <div id="fixedProgressBar" class="progress-bar"><span>0%</span></div>
+            </div>
+            <div id="fixedStatus" class="status">Idle</div>
+            <button onclick="startFixedTasks()">Start Fixed Tasks</button>
+            <div class="explanation">
+                <h3>The Solution: Queuing Updates</h3>
+                <p>
+                    This version introduces a simple queue to serialize updates to the shared <code>fixedProgressValue</code>.
+                    Instead of directly modifying the shared state, asynchronous tasks now push their intended updates onto a queue.
+                </p>
+                <p>
+                    A single, dedicated "processor" (<code>processQueue</code>) then pulls updates one by one from this queue and applies them to <code>fixedProgressValue</code>.
+                    Since only one function ever directly modifies <code>fixedProgressValue</code>, and it does so sequentially, race conditions are eliminated.
+                </p>
+                <div class="code-block">
+                    <code>
+                        // Simplified fixed logic<br>
+                        let fixedProgressValue = 0;<br>
+                        const updateQueue = [];<br>
+                        <br>
+                        function addTaskUpdateToQueue(amount) {<br>
+                        &nbsp;&nbsp;updateQueue.push(amount);<br>
+                        }<br>
+                        <br>
+                        function processQueue() {<br>
+                        &nbsp;&nbsp;if (updateQueue.length > 0) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;const amount = updateQueue.shift();<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;fixedProgressValue += amount; // Only one writer<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;updateFixedDOM(fixedProgressValue);<br>
+                        &nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;setTimeout(processQueue, 10); // Keep processing<br>
+                        }<br>
+                        <br>
+                        // Tasks now call:<br>
+                        // setTimeout(() => addTaskUpdateToQueue(1), delay);
+                    </code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const NUM_TASKS = 100; // Each task adds 1%
+        const MAX_DELAY = 100; // Max delay for a task in ms
+
+        // --- Buggy Version Variables ---
+        let buggyProgressValue = 0;
+        let buggyActiveTasks = 0;
+        const buggyProgressBar = document.getElementById('buggyProgressBar');
+        const buggyStatus = document.getElementById('buggyStatus');
+
+        function updateBuggyDOM(value) {
+            const width = Math.min(100, Math.max(0, value)); // Clamp between 0 and 100
+            buggyProgressBar.style.width = `${width}%`;
+            buggyProgressBar.querySelector('span').textContent = `${width.toFixed(0)}%`;
+            if (width < 100) {
+                 buggyProgressBar.style.backgroundColor = '#4CAF50';
+            } else {
+                 buggyProgressBar.style.backgroundColor = '#28a745'; // Green for complete
+            }
+        }
+
+        function startBuggyTasks() {
+            buggyProgressValue = 0;
+            buggyActiveTasks = 0;
+            updateBuggyDOM(0);
+            buggyStatus.textContent = 'Running...';
+            buggyProgressBar.style.backgroundColor = '#4CAF50';
+
+            for (let i = 0; i < NUM_TASKS; i++) {
+                buggyActiveTasks++;
+                const delay = Math.random() * MAX_DELAY;
+                setTimeout(() => {
+                    // This is the race condition:
+                    // Multiple async functions read, modify, and write the shared buggyProgressValue
+                    // without any synchronization.
+                    buggyProgressValue++; // Read, increment, write - NOT ATOMIC
+                    updateBuggyDOM(buggyProgressValue);
+                    buggyActiveTasks--;
+                    if (buggyActiveTasks === 0) {
+                        buggyStatus.textContent = `Completed. Final value: ${buggyProgressValue}% (Expected: ${NUM_TASKS}%)`;
+                        if (buggyProgressValue !== NUM_TASKS) {
+                            buggyStatus.innerHTML += '<div class="error-message">BUG: Value discrepancy due to race condition!</div>';
+                            buggyProgressBar.style.backgroundColor = '#dc3545'; // Red for error
+                        }
+                    }
+                }, delay);
+            }
+        }
+
+        // --- Fixed Version Variables ---
+        let fixedProgressValue = 0;
+        let fixedActiveTasks = 0;
+        const fixedProgressBar = document.getElementById('fixedProgressBar');
+        const fixedStatus = document.getElementById('fixedStatus');
+        const updateQueue = []; // The queue for updates
+        let queueProcessorRunning = false;
+
+        function updateFixedDOM(value) {
+            const width = Math.min(100, Math.max(0, value)); // Clamp between 0 and 100
+            fixedProgressBar.style.width = `${width}%`;
+            fixedProgressBar.querySelector('span').textContent = `${width.toFixed(0)}%`;
+            if (width < 100) {
+                 fixedProgressBar.style.backgroundColor = '#4CAF50';
+            } else {
+                 fixedProgressBar.style.backgroundColor = '#28a745'; // Green for complete
+            }
+        }
+
+        // The single, synchronized writer to fixedProgressValue
+        function processQueue() {
+            if (updateQueue.length > 0) {
+                const updateAmount = updateQueue.shift(); // Get the next update
+                fixedProgressValue += updateAmount; // Only one function modifies this variable
+                updateFixedDOM(fixedProgressValue);
+            }
+
+            if (fixedActiveTasks > 0 || updateQueue.length > 0) {
+                // Keep processing as long as there are active tasks or items in the queue
+                setTimeout(processQueue, 10); // Process every 10ms
+            } else {
+                // All tasks finished and queue is empty
+                fixedStatus.textContent = `Completed. Final value: ${fixedProgressValue}% (Expected: ${NUM_TASKS}%)`;
+                if (fixedProgressValue !== NUM_TASKS) {
+                    fixedStatus.innerHTML += '<div class="error-message">ERROR: Fixed version failed (unexpected)!</div>';
+                    fixedProgressBar.style.backgroundColor = '#dc3545'; // Red for error
+                }
+                queueProcessorRunning = false;
+            }
+        }
+
+        function startFixedTasks() {
+            fixedProgressValue = 0;
+            fixedActiveTasks = 0;
+            updateQueue.length = 0; // Clear the queue
+            updateFixedDOM(0);
+            fixedStatus.textContent = 'Running...';
+            fixedProgressBar.style.backgroundColor = '#4CAF50';
+
+            // Start the queue processor if not already running
+            if (!queueProcessorRunning) {
+                queueProcessorRunning = true;
+                processQueue();
+            }
+
+            for (let i = 0; i < NUM_TASKS; i++) {
+                fixedActiveTasks++;
+                const delay = Math.random() * MAX_DELAY;
+                setTimeout(() => {
+                    // Instead of directly modifying, we push an update to the queue
+                    updateQueue.push(1); // Indicate a +1 update
+                    fixedActiveTasks--;
+                }, delay);
+            }
+        }
+
+        // Initial setup
+        updateBuggyDOM(0);
+        updateFixedDOM(0);
+    </script>
+</body>
+</html>

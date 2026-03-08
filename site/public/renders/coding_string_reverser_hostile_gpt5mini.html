@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Live String Reverser — Interactive</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --muted:#9aa7bf;
+    --accent:#6ee7b7;
+    --accent2:#7dd3fc;
+    --glass: rgba(255,255,255,0.04);
+    --glow: 0 10px 30px rgba(99,102,241,0.12);
+    --glass-2: rgba(125,211,252,0.06);
+    --radius:14px;
+  }
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:
+      radial-gradient(800px 400px at 10% 20%, rgba(124,58,237,0.12), transparent 8%),
+      radial-gradient(600px 300px at 90% 80%, rgba(59,130,246,0.08), transparent 7%),
+      var(--bg);
+    color:#e6eef8;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .card{
+    width: min(920px, 96vw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:var(--radius);
+    padding:28px;
+    box-shadow: var(--glow);
+    border: 1px solid rgba(255,255,255,0.04);
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:20px;
+    align-items:center;
+  }
+
+  .left{
+    padding:18px;
+  }
+  h1{
+    margin:0 0 6px 0;
+    font-size:20px;
+    letter-spacing:0.2px;
+  }
+  p.lead{
+    margin:0 0 16px 0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .input-wrap{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px;
+    padding:10px;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  input[type="text"]{
+    flex:1;
+    background:transparent;
+    border:0;
+    outline:none;
+    color:inherit;
+    font-size:16px;
+    padding:8px 6px;
+  }
+  .hint{
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* right panel (visualizer) */
+  .visual{
+    padding:18px;
+    background: linear-gradient(180deg, rgba(125,211,252,0.02), rgba(110,231,183,0.02));
+    border-radius:12px;
+    border:1px solid rgba(125,211,252,0.06);
+    min-height:160px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:stretch;
+    justify-content:center;
+  }
+  .result-box{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:12px;
+    align-items:center;
+    justify-content:flex-start;
+    border-radius:10px;
+    min-height:64px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    border: 1px dashed rgba(255,255,255,0.03);
+  }
+
+  .char{
+    display:inline-grid;
+    place-items:center;
+    min-width:28px;
+    height:38px;
+    padding:0 8px;
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    color:#061026;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.6px;
+    transform-origin:center;
+    transition: transform 420ms cubic-bezier(.2,.9,.27,1), background 320ms, color 240ms, box-shadow 240ms;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.24), inset 0 -6px 8px rgba(255,255,255,0.02);
+    background-image: linear-gradient(180deg, rgba(125,211,252,0.95), rgba(110,231,183,0.95));
+    color:#022024;
+  }
+
+  .char.blank{
+    background:transparent;
+    color:var(--muted);
+    font-weight:600;
+    border-radius:6px;
+    min-width:18px;
+    padding:0 6px;
+    height:28px;
+    box-shadow:none;
+  }
+
+  .char.entering{
+    transform: translateY(-20px) rotateX(24deg) scale(0.95);
+    opacity:0;
+    animation:popIn 420ms cubic-bezier(.2,.9,.27,1) forwards;
+  }
+  .char.leaving{
+    animation:popOut 360ms cubic-bezier(.4,.05,.33,1) forwards;
+  }
+
+  @keyframes popIn{
+    0%{ transform: translateY(-26px) rotateX(38deg) scale(0.92); opacity:0 }
+    60%{ transform: translateY(6px) rotateX(0deg) scale(1.02); opacity:1 }
+    100%{ transform: translateY(0) rotateX(0) scale(1); opacity:1 }
+  }
+  @keyframes popOut{
+    0%{ transform: translateY(0) rotateX(0) scale(1); opacity:1; }
+    100%{ transform: translateY(26px) rotateX(24deg) scale(0.9); opacity:0; }
+  }
+
+  .info-row{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    align-items:center;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .btn{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.04);
+    color:var(--muted);
+    padding:8px 10px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:13px;
+  }
+  .btn.primary{
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    color:#022;
+    border:0;
+    box-shadow:0 8px 24px rgba(125,211,252,0.08);
+  }
+  .footer{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* small screens */
+  @media (max-width:880px){
+    .card{ grid-template-columns: 1fr; padding:18px; gap:14px; }
+    .visual{ order:-1 }
+  }
+</style>
+</head>
+<body>
+  <div class="card" role="application" aria-label="Live string reverser">
+    <div class="left">
+      <h1>Live String Reverser</h1>
+      <p class="lead">Type in the box and watch the reversed text animate, character-by-character. Includes live info and playful visual feedback.</p>
+
+      <div class="input-wrap" aria-hidden="false">
+        <input id="source" type="text" placeholder="Type something — try long sentences, emojis, or code..." aria-label="Source text" autocomplete="off" autocapitalize="off" />
+        <div class="hint" id="len">0 chars</div>
+      </div>
+
+      <div class="footer">
+        Tip: use Backspace, paste, or arrow keys. Toggle "Sticky Step" to step through animation slowly.
+      </div>
+    </div>
+
+    <div class="visual" aria-live="polite" aria-atomic="true">
+      <div class="info-row" style="margin-bottom:6px;">
+        <div id="status">Reversed Preview</div>
+        <div class="controls">
+          <button id="clear" class="btn" title="Clear input">Clear</button>
+          <button id="copy" class="btn" title="Copy reversed">Copy</button>
+          <button id="toggleSlow" class="btn" title="Toggle step animation">Sticky Step</button>
+          <button id="shuffle" class="btn" title="Random demo">Random</button>
+        </div>
+      </div>
+
+      <div id="result" class="result-box" aria-label="Reversed characters container" tabindex="0"></div>
+
+      <div class="info-row">
+        <div id="meta" style="color:var(--muted)">—</div>
+        <div style="color:var(--muted); font-size:13px" id="perf">0ms</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const src = document.getElementById('source');
+  const result = document.getElementById('result');
+  const len = document.getElementById('len');
+  const meta = document.getElementById('meta');
+  const perf = document.getElementById('perf');
+  const status = document.getElementById('status');
+  const clearBtn = document.getElementById('clear');
+  const copyBtn = document.getElementById('copy');
+  const toggleSlow = document.getElementById('toggleSlow');
+  const shuffle = document.getElementById('shuffle');
+
+  let slowMode = false;
+  let lastText = '';
+  let animId = 0;
+
+  // Helper: iterate grapheme clusters to handle emojis and combining marks properly
+  function splitGraphemes(str){
+    // Use Intl.Segmenter if available for grapheme clusters
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+      return Array.from(seg.segment(str), s => s.segment);
+    }
+    // Fallback naive split that handles surrogate pairs reasonably
+    return Array.from(str);
+  }
+
+  function reverseGraphemes(str){
+    return splitGraphemes(str).reverse();
+  }
+
+  // animate update by diffing old and new arrays
+  function renderReversed(newText){
+    const start = performance.now();
+    animId++;
+    const currentAnim = animId;
+    const newArr = reverseGraphemes(newText);
+    const prevNodes = Array.from(result.children).map(n => n.dataset.ch);
+    const prevArr = prevNodes.slice(); // array of strings
+
+    len.textContent = newText.length + ' chars';
+
+    // compute simple diff: we'll try to preserve characters that match at same index;
+    // others will be removed/inserted with animations. This gives visible per-char moves.
+    // For better visual effect, we'll clear and animate each entering char with slight delays.
+
+    // mark all existing nodes as leaving by default
+    for (const node of result.children){
+      node.classList.remove('entering');
+      node.classList.add('leaving');
+    }
+
+    // Clear after short delay to allow popOut animation, but if slowMode stepping, wait for click
+    const doReplace = () => {
+      // If another update started, abort this replacement
+      if (currentAnim !== animId) return;
+      // remove all children
+      while (result.firstChild) result.removeChild(result.firstChild);
+
+      // create new nodes in order (reversed order already in newArr)
+      newArr.forEach((ch, i) => {
+        const div = document.createElement('div');
+        div.className = 'char entering';
+        div.dataset.ch = ch;
+        div.textContent = ch === ' ' ? '\u00A0' : ch;
+        // stagger animation slightly for a wave
+        div.style.animationDelay = (i * 18) + 'ms';
+        result.appendChild(div);
+      });
+
+      // if empty, show placeholder blanks
+      if (newArr.length === 0){
+        const ph = document.createElement('div');
+        ph.className = 'char blank';
+        ph.textContent = '—';
+        result.appendChild(ph);
+      }
+
+      const elapsed = performance.now() - start;
+      perf.textContent = Math.round(elapsed) + 'ms';
+      meta.textContent = `${newArr.length} characters reversed`;
+      status.textContent = 'Reversed Preview';
+
+      // focus highlight effect on first char
+      if (result.firstChild){
+        result.firstChild.style.boxShadow = '0 10px 30px rgba(125,211,252,0.12)';
+        setTimeout(()=> {
+          if (result.firstChild) result.firstChild.style.boxShadow = '';
+        }, 420);
+      }
+    };
+
+    if (slowMode && prevArr.join('') !== newArr.join('')){
+      // In slow mode, step through: remove existing, then insert one char at a time with user clicking toggleSlow
+      status.textContent = 'Sticky Step — click "Sticky Step" to step or toggle off';
+      // clear existing immediately:
+      while (result.firstChild) result.removeChild(result.firstChild);
+
+      // create placeholders
+      const placeholders = newArr.map(() => {
+        const ph = document.createElement('div');
+        ph.className = 'char blank';
+        ph.textContent = '\u2022'; // dot
+        return ph;
+      });
+      placeholders.forEach(p => result.appendChild(p));
+
+      // set up stepping state
+      let idx = 0;
+      const stepOnce = () => {
+        if (currentAnim !== animId) return;
+        if (idx >= newArr.length) {
+          meta.textContent = `${newArr.length} characters reversed`;
+          perf.textContent = Math.round(performance.now() - start) + 'ms';
+          return;
+        }
+        const ch = newArr[idx];
+        const node = placeholders[idx];
+        node.className = 'char entering';
+        node.dataset.ch = ch;
+        node.textContent = ch === ' ' ? '\u00A0' : ch;
+        idx++;
+      };
+
+      // attach a one-time click to toggleSlow button to step; also allow clicking result area
+      const stepHandler = (e) => { stepOnce(); };
+      toggleSlow.addEventListener('click', stepHandler, { once: false });
+      result.addEventListener('click', stepHandler, { once: false });
+
+      // also auto step a few to feel alive
+      const autoStep = () => {
+        if (currentAnim !== animId) return;
+        if (idx < newArr.length) {
+          stepOnce();
+          setTimeout(autoStep, 160 + Math.random()*160);
+        }
+      };
+      autoStep();
+
+      // remove listeners when animation superseded
+      setTimeout(()=> {
+        toggleSlow.removeEventListener('click', stepHandler);
+        result.removeEventListener('click', stepHandler);
+      }, 20000);
+
+      perf.textContent = Math.round(performance.now() - start) + 'ms';
+      meta.textContent = `Step mode: ${newArr.length} chars`;
+    } else {
+      // Normal fast replacement with brief out animation
+      setTimeout(doReplace, 120);
+    }
+  }
+
+  // input handler with slight debounce for nice feel
+  let tick;
+  src.addEventListener('input', (e) => {
+    clearTimeout(tick);
+    const text = src.value;
+    len.textContent = text.length + ' chars';
+    // immediate lightweight transform for small strings
+    if (text.length < 200){
+      // small delay to allow natural typing
+      tick = setTimeout(()=> renderReversed(text), 60);
+    } else {
+      // for long text, do a microtask to keep UI responsive
+      tick = setTimeout(()=> renderReversed(text), 10);
+    }
+  });
+
+  // buttons
+  clearBtn.addEventListener('click', () => {
+    src.value = '';
+    src.focus();
+    renderReversed('');
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const chars = Array.from(result.children).map(n => n.dataset.ch || n.textContent || '');
+    const txt = chars.join('');
+    try{
+      await navigator.clipboard.writeText(txt);
+      status.textContent = 'Copied reversed to clipboard';
+      setTimeout(()=> status.textContent = 'Reversed Preview', 1200);
+    }catch(err){
+      status.textContent = 'Copy failed — select and copy manually';
+      setTimeout(()=> status.textContent = 'Reversed Preview', 1200);
+    }
+  });
+
+  toggleSlow.addEventListener('click', () => {
+    slowMode = !slowMode;
+    toggleSlow.classList.toggle('primary', slowMode);
+    toggleSlow.textContent = slowMode ? 'Sticky Step (ON)' : 'Sticky Step';
+    // re-render to apply mode
+    renderReversed(src.value);
+  });
+
+  shuffle.addEventListener('click', () => {
+    const demos = [
+      "Hello, world!",
+      "Emoji test: 😀👍🏽✨",
+      "The quick brown fox jumps over the lazy dog.",
+      "12345 abcde 67890",
+      "こんにちは、世界！",
+      "Line 1\nLine 2\nLine 3",
+      "function reverse(s) { return s.split('').reverse().join('') }",
+      "Combining: e\u0301 and é look similar"
+    ];
+    const pick = demos[Math.floor(Math.random()*demos.length)];
+    src.value = pick;
+    src.focus();
+    // put caret at end
+    src.setSelectionRange(pick.length, pick.length);
+    renderReversed(pick);
+  });
+
+  // keyboard: pressing Enter will toggle slow mode quickly
+  src.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      slowMode = !slowMode;
+      toggleSlow.classList.toggle('primary', slowMode);
+      toggleSlow.textContent = slowMode ? 'Sticky Step (ON)' : 'Sticky Step';
+      renderReversed(src.value);
+    }
+  });
+
+  // initial render empty
+  renderReversed('');
+
+  // accessibility: allow pressing space on result to copy
+  result.addEventListener('keydown', async (e) => {
+    if (e.key === ' '){
+      e.preventDefault();
+      copyBtn.click();
+    }
+  });
+
+  // scattering micro interactions: when user types fast, add a little pulse on result
+  let lastPulse = 0;
+  src.addEventListener('input', () => {
+    const now = Date.now();
+    if (now - lastPulse < 90) return;
+    lastPulse = now;
+    result.animate([
+      { transform: 'scale(1)' },
+      { transform: 'scale(1.01)' },
+      { transform: 'scale(1)' }
+    ], { duration: 260, easing: 'cubic-bezier(.2,.9,.27,1)' });
+  });
+
+})();
+</script>

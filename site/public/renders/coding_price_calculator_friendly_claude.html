@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Floating-Point Shopping Cart Demo</title>
+    <title>Shopping Cart: Float Comparison Demo</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
+            background: #f0f4f8;
             color: #333;
             padding: 20px;
         }
@@ -21,227 +21,802 @@
         h1 {
             text-align: center;
             margin-bottom: 8px;
-            color: #1a1a2e;
+            color: #1a202c;
             font-size: 1.8rem;
         }
 
         .subtitle {
             text-align: center;
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             font-size: 0.95rem;
         }
 
-        /* ── Explanation banner ── */
-        .explanation-box {
-            background: #1a1a2e;
-            color: #e0e0e0;
-            border-radius: 12px;
-            padding: 24px 28px;
-            margin-bottom: 30px;
-            line-height: 1.7;
-        }
-
-        .explanation-box h2 {
-            color: #f0c040;
-            margin-bottom: 12px;
-            font-size: 1.2rem;
-        }
-
-        .explanation-box code {
-            background: #2e2e4e;
-            color: #7ec8e3;
-            padding: 2px 7px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        .explanation-box .highlight {
-            color: #ff6b6b;
-            font-weight: bold;
-        }
-
-        /* ── Two-column layout ── */
-        .carts-wrapper {
+        .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
-            margin-bottom: 30px;
+            max-width: 1200px;
+            margin: 0 auto 24px auto;
         }
 
-        @media (max-width: 820px) {
-            .carts-wrapper { grid-template-columns: 1fr; }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        /* ── Cart card ── */
-        .cart-card {
-            background: #fff;
+        .panel {
+            background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.09);
-            overflow: hidden;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
 
-        .cart-header {
-            padding: 16px 20px;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
+        .panel-broken {
+            border-top: 4px solid #e53e3e;
         }
 
-        .broken-header  { background: #ffe0e0; color: #c0392b; }
-        .fixed-header   { background: #d4edda; color: #1e7e34; }
-
-        .cart-header .tag {
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 20px;
-            margin-left: 8px;
-            vertical-align: middle;
+        .panel-fixed {
+            border-top: 4px solid #38a169;
         }
 
-        .broken-header .tag { background: #c0392b; color: #fff; }
-        .fixed-header  .tag { background: #1e7e34; color: #fff; }
-
-        /* ── Product list ── */
-        .product-list {
-            padding: 14px 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .product-row {
+        .panel h2 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed #f0f0f0;
             gap: 8px;
         }
 
-        .product-row:last-child { border-bottom: none; }
+        .panel-broken h2 { color: #e53e3e; }
+        .panel-fixed h2  { color: #38a169; }
 
-        .product-name {
-            flex: 1;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .product-price {
-            font-size: 0.88rem;
-            color: #555;
-            min-width: 70px;
-            text-align: right;
-        }
-
-        .add-btn {
-            background: #4a90d9;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 5px 12px;
-            cursor: pointer;
+        .panel-desc {
             font-size: 0.82rem;
-            transition: background 0.2s;
-        }
-
-        .add-btn:hover { background: #357abd; }
-
-        /* ── Cart items ── */
-        .cart-items {
-            padding: 14px 20px;
-            min-height: 90px;
+            color: #888;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #eee;
         }
 
-        .cart-items-title {
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #999;
-            margin-bottom: 8px;
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
-        .cart-item-row {
+        .product-item {
             display: flex;
             justify-content: space-between;
-            font-size: 0.87rem;
-            padding: 3px 0;
+            align-items: center;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+
+        .product-name { font-weight: 500; }
+
+        .product-price {
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        .add-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .add-btn:hover { background: #2b6cb0; }
+
+        .cart-section {
+            border-top: 1px solid #eee;
+            padding-top: 14px;
+        }
+
+        .cart-section h3 {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
             color: #444;
         }
 
-        .empty-cart {
-            color: #bbb;
+        .cart-items {
+            min-height: 40px;
+            margin-bottom: 12px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
             font-size: 0.85rem;
+            padding: 4px 0;
+            border-bottom: 1px dotted #eee;
+            color: #555;
+        }
+
+        .cart-empty {
+            font-size: 0.82rem;
+            color: #aaa;
             font-style: italic;
         }
 
-        /* ── Totals ── */
-        .totals-section {
-            padding: 14px 20px;
+        .totals-box {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85rem;
         }
 
         .total-row {
             display: flex;
             justify-content: space-between;
-            font-size: 0.9rem;
-            padding: 4px 0;
-            color: #555;
+            margin-bottom: 6px;
         }
 
         .total-row.grand {
             font-weight: 700;
-            font-size: 1.05rem;
-            color: #1a1a2e;
-            border-top: 2px solid #eee;
-            margin-top: 6px;
+            font-size: 1rem;
+            border-top: 2px solid #cbd5e0;
             padding-top: 8px;
+            margin-top: 4px;
         }
 
-        /* ── Debug / comparison panel ── */
-        .debug-panel {
-            padding: 12px 20px 16px;
-            background: #fafafa;
-            border-top: 1px solid #eee;
+        .raw-value {
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: #e53e3e;
+            margin-top: 2px;
+        }
+
+        .raw-value.ok {
+            color: #38a169;
+        }
+
+        .comparison-result {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            font-weight: 600;
+        }
+
+        .comparison-result.fail {
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            color: #c53030;
+        }
+
+        .comparison-result.pass {
+            background: #f0fff4;
+            border: 1px solid #68d391;
+            color: #276749;
+        }
+
+        .clear-btn {
+            width: 100%;
+            margin-top: 10px;
+            background: #e2e8f0;
+            color: #555;
+            border: none;
+            border-radius: 6px;
+            padding: 7px;
+            cursor: pointer;
             font-size: 0.82rem;
-            font-family: 'Courier New', monospace;
+            transition: background 0.2s;
+        }
+
+        .clear-btn:hover { background: #cbd5e0; }
+
+        /* Explanation panel */
+        .explanation {
+            max-width: 1200px;
+            margin: 0 auto 24px auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border-top: 4px solid #805ad5;
+        }
+
+        .explanation h2 {
+            color: #805ad5;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .explanation-grid { grid-template-columns: 1fr; }
+        }
+
+        .exp-block h3 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
             color: #444;
+        }
+
+        .exp-block p {
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        pre {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 0.78rem;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .highlight-bad  { color: #fc8181; }
+        .highlight-good { color: #68d391; }
+        .highlight-comment { color: #90cdf4; }
+
+        /* Live demo box */
+        .live-demo {
+            max-width: 1200px;
+            margin: 0 auto 24px auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border-top: 4px solid #ed8936;
+        }
+
+        .live-demo h2 {
+            color: #ed8936;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .demo-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .demo-row input {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            width: 130px;
+        }
+
+        .demo-row button {
+            padding: 8px 18px;
+            background: #ed8936;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .demo-row button:hover { background: #c05621; }
+
+        .demo-output {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 0.82rem;
+            font-family: monospace;
+            min-height: 60px;
             line-height: 1.8;
         }
 
-        .debug-panel .label {
-            color: #888;
-            font-size: 0.78rem;
+        .demo-output .bad  { color: #fc8181; }
+        .demo-output .good { color: #68d391; }
+        .demo-output .info { color: #90cdf4; }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 4px;
+            letter-spacing: 0.05em;
         }
 
-        .fail  { color: #e74c3c; font-weight: bold; }
-        .pass  { color: #27ae60; font-weight: bold; }
-        .warn  { color: #e67e22; font-weight: bold; }
+        .badge-broken { background: #fff5f5; color: #e53e3e; border: 1px solid #fc8181; }
+        .badge-fixed  { background: #f0fff4; color: #38a169; border: 1px solid #68d391; }
+    </style>
+</head>
+<body>
 
-        /* ── Comparison check section ── */
-        .check-section {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.09);
-            padding: 22px 28px;
-            margin-bottom: 30px;
-        }
+<h1>🛒 Shopping Cart: Float Comparison Demo</h1>
+<p class="subtitle">
+    Why <code>===</code> and naive float math silently break your prices — and how to fix it
+</p>
 
-        .check-section h2 {
-            font-size: 1.1rem;
-            margin-bottom: 16px;
-            color: #1a1a2e;
-        }
+<!-- ── LIVE ARITHMETIC DEMO ─────────────────────────────────────────── -->
+<div class="live-demo">
+    <h2>🔬 Live Float Arithmetic Explorer</h2>
+    <div class="demo-row">
+        <input type="number" id="demoA" value="4.99" step="0.01" placeholder="Price A">
+        <span style="font-size:1.2rem">+</span>
+        <input type="number" id="demoB" value="2.50" step="0.01" placeholder="Price B">
+        <button onclick="runDemo()">Calculate</button>
+    </div>
+    <div class="demo-output" id="demoOutput">
+        Press Calculate to see the raw float results…
+    </div>
+</div>
 
-        .check-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 14px;
-        }
+<!-- ── SIDE-BY-SIDE CARTS ─────────────────────────────────────────── -->
+<div class="grid">
 
-        .check-card {
-            border-radius: 8px;
-            padding: 14px 16px;
-            font-family: 'Courier New', monospace
+    <!-- BROKEN CART -->
+    <div class="panel panel-broken">
+        <h2>💥 <span class="badge badge-broken">Broken</span> &nbsp;Naive Float Cart</h2>
+        <p class="panel-desc">
+            Uses raw JS <code>+</code> addition and <code>===</code> for price comparisons.
+            Watch the raw totals go wrong.
+        </p>
+
+        <div class="product-list" id="broken-products"></div>
+
+        <div class="cart-section">
+            <h3>🧺 Cart Items</h3>
+            <div class="cart-items" id="broken-cart-items">
+                <span class="cart-empty">No items yet</span>
+            </div>
+            <div class="totals-box">
+                <div class="total-row">
+                    <span>Subtotal (raw JS float):</span>
+                    <div>
+                        <span id="broken-subtotal">$0.00</span>
+                        <div class="raw-value" id="broken-subtotal-raw"></div>
+                    </div>
+                </div>
+                <div class="total-row">
+                    <span>Tax (8.5% raw):</span>
+                    <div>
+                        <span id="broken-tax">$0.00</span>
+                        <div class="raw-value" id="broken-tax-raw"></div>
+                    </div>
+                </div>
+                <div class="total-row grand">
+                    <span>TOTAL:</span>
+                    <div>
+                        <span id="broken-total">$0.00</span>
+                        <div class="raw-value" id="broken-total-raw"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="broken-comparison" class="comparison-result" style="display:none"></div>
+            <button class="clear-btn" onclick="clearCart('broken')">🗑 Clear Cart</button>
+        </div>
+    </div>
+
+    <!-- FIXED CART -->
+    <div class="panel panel-fixed">
+        <h2>✅ <span class="badge badge-fixed">Fixed</span> &nbsp;Proper Decimal Cart</h2>
+        <p class="panel-desc">
+            Converts all prices to integer cents before math, then divides back at display time.
+            Comparisons are exact.
+        </p>
+
+        <div class="product-list" id="fixed-products"></div>
+
+        <div class="cart-section">
+            <h3>🧺 Cart Items</h3>
+            <div class="cart-items" id="fixed-cart-items">
+                <span class="cart-empty">No items yet</span>
+            </div>
+            <div class="totals-box">
+                <div class="total-row">
+                    <span>Subtotal (integer cents):</span>
+                    <div>
+                        <span id="fixed-subtotal">$0.00</span>
+                        <div class="raw-value ok" id="fixed-subtotal-raw"></div>
+                    </div>
+                </div>
+                <div class="total-row">
+                    <span>Tax (8.5% rounded):</span>
+                    <div>
+                        <span id="fixed-tax">$0.00</span>
+                        <div class="raw-value ok" id="fixed-tax-raw"></div>
+                    </div>
+                </div>
+                <div class="total-row grand">
+                    <span>TOTAL:</span>
+                    <div>
+                        <span id="fixed-total">$0.00</span>
+                        <div class="raw-value ok" id="fixed-total-raw"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="fixed-comparison" class="comparison-result" style="display:none"></div>
+            <button class="clear-btn" onclick="clearCart('fixed')">🗑 Clear Cart</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── EXPLANATION ─────────────────────────────────────────────────── -->
+<div class="explanation">
+    <h2>📚 Why This Happens — and How to Fix It</h2>
+    <div class="explanation-grid">
+
+        <div class="exp-block">
+            <h3>🔴 The Problem: IEEE 754 Binary Floating Point</h3>
+            <p>
+                JavaScript (like most languages) stores decimal numbers in
+                <strong>IEEE 754 double-precision binary format</strong>.
+                Most decimal fractions <em>cannot be represented exactly</em>
+                in binary — just like 1/3 cannot be written exactly in decimal.
+            </p>
+            <p>
+                The number <code>0.1</code> in binary is actually
+                <code>0.1000000000000000055511151231257827021181583404541015625</code>.
+                When you add <code>0.1 + 0.2</code> you get
+                <code>0.30000000000000004</code>, not <code>0.3</code>.
+            </p>
+            <p>
+                Using <code>===</code> to compare two floats that should be equal
+                will silently return <code>false</code> because the stored
+                binary values differ by tiny fractions.
+            </p>
+            <pre><span class="highlight-comment">// ❌ Broken — looks right, is wrong</span>
+let total = 0;
+total += 4.99;   <span class="highlight-comment">// 4.99</span>
+total += 2.50;   <span class="highlight-comment">// 7.49</span>
+total += 1.01;   <span class="highlight-comment">// 8.50?</span>
+
+<span class="highlight-comment">// Raw value: 8.500000000000002 !</span>
+<span class="highlight-bad">total === 8.50  // false  ← silent bug!</span>
+
+<span class="highlight-comment">// Classic JS gotcha</span>
+<span class="highlight-bad">0.1 + 0.2 === 0.3  // false</span>
+<span class="highlight-bad">1.005.toFixed(2)   // "1.00" not "1.01"</span></pre>
+        </div>
+
+        <div class="exp-block">
+            <h3>🟢 The Fix: Integer Cents Arithmetic</h3>
+            <p>
+                The safest approach for money is to <strong>work entirely in
+                integer cents</strong>. Integers are represented exactly in
+                IEEE 754 up to 2<sup>53</sup>. Convert dollars → cents on
+                input, do all math in cents, convert back only for display.
+            </p>
+            <p>
+                Use <code>Math.round(price * 100)</code> to convert — never
+                just <code>price * 100</code> alone, because that
+                multiplication can itself introduce float error.
+            </p>
+            <pre><span class="highlight-comment">// ✅ Fixed — work in integer cents</span>
+<span class="highlight-good">function toCents(dollars) {</span>
+<span class="highlight-good">    return Math.round(dollars * 100);</span>
+<span class="highlight-good">}</span>
+<span class="highlight-good">function toDollars(cents) {</span>
+<span class="highlight-good">    return (cents / 100).toFixed(2);</span>
+<span class="highlight-good">}</span>
+
+let totalCents = 0;
+totalCents += toCents(4.99);  <span class="highlight-comment">// 499</span>
+totalCents += toCents(2.50);  <span class="highlight-comment">// 250</span>
+totalCents += toCents(1.01);  <span class="highlight-comment">// 101</span>
+<span class="highlight-comment">// totalCents = 850  (exact integer)</span>
+
+<span class="highlight-good">totalCents === 850   // true  ✓</span>
+<span class="highlight-good">toDollars(totalCents) // "8.50" ✓</span>
+
+<span class="highlight-comment">// Tax: round to nearest cent</span>
+<span class="highlight-good">const taxCents =</span>
+<span class="highlight-good">    Math.round(totalCents * 0.085);</span></pre>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUCT DATA
+// ─────────────────────────────────────────────────────────────────────────────
+const PRODUCTS = [
+    { id: 1, name: "☕ Coffee Mug",        price: 4.99  },
+    { id: 2, name: "📓 Notebook",          price: 2.50  },
+    { id: 3, name: "🖊 Fancy Pen",         price: 1.01  },
+    { id: 4, name: "📎 Paperclip Pack",    price: 0.99  },
+    { id: 5, name: "🗂 File Folder",       price: 3.75  },
+    { id: 6, name: "🔦 Mini Flashlight",   price: 7.49  },
+    { id: 7, name: "🧴 Hand Sanitizer",    price: 2.99  },
+    { id: 8, name: "📏 Ruler",             price: 1.25  },
+];
+
+// Cart state
+const brokenCart = [];   // stores raw float prices
+const fixedCart  = [];   // stores integer cents
+
+const TAX_RATE = 0.085;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CENTS HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function toCents(dollars) {
+    // Math.round guards against the float error in the multiplication itself
+    return Math.round(dollars * 100);
+}
+
+function centsToDisplay(cents) {
+    return "$" + (cents / 100).toFixed(2);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER PRODUCT LISTS
+// ─────────────────────────────────────────────────────────────────────────────
+function renderProducts() {
+    ["broken", "fixed"].forEach(mode => {
+        const container = document.getElementById(`${mode}-products`);
+        container.innerHTML = "";
+        PRODUCTS.forEach(p => {
+            const div = document.createElement("div");
+            div.className = "product-item";
+            div.innerHTML = `
+                <span class="product-name">${p.name}</span>
+                <span class="product-price">$${p.price.toFixed(2)}</span>
+                <button class="add-btn" onclick="addItem('${mode}', ${p.id})">+ Add</button>
+            `;
+            container.appendChild(div);
+        });
+    });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADD ITEM
+// ─────────────────────────────────────────────────────────────────────────────
+function addItem(mode, productId) {
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (!product) return;
+
+    if (mode === "broken") {
+        brokenCart.push({ name: product.name, price: product.price });
+        renderBrokenCart();
+    } else {
+        fixedCart.push({ name: product.name, cents: toCents(product.price) });
+        renderFixedCart();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLEAR CART
+// ─────────────────────────────────────────────────────────────────────────────
+function clearCart(mode) {
+    if (mode === "broken") {
+        brokenCart.length = 0;
+        renderBrokenCart();
+    } else {
+        fixedCart.length = 0;
+        renderFixedCart();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER BROKEN CART
+// ─────────────────────────────────────────────────────────────────────────────
+function renderBrokenCart() {
+    const itemsEl    = document.getElementById("broken-cart-items");
+    const subEl      = document.getElementById("broken-subtotal");
+    const subRawEl   = document.getElementById("broken-subtotal-raw");
+    const taxEl      = document.getElementById("broken-tax");
+    const taxRawEl   = document.getElementById("broken-tax-raw");
+    const totalEl    = document.getElementById("broken-total");
+    const totalRawEl = document.getElementById("broken-total-raw");
+    const compEl     = document.getElementById("broken-comparison");
+
+    if (brokenCart.length === 0) {
+        itemsEl.innerHTML = '<span class="cart-empty">No items yet</span>';
+        subEl.textContent = "$0.00";
+        subRawEl.textContent = "";
+        taxEl.textContent = "$0.00";
+        taxRawEl.textContent = "";
+        totalEl.textContent = "$0.00";
+        totalRawEl.textContent = "";
+        compEl.style.display = "none";
+        return;
+    }
+
+    // Render item list
+    itemsEl.innerHTML = brokenCart.map(item =>
+        `<div class="cart-item">
+            <span>${item.name}</span>
+            <span>$${item.price.toFixed(2)}</span>
+        </div>`
+    ).join("");
+
+    // ── BROKEN arithmetic: naive float addition ──
+    let subtotal = 0;
+    for (const item of brokenCart) {
+        subtotal += item.price;   // ← raw float addition
+    }
+
+    const tax   = subtotal * TAX_RATE;   // ← raw float multiplication
+    const total = subtotal + tax;
+
+    // Display formatted
+    subEl.textContent   = "$" + subtotal.toFixed(2);
+    taxEl.textContent   = "$" + tax.toFixed(2);
+    totalEl.textContent = "$" + total.toFixed(2);
+
+    // Show raw JS value to reveal hidden precision errors
+    const subRaw   = subtotal.toPrecision(20);
+    const taxRaw   = tax.toPrecision(20);
+    const totalRaw = total.toPrecision(20);
+
+    subRawEl.textContent   = "raw: " + subRaw;
+    taxRawEl.textContent   = "raw: " + taxRaw;
+    totalRawEl.textContent = "raw: " + totalRaw;
+
+    // Highlight if raw value differs from rounded display
+    const subDisplay   = parseFloat(subtotal.toFixed(2));
+    const totalDisplay = parseFloat(total.toFixed(2));
+
+    subRawEl.style.color   = (subtotal !== subDisplay)   ? "#e53e3e" : "#aaa";
+    totalRawEl.style.color = (total    !== totalDisplay) ? "#e53e3e" : "#aaa";
+
+    // ── Comparison check ──
+    // Simulate: "did the user pay exactly the right amount?"
+    const expectedTotal = parseFloat(total.toFixed(2));
+    const paidAmount    = total;   // pretend they paid the raw float value
+    const strictEqual   = (paidAmount === expectedTotal);
+
+    // A more dramatic demo: check if subtotal of specific combo equals known value
+    const knownSubtotal = brokenCart.reduce((s, i) =>
+        s + parseFloat(i.price.toFixed(2)), 0);
+    const naiveCheck    = (subtotal === knownSubtotal);
+
+    compEl.style.display = "block";
+    if (subtotal !== subDisplay || !Number.isInteger(Math.round(subtotal * 100) / 100 * 100)) {
+        compEl.className = "comparison-result fail";
+        compEl.innerHTML = `
+            ❌ <strong>Float precision error detected!</strong><br>
+            <code>subtotal</code> raw = <code>${subRaw}</code><br>
+            <code>subtotal === ${subDisplay}</code> → <strong>${subtotal === subDisplay}</strong><br>
+            <small>toFixed(2) hides the error in display, but the stored value is wrong.</small>
+        `;
+    } else {
+        compEl.className = "comparison-result pass";
+        compEl.innerHTML = `
+            ⚠️ <strong>No visible error yet</strong> — try adding more items with
+            prices like $4.99, $1.01, $0.99 to trigger accumulation errors.
+        `;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER FIXED CART
+// ─────────────────────────────────────────────────────────────────────────────
+function renderFixedCart() {
+    const itemsEl    = document.getElementById("fixed-cart-items");
+    const subEl      = document.getElementById("fixed-subtotal");
+    const subRawEl   = document.getElementById("fixed-subtotal-raw");
+    const taxEl      = document.getElementById("fixed-tax");
+    const taxRawEl   = document.getElementById("fixed-tax-raw");
+    const totalEl    = document.getElementById("fixed-total");
+    const totalRawEl = document.getElementById("fixed-total-raw");
+    const compEl     = document.getElementById("fixed-comparison");
+
+    if (fixedCart.length === 0) {
+        itemsEl.innerHTML = '<span class="cart-empty">No items yet</span>';
+        subEl.textContent = "$0.00";
+        subRawEl.textContent = "";
+        taxEl.textContent = "$0.00";
+        taxRawEl.textContent = "";
+        totalEl.textContent = "$0.00";
+        totalRawEl.textContent = "";
+        compEl.style.display = "none";
+        return;
+    }
+
+    // Render item list
+    itemsEl.innerHTML = fixedCart.map(item =>
+        `<div class="cart-item">
+            <span>${item.name}</span>
+            <span>${centsToDisplay(item.cents)}</span>
+        </div>`
+    ).join("");
+
+    // ── FIXED arithmetic: integer cents ──
+    let subtotalCents = 0;
+    for (const item of fixedCart) {
+        subtotalCents += item.cents;   // ← exact integer addition
+    }
+
+    // Tax: round to nearest cent
+    const taxCents   = Math.round(subtotalCents * TAX_RATE);
+    const totalCents = subtotalCents + taxCents;
+
+    // Display
+    subEl.textContent   = centsToDisplay(subtotalCents);
+    taxEl.textContent   = centsToDisplay(taxCents);
+    totalEl.textContent = centsToDisplay(totalCents);
+
+    subRawEl.textContent   = `${subtotalCents} cents (exact integer)`;
+    taxRawEl.textContent   = `${taxCents} cents (Math.round applied)`;
+    totalRawEl.textContent = `${totalCents} cents (exact integer)`;
+
+    // ── Comparison check ──
+    // Integer comparison with === is always safe
+    const expectedCents = totalCents;
+    const paidCents     = totalCents;   // exact same integer
+    const exactMatch    = (paidCents === expectedCents);
+
+    compEl.style.display = "block";
+    compEl.className = "comparison-result pass";
+    compEl.innerHTML = `
+        ✅ <strong>Integer comparison is exact!</strong><br>
+        <code>totalCents === ${expectedCents}</code> → <strong>${exactMatch}</strong><br>
+        <code>subtotalCents</code> = <code>${subtotalCents}</code> (no hidden decimals)<br>
+        <small>All arithmetic stays in whole cents — no floating-point drift.</small>
+    `;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LIVE DEMO
+// ─────────────────────────────────────────────────────────────────────────────
+function runDemo() {
+    const a = parseFloat(document.getElementById("demoA").value) || 0;
+    const b = parseFloat(document.getElementById("demoB").value) || 0;
+    const out = document.getElementById("demoOutput");
+
+    const floatSum   = a + b;
+    const expected   = parseFloat((a + b).toFixed(2));
+    const strictEq   = (floatSum === expected);
+
+    const aCents     = toCents(a);
+    const bCents     = toCents(b);
+    const sumCents   = aCents + bCents;
+    const centsEq    = (sumCents === toCents(a + b) || true);  // always integer
+
+    // Show precision
+    const rawStr = floatSum.toPrecision(20);
+    const isExact = (rawStr === expected.toPrecision(20));
+
+    out.innerHTML = `
+<span class="info">── Broken Float Approach ──────────────────────</span>
+<span class="bad">  ${a} + ${b} = ${floatSum} </span>
+<span class="bad">  raw (20 sig figs): ${rawStr}</span>
+<span class="bad">  ${floatSum} === ${expected}  →  ${strictEq}  ${strictEq ? "✓" : "← FAILS! toFixed hides it"}</span>
+<span class="bad">  0.1 + 0.2 === 0.3  →  ${0.1 + 0.2 === 0.3}  (classic example)</span>
+
+<span class="info">── Fixed Integer-Cents Approach ───────────────</span>
+<span class="good">  toCents(${a}) = ${aCents}  |  toCents(${b}) = ${bCents}</span>
+<span class="good">  ${aCents} + ${bCents} = ${sumCents} cents  (exact integer)</span>
+<span class="good">  display: $${(sumCents / 100).toFixed(2)}</span>
+<span class="good">  ${sumCents} === ${sumCents}  →  true  ✓ always exact</span>
+    `.trim();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+renderProducts();
+runDemo();
+</script>
+</body>
+</html>

@@ -8,157 +8,152 @@
         body {
             font-family: Arial, sans-serif;
         }
-        #canvas {
+        .bars {
+            position: relative;
+            width: 400px;
+            height: 200px;
             border: 1px solid black;
+            display: inline-block;
+        }
+        .bar {
+            position: absolute;
+            bottom: 0;
+            background-color: blue;
+            transition: height 0.5s;
+        }
+        #steps {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas" width="800" height="400"></canvas>
-    <div id="complexity-notes">
-        <h2>Time Complexity Notes:</h2>
-        <p>Bubble Sort: O(n^2)</p>
-        <p>Quick Sort: O(n log n) on average, O(n^2) in the worst case</p>
-        <p>Merge Sort: O(n log n)</p>
+
+<h1>Sorting Algorithms Comparison</h1>
+
+<div id="algorithms">
+    <div>
+        <div class="bars" id="bubble-bars"></div>
+        <p>Bubble Sort (O(n^2))</p>
+        <p id="bubble-steps">Steps: 0</p>
     </div>
-    <button id="start-button">Start Sorting</button>
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const startButton = document.getElementById('start-button');
-        let data = [];
-        let bubbleSortData = [];
-        let quickSortData = [];
-        let mergeSortData = [];
-        let bubbleStep = 0;
-        let quickStep = 0;
-        let mergeStep = 0;
+    <div>
+        <div class="bars" id="quick-bars"></div>
+        <p>Quick Sort (O(n log n))</p>
+        <p id="quick-steps">Steps: 0</p>
+    </div>
+    <div>
+        <div class="bars" id="merge-bars"></div>
+        <p>Merge Sort (O(n log n))</p>
+        <p id="merge-steps">Steps: 0</p>
+    </div>
+</div>
 
-        // Generate random data
-        for (let i = 0; i < 20; i++) {
-            data.push(Math.floor(Math.random() * 100) + 1);
-            bubbleSortData.push(data[i]);
-            quickSortData.push(data[i]);
-            mergeSortData.push(data[i]);
+<button onclick="startSorting()">Sort</button>
+
+<script>
+    let data = Array(20).fill().map(() => Math.floor(Math.random() * 100));
+    let bubbleData = [...data];
+    let quickData = [...data];
+    let mergeData = [...data];
+
+    function startSorting() {
+        bubbleSort(bubbleData, 0);
+        quickSort(quickData, 0, quickData.length - 1);
+        mergeSort(mergeData, 0, mergeData.length - 1);
+    }
+
+    function bubbleSort(data, step) {
+        if (step < data.length) {
+            for (let i = 0; i < data.length - 1; i++) {
+                if (data[i] > data[i + 1]) {
+                    [data[i], data[i + 1]] = [data[i + 1], data[i]];
+                }
+            }
+            drawBars('bubble-bars', data);
+            document.getElementById('bubble-steps').innerText = `Steps: ${step + 1}`;
+            setTimeout(() => bubbleSort(data, step + 1), 500);
         }
+    }
 
-        startButton.addEventListener('click', () => {
-            bubbleStep = 0;
-            quickStep = 0;
-            mergeStep = 0;
-            animateSorting();
+    function quickSort(data, low, high) {
+        if (low < high) {
+            let pivotIndex = partition(data, low, high);
+            drawBars('quick-bars', data);
+            document.getElementById('quick-steps').innerText = `Steps: ${quickData.length - low - high}`;
+            setTimeout(() => quickSort(data, low, pivotIndex - 1), 500);
+            setTimeout(() => quickSort(data, pivotIndex + 1, high), 500);
+        }
+    }
+
+    function partition(data, low, high) {
+        let pivot = data[high];
+        let i = low - 1;
+        for (let j = low; j < high; j++) {
+            if (data[j] < pivot) {
+                i++;
+                [data[i], data[j]] = [data[j], data[i]];
+            }
+        }
+        [data[i + 1], data[high]] = [data[high], data[i + 1]];
+        return i + 1;
+    }
+
+    function mergeSort(data, low, high) {
+        if (low < high) {
+            let mid = Math.floor((low + high) / 2);
+            mergeSort(data, low, mid);
+            mergeSort(data, mid + 1, high);
+            merge(data, low, mid, high);
+            drawBars('merge-bars', data);
+            document.getElementById('merge-steps').innerText = `Steps: ${mergeData.length - low - high}`;
+        }
+    }
+
+    function merge(data, low, mid, high) {
+        let left = data.slice(low, mid + 1);
+        let right = data.slice(mid + 1, high + 1);
+        let i = 0, j = 0, k = low;
+        while (i < left.length && j < right.length) {
+            if (left[i] <= right[j]) {
+                data[k] = left[i];
+                i++;
+            } else {
+                data[k] = right[j];
+                j++;
+            }
+            k++;
+        }
+        while (i < left.length) {
+            data[k] = left[i];
+            i++;
+            k++;
+        }
+        while (j < right.length) {
+            data[k] = right[j];
+            j++;
+            k++;
+        }
+    }
+
+    function drawBars(id, data) {
+        let barsContainer = document.getElementById(id);
+        barsContainer.innerHTML = '';
+        let max = Math.max(...data);
+        data.forEach((value, index) => {
+            let bar = document.createElement('div');
+            bar.classList.add('bar');
+            bar.style.left = `${index * 20}px`;
+            bar.style.width = '20px';
+            bar.style.height = `${200 * value / max}px`;
+            barsContainer.appendChild(bar);
         });
+    }
 
-        function animateSorting() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBarChart(data, 50, 20, 'black', 'Data');
+    // Initial draw
+    drawBars('bubble-bars', bubbleData);
+    drawBars('quick-bars', quickData);
+    drawBars('merge-bars', mergeData);
+</script>
 
-            bubbleSortStep();
-            quickSortStep();
-            mergeSortStep();
-
-            requestAnimationFrame(animateSorting);
-        }
-
-        function drawBarChart(data, x, y, color, label) {
-            ctx.fillStyle = color;
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            ctx.fillText(label, x + (data.length * 20) / 2, 10);
-            for (let i = 0; i < data.length; i++) {
-                ctx.fillRect(x + i * 20, y - data[i], 10, data[i]);
-                ctx.fillStyle = 'black';
-                ctx.fillText(data[i], x + i * 20 + 5, y + 15);
-            }
-        }
-
-        function bubbleSortStep() {
-            if (bubbleStep < bubbleSortData.length * bubbleSortData.length) {
-                let i = Math.floor(bubbleStep / bubbleSortData.length);
-                let j = bubbleStep % bubbleSortData.length;
-                if (i < bubbleSortData.length - 1) {
-                    if (bubbleSortData[j] > bubbleSortData[j + 1]) {
-                        [bubbleSortData[j], bubbleSortData[j + 1]] = [bubbleSortData[j + 1], bubbleSortData[j]];
-                    }
-                    bubbleStep++;
-                }
-            }
-            drawBarChart(bubbleSortData, 50, 200, 'blue', `Bubble Sort (O(n^2), Steps: ${bubbleStep})`);
-        }
-
-        function quickSortStep() {
-            if (quickStep < quickSortData.length) {
-                quickSortData = quickSort(quickSortData, 0, quickSortData.length - 1, []);
-                quickStep++;
-            }
-            drawBarChart(quickSortData, 250, 200, 'red', `Quick Sort (O(n log n), Steps: ${quickStep})`);
-        }
-
-        function quickSort(arr, low, high, steps) {
-            if (low < high) {
-                let pi = partition(arr, low, high);
-                quickSort(arr, low, pi - 1, steps);
-                quickSort(arr, pi + 1, high, steps);
-            }
-            return arr;
-        }
-
-        function partition(arr, low, high) {
-            let pivot = arr[high];
-            let i = low - 1;
-            for (let j = low; j < high; j++) {
-                if (arr[j] < pivot) {
-                    i++;
-                    [arr[i], arr[j]] = [arr[j], arr[i]];
-                }
-            }
-            [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
-            return i + 1;
-        }
-
-        function mergeSortStep() {
-            if (mergeStep < mergeSortData.length) {
-                mergeSortData = mergeSort(mergeSortData, []);
-                mergeStep++;
-            }
-            drawBarChart(mergeSortData, 450, 200, 'green', `Merge Sort (O(n log n), Steps: ${mergeStep})`);
-        }
-
-        function mergeSort(arr, temp) {
-            if (arr.length <= 1) {
-                return arr;
-            }
-            let mid = Math.floor(arr.length / 2);
-            let left = arr.slice(0, mid);
-            let right = arr.slice(mid);
-            left = mergeSort(left, temp);
-            right = mergeSort(right, temp);
-            return merge(left, right, temp);
-        }
-
-        function merge(left, right, temp) {
-            let i = 0;
-            let j = 0;
-            let k = 0;
-            while (i < left.length && j < right.length) {
-                if (left[i] <= right[j]) {
-                    temp[k++] = left[i++];
-                } else {
-                    temp[k++] = right[j++];
-                }
-            }
-            while (i < left.length) {
-                temp[k++] = left[i++];
-            }
-            while (j < right.length) {
-                temp[k++] = right[j++];
-            }
-            for (let i = 0; i < temp.length; i++) {
-                arr[i] = temp[i];
-            }
-            return arr;
-        }
-    </script>
 </body>
 </html>

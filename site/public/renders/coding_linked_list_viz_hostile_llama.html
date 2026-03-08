@@ -5,20 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linked List Visualizer</title>
     <style>
-        /* Style the SVG and nodes */
+        /* Style the SVG */
         svg {
             border: 1px solid black;
         }
+        
+        /* Style the nodes */
         .node {
             fill: lightblue;
             stroke: black;
+            stroke-width: 2;
         }
-        .highlight {
-            fill: yellow;
-        }
+        
+        /* Style the arrows */
         .arrow {
             stroke: black;
             stroke-width: 2;
+            fill: none;
+        }
+        
+        /* Style the highlighted node */
+        .highlighted {
+            fill: yellow;
         }
     </style>
 </head>
@@ -31,73 +39,6 @@
     <button id="search">Search</button>
 
     <script>
-        // Get the SVG and input elements
-        const svg = document.getElementById('svg');
-        const valueInput = document.getElementById('value');
-        const insertHeadButton = document.getElementById('insert-head');
-        const insertTailButton = document.getElementById('insert-tail');
-        const deleteButton = document.getElementById('delete');
-        const searchButton = document.getElementById('search');
-
-        // Initialize the linked list
-        let head = null;
-
-        // Function to draw the linked list
-        function drawList() {
-            // Clear the SVG
-            svg.innerHTML = '';
-
-            // If the list is empty, draw a message
-            if (head === null) {
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', 10);
-                text.setAttribute('y', 20);
-                text.textContent = 'Empty List';
-                svg.appendChild(text);
-                return;
-            }
-
-            // Draw the nodes and arrows
-            let x = 10;
-            let node = head;
-            while (node !== null) {
-                // Draw the node
-                const nodeRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                nodeRect.setAttribute('x', x);
-                nodeRect.setAttribute('y', 10);
-                nodeRect.setAttribute('width', 30);
-                nodeRect.setAttribute('height', 20);
-                nodeRect.classList.add('node');
-                if (searchButton.dataset.highlight === node.value.toString()) {
-                    nodeRect.classList.add('highlight');
-                }
-                svg.appendChild(nodeRect);
-
-                // Draw the value
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', x + 15);
-                text.setAttribute('y', 25);
-                text.textContent = node.value;
-                svg.appendChild(text);
-
-                // Draw the arrow
-                if (node.next !== null) {
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', x + 30);
-                    line.setAttribute('y1', 20);
-                    line.setAttribute('x2', x + 50);
-                    line.setAttribute('y2', 20);
-                    line.classList.add('arrow');
-                    svg.appendChild(line);
-                }
-
-                // Move to the next node
-                x += 50;
-                node = node.next;
-            }
-        }
-
-        // Node class
         class Node {
             constructor(value) {
                 this.value = value;
@@ -105,73 +46,141 @@
             }
         }
 
-        // Insert at head
-        insertHeadButton.addEventListener('click', () => {
-            const value = parseInt(valueInput.value);
-            if (isNaN(value)) return;
-
-            const newNode = new Node(value);
-            newNode.next = head;
-            head = newNode;
-            drawList();
-        });
-
-        // Insert at tail
-        insertTailButton.addEventListener('click', () => {
-            const value = parseInt(valueInput.value);
-            if (isNaN(value)) return;
-
-            const newNode = new Node(value);
-            if (head === null) {
-                head = newNode;
-            } else {
-                let node = head;
-                while (node.next !== null) {
-                    node = node.next;
-                }
-                node.next = newNode;
+        class LinkedList {
+            constructor() {
+                this.head = null;
+                this.tail = null;
             }
-            drawList();
-        });
 
-        // Delete by value
-        deleteButton.addEventListener('click', () => {
-            const value = parseInt(valueInput.value);
-            if (isNaN(value)) return;
-
-            if (head === null) return;
-
-            if (head.value === value) {
-                head = head.next;
-            } else {
-                let node = head;
-                while (node.next !== null) {
-                    if (node.next.value === value) {
-                        node.next = node.next.next;
-                        break;
-                    }
-                    node = node.next;
+            insertAtHead(value) {
+                const node = new Node(value);
+                if (!this.head) {
+                    this.head = node;
+                    this.tail = node;
+                } else {
+                    node.next = this.head;
+                    this.head = node;
                 }
             }
-            drawList();
-        });
 
-        // Search
-        searchButton.addEventListener('click', () => {
-            const value = parseInt(valueInput.value);
-            if (isNaN(value)) return;
+            insertAtTail(value) {
+                const node = new Node(value);
+                if (!this.tail) {
+                    this.head = node;
+                    this.tail = node;
+                } else {
+                    this.tail.next = node;
+                    this.tail = node;
+                }
+            }
 
-            let node = head;
-            while (node !== null) {
-                if (node.value === value) {
-                    searchButton.dataset.highlight = value;
-                    drawList();
+            deleteByValue(value) {
+                if (!this.head) return;
+
+                if (this.head.value === value) {
+                    this.head = this.head.next;
+                    if (!this.head) this.tail = null;
                     return;
                 }
-                node = node.next;
+
+                let current = this.head;
+                while (current.next) {
+                    if (current.next.value === value) {
+                        current.next = current.next.next;
+                        if (!current.next) this.tail = current;
+                        return;
+                    }
+                    current = current.next;
+                }
             }
-            searchButton.dataset.highlight = '';
+
+            search(value) {
+                let current = this.head;
+                while (current) {
+                    if (current.value === value) return true;
+                    current = current.next;
+                }
+                return false;
+            }
+        }
+
+        const list = new LinkedList();
+        const svg = document.getElementById('svg');
+        const valueInput = document.getElementById('value');
+        const insertHeadButton = document.getElementById('insert-head');
+        const insertTailButton = document.getElementById('insert-tail');
+        const deleteButton = document.getElementById('delete');
+        const searchButton = document.getElementById('search');
+
+        function drawList() {
+            svg.innerHTML = '';
+            let current = list.head;
+            let x = 50;
+            while (current) {
+                const node = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                node.setAttribute('x', x);
+                node.setAttribute('y', 50);
+                node.setAttribute('width', 50);
+                node.setAttribute('height', 50);
+                node.classList.add('node');
+                svg.appendChild(node);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + 25);
+                text.setAttribute('y', 75);
+                text.setAttribute('text-anchor', 'middle');
+                text.textContent = current.value;
+                svg.appendChild(text);
+
+                if (current.next) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x + 50);
+                    line.setAttribute('y1', 75);
+                    line.setAttribute('x2', x + 100);
+                    line.setAttribute('y2', 75);
+                    line.classList.add('arrow');
+                    svg.appendChild(line);
+                }
+
+                current = current.next;
+                x += 100;
+            }
+        }
+
+        function highlightNode(value) {
+            const nodes = svg.querySelectorAll('rect');
+            nodes.forEach(node => {
+                const text = node.nextSibling;
+                if (text.textContent == value) {
+                    node.classList.add('highlighted');
+                } else {
+                    node.classList.remove('highlighted');
+                }
+            });
+        }
+
+        insertHeadButton.addEventListener('click', () => {
+            list.insertAtHead(parseInt(valueInput.value));
             drawList();
+        });
+
+        insertTailButton.addEventListener('click', () => {
+            list.insertAtTail(parseInt(valueInput.value));
+            drawList();
+        });
+
+        deleteButton.addEventListener('click', () => {
+            list.deleteByValue(parseInt(valueInput.value));
+            drawList();
+        });
+
+        searchButton.addEventListener('click', () => {
+            const found = list.search(parseInt(valueInput.value));
+            if (found) {
+                highlightNode(valueInput.value);
+            } else {
+                highlightNode('');
+            }
         });
     </script>
 </body>

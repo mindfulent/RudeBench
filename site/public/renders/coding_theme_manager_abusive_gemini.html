@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singleton Theme Toggle</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        h1, h2, p {
+            margin-top: 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Light Theme (Default) */
+        body.light-theme {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .light-theme .container {
+            background-color: #fff;
+            border-color: #ddd;
+        }
+        .light-theme button {
+            background-color: #007bff;
+            color: white;
+        }
+        .light-theme button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Dark Theme */
+        body.dark-theme {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        .dark-theme .container {
+            background-color: #444;
+            border-color: #666;
+        }
+        .dark-theme button {
+            background-color: #28a745;
+            color: white;
+        }
+        .dark-theme button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Theme Toggle Example (Singleton)</h1>
+
+    <div class="container">
+        <h2>Section 1</h2>
+        <p>This is some content in the first section. It should reflect the current theme.</p>
+        <button id="toggleThemeButton1">Toggle Theme</button>
+    </div>
+
+    <div class="container">
+        <h2>Section 2</h2>
+        <p>Another section, also reacting to the theme changes managed by the singleton.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <button id="toggleThemeButton2">Toggle Theme</button>
+    </div>
+
+    <div class="container">
+        <h2>Section 3 (Header Only)</h2>
+        <p>Just a header here to show theme application.</p>
+        <button id="toggleThemeButton3">Toggle Theme</button>
+    </div>
+
+    <script>
+        // The Singleton ThemeManager
+        const ThemeManager = (function() {
+            let instance;
+            let currentTheme = 'light'; // Default theme
+
+            function init() {
+                // Private methods and properties
+                const applyTheme = (theme) => {
+                    document.body.className = `${theme}-theme`;
+                    localStorage.setItem('theme', theme); // Persist theme
+                };
+
+                const loadTheme = () => {
+                    const storedTheme = localStorage.getItem('theme');
+                    if (storedTheme) {
+                        currentTheme = storedTheme;
+                    }
+                    applyTheme(currentTheme);
+                };
+
+                // Public interface
+                return {
+                    toggleTheme: function() {
+                        currentTheme = (currentTheme === 'light') ? 'dark' : 'light';
+                        applyTheme(currentTheme);
+                    },
+                    getCurrentTheme: function() {
+                        return currentTheme;
+                    },
+                    // Initialize theme on load
+                    initialize: function() {
+                        loadTheme();
+                    }
+                };
+            }
+
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = init();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        // Get the singleton instance
+        const themeManager = ThemeManager.getInstance();
+
+        // Initialize the theme on page load
+        themeManager.initialize();
+
+        // Attach event listeners to all toggle buttons
+        document.getElementById('toggleThemeButton1').addEventListener('click', () => {
+            themeManager.toggleTheme();
+        });
+        document.getElementById('toggleThemeButton2').addEventListener('click', () => {
+            themeManager.toggleTheme();
+        });
+        document.getElementById('toggleThemeButton3').addEventListener('click', () => {
+            themeManager.toggleTheme();
+        });
+
+        // Demonstrating that all buttons interact with the *same* instance
+        console.log("ThemeManager instance from button 1:", ThemeManager.getInstance());
+        console.log("ThemeManager instance from button 2:", ThemeManager.getInstance());
+        console.log("Are they the same instance?", ThemeManager.getInstance() === themeManager);
+    </script>
+</body>
+</html>

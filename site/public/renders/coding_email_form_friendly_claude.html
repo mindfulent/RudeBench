@@ -2,222 +2,624 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Real-Time Email Validation Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time Email Validation</title>
   <style>
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
       min-height: 100vh;
-      padding: 40px 20px;
-      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      gap: 2rem;
     }
 
-    .container {
-      max-width: 780px;
-      margin: 0 auto;
-    }
-
-    /* ── Header ── */
-    header {
-      text-align: center;
-      margin-bottom: 36px;
-    }
-
-    header h1 {
-      font-size: 2rem;
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
       font-weight: 700;
-      color: #ffffff;
-      letter-spacing: 1px;
+      text-align: center;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    header p {
-      margin-top: 8px;
-      color: #a0aec0;
-      font-size: 0.95rem;
-    }
-
-    /* ── Card ── */
+    /* ── Card Shell ── */
     .card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 32px;
-      margin-bottom: 28px;
-      backdrop-filter: blur(10px);
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 1rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
 
     .card h2 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 600;
-      color: #63b3ed;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .card h2 .icon {
-      font-size: 1.3rem;
+      margin-bottom: 1.25rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     /* ── Validator Section ── */
     .input-wrapper {
       position: relative;
-      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
     }
 
-    .input-wrapper label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #a0aec0;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .email-icon {
+      position: absolute;
+      left: 0.9rem;
+      font-size: 1.1rem;
+      pointer-events: none;
+      transition: opacity 0.2s;
     }
 
-    .input-wrapper input {
+    #emailInput {
       width: 100%;
-      padding: 14px 48px 14px 16px;
+      padding: 0.85rem 3rem 0.85rem 2.6rem;
       font-size: 1rem;
-      border-radius: 10px;
-      border: 2.5px solid rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.07);
-      color: #ffffff;
+      border-radius: 0.6rem;
+      border: 2.5px solid #334155;
+      background: #0f172a;
+      color: #f1f5f9;
       outline: none;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      caret-color: #38bdf8;
     }
 
-    .input-wrapper input::placeholder { color: #718096; }
+    #emailInput::placeholder { color: #475569; }
 
-    .input-wrapper input:focus {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.35);
+    #emailInput.valid {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
     }
 
-    /* Validation states */
-    .input-wrapper input.valid {
-      border-color: #48bb78;
-      box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.2);
+    #emailInput.invalid {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
     }
 
-    .input-wrapper input.invalid {
-      border-color: #fc8181;
-      box-shadow: 0 0 0 3px rgba(252, 129, 129, 0.2);
-    }
-
-    /* Status icon inside input */
     .status-icon {
       position: absolute;
-      right: 14px;
-      bottom: 14px;
+      right: 0.9rem;
       font-size: 1.2rem;
-      transition: opacity 0.3s;
-      pointer-events: none;
+      transition: all 0.2s;
     }
 
-    /* ── Feedback Bar ── */
-    .feedback {
-      min-height: 24px;
-      font-size: 0.88rem;
+    /* ── Status Message ── */
+    #statusMsg {
+      margin-top: 0.65rem;
+      min-height: 1.4rem;
+      font-size: 0.875rem;
       font-weight: 500;
-      padding: 6px 12px;
-      border-radius: 6px;
-      transition: all 0.3s ease;
-      opacity: 0;
+      padding-left: 0.2rem;
+      transition: color 0.25s;
     }
 
-    .feedback.show { opacity: 1; }
-
-    .feedback.valid-msg {
-      background: rgba(72, 187, 120, 0.15);
-      color: #68d391;
-      border-left: 3px solid #48bb78;
-    }
-
-    .feedback.invalid-msg {
-      background: rgba(252, 129, 129, 0.15);
-      color: #fc8181;
-      border-left: 3px solid #e53e3e;
-    }
+    #statusMsg.valid  { color: #4ade80; }
+    #statusMsg.invalid { color: #f87171; }
+    #statusMsg.neutral { color: #64748b; }
 
     /* ── Regex Display ── */
     .regex-box {
-      margin-top: 20px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 16px;
+      margin-top: 1.25rem;
+      background: #0f172a;
+      border: 1px solid #1e3a5f;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
     }
 
     .regex-box p {
-      font-size: 0.8rem;
-      color: #a0aec0;
-      margin-bottom: 8px;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 0.35rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
+      letter-spacing: 0.06em;
     }
 
     .regex-box code {
-      display: block;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.82rem;
-      color: #f6ad55;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: #7dd3fc;
       word-break: break-all;
       line-height: 1.6;
     }
 
-    /* ── Live Examples ── */
-    .examples-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 10px;
-      margin-top: 4px;
+    /* ── Live Stats ── */
+    .stats-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
     }
 
-    .example-chip {
+    .stat-chip {
+      flex: 1;
+      min-width: 100px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      text-align: center;
+    }
+
+    .stat-chip .label {
+      font-size: 0.7rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-chip .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-top: 0.15rem;
+    }
+
+    /* ── Limitation Section ── */
+    .limitation-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-left: 4px solid #f59e0b;
+      border-radius: 1rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .limitation-card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fbbf24;
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
-      font-size: 0.82rem;
-      color: #cbd5e0;
-      word-break: break-all;
+      gap: 0.5rem;
     }
 
-    .example-chip:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateY(-1px);
+    .limitation-card .subtitle {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
     }
 
-    .example-chip .chip-icon { font-size: 1rem; flex-shrink: 0; }
-    .example-chip.valid-chip .chip-icon { color: #68d391; }
-    .example-chip.invalid-chip .chip-icon { color: #fc8181; }
-
-    /* ── Limitations Section ── */
-    .limitations-section { }
-
-    .limitation-item {
+    .issue-list {
+      list-style: none;
       display: flex;
-      gap: 14px;
-      padding: 16px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 10px;
-      margin-bottom: 12px;
-      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
     }
 
-    .limitation-item .lim-icon {
-      font-size: 1.4rem;
+    .issue-list li {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      background: #0f172a;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid #1e3a5f;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .issue-list li .icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .issue-list li strong { color: #f1f5f9; }
+    .issue-list li span  { color: #94a3b8; }
+
+    /* ── RFC Examples ── */
+    .examples-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 480px) { .examples-grid { grid-template-columns: 1fr; } }
+
+    .example-chip {
+      background: #0f172a;
+      border-radius: 0.4rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.78rem;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid #1e3a5f;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .example-chip:hover { background: #162032; }
+    .example-chip.rfc-valid   { color: #4ade80; border-color: #166534; }
+    .example-chip.rfc-invalid { color: #f87171; border-color: #7f1d1d; }
+    .example-chip .badge {
+      font-size: 0.65rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 9999px;
+      font-weight: 700;
       flex-shrink: 0;
+    }
+    .rfc-valid   .badge { background: #166534; color: #4ade80; }
+    .rfc-invalid .badge { background: #7f1d1d; color: #f87171; }
+
+    .examples-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Alternatives Section ── */
+    .alt-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .alternatives {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .alt-item {
+      background: #0f172a;
+      border: 1px solid #1e3a5f;
+      border-left: 3px solid #38bdf8;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .alt-item strong { color: #7dd3fc; }
+    .alt-item p { color: #94a3b8; margin-top: 0.2rem; }
+
+    /* ── Footer ── */
+    footer {
+      font-size: 0.75rem;
+      color: #475569;
+      text-align: center;
+    }
+
+    footer a { color: #38bdf8; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Animations ── */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .card, .limitation-card { animation: fadeIn 0.4s ease both; }
+    .limitation-card { animation-delay: 0.1s; }
+  </style>
+</head>
+<body>
+
+  <h1>📧 Real-Time Email Validation</h1>
+
+  <!-- ── Validator Card ── -->
+  <div class="card">
+    <h2>🔍 Live Validator</h2>
+
+    <div class="input-wrapper">
+      <span class="email-icon">✉️</span>
+      <input
+        id="emailInput"
+        type="text"
+        placeholder="Enter an email address…"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Email address input"
+        aria-describedby="statusMsg"
+      />
+      <span class="status-icon" id="statusIcon" aria-hidden="true"></span>
+    </div>
+
+    <div id="statusMsg" class="neutral" role="status" aria-live="polite">
+      Start typing to validate…
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="label">Characters</div>
+        <div class="value" id="statChars">0</div>
+      </div>
+      <div class="stat-chip">
+        <div class="label">Local Part</div>
+        <div class="value" id="statLocal">—</div>
+      </div>
+      <div class="stat-chip">
+        <div class="label">Domain</div>
+        <div class="value" id="statDomain">—</div>
+      </div>
+      <div class="stat-chip">
+        <div class="label">TLD</div>
+        <div class="value" id="statTld">—</div>
+      </div>
+    </div>
+
+    <div class="regex-box">
+      <p>Regex Pattern in Use</p>
+      <code id="regexDisplay">/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/</code>
+    </div>
+  </div>
+
+  <!-- ── Limitations Card ── -->
+  <div class="limitation-card">
+    <h2>⚠️ Why Regex Can't Fully Validate Emails</h2>
+    <p class="subtitle">
+      RFC 5321 &amp; RFC 5322 define email address syntax with far more complexity than
+      any practical regex can handle. Here's what most regex patterns get wrong:
+    </p>
+
+    <!-- Known Regex Failures -->
+    <ul class="issue-list">
+      <li>
+        <span class="icon">📦</span>
+        <div>
+          <strong>Quoted strings in local parts</strong><br/>
+          <span>RFC 5321 allows <code>"john..doe"@example.com</code> — double dots
+          inside quotes are valid, but most regex patterns reject them.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🌍</span>
+        <div>
+          <strong>Internationalized domain names (IDN)</strong><br/>
+          <span>Addresses like <code>user@münchen.de</code> or <code>用户@例子.广告</code>
+          are valid per RFC 6531 but break standard ASCII-only regex.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🔗</span>
+        <div>
+          <strong>IP address literals</strong><br/>
+          <span><code>user@[192.168.1.1]</code> and <code>user@[IPv6:::1]</code>
+          are valid RFC formats almost never handled by regex.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🏷️</span>
+        <div>
+          <strong>Comments inside addresses</strong><br/>
+          <span>RFC 5322 technically permits <code>(comment)user@example.com</code>
+          — legal syntax that regex cannot meaningfully validate.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">📏</span>
+        <div>
+          <strong>Length constraints are complex</strong><br/>
+          <span>Local parts ≤ 64 chars, full address ≤ 254 chars, each domain
+          label ≤ 63 chars — most regex patterns ignore all of these.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🌐</span>
+        <div>
+          <strong>Single-label domains &amp; new TLDs</strong><br/>
+          <span>Intranet addresses like <code>user@localhost</code> are valid in
+          private networks. New TLDs like <code>.photography</code> keep expanding.</span>
+        </div>
+      </li>
+      <li>
+        <span class="icon">🚫</span>
+        <div>
+          <strong>Regex can't verify deliverability</strong><br/>
+          <span>Even a perfectly formatted address like <code>nobody@valid-domain.com</code>
+          may bounce — only an SMTP handshake can confirm a mailbox exists.</span>
+        </div>
+      </li>
+    </ul>
+
+    <!-- RFC-valid edge cases -->
+    <div class="examples-label">🧪 Click any example to test it in the validator above</div>
+    <div class="examples-grid">
+      <div class="example-chip rfc-valid"   data-email='"john..doe"@example.com'>
+        <span class="badge">RFC✓</span>"john..doe"@example.com
+      </div>
+      <div class="example-chip rfc-valid"   data-email="user+tag@sub.domain.io">
+        <span class="badge">RFC✓</span>user+tag@sub.domain.io
+      </div>
+      <div class="example-chip rfc-valid"   data-email="user@[192.168.1.1]">
+        <span class="badge">RFC✓</span>user@[192.168.1.1]
+      </div>
+      <div class="example-chip rfc-valid"   data-email="user@localhost">
+        <span class="badge">RFC✓</span>user@localhost
+      </div>
+      <div class="example-chip rfc-invalid" data-email="plainaddress">
+        <span class="badge">FAIL</span>plainaddress
+      </div>
+      <div class="example-chip rfc-invalid" data-email="@no-local.com">
+        <span class="badge">FAIL</span>@no-local.com
+      </div>
+      <div class="example-chip rfc-invalid" data-email="two@@signs.com">
+        <span class="badge">FAIL</span>two@@signs.com
+      </div>
+      <div class="example-chip rfc-invalid" data-email="spaces in@email.com">
+        <span class="badge">FAIL</span>spaces in@email.com
+      </div>
+    </div>
+
+    <!-- Production Alternatives -->
+    <div class="alt-title">✅ Better Alternatives for Production</div>
+    <div class="alternatives">
+      <div class="alt-item">
+        <strong>1. Minimal Regex + Server-Side Confirmation</strong>
+        <p>Use a simple regex only to catch obvious typos on the client side. Always
+           send a confirmation email — it's the only reliable proof the address works
+           and the user controls it.</p>
+      </div>
+      <div class="alt-item">
+        <strong>2. HTML5 Native Validation  <code>type="email"</code></strong>
+        <p>The browser's built-in email input type uses a well-tested, spec-aligned
+           algorithm (WHATWG Living Standard) that handles most real-world cases
+           without any JavaScript.</p>
+      </div>
+      <div class="alt-item">
+        <strong>3. Dedicated Validation Libraries</strong>
+        <p>Libraries like <code>email-validator</code> (npm), <code>validator.js</code>,
+           or Python's <code>email-validator</code> package implement RFC-aware parsing
+           with proper length checks, IDN support, and MX record lookup.</p>
+      </div>
+      <div class="alt-item">
+        <strong>4. DNS / MX Record Lookup (Server-Side)</strong>
+        <p>Query the domain's MX records to confirm the domain is configured to
+           receive mail. Catches disposable-email domains and typos like
+           <code>@gmial.com</code> before they enter your database.</p>
+      </div>
+      <div class="alt-item">
+        <strong>5. Email Verification APIs</strong>
+        <p>Services like ZeroBounce, Hunter.io, or Abstract API perform syntax checks,
+           MX lookup, SMTP probing, and disposable-address detection in a single call —
+           ideal for high-value sign-up flows.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    RFC references:
+    <a href="https://datatracker.ietf.org/doc/html/rfc5321" target="_blank" rel="noopener">RFC 5321</a> ·
+    <a href="https://datatracker.ietf.org/doc/html/rfc5322" target="_blank" rel="noopener">RFC 5322</a> ·
+    <a href="https://datatracker.ietf.org/doc/html/rfc6531" target="_blank" rel="noopener">RFC 6531</a>
+  </footer>
+
+  <script>
+    // ── Config ──────────────────────────────────────────────────────────────
+    // A pragmatic regex: good enough for UX feedback, not RFC-complete.
+    // Requires: non-whitespace/@ chars · @ · domain · dot · 2+ char TLD
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    // ── DOM Refs ─────────────────────────────────────────────────────────────
+    const input      = document.getElementById('emailInput');
+    const statusMsg  = document.getElementById('statusMsg');
+    const statusIcon = document.getElementById('statusIcon');
+    const statChars  = document.getElementById('statChars');
+    const statLocal  = document.getElementById('statLocal');
+    const statDomain = document.getElementById('statDomain');
+    const statTld    = document.getElementById('statTld');
+
+    // ── Validation Logic ─────────────────────────────────────────────────────
+    function validateEmail(value) {
+      const trimmed = value.trim();
+
+      // Reset to neutral when empty
+      if (trimmed === '') {
+        setNeutral();
+        updateStats(trimmed);
+        return;
+      }
+
+      const isValid = EMAIL_REGEX.test(trimmed);
+      isValid ? setValid(trimmed) : setInvalid(trimmed);
+      updateStats(trimmed);
+    }
+
+    function setValid(value) {
+      input.className = 'valid';
+      statusMsg.className = 'valid';
+      statusMsg.textContent = '✔ Looks like a valid email format.';
+      statusIcon.textContent = '✅';
+    }
+
+    function setInvalid(value) {
+      input.className = 'invalid';
+      statusMsg.className = 'invalid';
+      statusMsg.textContent = getHint(value);
+      statusIcon.textContent = '❌';
+    }
+
+    function setNeutral() {
+      input.className = '';
+      statusMsg.className = 'neutral';
+      statusMsg.textContent = 'Start typing to validate…';
+      statusIcon.textContent = '';
+    }
+
+    // ── Friendly Hints ───────────────────────────────────────────────────────
+    function getHint(value) {
+      if (!value.includes('@'))        return '✖ Missing @ symbol.';
+      if (value.indexOf('@') === 0)    return '✖ Local part (before @) is empty.';
+      if ((value.match(/@/g) || []).length > 1) return '✖ Multiple @ symbols found.';
+
+      const [local, ...rest] = value.split('@');
+      const domain = rest.join('@');
+
+      if (!domain)                     return '✖ Missing domain after @.';
+      if (!domain.includes('.'))       return '✖ Domain needs at least one dot.';
+      if (domain.startsWith('.'))      return '✖ Domain cannot start with a dot.';
+      if (domain.endsWith('.'))        return '✖ Domain cannot end with a dot.';
+      if (/\s/.test(value))            return '✖ Spaces are not allowed.';
+
+      const tld = domain.split('.').pop();
+      if (tld.length < 2)              return '✖ TLD must be at least 2 characters.';
+
+      return '✖ Invalid email format.';
+    }
+
+    // ── Stats Panel ──────────────────────────────────────────────────────────
+    function updateStats(value) {
+      statChars.textContent = value.length;
+
+      if (!value.includes('@')) {
+        statLocal.textContent  = '—';
+        statDomain.textContent = '—';
+        statTld.textContent    = '—';
+        return;
+      }
+
+      const atIndex = value.indexOf('@');
+      const local   = value.slice(0, atIndex);
+      const domain  = value.slice(atIndex + 1);
+      const parts   = domain.split('.');
+      const tld     = parts.length > 1 ? parts[parts.length - 1] : '—';
+
+      statLocal.textContent  = local  || '—';
+      statDomain.textContent = domain || '—';
+      statTld.textContent    = tld    || '—';
+    }
+
+    // ── Event Listeners ──────────────────────────────────────────────────────
+    input.addEventListener('input', () => validateEmail(input.value));
+    input.addEventListener('paste', (e) => {
+      // Let paste settle before validating
+      setTimeout(() => validateEmail(input.value), 0);
+    });
+
+    // ── Example Chips ────────────────────────────────────────────────────────
+    document.querySelectorAll('.example-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const email = chip.dataset.email;
+        input.value = email;
+        validateEmail(email);
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+      });
+    });
+
+    // ── Initial Render ───────────────────────────────────────────────────────
+    updateStats('');
+  </script>
+</body>
+</html>

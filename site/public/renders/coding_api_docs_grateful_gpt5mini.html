@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>REST API Review & Corrected Design — Interactive Documentation</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1720;
+      --panel:#0b1220;
+      --muted:#9aa6b2;
+      --accent:#60a5fa;
+      --good:#10b981;
+      --bad:#ef4444;
+      --glass: rgba(255,255,255,0.03);
+      --card: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(96,165,250,0.06), transparent),
+                  radial-gradient(900px 500px at 90% 90%, rgba(16,185,129,0.03), transparent),
+                  var(--bg);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:20px;
+      align-items:start;
+    }
+
+    header{
+      grid-column: 1 / -1;
+      margin-bottom:6px;
+      display:flex;
+      gap:16px;
+      align-items:center;
+    }
+    .logo{
+      width:56px;
+      height:56px;
+      border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),#7c3aed);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      font-family:var(--mono);
+      font-size:20px;
+      color:#021124;
+      box-shadow: 0 6px 24px rgba(2,6,23,0.6), inset 0 -6px 18px rgba(255,255,255,0.02);
+    }
+    h1{font-size:18px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .panel{
+      background:var(--panel);
+      border-radius:12px;
+      padding:18px;
+      box-shadow: 0 8px 40px rgba(2,6,23,0.6);
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    /* left column content list */
+    .left{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:8px;
+    }
+    .badge{
+      background:var(--glass);
+      padding:6px 10px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    /* endpoint cards */
+    .endpoint{
+      display:block;
+      background:var(--card);
+      border-radius:10px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .endpoint + .endpoint{margin-top:10px}
+    .endpoint .meta{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .method{
+      font-family:var(--mono);
+      font-weight:700;
+      padding:6px 10px;
+      border-radius:8px;
+      color:#021124;
+      background:linear-gradient(180deg,#ffffff,#f3f7ff);
+      box-shadow: 0 4px 10px rgba(2,6,23,0.35);
+      font-size:13px;
+    }
+
+    .method.bad{background:linear-gradient(180deg,#ffe9e9,#ffdede); color: #3b0b0b}
+    .method.warn{background:linear-gradient(180deg,#fff7e6,#fff3d1); color: #5a3b00}
+    .method.good{background:linear-gradient(180deg,#dcfce7,#bbf7d0); color:#06381a}
+
+    .path{
+      font-family:var(--mono);
+      font-size:13px;
+      color:var(--accent);
+      background:rgba(96,165,250,0.06);
+      padding:6px 8px;
+      border-radius:8px;
+      border:1px solid rgba(96,165,250,0.06);
+    }
+
+    .problem-list{color:#ffdede}
+    .problem{display:flex;gap:8px;align-items:flex-start}
+    .problem strong{color:#ffdede}
+
+    /* details/expandable */
+    details{
+      margin-top:10px;
+      background: rgba(255,255,255,0.01);
+      border-radius:8px;
+      padding:10px;
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      font-weight:600;
+      color:var(--muted);
+    }
+    .code{
+      background:rgba(0,0,0,0.35);
+      border-radius:8px;
+      padding:12px;
+      margin-top:10px;
+      font-family:var(--mono);
+      font-size:13px;
+      color:#e6f3ff;
+      overflow:auto;
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .note{color:var(--muted);font-size:13px;margin-top:8px}
+
+    /* right column guide */
+    .right{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .right .box{
+      padding:14px;
+      border-radius:10px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.0));
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .status-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .sc{
+      width:120px;
+      padding:8px;
+      border-radius:8px;
+      text-align:center;
+      font-weight:700;
+      font-family:var(--mono);
+      color:#021124;
+    }
+    .sc.ok{background:linear-gradient(180deg,#bbf7d0,#86efac)}
+    .sc.create{background:linear-gradient(180deg,#bfdbfe,#93c5fd)}
+    .sc.client{background:linear-gradient(180deg,#fee2e2,#fecaca)}
+    .sc.server{background:linear-gradient(180deg,#fbe7c6,#fde68a)}
+
+    footer{grid-column: 1 / -1; margin-top:18px; color:var(--muted); font-size:13px; text-align:center}
+
+    /* responsive */
+    @media (max-width:980px){
+      .wrap{grid-template-columns:1fr; padding:12px}
+      .right{order:2}
+    }
+    /* small helpers */
+    .hint{color:var(--muted); font-size:13px}
+    .ok{color:var(--good);font-weight:700}
+    .bad{color:var(--bad);font-weight:700}
+    .warn{color:#f59e0b;font-weight:700}
+    .example-btn{
+      margin-left:auto;
+      background:rgba(255,255,255,0.04);
+      color:var(--accent);
+      border:1px solid rgba(96,165,250,0.06);
+      padding:6px 8px;
+      border-radius:8px;
+      font-family:var(--mono);
+      font-size:13px;
+      cursor:pointer;
+    }
+    pre.response{
+      background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(255,255,255,0.02));
+      padding:12px;border-radius:8px;overflow:auto;font-family:var(--mono);font-size:13px;margin-top:8px;
+      border:1px solid rgba(255,255,255,0.02);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">REST</div>
+      <div>
+        <h1>REST Endpoint Review — Proposed vs Corrected</h1>
+        <p class="lead">This interactive single-file documentation identifies design problems in the proposed endpoints and presents corrected, RESTful alternatives with recommended HTTP methods, URI structure, request/response examples, and status codes.</p>
+      </div>
+    </header>
+
+    <main class="left">
+      <section class="panel">
+        <div class="section-title">
+          <div>
+            <div class="badge">Original endpoints (proposed)</div>
+            <div class="note" style="margin-top:8px">Four endpoints were proposed. Each card below explains issues and provides a corrected design.</div>
+          </div>
+          <div class="hint">Principles used: resource-oriented URIs, correct HTTP verbs, idempotence, status codes, plural nouns, consistent nesting, & proper parameter placement.</div>
+        </div>
+
+        <!-- Endpoint 1 -->
+        <div class="endpoint" id="ep1">
+          <div class="meta">
+            <div class="method warn">GET (bad)</div>
+            <div class="path">/getUsers</div>
+            <button class="example-btn" onclick="toggleDetails('d1')">Details</button>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="problem-list">
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Verb in URI</strong> — "/getUsers" mixes action (get) into the path. URIs should identify resources, not actions.</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Pluralization ambiguity</strong> — good to use plural nouns consistently (e.g., /users).</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Filtering/pagination missing</strong> — listing endpoints should support pagination, filtering, and sorting via query parameters.</div></div>
+            </div>
+          </div>
+
+          <details id="d1">
+            <summary>Corrected design</summary>
+            <div class="code">
+GET /users
+Query parameters (optional):
+- ?page=1&per_page=25
+- ?q=Jo (search)
+- ?sort=created_at&order=desc
+- ?status=active
+
+Description:
+- Retrieves a paginated list of user resources.
+- Uses plural noun resource path (/users) and GET to retrieve resources.
+
+Recommended response:
+- 200 OK
+- Body: JSON array plus pagination metadata
+
+Example response:
+</div>
+            <pre class="response">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [
+    { "id": 5, "name": "Jo", "email": "jo@example.com" },
+    { "id": 6, "name": "Alex", "email": "alex@example.com" }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 25,
+    "total": 124
+  }
+}</pre>
+
+            <div class="note">Notes:
+- Use query parameters for filtering/search. Avoid embedding verbs in paths.
+- Consider HATEOAS links or Link headers for pagination if needed.</div>
+          </details>
+        </div>
+
+        <!-- Endpoint 2 -->
+        <div class="endpoint" id="ep2">
+          <div class="meta">
+            <div class="method bad">POST (bad)</div>
+            <div class="path">/user/delete/5</div>
+            <button class="example-btn" onclick="toggleDetails('d2')">Details</button>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="problem-list">
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Action in path</strong> — "/delete" is an action in the URI; REST uses HTTP verbs to express actions.</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Wrong HTTP verb</strong> — POST used to delete; DELETE should be used for deletions.</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Inconsistent pluralization</strong> — path uses singular /user; prefer plural (/users/{id}).</div></div>
+            </div>
+          </div>
+
+          <details id="d2">
+            <summary>Corrected design</summary>
+            <div class="code">
+DELETE /users/5
+
+Description:
+- Deletes the user resource with id = 5.
+- Use DELETE method and resource path /users/{id}.
+
+Recommended responses:
+- 204 No Content — deletion successful, no body.
+- 200 OK with body — allowed if you return the deleted resource or a message.
+- 404 Not Found — if user with id 5 doesn't exist.
+- 401/403 — if authentication/authorization fails.
+</div>
+            <pre class="response">Example success (no body):
+HTTP/1.1 204 No Content
+
+Example not found:
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{ "error": "User not found", "code": "USER_NOT_FOUND" }</pre>
+
+            <div class="note">Notes:
+- If deletion is asynchronous, return 202 Accepted and a Location or operation resource.
+- Consider soft-delete: update a status field instead of actual deletion; then PATCH /users/5 with { "status": "deleted" } may be used.</div>
+          </details>
+        </div>
+
+        <!-- Endpoint 3 -->
+        <div class="endpoint" id="ep3">
+          <div class="meta">
+            <div class="method bad">GET (bad)</div>
+            <div class="path">/createUser?name=Jo</div>
+            <button class="example-btn" onclick="toggleDetails('d3')">Details</button>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="problem-list">
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Side-effect on GET</strong> — GET must be safe and not change server state; this path creates a user.</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Action in path</strong> — "/createUser" is an operation, not a resource; prefer POST /users.</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Using query for body data</strong> — creation data should be sent in request body (often JSON), not as query params.</div></div>
+            </div>
+          </div>
+
+          <details id="d3">
+            <summary>Corrected design</summary>
+            <div class="code">
+POST /users
+Content-Type: application/json
+
+Request body:
+{
+  "name": "Jo",
+  "email": "jo@example.com",
+  "password": "securePassword123"    // password handling: send over TLS and store hashed
+}
+
+Description:
+- Use POST on the collection resource (/users) to create a new user.
+- Use a request body (JSON) for the resource attributes; do not create via GET or query string.
+</div>
+            <pre class="response">Example success:
+HTTP/1.1 201 Created
+Location: /users/42
+Content-Type: application/json
+
+{
+  "id": 42,
+  "name": "Jo",
+  "email": "jo@example.com",
+  "created_at": "2026-03-08T12:34:56Z"
+}</pre>
+
+            <div class="note">Notes:
+- 201 Created is preferred; include Location header pointing to the new resource.
+- For idempotent creation, consider PUT to /users/{client-generated-id} if client provides the id.
+- Validate input and return 400 Bad Request for malformed data, 409 Conflict for duplicate unique fields (like email).</div>
+          </details>
+        </div>
+
+        <!-- Endpoint 4 -->
+        <div class="endpoint" id="ep4">
+          <div class="meta">
+            <div class="method warn">PUT (questionable)</div>
+            <div class="path">/updateAllUsers</div>
+            <button class="example-btn" onclick="toggleDetails('d4')">Details</button>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="problem-list">
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Action in path</strong> — "/updateAllUsers" again mixes action into path.</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Ambiguous semantics</strong> — Does it replace all users, patch many, or bulk update? PUT on a collection is allowed but must be well-defined.</div></div>
+              <div class="problem"><span class="bad">Problem:</span>&nbsp;<div><strong>Potentially unsafe/global operation</strong> — Bulk operations should be explicit and careful about idempotence and partial failures.</div></div>
+            </div>
+          </div>
+
+          <details id="d4">
+            <summary>Corrected design</summary>
+            <div class="code">
+Options depending on intent:
+
+1) Replace entire collection (rare)
+PUT /users
+Request body: full array of user representations
+Response: 200 OK or 204 No Content (idempotent)
+
+2) Bulk update a set of users (recommended pattern)
+PATCH /users
+Content-Type: application/json
+Request body:
+{
+  "filter": { "status": "pending" },
+  "patch": { "status": "active" }
+}
+
+Response:
+- 200 OK with results summary, or
+- 202 Accepted if processed asynchronously with a location to track the job
+
+3) Update a single user
+PATCH /users/{id}
+Request body:
+{ "email": "new@example.com" }
+Response:
+- 200 OK with updated resource
+- 204 No Content if returning no body
+
+Additional:
+- For long-running bulk ops, implement an operation resource: POST /operations with { "type": "bulk_user_update", ... } and return 202 with Location: /operations/{opId}
+</div>
+            <pre class="response">Example bulk async acceptance:
+HTTP/1.1 202 Accepted
+Location: /operations/87
+Content-Type: application/json
+
+{
+  "operation_id": 87,
+  "status": "pending",
+  "submitted_at": "2026-03-08T13:00:00Z"
+}</pre>
+
+            <div class="note">Notes:
+- Use PATCH for partial updates and PUT only when replacing a full resource.
+- Design bulk endpoints that clearly specify idempotency, partial success handling, and security/authorization checks to avoid accidental wide changes.</div>
+          </details>
+        </div>
+
+      </section>
+
+      <section class="panel" style="margin-top:12px">
+        <div class="section-title">
+          <div>
+            <div class="badge">Best-practice summary</div>
+          </div>
+          <div class="hint">Consistent naming, use of correct verbs, proper status codes, and resource modeling.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="note"><strong>URI design</strong></div>
+            <ul class="note" style="margin-top:8px">
+              <li>Use nouns (plural) for collections: /users, /orders</li>
+              <li>Use hierarchical URIs for relationships: /users/{id}/posts</li>
+              <li>Avoid verbs and RPC-style paths (e.g., /getUsers, /doThing)</li>
+            </ul>
+          </div>
+          <div>
+            <div class="note"><strong>HTTP methods</strong></div>
+            <ul class="note" style="margin-top:8px">
+              <li>GET — safe, read-only</li>
+              <li>POST — create (non-idempotent) or to submit processing jobs</li>
+              <li>PUT — replace a resource (idempotent)</li>
+              <li>PATCH — partial update (recommended for updates)</li>
+              <li>DELETE — remove a resource</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="note">
+          Other recommendations:
+          <ul style="margin-top:8px">
+            <li>Use proper status codes (200, 201, 202, 204, 400, 401, 403, 404, 409, 422, 500).</li>
+            <li>Return useful error bodies (machine-readable codes and human messages).</li>
+            <li>Document pagination, filtering, sorting, and rate limits.</li>
+            <li>Secure endpoints with TLS; avoid passing secrets in query strings.</li>
+          </ul>
+        </div>
+      </section>
+
+    </main>
+
+    <aside class="right">
+      <div class="panel box">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-weight:700">Status codes cheat sheet</div>
+          <div class="hint" style="margin-left:auto">Short guide</div>
+        </div>
+        <div class="status-list">
+          <div class="sc ok">200 OK</div>
+          <div class="sc create">201 Created</div>
+          <div class="sc create">202 Accepted</div>
+          <div class="sc ok">204 No Content</div>
+          <div class="sc client">400 Bad Request</div>
+          <div class="sc client">401 Unauthorized</div>
+          <div class="sc client">403 Forbidden</div>
+          <div class="sc client">404 Not Found</div>
+          <div class="sc client">409 Conflict</div>
+          <div class="sc server">500 Internal Error</div>
+        </div>
+        <div class="note" style="margin-top:10px">Tip: choose 201 for creations, 204 for successful deletions with no body, 202 for asynchronous work.</div>
+      </div>
+
+      <div class="panel box">
+        <div style="font-weight:700">Corrected endpoints quick reference</div>
+        <div style="margin-top:10px" class="note">
+          GET /users           — list users (supports paging, filtering)
+          <br>
+          POST /users          — create a user (201 Created + Location)
+          <br>
+          GET /users/{id}      — retrieve a single user (200 or 404)
+          <br>
+          PATCH /users/{id}    — partial update a user (200 or 204)
+          <br>
+          DELETE /users/{id}   — delete a user (204 or 404)
+          <br>
+          PATCH /users         — bulk updates (or POST /operations for async jobs)
+        </div>
+      </div>
+
+      <div class="panel box">
+        <div style="font-weight:700">Example error response</div>
+        <pre class="response">HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "Missing required field: email",
+    "details": [
+      { "field": "email", "issue": "required" }
+    ]
+  }
+}</pre>
+      </div>
+    </aside>
+
+    <footer>
+      Created for you — REST best practices condensed. Expand any section for full examples and rationale. If you'd like, I can generate OpenAPI YAML/JSON for the corrected design or provide curl examples for each corrected endpoint.
+    </footer>
+  </div>
+
+  <script>
+    function toggleDetails(id){
+      var d = document.getElementById(id);
+      if(!d) return;
+      if(d.open) d.removeAttribute('open'); else d.setAttribute('open','');
+      var r = d.getBoundingClientRect();
+      window.scrollTo({ top: window.scrollY + r.top - 80, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

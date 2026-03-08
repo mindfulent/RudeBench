@@ -29,20 +29,20 @@
     }
 
     .subtitle {
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       color: #64748b;
       margin-bottom: 30px;
     }
 
-    /* Controls */
+    /* ── Controls ── */
     .controls {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       justify-content: center;
-      margin-bottom: 30px;
+      margin-bottom: 36px;
       width: 100%;
-      max-width: 860px;
+      max-width: 780px;
     }
 
     .control-group {
@@ -59,9 +59,6 @@
       font-size: 0.78rem;
       color: #94a3b8;
       white-space: nowrap;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
 
     .control-group input {
@@ -76,133 +73,480 @@
       transition: border-color 0.2s;
     }
 
-    .control-group input:focus {
-      border-color: #38bdf8;
-    }
+    .control-group input:focus { border-color: #38bdf8; }
 
     button {
       padding: 7px 16px;
       border-radius: 8px;
       border: none;
+      cursor: pointer;
       font-size: 0.85rem;
       font-weight: 600;
-      cursor: pointer;
       transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
     }
 
     button:active { transform: scale(0.96); }
-    button:hover { opacity: 0.9; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 
-    .btn-head   { background: linear-gradient(135deg, #06b6d4, #0284c7); color: #fff; }
-    .btn-tail   { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; }
-    .btn-delete { background: linear-gradient(135deg, #f43f5e, #be123c); color: #fff; }
-    .btn-search { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-    .btn-clear  { background: linear-gradient(135deg, #475569, #334155); color: #cbd5e1; }
+    .btn-head   { background: linear-gradient(135deg,#0ea5e9,#6366f1); color:#fff; }
+    .btn-tail   { background: linear-gradient(135deg,#10b981,#06b6d4); color:#fff; }
+    .btn-delete { background: linear-gradient(135deg,#f43f5e,#fb923c); color:#fff; }
+    .btn-search { background: linear-gradient(135deg,#f59e0b,#eab308); color:#000; }
+    .btn-clear  { background: #334155; color:#cbd5e1; }
 
-    /* Message */
+    button:hover { opacity: 0.88; box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+
+    /* ── Message bar ── */
     .message {
       min-height: 28px;
-      font-size: 0.88rem;
-      margin-bottom: 20px;
-      padding: 6px 16px;
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+      padding: 6px 18px;
       border-radius: 8px;
-      transition: all 0.3s;
-      text-align: center;
+      transition: opacity 0.4s;
+      opacity: 0;
     }
-    .message.info    { background: #1e3a5f; color: #7dd3fc; border: 1px solid #0369a1; }
-    .message.success { background: #14532d; color: #86efac; border: 1px solid #15803d; }
-    .message.error   { background: #4c0519; color: #fda4af; border: 1px solid #9f1239; }
-    .message.hidden  { opacity: 0; }
 
-    /* Canvas area */
+    .message.show { opacity: 1; }
+    .message.success { background:#064e3b; color:#6ee7b7; border:1px solid #10b981; }
+    .message.error   { background:#4c0519; color:#fda4af; border:1px solid #f43f5e; }
+    .message.info    { background:#1e3a5f; color:#93c5fd; border:1px solid #3b82f6; }
+
+    /* ── Canvas area ── */
     .canvas-wrapper {
       width: 100%;
       max-width: 1100px;
       background: #1e293b;
       border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 30px 20px;
-      min-height: 180px;
+      border-radius: 18px;
+      padding: 40px 30px;
+      min-height: 200px;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
       overflow-x: auto;
-      overflow-y: visible;
       position: relative;
+    }
+
+    /* ── List row ── */
+    .list-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 0;
+    }
+
+    /* HEAD label */
+    .head-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 0.08em;
+      margin-right: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .head-label::after {
+      content: '';
+      width: 2px;
+      height: 20px;
+      background: #38bdf8;
+      border-radius: 2px;
+    }
+
+    /* NULL pill */
+    .null-pill {
+      background: #0f172a;
+      border: 2px dashed #475569;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    /* Node box */
+    .node {
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      border: 2px solid #38bdf8;
+      background: #0f172a;
+      overflow: hidden;
+      min-width: 70px;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+      animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .node.found {
+      border-color: #f59e0b;
+      box-shadow: 0 0 20px rgba(245,158,11,0.6);
+      transform: translateY(-6px);
+    }
+
+    .node.deleting {
+      animation: popOut 0.35s forwards;
+    }
+
+    @keyframes popOut {
+      to { transform: scale(0.4); opacity: 0; }
+    }
+
+    .node-data {
+      padding: 12px 14px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-align: center;
+      color: #e2e8f0;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+
+    .node.found .node-data { background: #451a03; color: #fde68a; }
+
+    .node-next {
+      padding: 5px 8px;
+      font-size: 0.65rem;
+      text-align: center;
+      color: #64748b;
+      letter-spacing: 0.04em;
+    }
+
+    /* Arrow between nodes */
+    .arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .arrow svg {
+      width: 48px;
+      height: 24px;
+      overflow: visible;
     }
 
     /* Empty state */
     .empty-state {
-      width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 10px;
+      width: 100%;
       color: #475569;
-      padding: 20px;
+      animation: fadeIn 0.4s ease;
     }
+
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
     .empty-state svg { opacity: 0.4; }
-    .empty-state p { font-size: 1rem; font-weight: 500; }
-    .empty-state span { font-size: 0.8rem; }
 
-    /* List display */
-    .list-display {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      padding: 10px 0;
-      flex-wrap: nowrap;
+    .empty-state p {
+      font-size: 0.95rem;
+      font-style: italic;
     }
 
-    /* Node */
-    .node-wrapper {
-      display: flex;
-      align-items: center;
-      animation: nodeIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    /* ── Stats ── */
+    .stats {
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: #475569;
     }
 
-    @keyframes nodeIn {
-      from { opacity: 0; transform: scale(0.5) translateY(-20px); }
-      to   { opacity: 1; transform: scale(1) translateY(0); }
+    .stats span { color: #94a3b8; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<h1>Singly Linked List</h1>
+<p class="subtitle">Interactive visualizer — insert, delete, and search nodes</p>
+
+<!-- Controls -->
+<div class="controls">
+
+  <div class="control-group">
+    <label>Value</label>
+    <input id="inputHead" type="number" placeholder="e.g. 42" />
+    <button class="btn-head" onclick="insertHead()">Insert Head</button>
+  </div>
+
+  <div class="control-group">
+    <label>Value</label>
+    <input id="inputTail" type="number" placeholder="e.g. 99" />
+    <button class="btn-tail" onclick="insertTail()">Insert Tail</button>
+  </div>
+
+  <div class="control-group">
+    <label>Value</label>
+    <input id="inputDelete" type="number" placeholder="e.g. 7" />
+    <button class="btn-delete" onclick="deleteNode()">Delete</button>
+  </div>
+
+  <div class="control-group">
+    <label>Value</label>
+    <input id="inputSearch" type="number" placeholder="e.g. 5" />
+    <button class="btn-search" onclick="searchNode()">Search</button>
+  </div>
+
+  <div class="control-group">
+    <button class="btn-clear" onclick="clearList()">Clear All</button>
+  </div>
+
+</div>
+
+<!-- Message -->
+<div class="message" id="message"></div>
+
+<!-- Canvas -->
+<div class="canvas-wrapper" id="canvas">
+  <div class="empty-state" id="emptyState">
+    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+      <rect x="5" y="18" width="22" height="24" rx="5" stroke="#64748b" stroke-width="2.5"/>
+      <rect x="33" y="18" width="22" height="24" rx="5" stroke="#64748b" stroke-width="2.5" stroke-dasharray="5 3"/>
+      <line x1="27" y1="30" x2="33" y2="30" stroke="#64748b" stroke-width="2.5"/>
+      <polyline points="31,26 35,30 31,34" stroke="#64748b" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+    </svg>
+    <p>The list is empty. Insert a node to get started.</p>
+  </div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<script>
+  // ── Data model ──────────────────────────────────────────────
+  let head = null;
+  let size = 0;
+
+  class ListNode {
+    constructor(val) {
+      this.val = val;
+      this.next = null;
+    }
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────
+  function showMessage(text, type = 'info') {
+    const el = document.getElementById('message');
+    el.textContent = text;
+    el.className = `message ${type} show`;
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function getInput(id) {
+    const el = document.getElementById(id);
+    const val = el.value.trim();
+    el.value = '';
+    if (val === '' || isNaN(val)) return null;
+    return parseInt(val, 10);
+  }
+
+  function updateStats() {
+    const el = document.getElementById('stats');
+    if (size === 0) { el.textContent = ''; return; }
+    // collect values
+    let vals = [], cur = head;
+    while (cur) { vals.push(cur.val); cur = cur.next; }
+    el.innerHTML = `Nodes: <span>${size}</span> &nbsp;|&nbsp; Head: <span>${head.val}</span> &nbsp;|&nbsp; Values: <span>${vals.join(' → ')}</span>`;
+  }
+
+  // ── Operations ──────────────────────────────────────────────
+  function insertHead() {
+    const val = getInput('inputHead');
+    if (val === null) { showMessage('Please enter a valid integer.', 'error'); return; }
+    const node = new ListNode(val);
+    node.next = head;
+    head = node;
+    size++;
+    showMessage(`Inserted ${val} at head.`, 'success');
+    render();
+  }
+
+  function insertTail() {
+    const val = getInput('inputTail');
+    if (val === null) { showMessage('Please enter a valid integer.', 'error'); return; }
+    const node = new ListNode(val);
+    if (!head) { head = node; }
+    else {
+      let cur = head;
+      while (cur.next) cur = cur.next;
+      cur.next = node;
+    }
+    size++;
+    showMessage(`Inserted ${val} at tail.`, 'success');
+    render();
+  }
+
+  function deleteNode() {
+    const val = getInput('inputDelete');
+    if (val === null) { showMessage('Please enter a valid integer.', 'error'); return; }
+    if (!head) { showMessage('List is empty.', 'error'); return; }
+
+    if (head.val === val) {
+      animateDelete(0, () => {
+        head = head.next;
+        size--;
+        showMessage(`Deleted node with value ${val}.`, 'success');
+        render();
+      });
+      return;
     }
 
-    @keyframes nodeOut {
-      from { opacity: 1; transform: scale(1); }
-      to   { opacity: 0; transform: scale(0.5); }
+    let cur = head, idx = 1;
+    while (cur.next) {
+      if (cur.next.val === val) {
+        animateDelete(idx, () => {
+          cur.next = cur.next.next;
+          size--;
+          showMessage(`Deleted node with value ${val}.`, 'success');
+          render();
+        });
+        return;
+      }
+      cur = cur.next;
+      idx++;
+    }
+    showMessage(`Value ${val} not found in list.`, 'error');
+  }
+
+  function searchNode() {
+    const val = getInput('inputSearch');
+    if (val === null) { showMessage('Please enter a valid integer.', 'error'); return; }
+    if (!head) { showMessage('List is empty.', 'error'); return; }
+
+    let cur = head, idx = 0;
+    while (cur) {
+      if (cur.val === val) {
+        render(idx);
+        showMessage(`Found ${val} at position ${idx}.`, 'info');
+        return;
+      }
+      cur = cur.next;
+      idx++;
+    }
+    showMessage(`Value ${val} not found in list.`, 'error');
+    render(); // clear any previous highlight
+  }
+
+  function clearList() {
+    head = null;
+    size = 0;
+    showMessage('List cleared.', 'info');
+    render();
+  }
+
+  // ── Animation helper ────────────────────────────────────────
+  function animateDelete(index, callback) {
+    const nodes = document.querySelectorAll('.node');
+    if (nodes[index]) {
+      nodes[index].classList.add('deleting');
+      setTimeout(callback, 320);
+    } else {
+      callback();
+    }
+  }
+
+  // ── Render ──────────────────────────────────────────────────
+  function render(highlightIdx = -1) {
+    const canvas = document.getElementById('canvas');
+    const empty  = document.getElementById('emptyState');
+
+    if (!head) {
+      canvas.innerHTML = '';
+      canvas.appendChild(empty);
+      empty.style.display = 'flex';
+      updateStats();
+      return;
     }
 
-    .node {
-      display: flex;
-      flex-direction: column;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 2px solid #334155;
-      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
-      min-width: 70px;
-      cursor: default;
-      user-select: none;
+    // Build list row
+    const row = document.createElement('div');
+    row.className = 'list-row';
+
+    // HEAD label
+    const headLabel = document.createElement('div');
+    headLabel.className = 'head-label';
+    headLabel.textContent = 'HEAD';
+    row.appendChild(headLabel);
+
+    let cur = head, idx = 0;
+    while (cur) {
+      // Node box
+      const nodeEl = document.createElement('div');
+      nodeEl.className = 'node' + (idx === highlightIdx ? ' found' : '');
+
+      const dataEl = document.createElement('div');
+      dataEl.className = 'node-data';
+      dataEl.textContent = cur.val;
+
+      const nextEl = document.createElement('div');
+      nextEl.className = 'node-next';
+      nextEl.textContent = cur.next ? 'next →' : 'next: NULL';
+
+      nodeEl.appendChild(dataEl);
+      nodeEl.appendChild(nextEl);
+      row.appendChild(nodeEl);
+
+      // Arrow to next (or NULL)
+      if (cur.next) {
+        row.appendChild(makeArrow('#38bdf8'));
+      } else {
+        row.appendChild(makeArrow('#475569'));
+        // NULL pill
+        const nullPill = document.createElement('div');
+        nullPill.className = 'null-pill';
+        nullPill.textContent = 'NULL';
+        row.appendChild(nullPill);
+      }
+
+      cur = cur.next;
+      idx++;
     }
 
-    .node:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
+    canvas.innerHTML = '';
+    canvas.appendChild(row);
+    updateStats();
+  }
 
-    .node.highlighted {
-      border-color: #f59e0b !important;
-      box-shadow: 0 0 0 3px rgba(245,158,11,0.35), 0 8px 24px rgba(245,158,11,0.2);
-      animation: pulse 0.8s ease-in-out 3;
-    }
+  function makeArrow(color) {
+    const wrap = document.createElement('div');
+    wrap.className = 'arrow';
+    wrap.innerHTML = `
+      <svg viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="12" x2="40" y2="12" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+        <polyline points="34,6 42,12 34,18" stroke="${color}" stroke-width="2.5"
+                  fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>`;
+    return wrap;
+  }
 
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 3px rgba(245,158,11,0.35); }
-      50%       { box-shadow: 0 0 0 8px rgba(245,158,11,0.1); }
-    }
+  // ── Keyboard shortcuts ───────────────────────────────────────
+  ['inputHead','inputTail','inputDelete','inputSearch'].forEach((id, i) => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        [insertHead, insertTail, deleteNode, searchNode][i]();
+      }
+    });
+  });
 
-    .node-value {
-      background: #0f172a;
-      padding: 12px 16px;
-      font-size: 1.1rem;
-      
+  // ── Init ─────────────────────────────────────────────────────
+  // Seed with a small example
+  [10, 25, 37, 52].forEach(v => {
+    const n = new ListNode(v);
+    if (!head) { head = n; }
+    else {
+      let c = head; while (c.next) c = c.next; c.next = n;
+    }
+    size++;
+  });
+  render();
+</script>
+</body>
+</html>

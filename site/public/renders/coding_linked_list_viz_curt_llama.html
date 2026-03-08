@@ -7,179 +7,169 @@
     <style>
         .node {
             display: inline-block;
-            width: 50px;
-            height: 30px;
+            margin: 10px;
+            padding: 10px;
             border: 1px solid black;
-            margin: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
+            border-radius: 5px;
+            width: 50px;
+            text-align: center;
         }
         .highlight {
             background-color: yellow;
         }
         .arrow {
             font-size: 20px;
-           	margin: 0 5px;
+            margin: 0 10px;
         }
     </style>
 </head>
 <body>
-    <div id="list"></div>
-    <input id="value" type="number" placeholder="Value">
-    <button id="insert-head">Insert at Head</button>
-    <button id="insert-tail">Insert at Tail</button>
-    <button id="delete">Delete</button>
-    <button id="search">Search</button>
 
-    <script>
-        class Node {
-            constructor(value) {
-                this.value = value;
-                this.next = null;
+<div id="listContainer"></div>
+
+<input id="valueInput" type="number" placeholder="Value">
+<button id="insertHeadBtn">Insert at Head</button>
+<button id="insertTailBtn">Insert at Tail</button>
+<button id="deleteBtn">Delete</button>
+<button id="searchBtn">Search</button>
+
+<script>
+    class Node {
+        constructor(value) {
+            this.value = value;
+            this.next = null;
+        }
+    }
+
+    class LinkedList {
+        constructor() {
+            this.head = null;
+            this.tail = null;
+        }
+
+        insertAtHead(value) {
+            const node = new Node(value);
+            if (!this.head) {
+                this.head = node;
+                this.tail = node;
+            } else {
+                node.next = this.head;
+                this.head = node;
             }
         }
 
-        class LinkedList {
-            constructor() {
-                this.head = null;
-                this.tail = null;
+        insertAtTail(value) {
+            const node = new Node(value);
+            if (!this.tail) {
+                this.head = node;
+                this.tail = node;
+            } else {
+                this.tail.next = node;
+                this.tail = node;
+            }
+        }
+
+        deleteByValue(value) {
+            if (!this.head) return;
+
+            if (this.head.value === value) {
+                this.head = this.head.next;
+                if (!this.head) this.tail = null;
+                return;
             }
 
-            insertAtHead(value) {
-                const node = new Node(value);
-                if (!this.head) {
-                    this.head = node;
-                    this.tail = node;
-                } else {
-                    node.next = this.head;
-                    this.head = node;
-                }
-            }
-
-            insertAtTail(value) {
-                const node = new Node(value);
-                if (!this.tail) {
-                    this.head = node;
-                    this.tail = node;
-                } else {
-                    this.tail.next = node;
-                    this.tail = node;
-                }
-            }
-
-            delete(value) {
-                if (!this.head) return;
-
-                if (this.head.value === value) {
-                    this.head = this.head.next;
-                    if (!this.head) this.tail = null;
+            let current = this.head;
+            while (current.next) {
+                if (current.next.value === value) {
+                    current.next = current.next.next;
+                    if (!current.next) this.tail = current;
                     return;
                 }
-
-                let current = this.head;
-                while (current.next) {
-                    if (current.next.value === value) {
-                        current.next = current.next.next;
-                        if (!current.next) this.tail = current;
-                        return;
-                    }
-                    current = current.next;
-                }
-            }
-
-            search(value) {
-                let current = this.head;
-                while (current) {
-                    if (current.value === value) {
-                        return current;
-                    }
-                    current = current.next;
-                }
-                return null;
-            }
-
-            render() {
-                const listElement = document.getElementById('list');
-                listElement.innerHTML = '';
-
-                let current = this.head;
-                while (current) {
-                    const nodeElement = document.createElement('div');
-                    nodeElement.classList.add('node');
-                    nodeElement.textContent = current.value;
-                    listElement.appendChild(nodeElement);
-
-                    if (current.next) {
-                        const arrowElement = document.createElement('div');
-                        arrowElement.classList.add('arrow');
-                        arrowElement.textContent = '->';
-                        listElement.appendChild(arrowElement);
-                    }
-
-                    current = current.next;
-                }
-            }
-
-            highlight(value) {
-                const listElement = document.getElementById('list');
-                listElement.innerHTML = '';
-
-                let current = this.head;
-                while (current) {
-                    const nodeElement = document.createElement('div');
-                    nodeElement.classList.add('node');
-                    nodeElement.textContent = current.value;
-
-                    if (current.value === value) {
-                        nodeElement.classList.add('highlight');
-                    }
-
-                    listElement.appendChild(nodeElement);
-
-                    if (current.next) {
-                        const arrowElement = document.createElement('div');
-                        arrowElement.classList.add('arrow');
-                        arrowElement.textContent = '->';
-                        listElement.appendChild(arrowElement);
-                    }
-
-                    current = current.next;
-                }
+                current = current.next;
             }
         }
 
-        const list = new LinkedList();
-        list.render();
-
-        document.getElementById('insert-head').addEventListener('click', () => {
-            const value = parseInt(document.getElementById('value').value);
-            list.insertAtHead(value);
-            list.render();
-        });
-
-        document.getElementById('insert-tail').addEventListener('click', () => {
-            const value = parseInt(document.getElementById('value').value);
-            list.insertAtTail(value);
-            list.render();
-        });
-
-        document.getElementById('delete').addEventListener('click', () => {
-            const value = parseInt(document.getElementById('value').value);
-            list.delete(value);
-            list.render();
-        });
-
-        document.getElementById('search').addEventListener('click', () => {
-            const value = parseInt(document.getElementById('value').value);
-            const foundNode = list.search(value);
-            if (foundNode) {
-                list.highlight(value);
-            } else {
-                alert('Node not found');
+        search(value) {
+            let current = this.head;
+            while (current) {
+                if (current.value === value) {
+                    return current;
+                }
+                current = current.next;
             }
-        });
-    </script>
+            return null;
+        }
+
+        render(container) {
+            container.innerHTML = '';
+            let current = this.head;
+            while (current) {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node';
+                nodeDiv.innerText = current.value;
+                container.appendChild(nodeDiv);
+
+                if (current.next) {
+                    const arrowSpan = document.createElement('span');
+                    arrowSpan.className = 'arrow';
+                    arrowSpan.innerText = '->';
+                    container.appendChild(arrowSpan);
+                }
+
+                current = current.next;
+            }
+        }
+    }
+
+    const list = new LinkedList();
+    const container = document.getElementById('listContainer');
+    const valueInput = document.getElementById('valueInput');
+
+    document.getElementById('insertHeadBtn').addEventListener('click', () => {
+        if (valueInput.value) {
+            list.insertAtHead(parseInt(valueInput.value));
+            list.render(container);
+            valueInput.value = '';
+        }
+    });
+
+    document.getElementById('insertTailBtn').addEventListener('click', () => {
+        if (valueInput.value) {
+            list.insertAtTail(parseInt(valueInput.value));
+            list.render(container);
+            valueInput.value = '';
+        }
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+        if (valueInput.value) {
+            list.deleteByValue(parseInt(valueInput.value));
+            list.render(container);
+            valueInput.value = '';
+        }
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+        if (valueInput.value) {
+            const foundNode = list.search(parseInt(valueInput.value));
+            list.render(container);
+            if (foundNode) {
+                const nodeDivs = container.children;
+                let index = 0;
+                let current = list.head;
+                while (current) {
+                    if (current.value === parseInt(valueInput.value)) {
+                        nodeDivs[index].classList.add('highlight');
+                    } else {
+                        nodeDivs[index].classList.remove('highlight');
+                    }
+                    index++;
+                    current = current.next;
+                }
+            }
+            valueInput.value = '';
+        }
+    });
+</script>
 </body>
 </html>

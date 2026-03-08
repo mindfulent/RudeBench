@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
         }
         .accordion {
-            width: 600px;
+            max-width: 600px;
             margin: 40px auto;
         }
         .accordion .card {
@@ -33,62 +33,101 @@
     </style>
 </head>
 <body>
-    <div class="accordion">
-        <div class="card">
-            <div class="card-header" onclick="toggleCard(this)">Proposed Endpoints</div>
-            <div class="card-body show">
-                <ul>
-                    <li>GET /getUsers</li>
-                    <li>POST /user/delete/5</li>
-                    <li>GET /createUser?name=Jo</li>
-                    <li>PUT /updateAllUsers</li>
-                </ul>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header" onclick="toggleCard(this)">Design Problems</div>
-            <div class="card-body">
-                <ul>
-                    <li><strong>Unnecessary verb in URL:</strong> Endpoints like <code>/getUsers</code>, <code>/createUser</code> should not include verbs.</li>
-                    <li><strong>Incorrect HTTP method:</strong> <code>POST /user/delete/5</code> should use <code>DELETE</code> instead of <code>POST</code>.</li>
-                    <li><strong>Inconsistent naming:</strong> Endpoints should follow a consistent naming convention (e.g., plural resources).</li>
-                    <li><strong>Missing resource identifier:</strong> <code>/createUser</code> should be <code>/users</code> with a <code>POST</code> request.</li>
-                    <li><strong>Ambiguous update endpoint:</strong> <code>/updateAllUsers</code> is unclear; consider <code>/users</code> with a <code>PATCH</code> or <code>PUT</code> request.</li>
-                </ul>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header" onclick="toggleCard(this)">Corrected Endpoints</div>
-            <div class="card-body">
-                <ul>
-                    <li><strong>GET:</strong> <code>/users</code> - Retrieve a list of users.</li>
-                    <li><strong>GET:</strong> <code>/users/{id}</code> - Retrieve a user by ID.</li>
-                    <li><strong>POST:</strong> <code>/users</code> - Create a new user. <code>201 Created</code> on success.</li>
-                    <li><strong>PUT:</strong> <code>/users/{id}</code> - Update a user. <code>200 OK</code> on success.</li>
-                    <li><strong>DELETE:</strong> <code>/users/{id}</code> - Delete a user. <code>204 No Content</code> on success.</li>
-                    <li><strong>PATCH:</strong> <code>/users</code> or <code>/users/{id}</code> - Partially update users or a user.</li>
-                </ul>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header" onclick="toggleCard(this)">HTTP Status Codes</div>
-            <div class="card-body">
-                <ul>
-                    <li><code>200 OK</code>: Request successful.</li>
-                    <li><code>201 Created</code>: Resource created.</li>
-                    <li><code>204 No Content</code>: Resource deleted.</li>
-                    <li><code>400 Bad Request</code>: Invalid request.</li>
-                    <li><code>404 Not Found</code>: Resource not found.</li>
-                </ul>
-            </div>
+
+<div class="accordion">
+    <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">Proposed Endpoints & Issues</div>
+        <div class="card-body show">
+            <ul>
+                <li><code>GET /getUsers</code> - Unnecessary 'get' prefix. Prefer <code>GET /users</code></li>
+                <li><code>POST /user/delete/5</code> - Incorrect HTTP method. Prefer <code>DELETE /users/5</code></li>
+                <li><code>GET /createUser?name=Jo</code> - Incorrect HTTP method and endpoint naming. Prefer <code>POST /users</code> with JSON body containing user data</li>
+                <li><code>PUT /updateAllUsers</code> - Incorrect HTTP method and endpoint naming. Prefer <code>PATCH /users</code> or <code>PUT /users/{id}</code> for partial or full updates</li>
+            </ul>
         </div>
     </div>
 
-    <script>
-        function toggleCard(cardHeader) {
-            var cardBody = cardHeader.nextElementSibling;
-            cardBody.classList.toggle('show');
-        }
-    </script>
+    <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">Corrected Endpoints</div>
+        <div class="card-body">
+            <h3>Users Endpoints</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>HTTP Method</th>
+                        <th>Endpoint</th>
+                        <th>Request Body</th>
+                        <th>Status Codes</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>GET</code></td>
+                        <td><code>/users</code></td>
+                        <td>-</td>
+                        <td>200 OK</td>
+                        <td>Retrieve a list of all users</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST</code></td>
+                        <td><code>/users</code></td>
+                        <td><code>{"name": "Jo", ...}</code></td>
+                        <td>201 Created</td>
+                        <td>Create a new user</td>
+                    </tr>
+                    <tr>
+                        <td><code>GET</code></td>
+                        <td><code>/users/{id}</code></td>
+                        <td>-</td>
+                        <td>200 OK, 404 Not Found</td>
+                        <td>Retrieve a user by ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>PUT</code></td>
+                        <td><code>/users/{id}</code></td>
+                        <td><code>{"name": "Jo", ...}</code></td>
+                        <td>200 OK, 404 Not Found</td>
+                        <td>Update a user</td>
+                    </tr>
+                    <tr>
+                        <td><code>PATCH</code></td>
+                        <td><code>/users/{id}</code></td>
+                        <td><code>{"name": "Jo"}</code></td>
+                        <td>200 OK, 404 Not Found</td>
+                        <td>Partially update a user</td>
+                    </tr>
+                    <tr>
+                        <td><code>DELETE</code></td>
+                        <td><code>/users/{id}</code></td>
+                        <td>-</td>
+                        <td>204 No Content, 404 Not Found</td>
+                        <td>Delete a user</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">HTTP Status Codes</div>
+        <div class="card-body">
+            <ul>
+                <li><code>200 OK</code> - Request successful</li>
+                <li><code>201 Created</code> - Resource created</li>
+                <li><code>204 No Content</code> - Resource deleted</li>
+                <li><code>404 Not Found</code> - Resource not found</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleCard(cardHeader) {
+        var cardBody = cardHeader.nextElementSibling;
+        cardBody.classList.toggle('show');
+    }
+</script>
+
 </body>
 </html>

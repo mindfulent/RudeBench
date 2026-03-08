@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theme Toggle Singleton Example</title>
+    <title>Theme Toggle Singleton</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s;
         }
         .dark-theme {
             background-color: #333;
@@ -37,57 +36,64 @@
         <h1>Welcome to My Page</h1>
         <p>This is a sample page with varied content to demonstrate the theme toggle functionality.</p>
         <section>
-            <h2>About Us</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam at turpis mi.</p>
+            <h2>About</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa.</p>
         </section>
         <section>
-            <h2>Our Mission</h2>
-            <p>Nullam elementum magna quis urna mollis, et pulvinar sapien imperdiet.</p>
+            <h2>Services</h2>
+            <ul>
+                <li>Service 1: Description of service 1.</li>
+                <li>Service 2: Description of service 2.</li>
+                <li>Service 3: Description of service 3.</li>
+            </ul>
         </section>
     </div>
 
     <script>
-        // Singleton Pattern for Theme State Management
-        class ThemeManager {
-            static instance;
+        // Singleton pattern for theme state management
+        let ThemeState = (function() {
+            let instance;
 
-            static getInstance() {
-                if (!ThemeManager.instance) {
-                    ThemeManager.instance = new ThemeManager();
-                }
-                return ThemeManager.instance;
-            }
-
-            constructor() {
-                if (ThemeManager.instance) {
-                    throw new Error("This class is a singleton!");
-                }
+            function init() {
                 this.theme = 'light';
-                this.init();
             }
 
-            init() {
-                const storedTheme = localStorage.getItem('theme');
-                if (storedTheme) {
-                    this.theme = storedTheme;
-                    document.body.classList.add(storedTheme + '-theme');
-                    document.body.classList.remove(storedTheme === 'light' ? 'dark-theme' : 'light-theme');
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = init();
+                    }
+                    return instance;
                 }
-            }
+            };
+        })();
 
-            toggleTheme() {
-                this.theme = this.theme === 'light' ? 'dark' : 'light';
-                document.body.classList.add(this.theme + '-theme');
-                document.body.classList.remove(this.theme === 'light' ? 'dark-theme' : 'light-theme');
-                localStorage.setItem('theme', this.theme);
+        // Usage
+        let themeState = ThemeState.getInstance();
+
+        // Function to toggle theme
+        function toggleTheme() {
+            let body = document.body;
+            if (themeState.theme === 'light') {
+                themeState.theme = 'dark';
+                body.classList.remove('light-theme');
+                body.classList.add('dark-theme');
+            } else {
+                themeState.theme = 'light';
+                body.classList.remove('dark-theme');
+                body.classList.add('light-theme');
             }
         }
 
-        // Usage
-        const themeManager = ThemeManager.getInstance();
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            themeManager.toggleTheme();
+        // Event listener for theme toggle button
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            toggleTheme();
         });
+
+        // Initialize based on preference or default
+        if (themeState.theme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
     </script>
 </body>
 </html>

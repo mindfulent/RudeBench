@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard Widget Memory Leak Demo — leaking vs fixed</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; }
+    h1 { margin-bottom: 6px; }
+    .container { display: flex; gap: 24px; }
+    .column { border: 1px solid #ddd; padding: 12px; border-radius: 6px; width: 48%; box-sizing: border-box; }
+    .controls { margin-bottom: 8px; }
+    .widget { background: #f7f9fc; border: 1px solid #e0e6ef; padding: 8px; margin: 6px 0; border-radius: 4px; display:flex; justify-content:space-between; align-items:center; }
+    .btn { padding: 6px 10px; margin-right:6px; border-radius:4px; border:1px solid #ccc; background:white; cursor:pointer; }
+    .btn:active { transform: translateY(1px); }
+    .small { font-size: 12px; color:#666; }
+    .stat { margin-top:8px; font-weight:600; }
+    footer { margin-top:18px; font-size:12px; color:#666; }
+    .leak-note { color: #b00; font-weight:600; }
+    .fixed-note { color: #0a6; font-weight:600; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard Widget Memory Leak Demo</h1>
+  <p class="small">Two side-by-side dashboards: left intentionally leaks (attaches listeners and keeps references on removal),
+     right is fixed (cleans up). Use "Add widget" and "Remove widget" to create churn. Watch the tracked counters below.</p>
+
+  <div class="container">
+    <div class="column" id="leakColumn">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>Leaking Dashboard</strong>
+          <div class="small leak-note">Attaches handlers + saves DOM refs and never removes them — causes retained memory</div>
+        </div>
+        <div>
+          <button class="btn" id="leakAdd">Add widget</button>
+          <button class="btn" id="leakRemove">Remove widget</button>
+        </div>
+      </div>
+      <div id="leakWidgets" style="margin-top:8px; min-height:60px;"></div>
+      <div class="stat">Created widgets: <span id="leakCreated">0</span></div>
+      <div class="stat">Currently rendered: <span id="leakRendered">0</span></div>
+      <div class="stat">Tracked widget objects retained: <span id="leakTracked">0</span></div>
+    </div>
+
+    <div class="column" id="fixedColumn">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>Fixed Dashboard</strong>
+          <div class="small fixed-note">Cleans up event listeners and removes references on removal</div>
+        </div>
+        <div>
+          <button class="btn" id="fixedAdd">Add widget</button>
+          <button class="btn" id="fixedRemove">Remove widget</button>
+        </div>
+      </div>
+      <div id="fixedWidgets" style="margin-top:8px; min-height:60px;"></div>
+      <div class="stat">Created widgets: <span id="fixedCreated">0</span></div>
+      <div class="stat">Currently rendered: <span id="fixedRendered">0</span></div>
+      <div class="stat">Tracked widget objects retained: <span id="fixedTracked">0</span></div>
+    </div>
+  </div>
+
+  <footer>
+    Explanation: The left example demonstrates a common pattern that causes objects to be retained even after DOM nodes are removed:
+    storing references to DOM nodes (or state) in long-lived structures and attaching closures/event listeners that close over those nodes.
+    The garbage collector cannot free memory while reachable references remain. The dashboard widget's growing memory usage is therefore
+    not a GC bug but a retention bug in application code. Use explicit cleanup (remove listeners, null references) like the fixed example.
+  </footer>
+
+  <script>
+    // Simple ID generator for widgets
+    let idCounter = 1;
+
+    // We'll keep "trackedObjects" arrays to simulate long-lived storage that may retain widget-related data.
+    // The leak version pushes objects into a global array and never removes them (simulating a memory leak).
+    // The fixed version removes references and event listeners on widget removal.
+
+    // Helpers
+    function createWidgetElement(title) {
+      const el = document.createElement('div');
+      el.className = 'widget';
+      el.innerHTML = '<span class="w-title"></span><button class="btn w-btn">Click</button>';
+      el.querySelector('.w-title').textContent = title;
+      return el;
+    }
+
+    // LEAKING DASHBOARD
+    const leakState = {
+      widgets: [],        // currently rendered widget elements
+      trackedObjects: []  // long-lived list that intentionally holds onto DOM refs & closures
+    };
+
+    function leakAddWidget() {
+      const id = idCounter++;
+      const title = 'Widget #' + id;
+      const el = createWidgetElement(title);
+
+      // Example of attaching an event listener that closes over the DOM node and some data.
+      // When we remove the element from the DOM, the event listener reference (if not removed) can still keep the element alive
+      // if something else keeps the listener or closure reachable.
+      function onClick() {
+        // perform some action - close over el and id
+        console.log('Leaking widget clicked', id);
+        el.style.background = '#fff4e6';
+      }
+      el.querySelector('.w-btn').addEventListener('click', onClick);
+
+      // BUG: store an object that references the DOM element and the listener function in a long-lived array
+      // and never remove it. This keeps 'el' (the DOM node) reachable by JS roots even after it's removed from the DOM.
+      leakState.trackedObjects.push({ id, el, onClick, metadata: { createdAt: Date.now() } });
+
+      // Insert into DOM
+      document.getElementById('leakWidgets').appendChild(el);
+      leakState.widgets.push(el);
+
+      // Update counters
+      updateLeakStats();
+    }
+
+    function leakRemoveWidget() {
+      const container = document.getElementById('leakWidgets');
+      const el = leakState.widgets.pop();
+      if (!el) return;
+      // Remove from DOM
+      container.removeChild(el);
+
+      // BUG: we do NOT remove the event listener, nor do we remove the trackedObjects entry.
+      // The object in leakState.trackedObjects holds a reference to 'el' and 'onClick', so 'el' cannot be GC'd.
+      // (In a real app there might also be timers/closures that reference nodes.)
+      updateLeakStats();
+    }
+
+    function updateLeakStats() {
+      document.getElementById('leakCreated').textContent = leakState.trackedObjects.length;
+      document.getElementById('leakRendered').textContent = leakState.widgets.length;
+      document.getElementById('leakTracked').textContent = leakState.trackedObjects.length;
+    }
+
+    // FIXED DASHBOARD
+    const fixedState = {
+      widgets: [],
+      trackedObjects: [] // we will keep this array but we will remove entries on removal
+    };
+
+    function fixedAddWidget() {
+      const id = idCounter++;
+      const title = 'Widget #' + id;
+      const el = createWidgetElement(title);
+
+      function onClick() {
+        console.log('Fixed widget clicked', id);
+        el.style.background = '#e6fff2';
+      }
+      const btn = el.querySelector('.w-btn');
+      btn.addEventListener('click', onClick);
+
+      // store a tracked object but we will remove it on widget removal
+      fixedState.trackedObjects.push({ id, el, onClick });
+
+      document.getElementById('fixedWidgets').appendChild(el);
+      fixedState.widgets.push({ el, onClick, btn });
+
+      updateFixedStats();
+    }
+
+    function fixedRemoveWidget() {
+      const entry = fixedState.widgets.pop();
+      if (!entry) return;
+      const { el, onClick, btn } = entry;
+      // Remove event listener to break closure reference to 'el'
+      try { btn.removeEventListener('click', onClick); } catch (e) { /* ignore */ }
+
+      // Also remove any long-lived tracked object referencing the element.
+      // In a real app you'd find the corresponding tracked entry and remove it.
+      for (let i = fixedState.trackedObjects.length - 1; i >= 0; i--) {
+        if (fixedState.trackedObjects[i].el === el) {
+          fixedState.trackedObjects.splice(i, 1);
+          break;
+        }
+      }
+
+      // Remove from DOM
+      const container = document.getElementById('fixedWidgets');
+      if (el.parentNode === container) container.removeChild(el);
+
+      updateFixedStats();
+    }
+
+    function updateFixedStats() {
+      document.getElementById('fixedCreated').textContent = fixedState.trackedObjects.length;
+      document.getElementById('fixedRendered').textContent = fixedState.widgets.length;
+      document.getElementById('fixedTracked').textContent = fixedState.trackedObjects.length;
+    }
+
+    // Wire buttons
+    document.getElementById('leakAdd').addEventListener('click', leakAddWidget);
+    document.getElementById('leakRemove').addEventListener('click', leakRemoveWidget);
+    document.getElementById('fixedAdd').addEventListener('click', fixedAddWidget);
+    document.getElementById('fixedRemove').addEventListener('click', fixedRemoveWidget);
+
+    // Optional: churn helpers to add/remove automatically for stress testing
+    let churnInterval = null;
+    function startChurn() {
+      if (churnInterval) return;
+      churnInterval = setInterval(() => {
+        leakAddWidget();
+        fixedAddWidget();
+        // remove after a short delay to create churn
+        setTimeout(() => { leakRemoveWidget(); }, 200);
+        setTimeout(() => { fixedRemoveWidget(); }, 200);
+      }, 250);
+    }
+    function stopChurn() {
+      if (!churnInterval) return;
+      clearInterval(churnInterval);
+      churnInterval = null;
+    }
+
+    // Small UI for starting/stopping automatic churn
+    const churnControls = document.createElement('div');
+    churnControls.style.marginTop = '12px';
+    churnControls.innerHTML = '<button class="btn" id="startChurn">Start churn</button><button class="btn" id="stopChurn">Stop churn</button><span class="small" style="margin-left:10px">Automatic add/remove to amplify the leak</span>';
+    document.body.insertBefore(churnControls, document.querySelector('footer'));
+
+    document.getElementById('startChurn').addEventListener('click', startChurn);
+    document.getElementById('stopChurn').addEventListener('click', stopChurn);
+
+    // Initialize stats
+    updateLeakStats();
+    updateFixedStats();
+
+    // Explanation block (short console note)
+    console.log('Demo ready. Use Add/Remove on each side. The left keeps references to removed DOM nodes in leakState.trackedObjects and never removes event listeners, so those nodes stay reachable and cannot be garbage-collected. The right side removes listeners and tracked references, allowing GC to reclaim memory.');
+  </script>
+</body>
+</html>

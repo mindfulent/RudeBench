@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Theme Singleton Demo — Light / Dark Toggle</title>
+  <style>
+    /* Basic reset */
+    :root {
+      --bg: #0b0f14;
+      --surface: #12161a;
+      --text: #e6eef3;
+      --muted: #a6b4bd;
+      --accent: #2ea6ff;
+      --accent-2: #8be6a1;
+      --danger: #ff6b6b;
+      --glass: rgba(255,255,255,0.02);
+      --code-bg: rgba(255,255,255,0.03);
+    }
+
+    /* Light overrides */
+    .theme-light {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --text: #0b1820;
+      --muted: #506070;
+      --accent: #1e6fff;
+      --accent-2: #1d9a5a;
+      --danger: #c23b3b;
+      --glass: rgba(0,0,0,0.03);
+      --code-bg: rgba(15,23,29,0.04);
+    }
+
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, var(--bg), var(--surface));
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 28px;
+    }
+
+    header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .brand {
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .logo {
+      width:48px;height:48px;border-radius:10px;
+      background: linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+      color: white;
+    }
+    h1 { margin:0;font-size:1.15rem;letter-spacing:0.2px }
+    p.lead { margin:0;color:var(--muted);font-size:0.95rem }
+
+    /* Toggle */
+    .controls { display:flex; gap:12px; align-items:center; }
+    .toggle {
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      background:var(--glass);
+      padding:6px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      user-select:none;
+      color:var(--text);
+    }
+    .toggle .icon {
+      width:36px;height:36px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.03));
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    main {
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:20px;
+      align-items:start;
+    }
+
+    .content {
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+      border-radius:12px;
+      padding:16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .row {
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .btn {
+      padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);
+      background:var(--surface); color:var(--text); cursor:pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .btn.accent { background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; border: none; }
+    .btn.ghost { background:transparent; border:1px dashed rgba(255,255,255,0.04); }
+
+    /* Form */
+    label { display:block; font-size:0.85rem; color:var(--muted); margin-bottom:6px }
+    input, textarea, select {
+      width:100%; padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);
+      background:var(--surface); color:var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+
+    /* Table */
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th,td { text-align:left; padding:10px; border-bottom:1px dashed rgba(255,255,255,0.03); color:var(--muted) }
+    th { color:var(--text); font-weight:600; font-size:0.95rem }
+
+    pre.code {
+      margin:0; padding:12px; border-radius:8px; background:var(--code-bg); color:var(--text); overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:0.9rem;
+    }
+
+    ul.demo-list { padding-left:18px; margin:0; color:var(--muted) }
+
+    footer {
+      margin-top:20px; color:var(--muted); font-size:0.9rem; display:flex; justify-content:space-between; align-items:center;
+    }
+
+    /* small responsive */
+    @media (max-width:920px) {
+      main { grid-template-columns: 1fr; }
+      .controls { flex-wrap:wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="brand">
+        <div class="logo">DP</div>
+        <div>
+          <h1>Design Patterns — Theme Singleton</h1>
+          <p class="lead">A demo of singleton state management for a light/dark theme (persistent, observable).</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div id="themeToggle" class="toggle" title="Toggle theme (Singleton)">
+          <div class="icon" id="toggleIcon">🌙</div>
+          <div id="toggleLabel">Dark</div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="content">
+        <div class="card">
+          <h3 style="margin-top:0">Quick demo controls</h3>
+          <div class="row">
+            <button id="btnAccent" class="btn accent">Primary Action</button>
+            <button id="btnGhost" class="btn ghost">Secondary</button>
+            <button id="btnDanger" class="btn" style="background:linear-gradient(90deg,var(--danger),#ff8b8b);color:white;border:none">Danger</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Form elements</h3>
+          <div style="display:grid;gap:10px">
+            <div>
+              <label for="name">Name</label>
+              <input id="name" placeholder="Your name">
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input id="email" placeholder="you@example.com">
+            </div>
+            <div>
+              <label for="about">About you</label>
+              <textarea id="about" rows="3" placeholder="Tell us something..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Data table</h3>
+          <table>
+            <thead><tr><th>Item</th><th>Status</th><th>Updated</th></tr></thead>
+            <tbody>
+              <tr><td>API design</td><td style="color:var(--accent)">In progress</td><td>2h ago</td></tr>
+              <tr><td>Docs</td><td style="color:var(--muted)">Review</td><td>1d ago</td></tr>
+              <tr><td>Release</td><td style="color:var(--accent-2)">Done</td><td>3d ago</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Code / Explanation</h3>
+          <pre class="code" id="codeBlock">// ThemeSingleton:
+// - holds theme state
+// - persist to localStorage
+// - observer callbacks for UI components
+// - single global instance
+</pre>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Notes</h3>
+          <ul class="demo-list">
+            <li>Theme persists across reloads and is shared across components via the singleton.</li>
+            <li>Multiple parts of the UI register as observers to update styling and labels.</li>
+            <li>Try toggling the theme and reloading the page to see persistence.</li>
+          </ul>
+        </div>
+      </section>
+
+      <aside>
+        <div class="card">
+          <h3 style="margin-top:0">Current theme</h3>
+          <div id="currentTheme" style="font-weight:700; font-size:1.1rem">—</div>
+          <p style="margin-top:8px;color:var(--muted)">This demonstrates centralized state used by many elements.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Singleton pros & cons</h3>
+          <div style="color:var(--muted);font-size:0.95rem;line-height:1.4">
+            <strong>Pros:</strong>
+            <ul class="demo-list">
+              <li>Single source of truth for theme state — easy to access anywhere.</li>
+              <li>Simple API to get/toggle theme and subscribe to changes.</li>
+              <li>Persistence and observer pattern combined in one place.</li>
+            </ul>
+            <strong>Cons:</strong>
+            <ul class="demo-list">
+              <li>Global state can become an anti-pattern if overused (harder to test/mocking).</li>
+              <li>Tight coupling — components implicitly depend on global singleton.</li>
+              <li>Lifecycle control and multiple instances in complex apps can be problematic.</li>
+            </ul>
+            <strong>When to prefer Dependency Injection (DI):</strong>
+            <ul class="demo-list">
+              <li>When you want explicit dependencies (better testability, swapping implementations).</li>
+              <li>In large apps with many environments or where themes vary per sub-tree or user session.</li>
+              <li>When you need fine-grained lifecycle control and easier mocking in unit tests.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Try it</h3>
+          <p style="color:var(--muted);margin-bottom:12px">Toggle the theme using the control in the header. The page will remember your choice.</p>
+          <div style="display:flex;gap:8px">
+            <button id="setLight" class="btn">Set Light</button>
+            <button id="setDark" class="btn">Set Dark</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <div>Made for a Design Patterns exercise — Singleton example</div>
+      <div style="font-size:0.9rem">LocalStorage persistence • Observer callbacks</div>
+    </footer>
+  </div>
+
+  <script>
+    /*
+      ThemeSingleton
+      - Use an IIFE to create a single instance
+      - Exposes: getTheme(), setTheme('light'|'dark'), toggle(), subscribe(fn), unsubscribe(fn)
+      - Persists to localStorage key 'theme'
+    */
+    const ThemeSingleton = (function () {
+      const STORAGE_KEY = 'theme';
+      let instance = null;
+
+      function createInstance() {
+        // Allowed values
+        const THEMES = { LIGHT: 'light', DARK: 'dark' };
+
+        // initial theme: try localStorage, otherwise prefer system dark media query
+        const saved = (function () {
+          try { return localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
+        })();
+
+        let theme = saved === THEMES.LIGHT || saved === THEMES.DARK
+          ? saved
+          : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? THEMES.LIGHT : THEMES.DARK);
+
+        const subscribers = new Set();
+
+        function persist() {
+          try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) { /* ignore */ }
+        }
+
+        function notify() {
+          subscribers.forEach(fn => {
+            try { fn(theme); } catch (e) { console.error('Theme subscriber error', e); }
+          });
+        }
+
+        // apply to document root
+        function applyDocument() {
+          const root = document.documentElement;
+          if (theme === THEMES.LIGHT) {
+            root.classList.add('theme-light');
+          } else {
+            root.classList.remove('theme-light');
+          }
+        }
+
+        function getTheme() { return theme; }
+        function setTheme(t) {
+          if (t !== THEMES.LIGHT && t !== THEMES.DARK) return;
+          if (theme === t) return;
+          theme = t;
+          persist();
+          applyDocument();
+          notify();
+        }
+        function toggle() {
+          setTheme(theme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT);
+        }
+        function subscribe(fn) {
+          subscribers.add(fn);
+          // call immediately to initialize subscriber with current theme
+          try { fn(theme); } catch (e) { console.error('Subscriber init error', e); }
+        }
+        function unsubscribe(fn) { subscribers.delete(fn); }
+
+        // initialize
+        applyDocument();
+
+        return {
+          THEMES,
+          getTheme,
+          setTheme,
+          toggle,
+          subscribe,
+          unsubscribe
+        };
+      }
+
+      return {
+        getInstance: function () {
+          if (!instance) instance = createInstance();
+          return instance;
+        }
+      };
+    })();
+
+    // Usage: multiple UI parts subscribe to the singleton and get updates
+    (function () {
+      const themeManager = ThemeSingleton.getInstance();
+
+      // header toggle UI
+      const themeToggle = document.getElementById('themeToggle');
+      const toggleIcon = document.getElementById('toggleIcon');
+      const toggleLabel = document.getElementById('toggleLabel');
+
+      themeToggle.addEventListener('click', () => themeManager.toggle());
+
+      // display current theme in aside
+      const currentThemeEl = document.getElementById('currentTheme');
+
+      // change text/icon of toggle and currentTheme
+      function updateToggleUI(theme) {
+        if (theme === themeManager.THEMES.LIGHT) {
+          toggleIcon.textContent = '☀️';
+          toggleLabel.textContent = 'Light';
+        } else {
+          toggleIcon.textContent = '🌙';
+          toggleLabel.textContent = 'Dark';
+        }
+      }
+
+      themeManager.subscribe(theme => {
+        // update some UI elements that depend on the theme
+        updateToggleUI(theme);
+        currentThemeEl.textContent = theme.toUpperCase();
+      });
+
+      // some other components also subscribe:
+      // code block theme-ish text (just to demonstrate observer usage)
+      const codeBlock = document.getElementById('codeBlock');
+      themeManager.subscribe(theme => {
+        if (theme === themeManager.THEMES.LIGHT) {
+          codeBlock.textContent = "// ThemeSingleton (light mode)\n// Current theme: " + theme;
+        } else {
+          codeBlock.textContent = "// ThemeSingleton (dark mode)\n// Current theme: " + theme;
+        }
+      });
+
+      // Buttons change style slightly to show dynamic reaction
+      const btnAccent = document.getElementById('btnAccent');
+      const btnGhost = document.getElementById('btnGhost');
+      themeManager.subscribe(theme => {
+        if (theme === themeManager.THEMES.LIGHT) {
+          btnGhost.style.borderStyle = 'dashed';
+          btnGhost.style.background = 'transparent';
+        } else {
+          btnGhost.style.borderStyle = 'dashed';
+          btnGhost.style.background = 'transparent';
+        }
+      });
+
+      // two explicit set buttons
+      document.getElementById('setLight').addEventListener('click', () => themeManager.setTheme(themeManager.THEMES.LIGHT));
+      document.getElementById('setDark').addEventListener('click', () => themeManager.setTheme(themeManager.THEMES.DARK));
+
+      // demonstrate that multiple independent subscribers can be added and removed:
+      const dynamicSubscriber = (theme) => {
+        console.log('dynamic subscriber got theme:', theme);
+      };
+      themeManager.subscribe(dynamicSubscriber);
+      // remove after 10s just as a demo (won't affect other subscribers)
+      setTimeout(() => themeManager.unsubscribe(dynamicSubscriber), 10000);
+
+      // Expose for debugging on window (not necessary, but helpful during dev)
+      window.__themeManager = themeManager;
+    })();
+  </script>
+</body>
+</html>

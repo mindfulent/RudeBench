@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Singly Linked List Visualizer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f7fafc;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --danger:#dc2626;
+      --success:#16a34a;
+      --node:#111827;
+      --arrow:#374151;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 40%);
+      color:var(--node);
+    }
+    .wrap{
+      max-width:1000px;
+      margin:28px auto;
+      padding:20px;
+      background:var(--card);
+      border-radius:12px;
+      box-shadow:0 8px 30px rgba(15,23,42,0.08);
+      border:1px solid rgba(15,23,42,0.04);
+    }
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    }
+    h1{margin:0;font-size:18px;}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .controls{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+      align-items:center;
+    }
+    .controls input[type="text"]{
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid #e6e9ee;
+      width:160px;
+    }
+    .controls button{
+      padding:9px 12px;
+      border-radius:8px;
+      border:1px solid rgba(15,23,42,0.06);
+      background:linear-gradient(180deg,white,#f8fafc);
+      cursor:pointer;
+      box-shadow:0 2px 6px rgba(2,6,23,0.04);
+    }
+    .controls button.primary{
+      background:linear-gradient(180deg,var(--accent),#1e40af);
+      color:white;
+      border:none;
+    }
+    .controls button.danger{
+      background:linear-gradient(180deg,var(--danger),#991b1b);
+      color:white;
+      border:none;
+    }
+    .controls button:disabled{opacity:0.5;cursor:not-allowed}
+    .status{
+      margin-left:auto;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .canvasWrap{
+      border-radius:10px;
+      background:linear-gradient(180deg,rgba(99,102,241,0.03),rgba(99,102,241,0.01));
+      padding:18px;
+      min-height:200px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:auto;
+    }
+    .emptyHint{
+      color:var(--muted);
+      font-size:14px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    svg.nodeSvg{width:100%;height:240px;overflow:visible}
+    .nodeRect{
+      rx:8; ry:8;
+      fill:white;
+      stroke:#d1d5db;
+      stroke-width:1;
+      filter:drop-shadow(0 6px 12px rgba(2,6,23,0.06));
+    }
+    .nodeValue{
+      font-weight:600;
+      font-size:13px;
+      fill:var(--node);
+    }
+    .nodeLabel{
+      font-size:11px;
+      fill:var(--muted);
+    }
+    .arrow{
+      stroke:var(--arrow);
+      fill:none;
+      stroke-width:2;
+      marker-end:url(#arrowhead);
+      opacity:0.95;
+    }
+    .highlight{
+      stroke: #fb923c;
+      stroke-width:2.5;
+      box-shadow:0 0 10px rgba(251,146,60,0.2);
+    }
+    .found{
+      stroke:var(--success);
+      stroke-width:3;
+      filter: drop-shadow(0 6px 12px rgba(16,185,129,0.08));
+    }
+    .fade-in{
+      animation:fadein .28s ease both;
+    }
+    .fade-out{
+      animation:fadeout .28s ease both;
+    }
+    @keyframes fadein{
+      from{opacity:0; transform:translateY(-6px) scale(0.98)}
+      to{opacity:1; transform:none}
+    }
+    @keyframes fadeout{
+      from{opacity:1; transform:none}
+      to{opacity:0; transform:translateY(-6px) scale(0.98)}
+    }
+    footer{margin-top:12px;color:var(--muted);font-size:13px;}
+    .small{font-size:12px;color:var(--muted)}
+    .btn-inline{
+      padding:6px 8px;border-radius:6px;border:1px solid #e6e9ee;background:white;font-size:13px;
+    }
+    @media (max-width:640px){
+      .controls input[type="text"]{width:120px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" role="application" aria-label="Singly linked list visualizer">
+    <header>
+      <div>
+        <h1>Singly Linked List Visualizer</h1>
+        <p class="lead">Insert head/tail, delete by value, and search with step-by-step highlighting.</p>
+      </div>
+      <div class="status" id="status">Size: 0</div>
+    </header>
+
+    <div class="controls" aria-hidden="false">
+      <input id="valueInput" type="text" placeholder="Value (string or number)" aria-label="Node value">
+      <button id="insertHeadBtn" class="primary">Insert Head</button>
+      <button id="insertTailBtn" class="primary">Insert Tail</button>
+      <button id="deleteBtn" class="danger">Delete by Value</button>
+      <input id="searchInput" type="text" placeholder="Search value" aria-label="Search value">
+      <button id="searchBtn" class="btn-inline">Search</button>
+      <button id="clearBtn" title="Clear list">Clear</button>
+    </div>
+
+    <div class="canvasWrap" id="canvasWrap" aria-live="polite">
+      <!-- SVG will be injected here -->
+    </div>
+
+    <footer>
+      <span class="small">Tip: Use simple values. The visual lays out nodes horizontally; it scrolls if too wide.</span>
+    </footer>
+  </div>
+
+  <script>
+    // Simple singly linked list model and SVG renderer
+    (function(){
+      const canvasWrap = document.getElementById('canvasWrap');
+      const status = document.getElementById('status');
+      const valueInput = document.getElementById('valueInput');
+      const insertHeadBtn = document.getElementById('insertHeadBtn');
+      const insertTailBtn = document.getElementById('insertTailBtn');
+      const deleteBtn = document.getElementById('deleteBtn');
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const clearBtn = document.getElementById('clearBtn');
+
+      let list = []; // array of node values, index0 = head
+      let animating = false;
+      let nodeIdCounter = 1;
+
+      function updateStatus(){
+        status.textContent = 'Size: ' + list.length;
+      }
+
+      function createSVG(){
+        // create a fresh SVG
+        const svgns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgns, 'svg');
+        svg.setAttribute('class','nodeSvg');
+        svg.setAttribute('aria-label','Linked list diagram');
+        svg.setAttribute('role','img');
+        svg.setAttribute('width','100%');
+        svg.setAttribute('height','220');
+        svg.setAttribute('viewBox','0 0 1000 220');
+        // defs arrowhead
+        const defs = document.createElementNS(svgns,'defs');
+        defs.innerHTML = '<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 z" fill="#374151" /></marker>';
+        svg.appendChild(defs);
+        return svg;
+      }
+
+      function render(){
+        canvasWrap.innerHTML = '';
+        if(list.length === 0){
+          const empty = document.createElement('div');
+          empty.className = 'emptyHint';
+          empty.innerHTML = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" style="opacity:0.9;margin-right:6px"><path d="M3 7a2 2 0 0 1 2-2h14" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 7v11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 3v4" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>Empty list</strong><div style="color:var(--muted);font-size:13px">Insert nodes at head or tail to get started</div></div>';
+          canvasWrap.appendChild(empty);
+          updateStatus();
+          updateControls();
+          return;
+        }
+
+        const svg = createSVG();
+        const svgns = "http://www.w3.org/2000/svg";
+
+        // layout variables
+        const padding = 20;
+        const nodeW = 84;
+        const nodeH = 46;
+        const spacing = 28;
+        const totalW = list.length * nodeW + (list.length - 1) * spacing + padding*2;
+        const viewW = Math.max(1000, totalW);
+        svg.setAttribute('viewBox','0 0 ' + viewW + ' 220');
+
+        // draw nodes left-to-right
+        const startX = padding;
+        const y = 60;
+
+        list.forEach((valObj, i) => {
+          const x = startX + i * (nodeW + spacing);
+          // group
+          const g = document.createElementNS(svgns,'g');
+          g.setAttribute('class','nodeGroup fade-in');
+          g.setAttribute('data-index', i);
+          g.setAttribute('transform','translate(' + x + ',' + y + ')');
+
+          // rectangle
+          const rect = document.createElementNS(svgns,'rect');
+          rect.setAttribute('width', nodeW);
+          rect.setAttribute('height', nodeH);
+          rect.setAttribute('class','nodeRect');
+          rect.setAttribute('rx','8');
+          rect.setAttribute('ry','8');
+          rect.setAttribute('fill','white');
+          rect.setAttribute('id','nodeRect-' + valObj.id);
+          // value text
+          const txt = document.createElementNS(svgns,'text');
+          txt.setAttribute('x', nodeW/2);
+          txt.setAttribute('y', nodeH/2 + 5);
+          txt.setAttribute('text-anchor','middle');
+          txt.setAttribute('class','nodeValue');
+          txt.textContent = valObj.value;
+
+          // small label "head" or "tail"
+          if(i===0){
+            const lbl = document.createElementNS(svgns,'text');
+            lbl.setAttribute('x', nodeW/2);
+            lbl.setAttribute('y', -8);
+            lbl.setAttribute('text-anchor','middle');
+            lbl.setAttribute('class','nodeLabel');
+            lbl.textContent = 'HEAD';
+            g.appendChild(lbl);
+          }
+          if(i===list.length-1){
+            const lbl2 = document.createElementNS(svgns,'text');
+            lbl2.setAttribute('x', nodeW/2);
+            lbl2.setAttribute('y', nodeH + 20);
+            lbl2.setAttribute('text-anchor','middle');
+            lbl2.setAttribute('class','nodeLabel');
+            lbl2.textContent = 'TAIL';
+            g.appendChild(lbl2);
+          }
+
+          g.appendChild(rect);
+          g.appendChild(txt);
+          svg.appendChild(g);
+
+          // arrow to next
+          if(i < list.length - 1){
+            const arrow = document.createElementNS(svgns,'path');
+            const sx = x + nodeW;
+            const sy = y + nodeH/2;
+            const ex = x + nodeW + spacing;
+            const ey = sy;
+            // simple horizontal arrow with slight curve
+            const d = `M ${sx} ${sy} C ${sx+10} ${sy} ${ex-10} ${ey} ${ex} ${ey}`;
+            arrow.setAttribute('d', d);
+            arrow.setAttribute('class','arrow');
+            arrow.setAttribute('fill','none');
+            svg.appendChild(arrow);
+          }
+        });
+
+        canvasWrap.appendChild(svg);
+        updateStatus();
+        updateControls();
+        // ensure newly created content is visible (scroll to rightmost for tail insert)
+        requestAnimationFrame(()=> {
+          canvasWrap.scrollLeft = canvasWrap.scrollWidth;
+        });
+      }
+
+      function updateControls(){
+        // disable controls if animating
+        const disabled = animating;
+        insertHeadBtn.disabled = disabled;
+        insertTailBtn.disabled = disabled;
+        deleteBtn.disabled = disabled || list.length === 0;
+        searchBtn.disabled = disabled || list.length === 0;
+        clearBtn.disabled = disabled || list.length === 0;
+      }
+
+      function makeNode(value){
+        return { value: String(value), id: nodeIdCounter++ };
+      }
+
+      // operations
+      function insertHead(value){
+        if(animating) return;
+        const node = makeNode(value);
+        animating = true;
+        list.unshift(node);
+        render();
+        // small visual clue (flash head)
+        setTimeout(()=> {
+          highlightIndex(0, 'found', 600).then(()=> { animating = false; updateControls(); });
+        }, 80);
+      }
+
+      function insertTail(value){
+        if(animating) return;
+        const node = makeNode(value);
+        animating = true;
+        list.push(node);
+        render();
+        setTimeout(()=> {
+          highlightIndex(list.length-1, 'found', 600).then(()=> { animating = false; updateControls(); });
+        }, 80);
+      }
+
+      function deleteByValue(value){
+        if(animating || list.length===0) return;
+        animating = true;
+        // sequential walk to find first occurrence
+        let i = 0;
+        function step(){
+          if(i >= list.length){
+            // not found
+            flashMessage('Value not found', 'danger');
+            animating = false;
+            updateControls();
+            return;
+          }
+          highlightIndex(i, 'highlight', 500).then(()=> {
+            if(list[i].value === value){
+              // found; flash then remove
+              highlightIndex(i, 'found', 700).then(()=> {
+                // remove and re-render with fade-out animation on removed rect
+                const removedId = list[i].id;
+                list.splice(i,1);
+                render();
+                flashMessage('Deleted first occurrence', 'success');
+                animating = false;
+                updateControls();
+              });
+            } else {
+              i++;
+              step();
+            }
+          });
+        }
+        step();
+      }
+
+      function searchByValue(value){
+        if(animating || list.length===0) return;
+        animating = true;
+        let i = 0;
+        function step(){
+          if(i >= list.length){
+            flashMessage('Value not found', 'danger');
+            animating = false;
+            updateControls();
+            return;
+          }
+          highlightIndex(i, 'highlight', 500).then(()=> {
+            if(list[i].value === value){
+              highlightIndex(i, 'found', 900).then(()=> {
+                flashMessage('Value found', 'success');
+                animating = false;
+                updateControls();
+              });
+            } else {
+              i++;
+              step();
+            }
+          });
+        }
+        step();
+      }
+
+      // helper: highlight node at index; type = 'highlight' or 'found'; duration ms
+      function highlightIndex(index, type, duration){
+        return new Promise(resolve => {
+          const svg = canvasWrap.querySelector('svg');
+          if(!svg) { resolve(); return; }
+          const g = svg.querySelector('g[data-index="' + index + '"]');
+          if(!g){ resolve(); return; }
+          const rect = g.querySelector('rect');
+          const origStroke = rect.getAttribute('stroke') || '#d1d5db';
+          const origWidth = rect.getAttribute('stroke-width') || '1';
+          if(type === 'highlight'){
+            rect.style.transition = 'stroke 160ms, stroke-width 160ms, filter 160ms';
+            rect.setAttribute('stroke','#fb923c');
+            rect.setAttribute('stroke-width','2.6');
+            // subtle scale
+            g.style.transformOrigin = 'center';
+            g.style.transition = 'transform 160ms';
+            g.style.transform = 'translateY(-6px)';
+            setTimeout(()=>{},20);
+            setTimeout(()=> {
+              rect.setAttribute('stroke', origStroke);
+              rect.setAttribute('stroke-width', origWidth);
+              g.style.transform = '';
+              resolve();
+            }, duration);
+          } else if(type === 'found'){
+            rect.style.transition = 'stroke 160ms, stroke-width 160ms, filter 160ms';
+            rect.setAttribute('stroke','#16a34a');
+            rect.setAttribute('stroke-width','3');
+            g.style.transformOrigin = 'center';
+            g.style.transition = 'transform 200ms';
+            g.style.transform = 'translateY(-6px)';
+            setTimeout(()=> {
+              rect.setAttribute('stroke', origStroke);
+              rect.setAttribute('stroke-width', origWidth);
+              g.style.transform = '';
+              resolve();
+            }, duration);
+          } else {
+            resolve();
+          }
+        });
+      }
+
+      function flashMessage(text, type){
+        const prev = document.getElementById('tempMsg');
+        if(prev) prev.remove();
+        const span = document.createElement('span');
+        span.id = 'tempMsg';
+        span.textContent = text;
+        span.style.position = 'absolute';
+        span.style.right = '16px';
+        span.style.top = '12px';
+        span.style.padding = '8px 10px';
+        span.style.borderRadius = '8px';
+        span.style.fontSize = '13px';
+        span.style.boxShadow = '0 6px 16px rgba(2,6,23,0.06)';
+        span.style.background = (type==='success') ? '#ecfdf5' : (type==='danger' ? '#fff1f2' : '#eef2ff');
+        span.style.color = (type==='success') ? '#065f46' : (type==='danger' ? '#7f1d1d' : '#1e3a8a');
+        span.style.border = '1px solid rgba(2,6,23,0.04)';
+        span.style.zIndex = 40;
+        canvasWrap.appendChild(span);
+        setTimeout(()=> {
+          span.style.opacity = '0';
+          span.style.transition = 'opacity 500ms';
+          setTimeout(()=> span.remove(), 600);
+        }, 1200);
+      }
+
+      // wire up events
+      insertHeadBtn.addEventListener('click', ()=> {
+        const v = valueInput.value.trim();
+        if(v === '') { valueInput.focus(); return; }
+        insertHead(v);
+        valueInput.value = '';
+        valueInput.focus();
+      });
+      insertTailBtn.addEventListener('click', ()=> {
+        const v = valueInput.value.trim();
+        if(v === '') { valueInput.focus(); return; }
+        insertTail(v);
+        valueInput.value = '';
+        valueInput.focus();
+      });
+      deleteBtn.addEventListener('click', ()=> {
+        const v = valueInput.value.trim();
+        if(v === '') { valueInput.focus(); return; }
+        deleteByValue(v);
+        valueInput.value = '';
+        valueInput.focus();
+      });
+      searchBtn.addEventListener('click', ()=> {
+        const v = searchInput.value.trim();
+        if(v === '') { searchInput.focus(); return; }
+        searchByValue(v);
+        searchInput.value = '';
+      });
+      clearBtn.addEventListener('click', ()=> {
+        if(animating) return;
+        if(list.length===0) return;
+        list = [];
+        render();
+        flashMessage('List cleared', 'success');
+      });
+
+      // keyboard shortcuts: Enter in valueInput => insertTail; Ctrl+Enter => insertHead
+      valueInput.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){
+          if(e.ctrlKey || e.metaKey) insertHeadBtn.click();
+          else insertTailBtn.click();
+        }
+      });
+      // initial render
+      render();
+
+      // expose nothing global
+    })();
+  </script>
+</body>
+</html>

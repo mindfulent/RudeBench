@@ -12,7 +12,7 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       background: #0f0f1a;
       color: #e0e0e0;
       min-height: 100vh;
@@ -38,27 +38,21 @@
     .controls {
       display: flex;
       gap: 12px;
-      align-items: center;
       flex-wrap: wrap;
       justify-content: center;
       margin-bottom: 40px;
     }
 
-    label {
-      font-size: 0.95rem;
-      color: #ccc;
-    }
-
     input[type="number"] {
-      width: 100px;
-      padding: 10px 14px;
+      padding: 10px 16px;
       border-radius: 8px;
-      border: 2px solid #4c1d95;
-      background: #1e1b2e;
+      border: 2px solid #3d3d5c;
+      background: #1a1a2e;
       color: #e0e0e0;
       font-size: 1rem;
+      width: 140px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border 0.2s;
     }
 
     input[type="number"]:focus {
@@ -69,7 +63,7 @@
       padding: 10px 22px;
       border-radius: 8px;
       border: none;
-      font-size: 0.95rem;
+      font-size: 1rem;
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
       font-weight: 600;
@@ -89,23 +83,23 @@
     }
 
     #stepBtn {
-      background: #2563eb;
+      background: #0ea5e9;
       color: white;
     }
 
-    #stepBtn:hover:not(:disabled) {
-      background: #1d4ed8;
+    #stepBtn:hover {
+      background: #0284c7;
     }
 
     #stepBtn:disabled {
       background: #334155;
-      color: #64748b;
       cursor: not-allowed;
+      color: #888;
     }
 
     #resetBtn {
       background: #374151;
-      color: #d1d5db;
+      color: #e0e0e0;
     }
 
     #resetBtn:hover {
@@ -114,161 +108,458 @@
 
     /* Array display */
     .array-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
       width: 100%;
-      max-width: 860px;
-      overflow-x: auto;
-      padding-bottom: 10px;
     }
 
     .array-container {
       display: flex;
-      gap: 8px;
-      justify-content: center;
       flex-wrap: wrap;
-      padding: 20px 10px;
-      min-height: 120px;
-      align-items: flex-end;
-    }
-
-    .box-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .index-label {
-      font-size: 0.7rem;
-      color: #555;
+      gap: 10px;
+      justify-content: center;
+      max-width: 900px;
     }
 
     .box {
-      width: 54px;
-      height: 54px;
+      width: 60px;
+      height: 60px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       border-radius: 10px;
+      border: 2px solid #3d3d5c;
+      background: #1a1a2e;
       font-size: 1rem;
       font-weight: 700;
-      border: 2px solid #2d2d4a;
-      background: #1a1a2e;
-      color: #94a3b8;
       transition: all 0.35s ease;
       position: relative;
     }
 
+    .box .index-label {
+      position: absolute;
+      top: -20px;
+      font-size: 0.65rem;
+      color: #666;
+      font-weight: 400;
+    }
+
+    /* States */
     .box.in-range {
-      border-color: #3b82f6;
-      background: #1e3a5f;
-      color: #93c5fd;
+      border-color: #0ea5e9;
+      background: #0c2a3e;
+      color: #7dd3fc;
     }
 
     .box.mid {
       border-color: #f59e0b;
-      background: #451a03;
+      background: #3b2200;
       color: #fcd34d;
-      transform: scale(1.15);
-      box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
-      z-index: 1;
+      transform: scale(1.12);
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.5);
     }
 
     .box.found {
       border-color: #22c55e;
       background: #052e16;
       color: #86efac;
-      transform: scale(1.2);
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.7);
+      transform: scale(1.15);
+      box-shadow: 0 0 22px rgba(34, 197, 94, 0.6);
     }
 
-    .box.eliminated {
-      border-color: #1f2937;
-      background: #111827;
-      color: #374151;
-      opacity: 0.4;
+    .box.out-of-range {
+      opacity: 0.25;
+      border-color: #2a2a3e;
     }
 
-    .mid-label {
-      font-size: 0.65rem;
+    /* Pointer labels */
+    .pointer-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      max-width: 900px;
+      min-height: 24px;
+    }
+
+    .pointer-cell {
+      width: 60px;
+      text-align: center;
+      font-size: 0.72rem;
       font-weight: 700;
-      color: #f59e0b;
-      letter-spacing: 0.5px;
-      height: 14px;
+      height: 22px;
+      line-height: 22px;
+      border-radius: 4px;
     }
+
+    .ptr-lo  { color: #38bdf8; }
+    .ptr-hi  { color: #f87171; }
+    .ptr-mid { color: #fbbf24; }
+    .ptr-multi { font-size: 0.6rem; }
 
     /* Info panel */
     .info-panel {
-      width: 100%;
-      max-width: 860px;
-      background: #12121f;
-      border: 1px solid #2d2d4a;
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
       border-radius: 12px;
       padding: 20px 28px;
-      margin-top: 10px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 16px;
-    }
-
-    .info-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .info-item .info-label {
-      font-size: 0.72rem;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-    }
-
-    .info-item .info-value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #e2e8f0;
-    }
-
-    .info-item .info-value.highlight {
-      color: #f59e0b;
-    }
-
-    /* Status message */
-    .status-bar {
+      max-width: 520px;
       width: 100%;
-      max-width: 860px;
-      margin-top: 20px;
-      padding: 16px 24px;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
+      margin-bottom: 28px;
       text-align: center;
-      min-height: 56px;
+    }
+
+    .info-panel .step-label {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-panel .message {
+      font-size: 1.05rem;
+      color: #c4b5fd;
+      min-height: 28px;
+    }
+
+    .info-panel .vars {
+      margin-top: 12px;
       display: flex;
-      align-items: center;
       justify-content: center;
-      transition: all 0.3s;
-      background: #12121f;
-      border: 1px solid #2d2d4a;
-      color: #64748b;
+      gap: 24px;
+      font-size: 0.9rem;
     }
 
-    .status-bar.info {
-      background: #1e3a5f;
-      border-color: #3b82f6;
-      color: #93c5fd;
+    .info-panel .vars span {
+      background: #0f0f1a;
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: 1px solid #2d2d4e;
     }
 
-    .status-bar.success {
+    .var-lo  { color: #38bdf8; }
+    .var-hi  { color: #f87171; }
+    .var-mid { color: #fbbf24; }
+
+    /* Result banner */
+    .result-banner {
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      display: none;
+      animation: popIn 0.4s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .result-banner.found-banner {
       background: #052e16;
-      border-color: #22c55e;
+      border: 2px solid #22c55e;
       color: #86efac;
     }
 
-    .status-bar.error {
+    .result-banner.not-found-banner {
       background: #2d0a0a;
-      border-color: #ef4444;
+      border: 2px solid #ef4444;
       color: #fca5a5;
     }
 
-    /*
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 2px solid;
+    }
+
+    .ld-range  { border-color: #0ea5e9; background: #0c2a3e; }
+    .ld-mid    { border-color: #f59e0b; background: #3b2200; }
+    .ld-found  { border-color: #22c55e; background: #052e16; }
+    .ld-out    { border-color: #2a2a3e; background: #1a1a2e; opacity: 0.35; }
+  </style>
+</head>
+<body>
+
+  <h1>🔍 Binary Search Visualizer</h1>
+  <p class="subtitle">Watch the algorithm narrow down the search range step by step</p>
+
+  <div class="controls">
+    <input type="number" id="targetInput" placeholder="Target value" />
+    <button id="startBtn" onclick="startSearch()">Search</button>
+    <button id="stepBtn" onclick="step()" disabled>Step ▶</button>
+    <button id="resetBtn" onclick="resetAll()">Reset</button>
+  </div>
+
+  <div class="array-wrapper">
+    <div class="pointer-row" id="pointerRow"></div>
+    <div class="array-container" id="arrayContainer"></div>
+  </div>
+
+  <div class="result-banner" id="resultBanner"></div>
+
+  <div class="info-panel" id="infoPanel">
+    <div class="step-label">Status</div>
+    <div class="message" id="infoMessage">Enter a target value and press Search to begin.</div>
+    <div class="vars" id="infoVars"></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot ld-range"></div> In search range</div>
+    <div class="legend-item"><div class="legend-dot ld-mid"></div> Middle element</div>
+    <div class="legend-item"><div class="legend-dot ld-found"></div> Found!</div>
+    <div class="legend-item"><div class="legend-dot ld-out"></div> Eliminated</div>
+  </div>
+
+  <script>
+    // ── Data ──────────────────────────────────────────────────────────────────
+    const ARRAY = [3, 7, 11, 15, 19, 23, 28, 34, 41, 47, 53, 60, 68, 75, 82, 90];
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let lo, hi, mid, target, done, stepCount, foundIndex;
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    function init() {
+      lo = 0;
+      hi = ARRAY.length - 1;
+      mid = null;
+      done = false;
+      stepCount = 0;
+      foundIndex = -1;
+    }
+
+    // ── Render array boxes ────────────────────────────────────────────────────
+    function renderArray(highlightFound = false) {
+      const container = document.getElementById('arrayContainer');
+      const pointerRow = document.getElementById('pointerRow');
+      container.innerHTML = '';
+      pointerRow.innerHTML = '';
+
+      ARRAY.forEach((val, i) => {
+        // Determine box state
+        let cls = '';
+        if (highlightFound && i === foundIndex) {
+          cls = 'found';
+        } else if (mid !== null && i === mid && !highlightFound) {
+          cls = 'mid';
+        } else if (mid !== null && i >= lo && i <= hi && !highlightFound) {
+          cls = 'in-range';
+        } else if (!highlightFound && mid !== null && (i < lo || i > hi)) {
+          cls = 'out-of-range';
+        } else if (highlightFound && i !== foundIndex) {
+          cls = 'out-of-range';
+        }
+
+        // Box
+        const box = document.createElement('div');
+        box.className = `box ${cls}`;
+        box.id = `box-${i}`;
+
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'index-label';
+        idxLabel.textContent = i;
+
+        box.appendChild(idxLabel);
+        box.appendChild(document.createTextNode(val));
+        container.appendChild(box);
+
+        // Pointer cell
+        const cell = document.createElement('div');
+        cell.className = 'pointer-cell';
+
+        const ptrs = [];
+        if (mid !== null && i === lo)  ptrs.push({ label: 'LO',  cls: 'ptr-lo'  });
+        if (mid !== null && i === hi)  ptrs.push({ label: 'HI',  cls: 'ptr-hi'  });
+        if (mid !== null && i === mid) ptrs.push({ label: 'MID', cls: 'ptr-mid' });
+
+        if (ptrs.length === 1) {
+          cell.textContent = ptrs[0].label;
+          cell.classList.add(ptrs[0].cls);
+        } else if (ptrs.length > 1) {
+          cell.textContent = ptrs.map(p => p.label).join('/');
+          cell.classList.add('ptr-multi');
+          cell.style.color = '#c084fc';
+        }
+
+        pointerRow.appendChild(cell);
+      });
+    }
+
+    // ── Update info panel ─────────────────────────────────────────────────────
+    function updateInfo(msg) {
+      document.getElementById('infoMessage').textContent = msg;
+
+      const varsEl = document.getElementById('infoVars');
+      if (mid !== null) {
+        varsEl.innerHTML = `
+          <span class="var-lo">LO = ${lo}</span>
+          <span class="var-mid">MID = ${mid}</span>
+          <span class="var-hi">HI = ${hi}</span>
+        `;
+      } else {
+        varsEl.innerHTML = '';
+      }
+    }
+
+    // ── Start search ──────────────────────────────────────────────────────────
+    function startSearch() {
+      const raw = document.getElementById('targetInput').value.trim();
+      if (raw === '') {
+        alert('Please enter a target value.');
+        return;
+      }
+
+      target = parseInt(raw, 10);
+      if (isNaN(target)) {
+        alert('Please enter a valid integer.');
+        return;
+      }
+
+      // Hide result banner
+      const banner = document.getElementById('resultBanner');
+      banner.style.display = 'none';
+      banner.className = 'result-banner';
+
+      init();
+      renderArray();
+      updateInfo(`Searching for ${target}. Array has ${ARRAY.length} elements. Press Step ▶ to begin.`);
+
+      document.getElementById('stepBtn').disabled = false;
+      document.getElementById('startBtn').disabled = true;
+    }
+
+    // ── Single step ───────────────────────────────────────────────────────────
+    function step() {
+      if (done) return;
+      stepCount++;
+
+      if (lo > hi) {
+        // Not found
+        finish(false);
+        return;
+      }
+
+      mid = Math.floor((lo + hi) / 2);
+      renderArray();
+
+      const midVal = ARRAY[mid];
+
+      if (midVal === target) {
+        // Found!
+        foundIndex = mid;
+        finish(true);
+      } else if (midVal < target) {
+        updateInfo(
+          `Step ${stepCount}: arr[${mid}] = ${midVal} < ${target} → target is in the RIGHT half. Moving LO to ${mid + 1}.`
+        );
+        lo = mid + 1;
+      } else {
+        updateInfo(
+          `Step ${stepCount}: arr[${mid}] = ${midVal} > ${target} → target is in the LEFT half. Moving HI to ${mid - 1}.`
+        );
+        hi = mid - 1;
+      }
+
+      // Check if next iteration will fail
+      if (!done && lo > hi) {
+        // Will finish on next step — let it happen naturally
+      }
+    }
+
+    // ── Finish ────────────────────────────────────────────────────────────────
+    function finish(found) {
+      done = true;
+      document.getElementById('stepBtn').disabled = true;
+      document.getElementById('startBtn').disabled = false;
+
+      const banner = document.getElementById('resultBanner');
+
+      if (found) {
+        renderArray(true);
+        updateInfo(`✅ Found ${target} at index ${foundIndex} in ${stepCount} step(s)!`);
+        banner.textContent = `🎉 Found ${target} at index ${foundIndex}!`;
+        banner.className = 'result-banner found-banner';
+      } else {
+        // Grey everything out
+        mid = null;
+        lo = ARRAY.length; // forces all out-of-range
+        hi = -1;
+        renderArray(false);
+        updateInfo(`❌ ${target} is not in the array. Search ended after ${stepCount} step(s).`);
+        banner.textContent = `❌ ${target} not found in the array.`;
+        banner.className = 'result-banner not-found-banner';
+      }
+
+      banner.style.display = 'block';
+    }
+
+    // ── Reset ─────────────────────────────────────────────────────────────────
+    function resetAll() {
+      init();
+      mid = null;
+
+      document.getElementById('targetInput').value = '';
+      document.getElementById('stepBtn').disabled = true;
+      document.getElementById('startBtn').disabled = false;
+
+      const banner = document.getElementById('resultBanner');
+      banner.style.display = 'none';
+
+      // Render clean array
+      const container = document.getElementById('arrayContainer');
+      const pointerRow = document.getElementById('pointerRow');
+      container.innerHTML = '';
+      pointerRow.innerHTML = '';
+
+      ARRAY.forEach((val, i) => {
+        const box = document.createElement('div');
+        box.className = 'box';
+        box.id = `box-${i}`;
+
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'index-label';
+        idxLabel.textContent = i;
+
+        box.appendChild(idxLabel);
+        box.appendChild(document.createTextNode(val));
+        container.appendChild(box);
+
+        const cell = document.createElement('div');
+        cell.className = 'pointer-cell';
+        pointerRow.appendChild(cell);
+      });
+
+      updateInfo('Enter a target value and press Search to begin.');
+      document.getElementById('infoVars').innerHTML = '';
+    }
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    resetAll();
+  </script>
+</body>
+</html>

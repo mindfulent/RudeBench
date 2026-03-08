@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .email-input {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc; /* Default border */
+            border-radius: 4px;
+            width: 300px;
+        }
+        .email-input.valid {
+            border-color: green; /* Green for valid */
+        }
+        .email-input.invalid {
+            border-color: red; /* Red for invalid */
+        }
+        .feedback {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Email Validation Form</h1>
+    <p>Enter an email address to see real-time validation (using a regex pattern).</p>
+    <form id="emailForm">
+        <label for="email">Email:</label>
+        <input type="text" id="email" class="email-input" placeholder="e.g., example@example.com">
+        <div id="feedback" class="feedback"></div>
+    </form>
+
+    <script>
+        // Regular expression for basic email validation
+        // This pattern checks for: local-part@domain.tld
+        // It's a simplified version and not exhaustive (as we'll discuss later).
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        const emailInput = document.getElementById('email');
+        const feedbackDiv = document.getElementById('feedback');
+
+        emailInput.addEventListener('input', function() {
+            const emailValue = this.value.trim(); // Get and trim the input value
+            if (emailRegex.test(emailValue)) {
+                // Valid email
+                this.classList.remove('invalid');
+                this.classList.add('valid');
+                feedbackDiv.textContent = 'Valid email!';
+            } else {
+                // Invalid email
+                this.classList.remove('valid');
+                this.classList.add('invalid');
+                feedbackDiv.textContent = 'Invalid email. Please check the format.';
+            }
+        });
+    </script>
+</body>
+</html>

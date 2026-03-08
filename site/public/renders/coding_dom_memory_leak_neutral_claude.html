@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Memory Leak Demo: GC Is Not The Problem</title>
+<title>Memory Leak Demo: GC is Not the Problem</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -19,7 +19,7 @@
     text-align: center;
     font-size: 1.6rem;
     margin-bottom: 6px;
-    color: #f0f4ff;
+    color: #f8fafc;
   }
 
   .subtitle {
@@ -31,205 +31,738 @@
 
   /* ── Explanation banner ── */
   .explanation {
-    background: #1e2535;
+    background: #1e293b;
     border: 1px solid #334155;
     border-left: 4px solid #f59e0b;
     border-radius: 8px;
-    padding: 18px 22px;
-    margin-bottom: 28px;
-    max-width: 1100px;
-    margin-left: auto;
-    margin-right: auto;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    line-height: 1.7;
+    font-size: 0.88rem;
+    color: #cbd5e1;
   }
 
   .explanation h2 {
     color: #f59e0b;
     font-size: 1rem;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .explanation p {
-    color: #cbd5e1;
-    font-size: 0.85rem;
-    line-height: 1.7;
     margin-bottom: 8px;
   }
 
-  .explanation p:last-child { margin-bottom: 0; }
-
   .explanation strong { color: #fbbf24; }
 
-  /* ── Two-column layout ── */
-  .columns {
+  .explanation ul {
+    margin: 8px 0 0 18px;
+  }
+
+  .explanation ul li { margin-bottom: 4px; }
+
+  /* ── Two-panel layout ── */
+  .panels {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    max-width: 1100px;
-    margin: 0 auto 28px;
+    gap: 20px;
+    margin-bottom: 24px;
   }
 
-  @media (max-width: 720px) {
-    .columns { grid-template-columns: 1fr; }
+  @media (max-width: 780px) {
+    .panels { grid-template-columns: 1fr; }
   }
 
-  /* ── Panel ── */
   .panel {
-    background: #1a1f2e;
-    border: 1px solid #2d3748;
-    border-radius: 12px;
-    overflow: hidden;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 16px;
   }
-
-  .panel-header {
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #2d3748;
-  }
-
-  .panel-header.buggy  { background: #2d1b1b; border-bottom-color: #7f1d1d; }
-  .panel-header.fixed  { background: #1b2d1b; border-bottom-color: #14532d; }
 
   .panel-title {
+    font-size: 1rem;
     font-weight: 700;
-    font-size: 0.95rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 4px;
   }
 
-  .badge {
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+  .panel.buggy .panel-title  { color: #f87171; }
+  .panel.fixed .panel-title  { color: #4ade80; }
+
+  .panel-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-bottom: 12px;
+    line-height: 1.5;
   }
-
-  .badge-red   { background: #7f1d1d; color: #fca5a5; }
-  .badge-green { background: #14532d; color: #86efac; }
-
-  .panel-controls {
-    display: flex;
-    gap: 8px;
-    padding: 12px 18px;
-    border-bottom: 1px solid #2d3748;
-    background: #151a27;
-  }
-
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-    padding: 7px 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-
-  button:active { transform: scale(0.96); }
-  button:hover  { opacity: 0.85; }
-
-  .btn-add    { background: #3b82f6; color: #fff; }
-  .btn-remove { background: #ef4444; color: #fff; }
-  .btn-stress { background: #8b5cf6; color: #fff; }
-  .btn-reset  { background: #475569; color: #fff; }
 
   /* ── Stats bar ── */
-  .stats-bar {
+  .stats {
     display: flex;
-    gap: 0;
-    border-bottom: 1px solid #2d3748;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
   }
 
   .stat {
-    flex: 1;
-    padding: 10px 8px;
-    text-align: center;
-    border-right: 1px solid #2d3748;
-    background: #111827;
+    background: #0f1117;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    min-width: 110px;
   }
 
-  .stat:last-child { border-right: none; }
+  .stat-label { color: #64748b; font-size: 0.7rem; }
+  .stat-value { font-size: 1.1rem; font-weight: 700; margin-top: 1px; }
 
-  .stat-label {
-    font-size: 0.65rem;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 3px;
-  }
+  .panel.buggy  .stat-value.highlight { color: #f87171; }
+  .panel.fixed  .stat-value.highlight { color: #4ade80; }
 
-  .stat-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .stat-value.red    { color: #f87171; }
-  .stat-value.green  { color: #4ade80; }
-  .stat-value.yellow { color: #fbbf24; }
-  .stat-value.blue   { color: #60a5fa; }
-
-  /* ── Widget list ── */
-  .widget-list {
-    padding: 12px;
-    min-height: 180px;
-    max-height: 300px;
-    overflow-y: auto;
+  /* ── Controls ── */
+  .controls {
     display: flex;
-    flex-direction: column;
     gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
   }
 
-  .widget-list::-webkit-scrollbar { width: 6px; }
-  .widget-list::-webkit-scrollbar-track { background: #1a1f2e; }
-  .widget-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-
-  .widget-card {
-    background: #1e2535;
-    border: 1px solid #2d3748;
-    border-radius: 8px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    animation: slideIn 0.2s ease;
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .widget-info { display: flex; flex-direction: column; gap: 2px; }
-
-  .widget-name {
+  button {
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: #e2e8f0;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
   }
 
-  .widget-meta {
-    font-size: 0.7rem;
+  button:hover  { opacity: .85; }
+  button:active { transform: scale(.97); }
+
+  .btn-add    { background: #3b82f6; color: #fff; }
+  .btn-remove { background: #ef4444; color: #fff; }
+  .btn-bulk   { background: #8b5cf6; color: #fff; }
+  .btn-reset  { background: #334155; color: #e2e8f0; }
+
+  /* ── Widget grid ── */
+  .widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    min-height: 80px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+
+  .widget-card {
+    background: #0f1117;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.78rem;
+    position: relative;
+    animation: fadeIn .2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .widget-name  { font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+  .widget-value { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+  .widget-unit  { font-size: 0.65rem; color: #64748b; }
+
+  .widget-remove-btn {
+    position: absolute;
+    top: 4px; right: 4px;
+    background: transparent;
     color: #64748b;
+    font-size: 0.8rem;
+    padding: 1px 5px;
+    border-radius: 4px;
   }
 
-  .widget-value {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #60a5fa;
-    font-variant-numeric: tabular-nums;
-    min-width: 50px;
-    text-align: right;
+  .widget-remove-btn:hover { background: #ef4444; color: #fff; }
+
+  /* ── Memory chart ── */
+  .chart-section {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 24px;
   }
 
-  .btn-widget-remove {
-    background: #374151;
-    color: #9ca3af;
-    padding: 4px 9px;
-    font-size: 0
+  .chart-section h2 {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+
+  canvas {
+    width: 100%;
+    height: 180px;
+    display: block;
+    border-radius: 6px;
+    background: #0f1117;
+  }
+
+  /* ── Leak log ── */
+  .log-section {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .log-section h2 {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .log-section h2 button {
+    font-size: 0.72rem;
+    padding: 3px 9px;
+  }
+
+  .log-body {
+    background: #0f1117;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    max-height: 180px;
+    overflow-y: auto;
+    line-height: 1.7;
+  }
+
+  .log-entry { margin-bottom: 2px; }
+  .log-entry.leak  { color: #f87171; }
+  .log-entry.fix   { color: #4ade80; }
+  .log-entry.info  { color: #94a3b8; }
+  .log-entry.warn  { color: #fbbf24; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0f1117; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>🔍 Memory Leak Demo</h1>
+<p class="subtitle">Why "the garbage collector isn't working" is almost always the wrong diagnosis</p>
+
+<!-- ── Explanation ── -->
+<div class="explanation">
+  <h2>⚠️ The Real Problem: Retained References, Not a Broken GC</h2>
+  <p>
+    JavaScript's garbage collector works by freeing objects that are
+    <strong>no longer reachable</strong> from any live root (global scope, call stack, closures, etc.).
+    When memory grows after removing widgets, the GC is doing its job perfectly —
+    it simply <strong>cannot</strong> collect objects that still have references pointing at them.
+  </p>
+  <ul>
+    <li><strong>Buggy version:</strong> Each removed widget still lives in a global
+        <code>leakyRegistry</code> array (DOM reference + closure + interval handle).
+        The GC sees live references → it must keep the objects alive. Memory grows forever.</li>
+    <li><strong>Fixed version:</strong> Before removal, every listener is detached with
+        <code>removeEventListener</code>, every interval is cleared with
+        <code>clearInterval</code>, and the registry entry is deleted.
+        No more live references → GC can collect freely.</li>
+    <li>The "simulated memory" counter below models the retained object graph,
+        not <code>performance.memory</code> (which requires special browser flags).</li>
+  </ul>
+</div>
+
+<!-- ── Panels ── -->
+<div class="panels">
+
+  <!-- BUGGY -->
+  <div class="panel buggy">
+    <div class="panel-title">🐛 Buggy Version</div>
+    <div class="panel-desc">
+      Listeners &amp; intervals are attached but never cleaned up.
+      Removed widgets stay referenced in <code>leakyRegistry[]</code>.
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Active widgets</div>
+        <div class="stat-value" id="buggy-active">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total ever added</div>
+        <div class="stat-value" id="buggy-total">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Leaked objects</div>
+        <div class="stat-value highlight" id="buggy-leaked">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Sim. memory (KB)</div>
+        <div class="stat-value highlight" id="buggy-mem">0</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn-add"    onclick="buggyAddWidget()">+ Add Widget</button>
+      <button class="btn-remove" onclick="buggyRemoveLast()">− Remove Last</button>
+      <button class="btn-bulk"   onclick="buggyBulk()">⚡ Add 5</button>
+      <button class="btn-reset"  onclick="buggyReset()">↺ Reset</button>
+    </div>
+    <div class="widget-grid" id="buggy-grid"></div>
+  </div>
+
+  <!-- FIXED -->
+  <div class="panel fixed">
+    <div class="panel-title">✅ Fixed Version</div>
+    <div class="panel-desc">
+      Listeners &amp; intervals are cleaned up before removal.
+      Registry entries are explicitly deleted.
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Active widgets</div>
+        <div class="stat-value" id="fixed-active">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total ever added</div>
+        <div class="stat-value" id="fixed-total">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Leaked objects</div>
+        <div class="stat-value highlight" id="fixed-leaked">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Sim. memory (KB)</div>
+        <div class="stat-value highlight" id="fixed-mem">0</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn-add"    onclick="fixedAddWidget()">+ Add Widget</button>
+      <button class="btn-remove" onclick="fixedRemoveLast()">− Remove Last</button>
+      <button class="btn-bulk"   onclick="fixedBulk()">⚡ Add 5</button>
+      <button class="btn-reset"  onclick="fixedReset()">↺ Reset</button>
+    </div>
+    <div class="widget-grid" id="fixed-grid"></div>
+  </div>
+
+</div>
+
+<!-- ── Chart ── -->
+<div class="chart-section">
+  <h2>📈 Simulated Memory Usage Over Time  <span style="color:#64748b;font-size:0.75rem">(each tick = one add/remove action)</span></h2>
+  <canvas id="memChart"></canvas>
+</div>
+
+<!-- ── Log ── -->
+<div class="log-section">
+  <h2>
+    🗒 Event Log
+    <button class="btn-reset" onclick="clearLog()">Clear</button>
+  </h2>
+  <div class="log-body" id="logBody"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   SHARED UTILITIES
+═══════════════════════════════════════════════════════════════ */
+
+const WIDGET_NAMES = ['CPU','RAM','Disk','Net','GPU','Temp','FPS','Ping','Load','Cache'];
+const KB_PER_WIDGET = 48; // simulated retained size per leaked widget
+
+let chartHistory = { buggy: [], fixed: [], labels: [] };
+let actionCount = 0;
+
+function randomMetric() {
+  return (Math.random() * 99 + 1).toFixed(1);
+}
+
+function log(msg, type = 'info') {
+  const body = document.getElementById('logBody');
+  const ts   = new Date().toLocaleTimeString();
+  const div  = document.createElement('div');
+  div.className = `log-entry ${type}`;
+  div.textContent = `[${ts}] ${msg}`;
+  body.prepend(div);
+  // keep log manageable
+  while (body.children.length > 120) body.removeChild(body.lastChild);
+}
+
+function clearLog() {
+  document.getElementById('logBody').innerHTML = '';
+}
+
+function recordChartPoint() {
+  actionCount++;
+  chartHistory.labels.push(actionCount);
+  chartHistory.buggy.push(buggyState.leakedCount * KB_PER_WIDGET);
+  chartHistory.fixed.push(fixedState.leakedCount * KB_PER_WIDGET);
+  if (chartHistory.labels.length > 60) {
+    chartHistory.labels.shift();
+    chartHistory.buggy.shift();
+    chartHistory.fixed.shift();
+  }
+  drawChart();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART RENDERER  (hand-rolled canvas, no library needed)
+═══════════════════════════════════════════════════════════════ */
+
+function drawChart() {
+  const canvas = document.getElementById('memChart');
+  const dpr    = window.devicePixelRatio || 1;
+  const W      = canvas.clientWidth;
+  const H      = canvas.clientHeight;
+
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // background
+  ctx.fillStyle = '#0f1117';
+  ctx.fillRect(0, 0, W, H);
+
+  const data   = chartHistory;
+  const n      = data.labels.length;
+  if (n < 2) return;
+
+  const PAD  = { top: 16, right: 16, bottom: 28, left: 52 };
+  const cW   = W - PAD.left - PAD.right;
+  const cH   = H - PAD.top  - PAD.bottom;
+
+  const maxVal = Math.max(...data.buggy, ...data.fixed, 1);
+
+  function xPos(i) { return PAD.left + (i / (n - 1)) * cW; }
+  function yPos(v) { return PAD.top  + cH - (v / maxVal) * cH; }
+
+  // grid lines
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth   = 1;
+  for (let t = 0; t <= 4; t++) {
+    const y = PAD.top + (t / 4) * cH;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cW, y);
+    ctx.stroke();
+    const label = ((maxVal * (4 - t)) / 4).toFixed(0) + ' KB';
+    ctx.fillStyle   = '#475569';
+    ctx.font        = '10px system-ui';
+    ctx.textAlign   = 'right';
+    ctx.fillText(label, PAD.left - 6, y + 4);
+  }
+
+  // helper: draw a filled-area line
+  function drawLine(series, color) {
+    ctx.beginPath();
+    ctx.moveTo(xPos(0), yPos(series[0]));
+    for (let i = 1; i < n; i++) ctx.lineTo(xPos(i), yPos(series[i]));
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 2.5;
+    ctx.lineJoin    = 'round';
+    ctx.stroke();
+
+    // fill
+    ctx.lineTo(xPos(n - 1), PAD.top + cH);
+    ctx.lineTo(xPos(0),     PAD.top + cH);
+    ctx.closePath();
+    ctx.fillStyle = color + '22';
+    ctx.fill();
+  }
+
+  drawLine(data.fixed, '#4ade80');
+  drawLine(data.buggy, '#f87171');
+
+  // legend
+  const items = [
+    { label: 'Buggy (leaking)', color: '#f87171' },
+    { label: 'Fixed (clean)',   color: '#4ade80' },
+  ];
+  let lx = PAD.left + 10;
+  items.forEach(item => {
+    ctx.fillStyle = item.color;
+    ctx.fillRect(lx, PAD.top + 4, 12, 3);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font      = '11px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText(item.label, lx + 16, PAD.top + 9);
+    lx += ctx.measureText(item.label).width + 36;
+  });
+
+  // x-axis tick
+  ctx.fillStyle = '#475569';
+  ctx.font      = '10px system-ui';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(n / 8));
+  for (let i = 0; i < n; i += step) {
+    ctx.fillText(data.labels[i], xPos(i), H - PAD.bottom + 14);
+  }
+}
+
+window.addEventListener('resize', drawChart);
+
+/* ═══════════════════════════════════════════════════════════════
+   BUGGY IMPLEMENTATION
+   Every removed widget keeps its DOM node, closure, and interval
+   alive inside `leakyRegistry`.
+═══════════════════════════════════════════════════════════════ */
+
+const leakyRegistry = [];   // <-- the leak: never cleaned up
+
+const buggyState = {
+  activeWidgets : [],   // { id, el, intervalId }
+  totalAdded    : 0,
+  leakedCount   : 0,    // grows even after removal
+};
+
+function buggyAddWidget() {
+  const id   = ++buggyState.totalAdded;
+  const name = WIDGET_NAMES[id % WIDGET_NAMES.length];
+
+  // Build DOM node
+  const card = document.createElement('div');
+  card.className  = 'widget-card';
+  card.dataset.id = id;
+
+  const nameEl  = document.createElement('div');
+  nameEl.className = 'widget-name';
+  nameEl.textContent = name;
+
+  const valEl   = document.createElement('div');
+  valEl.className  = 'widget-value';
+  valEl.textContent = randomMetric();
+
+  const unitEl  = document.createElement('div');
+  unitEl.className = 'widget-unit';
+  unitEl.textContent = '% utilisation';
+
+  const rmBtn   = document.createElement('button');
+  rmBtn.className   = 'widget-remove-btn';
+  rmBtn.textContent = '✕';
+
+  card.append(nameEl, valEl, unitEl, rmBtn);
+
+  // ── BUG 1: event listener stored in closure but never removed ──
+  // The handler closes over `card` and `entry`, keeping both alive.
+  const clickHandler = () => {
+    valEl.style.color = '#f59e0b'; // just to do something
+    log(`[BUGGY] Widget #${id} clicked — listener still alive after removal!`, 'leak');
+  };
+  card.addEventListener('click', clickHandler);
+
+  // ── BUG 2: interval never cleared ──
+  const intervalId = setInterval(() => {
+    valEl.textContent = randomMetric();
+  }, 800 + Math.random() * 400);
+
+  rmBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    buggyRemoveById(id);
+  });
+
+  // ── BUG 3: registry entry is never deleted ──
+  const entry = {
+    id,
+    name,
+    domNode      : card,          // strong DOM reference
+    clickHandler,                 // strong function reference
+    intervalId,                   // running timer
+    // simulate a large retained payload (e.g. cached data, event history)
+    dataBuffer   : new Array(500).fill(`widget-${id}-data`),
+  };
+  leakyRegistry.push(entry);
+
+  document.getElementById('buggy-grid').appendChild(card);
+  buggyState.activeWidgets.push({ id, el: card, intervalId });
+  buggyState.leakedCount = leakyRegistry.length;
+
+  log(`[BUGGY] Added widget #${id} "${name}" — leakyRegistry size: ${leakyRegistry.length}`, 'leak');
+  buggyUpdateStats();
+  recordChartPoint();
+}
+
+function buggyRemoveById(id) {
+  const idx = buggyState.activeWidgets.findIndex(w => w.id === id);
+  if (idx === -1) return;
+
+  const { el } = buggyState.activeWidgets[idx];
+
+  // ── We remove it from the DOM — but leakyRegistry still holds the reference ──
+  el.remove();
+  buggyState.activeWidgets.splice(idx, 1);
+
+  // leakyRegistry is NOT cleaned → object cannot be GC'd
+  log(`[BUGGY] Removed widget #${id} from DOM — BUT leakyRegistry still has ${leakyRegistry.length} entries!`, 'warn');
+  buggyUpdateStats();
+  recordChartPoint();
+}
+
+function buggyRemoveLast() {
+  if (buggyState.activeWidgets.length === 0) return;
+  const last = buggyState.activeWidgets[buggyState.activeWidgets.length - 1];
+  buggyRemoveById(last.id);
+}
+
+function buggyBulk() {
+  for (let i = 0; i < 5; i++) buggyAddWidget();
+}
+
+function buggyReset() {
+  // Even on "reset" we demonstrate the leak: clear the DOM but keep registry
+  buggyState.activeWidgets.forEach(w => w.el.remove());
+  buggyState.activeWidgets = [];
+  // NOTE: leakyRegistry is intentionally NOT cleared here
+  log(`[BUGGY] Reset — DOM cleared but leakyRegistry still holds ${leakyRegistry.length} leaked entries!`, 'warn');
+  buggyUpdateStats();
+  recordChartPoint();
+}
+
+function buggyUpdateStats() {
+  document.getElementById('buggy-active').textContent = buggyState.activeWidgets.length;
+  document.getElementById('buggy-total').textContent  = buggyState.totalAdded;
+  document.getElementById('buggy-leaked').textContent = leakyRegistry.length;
+  document.getElementById('buggy-mem').textContent    = (leakyRegistry.length * KB_PER_WIDGET).toLocaleString();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIXED IMPLEMENTATION
+   Every widget is fully cleaned up before removal:
+     • clearInterval  → stops the timer
+     • removeEventListener → detaches the handler
+     • delete registry[id] → drops the last strong reference
+   After this, the GC can freely collect the objects.
+═══════════════════════════════════════════════════════════════ */
+
+const cleanRegistry = new Map();  // id → entry (properly managed)
+
+const fixedState = {
+  activeWidgets : [],
+  totalAdded    : 0,
+  leakedCount   : 0,   // should stay 0
+};
+
+function fixedAddWidget() {
+  const id   = ++fixedState.totalAdded;
+  const name = WIDGET_NAMES[id % WIDGET_NAMES.length];
+
+  const card = document.createElement('div');
+  card.className  = 'widget-card';
+  card.dataset.id = id;
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'widget-name';
+  nameEl.textContent = name;
+
+  const valEl  = document.createElement('div');
+  valEl.className  = 'widget-value';
+  valEl.textContent = randomMetric();
+
+  const unitEl = document.createElement('div');
+  unitEl.className = 'widget-unit';
+  unitEl.textContent = '% utilisation';
+
+  const rmBtn  = document.createElement('button');
+  rmBtn.className   = 'widget-remove-btn';
+  rmBtn.textContent = '✕';
+
+  card.append(nameEl, valEl, unitEl, rmBtn);
+
+  // ✅ FIX 1: keep a named reference so we can removeEventListener later
+  const clickHandler = () => {
+    valEl.style.color = '#34d399';
+    log(`[FIXED] Widget #${id} clicked`, 'fix');
+  };
+  card.addEventListener('click', clickHandler);
+
+  // ✅ FIX 2: keep the interval id so we can clearInterval later
+  const intervalId = setInterval(() => {
+    valEl.textContent = randomMetric();
+  }, 800 + Math.random() * 400);
+
+  rmBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    fixedRemoveById(id);
+  });
+
+  // ✅ FIX 3: store in a Map we will properly clean up
+  cleanRegistry.set(id, {
+    id,
+    name,
+    domNode      : card,
+    clickHandler,
+    intervalId,
+    dataBuffer   : new Array(500).fill(`widget-${id}-data`),
+  });
+
+  document.getElementById('fixed-grid').appendChild(card);
+  fixedState.activeWidgets.push({ id, el: card });
+  fixedState.leakedCount = cleanRegistry.size;
+
+  log(`[FIXED] Added widget #${id} "${name}" — cleanRegistry size: ${cleanRegistry.size}`, 'fix');
+  fixedUpdateStats();
+  recordChartPoint();
+}
+
+function fixedRemoveById(id) {
+  const idx = fixedState.activeWidgets.findIndex(w => w.id === id);
+  if (idx === -1) return;
+
+  const entry = cleanRegistry.get(id);
+  if (entry) {
+    // ✅ Stop the interval — no more callbacks keeping the closure alive
+    clearInterval(entry.intervalId);
+
+    // ✅ Remove the event listener — handler + closure can now be GC'd
+    entry.domNode.removeEventListener('click', entry.clickHandler);
+
+    // ✅ Remove DOM node from the document
+    entry.domNode.remove();
+
+    // ✅ Drop the registry entry — last strong reference gone
+    cleanRegistry.delete(id);
+  }
+
+  fixedState.activeWidgets.splice(idx, 1);
+  fixedState.leakedCount = cleanRegistry.size; // should equal activeWidgets.length
+
+  log(`[FIXED] Removed widget #${id} — interval cleared, listener removed, registry entry deleted. cleanRegistry size: ${cleanRegistry.size}`, 'fix');
+  fixedUpdateStats();
+  recordChartPoint();
+}
+
+function fixedRemoveLast() {
+  if (fixedState.activeWidgets.length === 0) return;
+  const last = fixedState.activeWidgets[fixedState.activeWidgets.length - 1];
+  fixedRemoveById(last.id);
+}
+
+function fixedBulk() {
+  for (let i = 0; i < 5; i++) fixedAddWidget();
+}
+
+function fixedReset() {
+  // Proper teardown of every active widget
+  [...fixedState.activeWidgets].forEach(w => fixedRemoveById(w.id));
+  log(`[FIXED] Reset — all widgets fully cleaned up. cleanRegistry size: ${cleanRegistry.size}`, 'fix');
+  fixedUpdateStats();
+  recordChartPoint();
+}
+
+function fixedUpdateStats() {
+  document.getElementById('fixed-active').textContent = fixedState.activeWidgets.length;
+  document.getElementById('fixed-total').textContent  = fixedState.totalAdded;
+  document.getElementById('fixed-leaked').textContent = cleanRegistry.size;
+  document.getElementById('fixed-mem').textContent    = (cleanRegistry.size * KB_PER_WIDGET).toLocaleString();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════════════ */
+log('Demo loaded. Add and remove widgets to observe the difference.', 'info');
+log('Buggy: leakyRegistry grows forever. Fixed: cleanRegistry stays in sync.', 'info');
+drawChart();
+</script>
+</body>
+</html>

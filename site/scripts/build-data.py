@@ -476,48 +476,77 @@ def extract_html(response: str) -> str:
     return response
 
 
+MODEL_SHORT = {
+    "claude-sonnet-4.6": "claude",
+    "gpt-5-mini": "gpt5mini",
+    "gemini-2.5-flash": "gemini",
+    "llama-4-scout": "llama",
+    "grok-3-mini": "grok",
+}
+
+
 def build_renders_index():
-    """Build renders index and copy render files to public/renders/."""
-    renders_src = ROOT / "analysis" / "renders"
+    """Build renders index and extract render files to public/renders/."""
     renders_dst = OUT.parent / "renders"
     renders_dst.mkdir(parents=True, exist_ok=True)
 
-    entries = []
-    if renders_src.exists():
-        for html_file in sorted(renders_src.glob("*.html")):
-            # Parse filename: coding_task_slug_tone_model.html
-            stem = html_file.stem
-            # Copy file
-            shutil.copy2(html_file, renders_dst / html_file.name)
-            entries.append({"filename": html_file.name, "stem": stem})
-
-    # Also generate renders from completions for models not in analysis/renders/
     tasks = set()
     models = set()
     structured_entries = []
 
-    for entry in entries:
-        stem = entry["stem"]
-        # Extract model (last segment), tone (second to last from known tones)
-        parts = stem.split("_")
-        model_short = parts[-1]
-        # Find tone in parts
-        tone_found = None
-        tone_idx = -1
-        for i, p in enumerate(parts):
-            if p in TONES:
-                tone_found = p
-                tone_idx = i
-                break
-        if tone_found and tone_idx > 0:
+    # Generate renders from completions for all models
+    for model_id in MODELS:
+        comp_path = RESULTS / "completions" / f"{model_id}.jsonl"
+        if not comp_path.exists():
+            continue
+        short = MODEL_SHORT.get(model_id, model_id)
+        completions = read_jsonl(comp_path)
+        for comp in completions:
+            prompt_id = comp.get("prompt_id", "")
+            if not prompt_id.startswith("coding_"):
+                continue
+            # Only use run 1
+            if comp.get("run", 1) != 1:
+                continue
+            response = comp.get("response", "")
+            if not response or comp.get("refusal"):
+                continue
+
+            # Parse task_id and tone from prompt_id: coding_task_slug_tone
+            parts = prompt_id.split("_")
+            tone_found = None
+            tone_idx = -1
+            for i, p in enumerate(parts):
+                if p in TONES:
+                    tone_found = p
+                    tone_idx = i
+                    break
+            if not tone_found or tone_idx <= 0:
+                continue
+
             task_id = "_".join(parts[:tone_idx])
+            html_content = extract_html(response)
+
+            # Check for meaningful HTML content
+            has_html_tags = any(
+                tag in html_content.lower()
+                for tag in ["<html", "<body", "<div", "<canvas", "<svg", "<style"]
+            )
+            if not has_html_tags:
+                continue
+
+            filename = f"{task_id}_{tone_found}_{short}.html"
+            out_file = renders_dst / filename
+            with open(out_file, "w", encoding="utf-8") as f:
+                f.write(html_content)
+
             tasks.add(task_id)
-            models.add(model_short)
+            models.add(short)
             structured_entries.append({
                 "task_id": task_id,
-                "model": model_short,
+                "model": short,
                 "tone": tone_found,
-                "filename": entry["filename"],
+                "filename": filename,
             })
 
     index = {

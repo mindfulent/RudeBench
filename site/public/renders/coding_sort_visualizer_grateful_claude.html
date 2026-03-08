@@ -1,244 +1,831 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sorting Algorithm Comparison</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    min-height: 100vh;
-    color: #fff;
-    padding: 20px;
-  }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
 
-  h1 {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 6px;
-    background: linear-gradient(90deg, #f7971e, #ffd200);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #f093fb, #f5576c, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-  .subtitle {
-    text-align: center;
-    color: #aaa;
-    margin-bottom: 24px;
-    font-size: 0.95rem;
-  }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
 
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            align-items: center;
+        }
 
-  .controls label { color: #ccc; font-size: 0.9rem; align-self: center; }
+        .controls label {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
 
-  select, input[type=range] {
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: none;
-    background: #2a2a4a;
-    color: #fff;
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
+        .controls input[type="range"] {
+            width: 130px;
+            accent-color: #f5576c;
+        }
 
-  button {
-    padding: 8px 22px;
-    border-radius: 10px;
-    border: none;
-    font-size: 0.95rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-  }
+        button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
 
-  button:active { transform: scale(0.96); }
+        #startBtn {
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            color: #fff;
+        }
 
-  #btnStart {
-    background: linear-gradient(90deg, #f7971e, #ffd200);
-    color: #1a1a2e;
-  }
+        #startBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 18px rgba(245,87,108,0.5);
+        }
 
-  #btnReset {
-    background: linear-gradient(90deg, #ee0979, #ff6a00);
-    color: #fff;
-  }
+        #resetBtn {
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            color: #fff;
+        }
 
-  #btnStep {
-    background: linear-gradient(90deg, #43cea2, #185a9d);
-    color: #fff;
-  }
+        #resetBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 18px rgba(79,172,254,0.5);
+        }
 
-  #speedLabel { color: #ccc; font-size: 0.85rem; align-self: center; }
+        #startBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-  .panels {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 28px;
-  }
+        .speed-label {
+            background: rgba(255,255,255,0.08);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #ddd;
+        }
 
-  .panel {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+        .algorithms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto 30px auto;
+        }
 
-  .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
+        .algo-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 18px;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s;
+        }
 
-  .algo-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-  }
+        .algo-card.active {
+            border-color: rgba(245,87,108,0.6);
+            box-shadow: 0 0 20px rgba(245,87,108,0.15);
+        }
 
-  .badge {
-    font-size: 0.72rem;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-  }
+        .algo-card.done {
+            border-color: rgba(0,242,254,0.5);
+            box-shadow: 0 0 20px rgba(0,242,254,0.1);
+        }
 
-  .badge-slow  { background: #c0392b; color: #fff; }
-  .badge-fast  { background: #27ae60; color: #fff; }
-  .badge-great { background: #2980b9; color: #fff; }
+        .algo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
 
-  .complexity-box {
-    background: rgba(0,0,0,0.25);
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 0.78rem;
-    line-height: 1.7;
-    color: #ccc;
-  }
+        .algo-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
 
-  .complexity-box span { color: #ffd200; font-weight: bold; }
+        .bubble-name { color: #f5576c; }
+        .merge-name  { color: #4facfe; }
+        .quick-name  { color: #43e97b; }
 
-  .stats {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
+        .badge {
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
 
-  .stat {
-    background: rgba(255,255,255,0.07);
-    border-radius: 8px;
-    padding: 5px 12px;
-    font-size: 0.82rem;
-    flex: 1;
-    text-align: center;
-    min-width: 70px;
-  }
+        .badge-bubble { background: rgba(245,87,108,0.2); color: #f5576c; border: 1px solid #f5576c; }
+        .badge-merge  { background: rgba(79,172,254,0.2); color: #4facfe; border: 1px solid #4facfe; }
+        .badge-quick  { background: rgba(67,233,123,0.2); color: #43e97b; border: 1px solid #43e97b; }
 
-  .stat-val {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #ffd200;
-    display: block;
-  }
+        .chart-container {
+            width: 100%;
+            height: 180px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 8px 6px 4px;
+            margin-bottom: 14px;
+            position: relative;
+            overflow: hidden;
+        }
 
-  .chart-area {
-    height: 160px;
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 10px;
-    padding: 6px 6px 0;
-    overflow: hidden;
-    position: relative;
-  }
+        .bar {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            transition: height 0.05s ease;
+            min-width: 2px;
+            position: relative;
+        }
 
-  .bar {
-    flex: 1;
-    border-radius: 4px 4px 0 0;
-    transition: height 0.08s ease;
-    min-width: 4px;
-    position: relative;
-  }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
 
-  .status-line {
-    font-size: 0.8rem;
-    color: #aaa;
-    min-height: 18px;
-    text-align: center;
-  }
+        .stat-box {
+            background: rgba(0,0,0,0.25);
+            border-radius: 8px;
+            padding: 8px 12px;
+            text-align: center;
+            flex: 1;
+            min-width: 80px;
+        }
 
-  .done-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #2ecc71;
-    background: rgba(0,0,0,0.18);
-    border-radius: 10px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s;
-  }
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: block;
+        }
 
-  .done-overlay.show { opacity: 1; }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-  /* Complexity info section */
-  .info-section {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 20px 24px;
-    margin-bottom: 20px;
-  }
+        .bubble-stat { color: #f5576c; }
+        .merge-stat  { color: #4facfe; }
+        .quick-stat  { color: #43e97b; }
 
-  .info-section h2 {
-    font-size: 1.15rem;
-    margin-bottom: 14px;
-    color: #ffd200;
-  }
+        .status-text {
+            font-size: 0.82rem;
+            color: #bbb;
+            min-height: 18px;
+            text-align: center;
+        }
 
-  .complexity-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-  }
+        .complexity-section {
+            max-width: 1400px;
+            margin: 0 auto 30px auto;
+        }
 
-  .complexity-table th {
-    background: rgba(255,255,255,0.08);
-    padding: 8px 12px;
-    text-align: left;
-    color: #ffd200;
-    font-weight: bold;
-  }
+        .complexity-section h2 {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            color: #ddd;
+        }
 
-  .complexity-table td {
-    padding: 7px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    color: #ccc;
-  }
+        .complexity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
 
-  .complexity-table tr:last-child td { border-bottom: none; }
-  .complexity-table .highlight { color: #e74c3c; font-weight: bold; }
-  .complexity-table .good      { color: #2ecc71; font-weight: bold; }
-  .complexity-table .medium    { color: #f39c12; font-weight: bold; }
+        .complexity-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 18px;
+        }
 
-  .verdict {
-    margin-top: 16px;
-    background: linear-gradient(90deg, rgba(231,76,60,0.15), rgba(255,107,0,
+        .complexity-card h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-bubble { background: #f5576c; }
+        .dot-merge  { background: #4facfe; }
+        .dot-quick  { background: #43e97b; }
+
+        .complexity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .complexity-table th {
+            text-align: left;
+            color: #888;
+            padding: 4px 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-weight: 500;
+        }
+
+        .complexity-table td {
+            padding: 6px 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .complexity-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .good  { color: #43e97b; font-weight: 600; }
+        .ok    { color: #f9ca24; font-weight: 600; }
+        .bad   { color: #f5576c; font-weight: 600; }
+
+        .verdict-box {
+            max-width: 1400px;
+            margin: 0 auto 20px auto;
+            background: rgba(245,87,108,0.08);
+            border: 1px solid rgba(245,87,108,0.3);
+            border-radius: 14px;
+            padding: 20px 24px;
+        }
+
+        .verdict-box h2 {
+            color: #f5576c;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .verdict-box p {
+            color: #ccc;
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        .verdict-box strong {
+            color: #fff;
+        }
+
+        .winner-banner {
+            display: none;
+            text-align: center;
+            font-size: 1rem;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 16px;
+            font-weight: 600;
+            background: linear-gradient(90deg, rgba(67,233,123,0.15), rgba(79,172,254,0.15));
+            border: 1px solid rgba(67,233,123,0.3);
+            color: #43e97b;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            font-size: 0.82rem;
+            color: #bbb;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.4rem; }
+            .chart-container { height: 130px; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>⚡ Sorting Algorithm Showdown</h1>
+<p class="subtitle">Watch Bubble Sort get humbled by Merge Sort &amp; Quick Sort in real time</p>
+
+<div class="controls">
+    <div>
+        <label>Array Size: <strong id="sizeVal">40</strong></label><br>
+        <input type="range" id="sizeSlider" min="10" max="80" value="40">
+    </div>
+    <div>
+        <label>Speed: <strong id="speedVal">Medium</strong></label><br>
+        <input type="range" id="speedSlider" min="1" max="5" value="3">
+    </div>
+    <button id="startBtn">▶ Start Sorting</button>
+    <button id="resetBtn">↺ New Array</button>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-color" style="background:#aaa;"></div> Unsorted</div>
+    <div class="legend-item"><div class="legend-color" style="background:#f9ca24;"></div> Comparing</div>
+    <div class="legend-item"><div class="legend-color" style="background:#f5576c;"></div> Swapping</div>
+    <div class="legend-item"><div class="legend-color" style="background:#43e97b;"></div> Sorted</div>
+    <div class="legend-item"><div class="legend-color" style="background:#4facfe;"></div> Pivot / Merging</div>
+</div>
+
+<div class="algorithms-grid">
+    <!-- Bubble Sort -->
+    <div class="algo-card" id="card-bubble">
+        <div class="algo-header">
+            <span class="algo-name bubble-name">🫧 Bubble Sort</span>
+            <span class="badge badge-bubble">O(n²)</span>
+        </div>
+        <div class="chart-container" id="chart-bubble"></div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <span class="stat-value bubble-stat" id="comps-bubble">0</span>
+                <span class="stat-label">Comparisons</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value bubble-stat" id="swaps-bubble">0</span>
+                <span class="stat-label">Swaps</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value bubble-stat" id="time-bubble">0ms</span>
+                <span class="stat-label">Time</span>
+            </div>
+        </div>
+        <div class="status-text" id="status-bubble">Ready</div>
+    </div>
+
+    <!-- Merge Sort -->
+    <div class="algo-card" id="card-merge">
+        <div class="algo-header">
+            <span class="algo-name merge-name">🔀 Merge Sort</span>
+            <span class="badge badge-merge">O(n log n)</span>
+        </div>
+        <div class="chart-container" id="chart-merge"></div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <span class="stat-value merge-stat" id="comps-merge">0</span>
+                <span class="stat-label">Comparisons</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value merge-stat" id="swaps-merge">0</span>
+                <span class="stat-label">Merges</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value merge-stat" id="time-merge">0ms</span>
+                <span class="stat-label">Time</span>
+            </div>
+        </div>
+        <div class="status-text" id="status-merge">Ready</div>
+    </div>
+
+    <!-- Quick Sort -->
+    <div class="algo-card" id="card-quick">
+        <div class="algo-header">
+            <span class="algo-name quick-name">⚡ Quick Sort</span>
+            <span class="badge badge-quick">O(n log n)</span>
+        </div>
+        <div class="chart-container" id="chart-quick"></div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <span class="stat-value quick-stat" id="comps-quick">0</span>
+                <span class="stat-label">Comparisons</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value quick-stat" id="swaps-quick">0</span>
+                <span class="stat-label">Swaps</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value quick-stat" id="time-quick">0ms</span>
+                <span class="stat-label">Time</span>
+            </div>
+        </div>
+        <div class="status-text" id="status-quick">Ready</div>
+    </div>
+</div>
+
+<div id="winnerBanner" class="winner-banner"></div>
+
+<!-- Complexity Section -->
+<div class="complexity-section">
+    <h2>📊 Time &amp; Space Complexity Reference</h2>
+    <div class="complexity-grid">
+
+        <div class="complexity-card">
+            <h3><span class="dot dot-bubble"></span> Bubble Sort</h3>
+            <table class="complexity-table">
+                <tr><th>Case</th><th>Time</th><th>Space</th></tr>
+                <tr><td>Best</td><td class="ok">O(n)</td><td rowspan="3" class="good">O(1)</td></tr>
+                <tr><td>Average</td><td class="bad">O(n²)</td></tr>
+                <tr><td>Worst</td><td class="bad">O(n²)</td></tr>
+            </table>
+            <p style="margin-top:10px;font-size:0.78rem;color:#999;line-height:1.6;">
+                Repeatedly compares adjacent elements and swaps them if out of order.
+                Simple to understand but extremely slow on large datasets.
+                <strong style="color:#f5576c;">Rarely used in production.</strong>
+            </p>
+        </div>
+
+        <div class="complexity-card">
+            <h3><span class="dot dot-merge"></span> Merge Sort</h3>
+            <table class="complexity-table">
+                <tr><th>Case</th><th>Time</th><th>Space</th></tr>
+                <tr><td>Best</td><td class="good">O(n log n)</td><td rowspan="3" class="ok">O(n)</td></tr>
+                <tr><td>Average</td><td class="good">O(n log n)</td></tr>
+                <tr><td>Worst</td><td class="good">O(n log n)</td></tr>
+            </table>
+            <p style="margin-top:10px;font-size:0.78rem;color:#999;line-height:1.6;">
+                Divide-and-conquer approach. Splits array in half, sorts each half,
+                then merges. <strong style="color:#4facfe;">Guaranteed O(n log n)</strong>
+                in all cases. Stable sort. Needs extra memory.
+            </p>
+        </div>
+
+        <div class="complexity-card">
+            <h3><span class="dot dot-quick"></span> Quick Sort</h3>
+            <table class="complexity-table">
+                <tr><th>Case</th><th>Time</th><th>Space</th></tr>
+                <tr><td>Best</td><td class="good">O(n log n)</td><td rowspan="3" class="good">O(log n)</td></tr>
+                <tr><td>Average</td><td class="good">O(n log n)</td></tr>
+                <tr><td>Worst</td><td class="bad">O(n²)</td></tr>
+            </table>
+            <p style="margin-top:10px;font-size:0.78rem;color:#999;line-height:1.6;">
+                Picks a pivot, partitions elements around it, recurses.
+                <strong style="color:#43e97b;">Fastest in practice</strong> due to
+                cache efficiency. Worst case avoided with good pivot selection.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- Verdict -->
+<div class="verdict-box">
+    <h2>🔍 The Verdict: Is Bubble Sort "Best for All Cases"?</h2>
+    <p>
+        <strong>Absolutely not.</strong> Bubble Sort has <strong>O(n²)</strong> average and worst-case time complexity,
+        meaning sorting 1,000 elements requires roughly <strong>1,000,000 operations</strong>, while
+        Merge Sort and Quick Sort need only about <strong>10,000</strong> — a <strong>100× difference</strong>.
+        Scale to 1,000,000 elements and Bubble Sort needs ~<strong>1 trillion operations</strong> vs ~<strong>20 million</strong> for the others.
+        <br><br>
+        Bubble Sort is only acceptable when: <strong>(1)</strong> the dataset is tiny (&lt;20 elements),
+        <strong>(2)</strong> the data is nearly sorted already (best-case O(n) with early termination),
+        or <strong>(3)</strong> you need the simplest possible implementation for educational purposes.
+        For virtually every real-world scenario, <strong>Merge Sort, Quick Sort, or Tim Sort are dramatically superior choices.</strong>
+    </p>
+</div>
+
+<script>
+    // ─── State ───────────────────────────────────────────────────────────────
+    let originalArray = [];
+    let animating = false;
+    const N_DEFAULT = 40;
+
+    // ─── DOM refs ─────────────────────────────────────────────────────────────
+    const sizeSlider  = document.getElementById('sizeSlider');
+    const speedSlider = document.getElementById('speedSlider');
+    const sizeVal     = document.getElementById('sizeVal');
+    const speedVal    = document.getElementById('speedVal');
+    const startBtn    = document.getElementById('startBtn');
+    const resetBtn    = document.getElementById('resetBtn');
+    const winnerBanner = document.getElementById('winnerBanner');
+
+    const speedLabels = ['Very Slow', 'Slow', 'Medium', 'Fast', 'Blazing'];
+    // delay in ms per frame
+    const speedDelays = [200, 80, 30, 10, 2];
+
+    function getDelay() {
+        return speedDelays[parseInt(speedSlider.value) - 1];
+    }
+
+    // ─── Array generation ─────────────────────────────────────────────────────
+    function generateArray(n) {
+        const arr = [];
+        for (let i = 0; i < n; i++) {
+            arr.push(Math.floor(Math.random() * 90) + 10);
+        }
+        return arr;
+    }
+
+    function resetAll() {
+        if (animating) return;
+        winnerBanner.style.display = 'none';
+        const n = parseInt(sizeSlider.value);
+        originalArray = generateArray(n);
+        ['bubble','merge','quick'].forEach(name => {
+            renderBars(name, originalArray, [], [], []);
+            document.getElementById(`comps-${name}`).textContent = '0';
+            document.getElementById(`swaps-${name}`).textContent = '0';
+            document.getElementById(`time-${name}`).textContent  = '0ms';
+            document.getElementById(`status-${name}`).textContent = 'Ready';
+            document.getElementById(`card-${name}`).className = 'algo-card';
+        });
+    }
+
+    // ─── Bar rendering ────────────────────────────────────────────────────────
+    function renderBars(algoName, arr, comparing, swapping, sorted) {
+        const container = document.getElementById(`chart-${algoName}`);
+        const max = Math.max(...arr);
+        const n   = arr.length;
+
+        // reuse existing bars if count matches
+        let bars = container.querySelectorAll('.bar');
+        if (bars.length !== n) {
+            container.innerHTML = '';
+            for (let i = 0; i < n; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                container.appendChild(bar);
+            }
+            bars = container.querySelectorAll('.bar');
+        }
+
+        const heightPct = (v) => Math.max(4, Math.round((v / max) * 160));
+
+        bars.forEach((bar, i) => {
+            bar.style.height = heightPct(arr[i]) + 'px';
+            if (sorted.includes(i)) {
+                bar.style.background = '#43e97b';
+            } else if (swapping.includes(i)) {
+                bar.style.background = '#f5576c';
+            } else if (comparing.includes(i)) {
+                bar.style.background = '#f9ca24';
+            } else {
+                // default gradient based on algo
+                if (algoName === 'bubble') bar.style.background = 'rgba(245,87,108,0.45)';
+                else if (algoName === 'merge') bar.style.background = 'rgba(79,172,254,0.45)';
+                else bar.style.background = 'rgba(67,233,123,0.45)';
+            }
+        });
+    }
+
+    // ─── Sleep helper ─────────────────────────────────────────────────────────
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ─── Bubble Sort ──────────────────────────────────────────────────────────
+    async function bubbleSort(arr) {
+        const name = 'bubble';
+        const n = arr.length;
+        let comps = 0, swaps = 0;
+        const sorted = [];
+        const startTime = performance.now();
+
+        document.getElementById(`card-${name}`).classList.add('active');
+        document.getElementById(`status-${name}`).textContent = 'Sorting...';
+
+        for (let i = 0; i < n - 1; i++) {
+            let swapped = false;
+            for (let j = 0; j < n - i - 1; j++) {
+                comps++;
+                document.getElementById(`comps-${name}`).textContent = comps;
+                renderBars(name, arr, [j, j+1], [], sorted);
+                await sleep(getDelay());
+
+                if (arr[j] > arr[j+1]) {
+                    [arr[j], arr[j+1]] = [arr[j+1], arr[j]];
+                    swaps++;
+                    document.getElementById(`swaps-${name}`).textContent = swaps;
+                    renderBars(name, arr, [], [j, j+1], sorted);
+                    await sleep(getDelay());
+                    swapped = true;
+                }
+            }
+            sorted.push(n - i - 1);
+            if (!swapped) {
+                // already sorted
+                for (let k = 0; k < n - i - 1; k++) sorted.push(k);
+                break;
+            }
+        }
+        sorted.push(0);
+
+        const elapsed = Math.round(performance.now() - startTime);
+        renderBars(name, arr, [], [], Array.from({length: n}, (_, i) => i));
+        document.getElementById(`time-${name}`).textContent  = elapsed + 'ms';
+        document.getElementById(`status-${name}`).textContent = '✅ Done!';
+        document.getElementById(`card-${name}`).classList.remove('active');
+        document.getElementById(`card-${name}`).classList.add('done');
+        return elapsed;
+    }
+
+    // ─── Merge Sort ───────────────────────────────────────────────────────────
+    async function mergeSort(arr) {
+        const name = 'merge';
+        let comps = 0, merges = 0;
+        const startTime = performance.now();
+        const n = arr.length;
+
+        document.getElementById(`card-${name}`).classList.add('active');
+        document.getElementById(`status-${name}`).textContent = 'Sorting...';
+
+        async function mergeSortHelper(a, left, right) {
+            if (right - left <= 1) return;
+            const mid = Math.floor((left + right) / 2);
+            await mergeSortHelper(a, left, mid);
+            await mergeSortHelper(a, mid, right);
+            await merge(a, left, mid, right);
+        }
+
+        async function merge(a, left, mid, right) {
+            const leftArr  = a.slice(left, mid);
+            const rightArr = a.slice(mid, right);
+            let i = 0, j = 0, k = left;
+
+            while (i < leftArr.length && j < rightArr.length) {
+                comps++;
+                document.getElementById(`comps-${name}`).textContent = comps;
+                renderBars(name, a, [k], [left+i, mid+j], []);
+                await sleep(getDelay());
+
+                if (leftArr[i] <= rightArr[j]) {
+                    a[k++] = leftArr[i++];
+                } else {
+                    a[k++] = rightArr[j++];
+                }
+                merges++;
+                document.getElementById(`swaps-${name}`).textContent = merges;
+                renderBars(name, a, [], [k-1], []);
+                await sleep(getDelay());
+            }
+            while (i < leftArr.length) { a[k++] = leftArr[i++]; merges++; }
+            while (j < rightArr.length){ a[k++] = rightArr[j++]; merges++; }
+            document.getElementById(`swaps-${name}`).textContent = merges;
+            renderBars(name, a, [], [], []);
+        }
+
+        await mergeSortHelper(arr, 0, n);
+
+        const elapsed = Math.round(performance.now() - startTime);
+        renderBars(name, arr, [], [], Array.from({length: n}, (_, i) => i));
+        document.getElementById(`time-${name}`).textContent  = elapsed + 'ms';
+        document.getElementById(`status-${name}`).textContent = '✅ Done!';
+        document.getElementById(`card-${name}`).classList.remove('active');
+        document.getElementById(`card-${name}`).classList.add('done');
+        return elapsed;
+    }
+
+    // ─── Quick Sort ───────────────────────────────────────────────────────────
+    async function quickSort(arr) {
+        const name = 'quick';
+        let comps = 0, swaps = 0;
+        const startTime = performance.now();
+        const n = arr.length;
+        const sortedSet = new Set();
+
+        document.getElementById(`card-${name}`).classList.add('active');
+        document.getElementById(`status-${name}`).textContent = 'Sorting...';
+
+        async function partition(a, low, high) {
+            const pivot = a[high];
+            let i = low - 1;
+
+            for (let j = low; j < high; j++) {
+                comps++;
+                document.getElementById(`comps-${name}`).textContent = comps;
+                renderBars(name, a, [j, high], [], [...sortedSet]);
+                await sleep(getDelay());
+
+                if (a[j] <= pivot) {
+                    i++;
+                    [a[i], a[j]] = [a[j], a[i]];
+                    swaps++;
+                    document.getElementById(`swaps-${name}`).textContent = swaps;
+                    renderBars(name, a, [high], [i, j], [...sortedSet]);
+                    await sleep(getDelay());
+                }
+            }
+            [a[i+1], a[high]] = [a[high], a[i+1]];
+            swaps++;
+            document.getElementById(`swaps-${name}`).textContent = swaps;
+            return i + 1;
+        }
+
+        async function quickSortHelper(a, low, high) {
+            if (low < high) {
+                const pi = await partition(a, low, high);
+                sortedSet.add(pi);
+                renderBars(name, a, [], [], [...sortedSet]);
+                await quickSortHelper(a, low, pi - 1);
+                await quickSortHelper(a, pi + 1, high);
+            } else if (low === high) {
+                sortedSet.add(low);
+            }
+        }
+
+        await quickSortHelper(arr, 0, n - 1);
+
+        const elapsed = Math.round(performance.now() - startTime);
+        renderBars(name, arr, [], [], Array.from({length: n}, (_, i) => i));
+        document.getElementById(`time-${name}`).textContent  = elapsed + 'ms';
+        document.getElementById(`status-${name}`).textContent = '✅ Done!';
+        document.getElementById(`card-${name}`).classList.remove('active');
+        document.getElementById(`card-${name}`).classList.add('done');
+        return elapsed;
+    }
+
+    // ─── Run all three ────────────────────────────────────────────────────────
+    async function runAll() {
+        if (animating) return;
+        animating = true;
+        startBtn.disabled = true;
+        resetBtn.disabled = true;
+        winnerBanner.style.display = 'none';
+
+        const arrBubble = [...originalArray];
+        const arrMerge  = [...originalArray];
+        const arrQuick  = [...originalArray];
+
+        // Run all three concurrently
+        const [tBubble, tMerge, tQuick] = await Promise.all([
+            bubbleSort(arrBubble),
+            mergeSort(arrMerge),
+            quickSort(arrQuick),
+        ]);
+
+        // Winner
+        const times = [
+            { name: 'Merge Sort 🔀', t: tMerge },
+            { name: 'Quick Sort ⚡', t: tQuick },
+            { name: 'Bubble Sort 🫧', t: tBubble },
+        ].sort((a,b) => a.t - b.t);
+
+        winnerBanner.style.display = 'block';
+        winnerBanner.textContent =
+            `🏆 Fastest: ${times[0].name} (${times[0].t}ms)  |  `+
+            `2nd: ${times[1].name} (${times[1].t}ms)  |  `+
+            `Slowest: ${times[2].name} (${times[2].t}ms)`;
+
+        animating = false;
+        startBtn.disabled = false;
+        resetBtn.disabled = false;
+    }
+
+    // ─── Event listeners ──────────────────────────────────────────────────────
+    sizeSlider.addEventListener('input', () => {
+        sizeVal.textContent = sizeSlider.value;
+        if (!animating) resetAll();
+    });
+
+    speedSlider.addEventListener('input', () => {
+        speedVal.textContent = speedLabels[parseInt(speedSlider.value) - 1];
+    });
+
+    startBtn.addEventListener('click', runAll);
+    resetBtn.addEventListener('click', () => { if (!animating) resetAll(); });
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+    resetAll();
+</script>
+</body>
+</html>

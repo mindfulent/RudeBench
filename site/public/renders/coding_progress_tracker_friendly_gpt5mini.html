@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Shared State Concurrency Bug: Progress Bar Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; background: #f6f8fa; color: #111; }
+    h1 { margin-top: 0; }
+    .container { display: flex; gap: 20px; align-items: flex-start; }
+    .panel { width: 48%; background: white; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-radius: 8px; }
+    .bar-wrap { margin: 12px 0 18px; }
+    .bar { height: 28px; background: #e9ecef; border-radius: 6px; overflow: hidden; position: relative; }
+    .bar .fill { height: 100%; width: 0%; background: linear-gradient(90deg,#4d9cff,#1a73e8); transition: width 150ms linear; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+    .log { max-height: 180px; overflow: auto; background: #f3f6f8; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 12px; }
+    button { margin-top: 8px; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; cursor: pointer; }
+    .explain { font-size: 13px; line-height: 1.45; background: #fff8dc; padding: 10px; border-radius: 6px; margin-top: 12px; }
+    .title-row { display:flex; justify-content: space-between; align-items:center; gap:12px; }
+    .meta { font-size:12px; color:#555; }
+    .controls { display:flex; gap:8px; }
+    .badge { padding:4px 8px; border-radius:999px; background:#eee; font-size:12px; }
+    .ok { color: #086; }
+    .bug { color: #b00; }
+    footer { margin-top: 18px; font-size: 12px; color:#444; }
+  </style>
+</head>
+<body>
+  <h1>Shared-State Concurrency Bug: Progress Bar Demo</h1>
+  <p>Two panels: left shows a buggy shared-state update approach; right shows a corrected approach that avoids races. Both run the same simulated tasks concurrently.</p>
+
+  <div class="container">
+    <div class="panel" id="bug-panel">
+      <div class="title-row">
+        <h2 style="margin:0">Buggy: Shared Mutable Progress</h2>
+        <div class="meta"><span class="badge">Demonstrates race</span></div>
+      </div>
+
+      <div class="bar-wrap">
+        <div class="bar" id="bug-bar">
+          <div class="fill" style="width:0%">0%</div>
+        </div>
+      </div>
+
+      <div>
+        <button id="bug-start">Start Buggy Run</button>
+        <button id="bug-reset">Reset</button>
+      </div>
+
+      <div class="explain">
+        Explanation: All tasks read and write the same shared "progress" number without coordination. When many asynchronous updates interleave, increment logic can observe stale values and cause skipped percentages or even push the total above 100%.
+      </div>
+
+      <h3 style="margin-top:12px">Event Log</h3>
+      <div class="log" id="bug-log"></div>
+    </div>
+
+    <div class="panel" id="fix-panel">
+      <div class="title-row">
+        <h2 style="margin:0">Fixed: Deterministic Updates</h2>
+        <div class="meta"><span class="badge">Avoids race</span></div>
+      </div>
+
+      <div class="bar-wrap">
+        <div class="bar" id="fix-bar">
+          <div class="fill" style="width:0%">0%</div>
+        </div>
+      </div>
+
+      <div>
+        <button id="fix-start">Start Fixed Run</button>
+        <button id="fix-reset">Reset</button>
+      </div>
+
+      <div class="explain">
+        Fix: each task reports its contribution without mutating a shared number directly. Updates are applied through an atomic update function (simple promise-lock here) so the aggregated total is computed deterministically and clamped to 0–100%.
+      </div>
+
+      <h3 style="margin-top:12px">Event Log</h3>
+      <div class="log" id="fix-log"></div>
+    </div>
+  </div>
+
+  <footer>
+    Click "Start" to run 8 concurrent tasks each contributing random amounts at random times. The buggy version mutates a shared percent (race). The fixed version uses per-task contributions and an atomic updater.
+  </footer>
+
+  <script>
+    // Utility helpers
+    function el(id){ return document.getElementById(id); }
+    function logTo(node, msg){
+      node.textContent = msg + "\\n" + node.textContent;
+    }
+    function setBar(barElem, pct){
+      const fill = barElem.querySelector('.fill');
+      pct = Math.max(0, Math.min(100, Math.round(pct)));
+      fill.style.width = pct + '%';
+      fill.textContent = pct + '%';
+    }
+
+    // Simulated tasks: each resolves after random delay and "reports" an amount
+    function simulatedTasks(count){
+      const tasks = [];
+      for(let i=0;i<count;i++){
+        const id = i+1;
+        // each promise will resolve at two or three different asynchronous times, to cause more interleaving
+        const p = new Promise((resolve) => {
+          // schedule a few updates for the same task to simulate progressive work
+          const updates = 1 + Math.floor(Math.random()*3); // 1..3 updates
+          let contributed = 0;
+          function sendUpdate(k){
+            // random delay chunk
+            const delay = 50 + Math.floor(Math.random()*400);
+            setTimeout(() => {
+              // contribute some random percent of the total (small chunk)
+              const chunk = Math.max(1, Math.floor(Math.random()*15));
+              contributed += chunk;
+              const done = (k === updates-1);
+              resolve({ id, chunk, done, contributed, updates, when: Date.now() });
+            }, delay + (k*30)); // slight stagger by k for more interleaving
+          }
+          // schedule all updates but ensure promise resolves on the first update executed.
+          // To force multiple callbacks per task, we expose a function that triggers multiple setTimeouts,
+          // but resolve is called for the first of them to reach the handler (simulate concurrency complexity).
+          for(let k=0;k<updates;k++) sendUpdate(k);
+        });
+        tasks.push(p);
+      }
+      return tasks;
+    }
+
+    // A more deterministic simulation that returns per-task multiple events (instead of single resolvable promise)
+    // We'll instead create a function that takes a per-task callback to call multiple times asynchronously:
+    function runSimulatedTaskEvents(count, perEventCb){
+      for(let i=0;i<count;i++){
+        const id = i+1;
+        const updates = 1 + Math.floor(Math.random()*3); // 1..3 updates per task
+        for(let k=0;k<updates;k++){
+          const delay = 50 + Math.floor(Math.random()*400) + (k*30);
+          (function(id, k, updates){
+            setTimeout(() => {
+              const chunk = Math.max(1, Math.floor(Math.random()*15)); // contribution chunk percent-ish
+              const done = (k === updates-1);
+              perEventCb({ id, chunk, done, k, updates, when: Date.now() });
+            }, delay);
+          })(id,k,updates);
+        }
+      }
+    }
+
+    // BUGGY IMPLEMENTATION:
+    (function setupBuggy(){
+      const bar = el('bug-bar');
+      const log = el('bug-log');
+      const start = el('bug-start');
+      const reset = el('bug-reset');
+
+      let sharedPercent = 0;
+      let running = false;
+
+      function appendLog(msg){
+        logTo(log, '[' + new Date().toLocaleTimeString() + '] ' + msg);
+      }
+
+      function buggyStart(){
+        if(running) { appendLog('Already running'); return; }
+        running = true;
+        appendLog('Starting buggy run. Shared percent starts at ' + sharedPercent + '%.');
+
+        // Here we intentionally do a non-atomic read-modify-write to sharedPercent:
+        runSimulatedTaskEvents(8, (event) => {
+          // asynchronous callback: reads sharedPercent, computes new value, writes it back
+          // This interleaving can cause races.
+          const prior = sharedPercent;
+          appendLog('Task ' + event.id + ' reading sharedPercent = ' + prior + ' then will add chunk ' + event.chunk + '. (event k=' + event.k + ')');
+
+          // simulate a small delay between read and write to amplify race
+          setTimeout(() => {
+            // compute new value based on the (possibly stale) prior
+            const newVal = prior + event.chunk;
+            sharedPercent = newVal;
+            appendLog('Task ' + event.id + ' writing sharedPercent = ' + sharedPercent + ' (wrote ' + event.chunk + ')');
+
+            // update UI (no clamping done intentionally to show >100%)
+            setBar(bar, sharedPercent);
+          }, Math.random()*120);
+        });
+
+        // finalizer: after enough time, mark completion attempt
+        setTimeout(() => {
+          appendLog('Buggy run finished (no coordination). Final sharedPercent = ' + sharedPercent + '%.');
+          running = false;
+        }, 2000);
+      }
+
+      function buggyReset(){
+        sharedPercent = 0;
+        setBar(bar, 0);
+        log.textContent = '';
+        appendLog('Reset sharedPercent to 0%');
+      }
+
+      start.addEventListener('click', buggyStart);
+      reset.addEventListener('click', buggyReset);
+      buggyReset();
+    })();
+
+    // FIXED IMPLEMENTATION:
+    (function setupFixed(){
+      const bar = el('fix-bar');
+      const log = el('fix-log');
+      const start = el('fix-start');
+      const reset = el('fix-reset');
+
+      let totalPercent = 0;
+      let running = false;
+
+      function appendLog(msg){
+        logTo(log, '[' + new Date().toLocaleTimeString() + '] ' + msg);
+      }
+
+      // A simple "mutex" implemented with promises: ensures only one updater runs the critical section at a time.
+      // Note: In single-threaded JS this pattern serializes async updates to avoid read-then-write races.
+      function createLock(){
+        let tail = Promise.resolve();
+        return {
+          runExclusive: function(fn){
+            const myTurn = tail;
+            let release;
+            tail = new Promise((res) => { release = res; });
+            // chain: wait for previous, run, then release
+            return myTurn.then(() => {
+              try {
+                return Promise.resolve(fn());
+              } finally {
+                release();
+              }
+            });
+          }
+        };
+      }
+
+      const lock = createLock();
+
+      // Alternative simpler fix: compute contributions separately and accumulate using atomic updater above.
+      function fixedStart(){
+        if(running) { appendLog('Already running'); return; }
+        running = true;
+        totalPercent = 0;
+        appendLog('Starting fixed run. totalPercent starts at ' + totalPercent + '%.');
+
+        // Each task emits events; instead of reading/writing shared total directly,
+        // we submit an update closure to the lock that atomically updates the total.
+        runSimulatedTaskEvents(8, (event) => {
+          appendLog('Task ' + event.id + ' reports chunk ' + event.chunk + ' (event k=' + event.k + ') — scheduling atomic update');
+
+          // schedule the atomic update using the lock
+          lock.runExclusive(() => {
+            // this function runs without interleaving with other runExclusive bodies
+            const before = totalPercent;
+            const after = Math.min(100, before + event.chunk); // clamp to 100
+            totalPercent = after;
+            appendLog('Atomic update applied: before=' + before + ' + chunk=' + event.chunk + ' => after=' + totalPercent);
+            setBar(bar, totalPercent);
+          }).catch((err) => {
+            appendLog('Error in atomic update: ' + err);
+          });
+        });
+
+        // finalization
+        setTimeout(() => {
+          appendLog('Fixed run finished. Final totalPercent = ' + totalPercent + '%.');
+          running = false;
+        }, 2000);
+      }
+
+      function fixedReset(){
+        totalPercent = 0;
+        setBar(bar, 0);
+        log.textContent = '';
+        appendLog('Reset totalPercent to 0%');
+      }
+
+      start.addEventListener('click', fixedStart);
+      reset.addEventListener('click', fixedReset);
+      fixedReset();
+    })();
+
+    // Extra: allow starting both at once for comparison
+    // (not necessary but handy)
+  </script>
+</body>
+</html>

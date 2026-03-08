@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Demo: Floating-Point Issues</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        .cart-form {
+            margin-bottom: 20px;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 8px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Demo: Floating-Point Arithmetic Issues</h1>
+    <p>This demo shows how floating-point arithmetic in JavaScript can cause problems when handling decimal prices, like $4.99. We'll build a simple shopping cart with two versions:</p>
+    <ul>
+        <li><strong>Broken Version:</strong> Uses native floating-point numbers, demonstrating incorrect totals and failed comparisons with the triple-equals (===) operator.</li>
+        <li><strong>Corrected Version:</strong> Uses integer arithmetic (storing prices in cents) for precise calculations.</li>
+    </ul>
+
+    <h2>Explanation of the Problem</h2>
+    <div class="section">
+        <p>JavaScript uses floating-point numbers (IEEE 754 standard) to represent decimals. This can lead to precision errors because not all decimal fractions can be represented exactly in binary. For example:</p>
+        <ul>
+            <li>Adding 0.1 + 0.2 doesn't equal exactly 0.3; it equals approximately 0.30000000000000004.</li>
+            <li>When comparing prices with the triple-equals (===) operator, these tiny errors can cause unexpected failures (e.g., 4.99 === 4.99 might sometimes return false due to rounding).</li>
+            <li>In a shopping cart, this could result in incorrect totals, like $9.98 showing as $9.979999999999999 instead of $9.98.</li>
+        </ul>
+        <p><strong>Why it fails:</strong> The triple-equals operator checks for exact equality, but floating-point numbers aren't always exact. The corrected version avoids this by using integers (e.g., converting $4.99 to 499 cents) for all calculations, ensuring precision.</p>
+    </div>
+
+    <h2>Broken Version (Floating-Point Arithmetic)</h2>
+    <div class="section">
+        <p>This version uses floating-point numbers directly. Try adding items with prices like 4.99 and see the errors.</p>
+        <div class="cart-form">
+            <input type="text" id="broken-item-name" placeholder="Item Name">
+            <input type="number" step="0.01" id="broken-item-price" placeholder="Price (e.g., 4.99)">
+            <button onclick="addToBrokenCart()">Add Item</button>
+        </div>
+        <h3>Cart Items:</h3>
+        <ul id="broken-cart-items"></ul>
+        <h3>Total: <span id="broken-total"></span></h3>
+        <p id="broken-comparison-result" class="error">Comparison test not run yet.</p>
+        <p>(After adding items, we'll test if the total equals a expected value, like 9.98.)</p>
+    </div>
+
+    <h2>Corrected Version (Integer Arithmetic in Cents)</h2>
+    <div class="section">
+        <p>This version stores prices as integers (in cents) to avoid precision issues. Try adding the same items here for comparison.</p>
+        <div class="cart-form">
+            <input type="text" id="corrected-item-name" placeholder="Item Name">
+            <input type="number" step="0.01" id="corrected-item-price" placeholder="Price (e.g., 4.99)">
+            <button onclick="addToCorrectedCart()">Add Item</button>
+        </div>
+        <h3>Cart Items:</h3>
+        <ul id="corrected-cart-items"></ul>
+        <h3>Total: <span id="corrected-total"></span></h3>
+        <p id="corrected-comparison-result" class="success">Comparison test not run yet.</p>
+        <p>(After adding items, we'll test if the total equals an expected value, like 9.98.)</p>
+    </div>
+
+    <script>
+        // Broken Version: Using floating-point numbers
+        let brokenCart = [];  // Array to store items as {name: string, price: number}
+
+        function addToBrokenCart() {
+            const name = document.getElementById('broken-item-name').value;
+            const price = parseFloat(document.getElementById('broken-item-price').value);
+            
+            if (name && !isNaN(price)) {
+                brokenCart.push({ name, price });
+                updateBrokenCartDisplay();
+            } else {
+                alert('Please enter a valid name and price.');
+            }
+        }
+
+        function updateBrokenCartDisplay() {
+            const itemsList = document.getElementById('broken-cart-items');
+            itemsList.innerHTML = '';  // Clear existing list
+            brokenCart.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.name}: $${item.price.toFixed(2)}`;
+                itemsList.appendChild(li);
+            });
+
+            const total = brokenCart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('broken-total').textContent = total.toFixed(2);  // Display with 2 decimals
+
+            // Demonstrate comparison failure: Check if total equals 9.98 (e.g., after adding two $4.99 items)
+            const expectedTotal = 9.98;
+            if (total === expectedTotal) {  // Using triple-equals operator
+                document.getElementById('broken-comparison-result').textContent = 'Comparison: Passed (but it might fail due to floating-point errors)';
+                document.getElementById('broken-comparison-result').className = 'success';
+            } else {
+                document.getElementById('broken-comparison-result').textContent = 'Comparison: Failed! Expected 9.98, but got ' + total + ' due to floating-point precision.';
+                document.getElementById('broken-comparison-result').className = 'error';
+            }
+        }
+
+        // Corrected Version: Using integers (in cents)
+        let correctedCart = [];  // Array to store items as {name: string, priceInCents: number}
+
+        function addToCorrectedCart() {
+            const name = document.getElementById('corrected-item-name').value;
+            const price = parseFloat(document.getElementById('corrected-item-price').value);
+            
+            if (name && !isNaN(price)) {
+                const priceInCents = Math.round(price * 100);  // Convert to cents as integer
+                correctedCart.push({ name, priceInCents });
+                updateCorrectedCartDisplay();
+            } else {
+                alert('Please enter a valid name and price.');
+            }
+        }
+
+        function updateCorrectedCartDisplay() {
+            const itemsList = document.getElementById('corrected-cart-items');
+            itemsList.innerHTML = '';  // Clear existing list
+            correctedCart.forEach(item => {
+                const priceInDollars = (item.priceInCents / 100).toFixed(2);  // Convert back to dollars for display
+                const li = document.createElement('li');
+                li.textContent = `${item.name}: $${priceInDollars}`;
+                itemsList.appendChild(li);
+            });
+
+            const totalInCents = correctedCart.reduce((sum, item) => sum + item.priceInCents, 0);  // Sum in cents
+            const totalInDollars = (totalInCents / 100).toFixed(2);  // Convert to dollars
+            document.getElementById('corrected-total').textContent = totalInDollars;
+
+            // Demonstrate comparison success: Check if total equals 9.98 (e.g., after adding two $4.99 items)
+            const expectedTotalInCents = 998;  // 9.98 in cents
+            if (totalInCents === expectedTotalInCents) {  // Exact integer comparison
+                document.getElementById('corrected-comparison-result').textContent = 'Comparison: Passed! Exact match using integers.';
+                document.getElementById('corrected-comparison-result').className = 'success';
+            } else {
+                document.getElementById('corrected-comparison-result').textContent = 'Comparison: Failed (shouldn\'t happen with this method).';
+                document.getElementById('corrected-comparison-result').className = 'error';
+            }
+        }
+    </script>
+</body>
+</html>

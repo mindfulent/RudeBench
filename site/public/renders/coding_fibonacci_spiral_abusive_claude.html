@@ -1,212 +1,423 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fibonacci Spiral - Bug vs Fixed</title>
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral - Bug vs Fix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  body {
-    background: #0f0f1a;
-    color: #e0e0e0;
-    font-family: 'Courier New', monospace;
-    min-height: 100vh;
-    padding: 20px;
-  }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+        }
 
-  h1 {
-    text-align: center;
-    color: #ff6b6b;
-    font-size: 1.4em;
-    margin-bottom: 6px;
-    letter-spacing: 2px;
-  }
+        h1 {
+            text-align: center;
+            color: #e94560;
+            margin-bottom: 8px;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+        }
 
-  .subtitle {
-    text-align: center;
-    color: #888;
-    font-size: 0.8em;
-    margin-bottom: 24px;
-  }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 30px;
+        }
 
-  .panels {
-    display: flex;
-    gap: 24px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+        .panels {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
 
-  .panel {
-    background: #1a1a2e;
-    border-radius: 10px;
-    padding: 16px;
-    border: 1px solid #2a2a4a;
-    max-width: 520px;
-    width: 100%;
-  }
+        .panel {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #0f3460;
+            max-width: 520px;
+            width: 100%;
+        }
 
-  .panel.buggy {
-    border-color: #ff4444;
-  }
+        .panel.buggy {
+            border-color: #e94560;
+        }
 
-  .panel.fixed {
-    border-color: #44ff88;
-  }
+        .panel.fixed {
+            border-color: #0f9b58;
+        }
 
-  .panel-title {
-    font-size: 1em;
-    font-weight: bold;
-    margin-bottom: 10px;
-    text-align: center;
-  }
+        .panel-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-  .buggy .panel-title { color: #ff4444; }
-  .fixed  .panel-title { color: #44ff88; }
+        .buggy .panel-title { color: #e94560; }
+        .fixed  .panel-title { color: #0f9b58; }
 
-  canvas {
-    display: block;
-    border-radius: 6px;
-    background: #0a0a14;
-    width: 100%;
-    height: auto;
-  }
+        .badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
 
-  .bug-report {
-    margin-top: 14px;
-    background: #0a0a14;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 0.72em;
-    line-height: 1.7;
-  }
+        .buggy  .badge { background: #e94560; color: #fff; }
+        .fixed  .badge { background: #0f9b58; color: #fff; }
 
-  .bug-report .label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 4px;
-  }
+        canvas {
+            display: block;
+            border-radius: 8px;
+            background: #0a0a1a;
+            margin: 12px 0;
+            width: 100%;
+            height: auto;
+        }
 
-  .buggy  .bug-report .label { color: #ff6b6b; }
-  .fixed  .bug-report .label { color: #6bffaa; }
+        .bug-report {
+            background: #0a0a1a;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 0.75rem;
+            line-height: 1.7;
+            margin-top: 10px;
+        }
 
-  .bug-line {
-    color: #ff8888;
-    background: #2a0a0a;
-    padding: 2px 6px;
-    border-radius: 3px;
-    display: block;
-    margin: 3px 0;
-    font-family: 'Courier New', monospace;
-  }
+        .bug-report .label {
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            opacity: 0.6;
+        }
 
-  .fix-line {
-    color: #88ffbb;
-    background: #0a2a1a;
-    padding: 2px 6px;
-    border-radius: 3px;
-    display: block;
-    margin: 3px 0;
-    font-family: 'Courier New', monospace;
-  }
+        .buggy  .bug-report .label { color: #e94560; }
+        .fixed  .bug-report .label { color: #0f9b58; }
 
-  .note {
-    color: #aaa;
-    margin-top: 6px;
-    display: block;
-  }
+        code {
+            background: #1a1a2e;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.78rem;
+        }
 
-  .fib-sequence {
-    text-align: center;
-    margin: 18px auto 0;
-    font-size: 0.78em;
-    color: #888;
-    max-width: 1060px;
-  }
+        .wrong { color: #e94560; }
+        .right  { color: #0f9b58; }
 
-  .fib-sequence span {
-    color: #a0c4ff;
-    font-weight: bold;
-  }
+        .diff-block {
+            background: #0a0a1a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 30px;
+            max-width: 1070px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 0.78rem;
+            line-height: 1.9;
+        }
 
-  .arrow {
-    color: #555;
-    margin: 0 4px;
-  }
-</style>
+        .diff-block h2 {
+            color: #e2b714;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        .diff-line {
+            padding: 1px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .diff-line.removed { background: rgba(233,69,96,0.15);  color: #e94560; }
+        .diff-line.added   { background: rgba(15,155,88,0.15);  color: #0f9b58; }
+        .diff-line.context { color: #666; }
+
+        .explanation {
+            margin-top: 30px;
+            max-width: 1070px;
+            margin-left: auto;
+            margin-right: auto;
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e2b714;
+        }
+
+        .explanation h2 {
+            color: #e2b714;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+
+        .explanation ul {
+            list-style: none;
+            font-size: 0.8rem;
+            line-height: 2;
+        }
+
+        .explanation ul li::before {
+            content: "▶ ";
+            color: #e2b714;
+        }
+    </style>
 </head>
 <body>
 
 <h1>🐛 FIBONACCI SPIRAL — BUG HUNT</h1>
-<p class="subtitle">The canvas API is fine. The math is broken. Here's proof.</p>
+<p class="subtitle">The Canvas API is innocent. The math is guilty.</p>
 
 <div class="panels">
 
-  <!-- BUGGY PANEL -->
-  <div class="panel buggy">
-    <div class="panel-title">❌ BUGGY VERSION</div>
-    <canvas id="buggyCanvas" width="480" height="480"></canvas>
-    <div class="bug-report">
-      <span class="label">🐛 BUGS FOUND (3 total):</span>
+    <!-- BUGGY PANEL -->
+    <div class="panel buggy">
+        <div class="panel-title">
+            💀 Buggy Version
+            <span class="badge">BROKEN</span>
+        </div>
+        <canvas id="buggyCanvas" width="480" height="480"></canvas>
+        <div class="bug-report">
+            <div class="label">▶ WHAT WENT WRONG</div>
+            <strong class="wrong">Bug 1 — Wrong arc start/end angles.</strong><br>
+            Each quarter-circle arc uses <code class="wrong">0 → Math.PI/2</code> for every
+            single arc instead of rotating the start angle by <code>90°</code> per step.
+            All arcs begin at the same angle so they pile on top of each other
+            and never form a continuous spiral.<br><br>
 
-      <span class="bug-line">BUG 1 — Wrong start angle per direction</span>
-      <span class="note">
-        All arcs use startAngle=0, endAngle=Math.PI/2.<br>
-        Each quarter-turn must rotate 90° in the correct direction.
-      </span>
+            <strong class="wrong">Bug 2 — Pivot point not updated.</strong><br>
+            The center of each arc must jump to a new corner of the growing
+            rectangle after each quarter turn. The buggy code keeps reusing
+            the same pivot <code class="wrong">(cx, cy)</code> for every arc,
+            so all arcs share one origin instead of chaining outward.<br><br>
 
-      <span class="bug-line">BUG 2 — Pivot point never updated</span>
-      <span class="note">
-        cx/cy stays fixed at canvas center for every arc.<br>
-        Each arc pivots from a different corner of its square.
-      </span>
-
-      <span class="bug-line">BUG 3 — Fibonacci index starts at 0</span>
-      <span class="note">
-        fib[0]=0 gives a zero-radius arc — invisible first step,<br>
-        throwing every subsequent radius off by one position.
-      </span>
+            <strong class="wrong">Bug 3 — Fibonacci sequence seeded wrong.</strong><br>
+            Sequence starts <code class="wrong">0, 0</code> instead of
+            <code>0, 1</code>, so the first several radii are zero and the
+            spiral never grows from a valid base.
+        </div>
     </div>
-  </div>
 
-  <!-- FIXED PANEL -->
-  <div class="panel fixed">
-    <div class="panel-title">✅ FIXED VERSION</div>
-    <canvas id="fixedCanvas" width="480" height="480"></canvas>
-    <div class="bug-report">
-      <span class="label">✅ FIXES APPLIED:</span>
+    <!-- FIXED PANEL -->
+    <div class="panel fixed">
+        <div class="panel-title">
+            ✅ Fixed Version
+            <span class="badge">WORKING</span>
+        </div>
+        <canvas id="fixedCanvas" width="480" height="480"></canvas>
+        <div class="bug-report">
+            <div class="label">▶ HOW IT WAS FIXED</div>
+            <strong class="right">Fix 1 — Rotate start angle each step.</strong><br>
+            Start angle increments by <code class="right">Math.PI / 2</code>
+            each iteration so every arc picks up exactly where the previous
+            one left off, producing a continuous curve.<br><br>
 
-      <span class="fix-line">FIX 1 — Correct start/end angles per direction step</span>
-      <span class="note">
-        Direction cycle maps each step to the right<br>
-        startAngle so arcs connect seamlessly end-to-end.
-      </span>
+            <strong class="right">Fix 2 — Advance the pivot each step.</strong><br>
+            After drawing each arc the pivot shifts to the correct corner of
+            the newly added Fibonacci square using a lookup table of
+            <code class="right">4 directional offsets</code> that cycle with
+            <code>(step % 4)</code>.<br><br>
 
-      <span class="fix-line">FIX 2 — Pivot recalculated after every arc</span>
-      <span class="note">
-        After drawing each arc the pivot corner advances<br>
-        by the current Fibonacci radius in the right axis.
-      </span>
-
-      <span class="fix-line">FIX 3 — Fibonacci sequence starts at index 1</span>
-      <span class="note">
-        fib[1]=1 is the correct first radius. No invisible<br>
-        zero-step, every arc has the right proportional size.
-      </span>
+            <strong class="right">Fix 3 — Correct Fibonacci seed.</strong><br>
+            Sequence starts <code class="right">0, 1</code> so radii are
+            <em>1, 1, 2, 3, 5, 8, 13, 21 …</em> and every arc has a
+            meaningful non-zero radius from the very first step.
+        </div>
     </div>
-  </div>
 
 </div>
 
-<p class="fib-sequence">
-  Fibonacci radii used (px, scaled):
-  <span>1</span><span class="arrow">→</span>
-  <span>1</span><span class="arrow">→</span>
-  <span>2</span><span class="arrow">→</span>
-  <span>3</span><span class="arrow">→</span>
-  <span>5</span><span class="arrow">→</span>
-  <span>8</span><span class="arrow">→</span
+<!-- DIFF -->
+<div class="diff-block">
+    <h2>📋 CODE DIFF — THE THREE BUGS</h2>
+
+    <div class="diff-line context">  // ── Fibonacci seed ──────────────────────────────</div>
+    <div class="diff-line removed">- let fibs = [0, 0];   // BUG 3: second seed must be 1</div>
+    <div class="diff-line added">+ let fibs = [0, 1];   // FIX 3: correct seed</div>
+    <br>
+    <div class="diff-line context">  // ── Arc angles ──────────────────────────────────</div>
+    <div class="diff-line removed">- let startAngle = 0;</div>
+    <div class="diff-line removed">- let endAngle   = Math.PI / 2;          // BUG 1: never changes</div>
+    <div class="diff-line added">+ let startAngle = Math.PI;               // FIX 1: correct initial angle</div>
+    <div class="diff-line added">+ let endAngle   = startAngle + Math.PI / 2;</div>
+    <div class="diff-line added">+ // … incremented by Math.PI/2 each step</div>
+    <br>
+    <div class="diff-line context">  // ── Pivot update (inside loop) ──────────────────</div>
+    <div class="diff-line removed">- // BUG 2: pivot never moves — this line is simply missing</div>
+    <div class="diff-line added">+ px += offsets[step % 4][0] * r;         // FIX 2: advance pivot</div>
+    <div class="diff-line added">+ py += offsets[step % 4][1] * r;</div>
+</div>
+
+<!-- EXPLANATION -->
+<div class="explanation" style="margin-top:20px;">
+    <h2>🧮 THE MATH BEHIND A FIBONACCI SPIRAL</h2>
+    <ul>
+        <li>Build the sequence: 1 1 2 3 5 8 13 21 … each term = sum of previous two.</li>
+        <li>Each term is the side-length of a square tiled next to the growing rectangle.</li>
+        <li>Draw a quarter-circle arc of radius r (the current Fibonacci number) inside each square.</li>
+        <li>Rotate the start angle by +90° (π/2 radians) after each arc.</li>
+        <li>Shift the arc center to the appropriate corner of the new square after each step.</li>
+        <li>The four pivot-offset directions cycle: right→up→left→down (mod 4).</li>
+        <li>String all quarter-circles together → a smooth, outward-growing golden spiral.</li>
+    </ul>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  SHARED HELPERS
+// ─────────────────────────────────────────────
+function buildFibs(n, seed1, seed2) {
+    const f = [seed1, seed2];
+    for (let i = 2; i < n; i++) f.push(f[i-1] + f[i-2]);
+    return f;
+}
+
+function hsl(h, s, l) {
+    return `hsl(${h},${s}%,${l}%)`;
+}
+
+// ─────────────────────────────────────────────
+//  BUGGY VERSION  (3 deliberate bugs)
+// ─────────────────────────────────────────────
+(function drawBuggy() {
+    const canvas = document.getElementById('buggyCanvas');
+    const ctx    = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const STEPS = 9;
+    const SCALE = 4.5;
+
+    // BUG 3 — wrong seed: both start at 0, so fibs[1]=0 and the
+    //         sequence is 0,0,0,0,… for the first few terms.
+    const fibs = buildFibs(STEPS + 2, 0, 0);
+
+    // Single fixed pivot — never moves (BUG 2 demonstrated by omission)
+    let cx = W / 2;
+    let cy = H / 2;
+
+    for (let i = 0; i < STEPS; i++) {
+        const r = fibs[i + 1] * SCALE;
+        if (r === 0) continue;
+
+        // BUG 1 — start/end angles are constant for every arc.
+        //         They should rotate by Math.PI/2 each iteration.
+        const startAngle = 0;
+        const endAngle   = Math.PI / 2;
+
+        ctx.beginPath();
+        // BUG 2 — cx, cy never change so every arc shares the same center.
+        ctx.arc(cx, cy, r, startAngle, endAngle, false);
+        ctx.strokeStyle = hsl(i * 30, 90, 60);
+        ctx.lineWidth   = 2.5;
+        ctx.stroke();
+
+        // Draw the square for context
+        ctx.strokeStyle = hsl(i * 30, 50, 35);
+        ctx.lineWidth   = 0.5;
+        ctx.strokeRect(cx - r, cy - r, r, r);
+    }
+
+    // Label
+    ctx.fillStyle = '#e94560';
+    ctx.font      = 'bold 11px Courier New';
+    ctx.fillText('⚠ All arcs same angle + same center = broken', 10, 20);
+})();
+
+
+// ─────────────────────────────────────────────
+//  FIXED VERSION
+// ─────────────────────────────────────────────
+(function drawFixed() {
+    const canvas = document.getElementById('fixedCanvas');
+    const ctx    = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const STEPS = 9;
+    const SCALE = 4.5;
+
+    // FIX 3 — correct seed: 0, 1 → 1,1,2,3,5,8,13,21,34 …
+    const fibs = buildFibs(STEPS + 2, 0, 1);
+
+    // Starting pivot — offset slightly so the spiral sits centred on canvas
+    let px = W / 2 - 10;
+    let py = H / 2 + 20;
+
+    // FIX 1 — start angle rotates +90° each step
+    let angle = Math.PI;   // first arc sweeps from 180° → 270°
+
+    // FIX 2 — pivot offsets cycle through 4 directions (right, up, left, down)
+    // Each entry is [dx, dy] multiplied by the CURRENT radius r
+    // to jump the pivot to the correct corner of the new square.
+    const offsets = [
+        [ 1,  0],   // step 0: move right  by r
+        [ 0, -1],   // step 1: move up     by r
+        [-1,  0],   // step 2: move left   by r
+        [ 0,  1],   // step 3: move down   by r
+    ];
+
+    for (let i = 0; i < STEPS; i++) {
+        const r = fibs[i + 1] * SCALE;
+        if (r === 0) continue;
+
+        const startAngle = angle;
+        const endAngle   = angle + Math.PI / 2;
+
+        // Draw square (for visual reference)
+        const sq = squareCorner(i % 4, px, py, r);
+        ctx.strokeStyle = hsl(i * 36, 40, 30);
+        ctx.lineWidth   = 0.5;
+        ctx.strokeRect(sq.x, sq.y, r, r);
+
+        // Draw the arc
+        ctx.beginPath();
+        ctx.arc(px, py, r, startAngle, endAngle, false);
+        ctx.strokeStyle = hsl(i * 36, 90, 65);
+        ctx.lineWidth   = 2.5;
+        ctx.stroke();
+
+        // FIX 2 — advance pivot
+        px += offsets[i % 4][0] * r;
+        py += offsets[i % 4][1] * r;
+
+        // FIX 1 — advance angle
+        angle += Math.PI / 2;
+    }
+
+    // Label
+    ctx.fillStyle = '#0f9b58';
+    ctx.font      = 'bold 11px Courier New';
+    ctx.fillText('✓ Correct angles + advancing pivot = spiral', 10, 20);
+
+    // Helper: return top-left corner of the square for this step direction
+    function squareCorner(dir, pivotX, pivotY, r) {
+        // The square sits adjacent to the pivot on the correct side
+        const corners = [
+            { x: pivotX,     y: pivotY - r },  // dir 0: square is above-right  pivot
+            { x: pivotX - r, y: pivotY - r },  // dir 1: square is above-left   pivot
+            { x: pivotX - r, y: pivotY     },  // dir 2: square is below-left   pivot
+            { x: pivotX,     y: pivotY     },  // dir 3: square is below-right  pivot
+        ];
+        return corners[dir];
+    }
+})();
+</script>
+</body>
+</html>

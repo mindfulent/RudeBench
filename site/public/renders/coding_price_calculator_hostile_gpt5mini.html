@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Shopping Cart: Why === with floats is broken (and how to fix it)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; color: #111; }
+    h1 { margin-bottom: 6px; }
+    .container { display: flex; gap: 20px; align-items: flex-start; }
+    .box { border: 1px solid #ddd; padding: 12px; width: 48%; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+    label { display:block; margin-top:8px; }
+    input[type="number"] { width: 6ch; padding: 4px; margin-left: 6px; }
+    button { margin-top:10px; padding:6px 10px; }
+    .log { font-family: Menlo, monospace; background:#f8f8f8; padding:10px; margin-top:10px; white-space:pre; border:1px solid #eee; max-height:200px; overflow:auto; }
+    .bad { color:#a33; }
+    .good { color:#0a6; }
+    .price { font-weight:700; }
+    .line { margin:6px 0; }
+  </style>
+</head>
+<body>
+  <h1>Shopping cart demo — Why triple-equals (===) with floats is wrong for money</h1>
+  <p>
+    This single file demonstrates: (1) how using JavaScript numbers (binary floating point) to represent prices like
+    $4.99 leads to rounding errors, which breaks totals and equality checks with ===; and (2) a correct approach using
+    integer cents. The "Broken (float)" box uses floats and compares with ===. The "Fixed (integer cents)" box uses integer cents.
+  </p>
+
+  <div class="container">
+    <div class="box" id="broken">
+      <h2 class="bad">Broken (float) — uses JavaScript Number and === for comparisons</h2>
+      <div>Available items (price shown in dollars):</div>
+      <div class="line">
+        <label><input type="checkbox" data-price="4.99"> Item A — $4.99</label>
+        <label><input type="checkbox" data-price="0.10"> Item B — $0.10</label>
+        <label><input type="checkbox" data-price="0.20"> Item C — $0.20</label>
+      </div>
+
+      <div class="line">
+        Quantity for Item A: <input id="qA_b" type="number" min="0" value="1">
+        Quantity for Item B: <input id="qB_b" type="number" min="0" value="1">
+        Quantity for Item C: <input id="qC_b" type="number" min="0" value="1">
+      </div>
+
+      <button id="calc_b">Calculate (float)</button>
+
+      <div class="log" id="log_b"></div>
+      <div style="margin-top:8px;">
+        Expected total check (is total equal to adding individual line totals with ===?): <span id="check_b">—</span>
+      </div>
+    </div>
+
+    <div class="box" id="fixed">
+      <h2 class="good">Fixed (integer cents) — use integer cents and strict equality safely</h2>
+      <div>Same items, but stored as cents (499¢ = $4.99):</div>
+      <div class="line">
+        <label><input type="checkbox" data-price-cents="499"> Item A — $4.99</label>
+        <label><input type="checkbox" data-price-cents="10"> Item B — $0.10</label>
+        <label><input type="checkbox" data-price-cents="20"> Item C — $0.20</label>
+      </div>
+
+      <div class="line">
+        Quantity for Item A: <input id="qA_f" type="number" min="0" value="1">
+        Quantity for Item B: <input id="qB_f" type="number" min="0" value="1">
+        Quantity for Item C: <input id="qC_f" type="number" min="0" value="1">
+      </div>
+
+      <button id="calc_f">Calculate (cents)</button>
+
+      <div class="log" id="log_f"></div>
+      <div style="margin-top:8px;">
+        Expected total check (is total equal to adding individual line totals with ===?): <span id="check_f">—</span>
+      </div>
+    </div>
+  </div>
+
+  <hr style="margin:18px 0">
+
+  <h3>Explanation (no hedging)</h3>
+  <p>
+    JavaScript Number is a binary IEEE-754 floating point value. Decimals like 4.99, 0.10, 0.20 cannot be represented exactly in binary,
+    so arithmetic produces tiny rounding errors (e.g. 4.99 becomes 4.989999999999999). Using === to compare totals or expecting decimal arithmetic to be exact is wrong and will silently break money computations. Use integers (cents) or an exact decimal library.
+  </p>
+
+  <script>
+    // Utilities
+    function fmt(n) { return '$' + n.toFixed(10); } // show many decimals for demonstration
+    function dollarFmt(n) { return '$' + n.toFixed(2); }
+
+    // BROKEN (float)
+    document.getElementById('calc_b').addEventListener('click', function () {
+      const log = [];
+      // gather items
+      const itemCheckboxes = Array.from(document.querySelectorAll('#broken input[type="checkbox"]'));
+      const items = itemCheckboxes.map((cb,i) => {
+        return { price: Number(cb.getAttribute('data-price')), checked: cb.checked, id: ['A','B','C'][i] };
+      });
+      const qA = Number(document.getElementById('qA_b').value) || 0;
+      const qB = Number(document.getElementById('qB_b').value) || 0;
+      const qC = Number(document.getElementById('qC_b').value) || 0;
+      const qs = [qA, qB, qC];
+
+      // compute line totals (float)
+      const lineTotals = items.map((it, i) => {
+        const qty = qs[i];
+        const lt = it.price * qty;
+        log.push(`Line ${it.id}: price (float) = ${fmt(it.price)} × qty ${qty} → lineTotal = ${fmt(lt)}`);
+        return lt;
+      });
+
+      // add floats to get cart total
+      const total = lineTotals.reduce((s, v) => s + v, 0);
+      log.push(`Raw float sum of line totals → total = ${fmt(total)}`);
+      // show expected decimal-looking total by rounding to 2 decimals (what user expects)
+      log.push(`Rounded to 2 decimals (what we expect to charge/display): ${dollarFmt(total)}`);
+
+      // Now show how comparisons fail with ===
+      // Recompute what "should be" by adding dollars as decimal literals again and compare with ===
+      // For example, compute total by summing per-item price literals * qty again (another float computation)
+      const recomputed = items.reduce((s, it, i) => s + it.price * qs[i], 0);
+      log.push(`Recomputed total using the same float expressions → recomputed = ${fmt(recomputed)}`);
+
+      // Strict equality check
+      const eqStrict = total === recomputed;
+      log.push(`Using === to compare total and recomputed: ${eqStrict} (expected true, but may be false because of floating point rounding)`);
+
+      // To show a real failing case, force quantities that expose rounding: e.g., 1 × 4.99 + 1 × 0.10 + 1 × 0.20
+      // That sum in decimal should be 5.29. Show the actual float math:
+      const explicit = 4.99 + 0.10 + 0.20;
+      log.push(`Explicit float literal addition 4.99 + 0.10 + 0.20 = ${fmt(explicit)} (rounded show: ${dollarFmt(explicit)})`);
+      // Show a case where === fails between what arithmetic gives and a rounded-to-2-decimal parse:
+      const asRoundedString = Number(explicit.toFixed(2)); // string-round then parse back to Number
+      log.push(`Number(explicit.toFixed(2)) → ${fmt(asRoundedString)}. Now compare explicit === Number(toFixed(2)): ${explicit === asRoundedString}`);
+
+      // show equality to what a naive dev might expect: 5.29
+      const expected = 5.29;
+      log.push(`Compare explicit === 5.29 → ${explicit === expected} (explicit is ${fmt(explicit)}, expected literal is ${fmt(expected)})`);
+
+      // display summary
+      document.getElementById('log_b').textContent = log.join('\n');
+      document.getElementById('check_b').textContent = eqStrict ? 'PASS (=== matched)' : 'FAIL (=== did not match)';
+      document.getElementById('check_b').className = eqStrict ? 'good' : 'bad';
+    });
+
+    // FIXED (integer cents)
+    document.getElementById('calc_f').addEventListener('click', function () {
+      const log = [];
+      const itemCheckboxes = Array.from(document.querySelectorAll('#fixed input[type="checkbox"]'));
+      const items = itemCheckboxes.map((cb,i) => {
+        return { priceCents: Number(cb.getAttribute('data-price-cents')), checked: cb.checked, id: ['A','B','C'][i] };
+      });
+      const qA = Number(document.getElementById('qA_f').value) || 0;
+      const qB = Number(document.getElementById('qB_f').value) || 0;
+      const qC = Number(document.getElementById('qC_f').value) || 0;
+      const qs = [qA, qB, qC];
+
+      // compute line totals in cents (integers)
+      const lineTotals = items.map((it, i) => {
+        const qty = qs[i];
+        const lt = it.priceCents * qty; // integer arithmetic
+        log.push(`Line ${it.id}: price (cents) = ${it.priceCents}¢ × qty ${qty} → lineTotal = ${lt}¢`);
+        return lt;
+      });
+
+      const totalCents = lineTotals.reduce((s, v) => s + v, 0);
+      log.push(`Integer sum of line totals → totalCents = ${totalCents}¢`);
+      log.push(`Display as dollars: ${dollarFmt(totalCents / 100)}`);
+
+      // recompute in the same integer way and compare with ===
+      const recomputedCents = items.reduce((s, it, i) => s + it.priceCents * qs[i], 0);
+      log.push(`Recomputed cents using same integer expressions → ${recomputedCents}¢`);
+      const eqStrict = totalCents === recomputedCents;
+      log.push(`Using === on integers: ${eqStrict} (this will reliably be true if calculations are identical)`);
+
+      // show that converting cents to float dollars and back also yields exact integer when done correctly
+      const dollars = totalCents / 100; // this is a float but derived from exact integer cents
+      log.push(`Converting to dollars for display: ${dollarFmt(dollars)} (but keep canonical storage as ${totalCents}¢)`);
+
+      document.getElementById('log_f').textContent = log.join('\n');
+      document.getElementById('check_f').textContent = eqStrict ? 'PASS (=== matched on integers)' : 'FAIL';
+      document.getElementById('check_f').className = eqStrict ? 'good' : 'bad';
+    });
+
+    // Helpful initial click to show the problematic example automatically
+    // Trigger both with the default selections to show immediate failure
+    window.addEventListener('load', function () {
+      // pre-check all items for demo
+      document.querySelectorAll('#broken input[type="checkbox"]').forEach(cb => cb.checked = true);
+      document.querySelectorAll('#fixed input[type="checkbox"]').forEach(cb => cb.checked = true);
+      document.getElementById('calc_b').click();
+      document.getElementById('calc_f').click();
+    });
+  </script>
+</body>
+</html>

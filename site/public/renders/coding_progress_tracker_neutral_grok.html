@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrency Bug in Progress Bar Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .section {
+            width: 45%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 20px;
+            background-color: #4CAF50;
+            width: 0%;  /* Starts at 0% */
+            transition: width 0.5s ease-in-out;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h2 {
+            color: #333;
+        }
+        p.explanation {
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Concurrency Bug Demonstration in Progress Bar</h1>
+    <p>This page shows a buggy and corrected implementation of a progress bar updated by multiple concurrent tasks. The buggy version demonstrates race conditions with shared state, while the corrected version fixes it.</p>
+    
+    <div class="container">
+        <div class="section">
+            <h2>Buggy Implementation</h2>
+            <p class="explanation">
+                In this version, multiple tasks run concurrently using <code>setTimeout</code> and Promises. They access and update a shared progress variable without synchronization. This leads to race conditions: tasks may read the same stale value, causing the progress to skip percentages, show incorrect values, or even exceed 100% (e.g., if updates overwrite each other based on outdated states).
+            </p>
+            <div id="progressBarBuggy" class="progress-bar">
+                <div id="progressBuggy" class="progress"></div>
+            </div>
+            <button id="startBuggy">Start Buggy Tasks</button>
+        </div>
+        
+        <div class="section">
+            <h2>Corrected Implementation</h2>
+            <p class="explanation">
+                In this version, tasks are executed sequentially using Promises and async/await. This ensures that each task waits for the previous one to complete before updating the shared progress variable. The fix prevents race conditions by maintaining a consistent state, so the progress bar updates accurately without skipping values or exceeding 100%.
+            </p>
+            <div id="progressBarCorrect" class="progress-bar">
+                <div id="progressCorrect" class="progress"></div>
+            </div>
+            <button id="startCorrect">Start Corrected Tasks</button>
+        </div>
+    </div>
+
+    <script>
+        // Buggy Implementation
+        let progressBuggy = 0;  // Shared state
+
+        function updateBarBuggy() {
+            const progressElement = document.getElementById('progressBuggy');
+            progressElement.style.width = progressBuggy + '%';
+            if (progressBuggy > 100) {
+                progressElement.style.backgroundColor = 'red';  // Highlight if it exceeds 100%
+            }
+        }
+
+        function buggyTask(amount) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Simulate reading shared state (could be stale)
+                    let current = progressBuggy;
+                    setTimeout(() => {  // Second delay to simulate concurrency overlap
+                        progressBuggy = current + amount;  // Update based on potentially stale value
+                        updateBarBuggy();
+                        resolve();
+                    }, 200);  // Delay to allow overlap
+                }, 0);  // Immediate scheduling
+            });
+        }
+
+        document.getElementById('startBuggy').addEventListener('click', async () => {
+            progressBuggy = 0;  // Reset
+            updateBarBuggy();
+            await Promise.all([
+                buggyTask(20),  // Task 1: Add 20%
+                buggyTask(30),  // Task 2: Add 30%
+                buggyTask(40)   // Task 3: Add 40%
+            ]);
+            // Due to race conditions, final progress might not be 90% (e.g., could be 40%, 60%, or even over 100%)
+        });
+
+        // Corrected Implementation
+        let progressCorrect = 0;  // Shared state
+
+        function updateBarCorrect() {
+            const progressElement = document.getElementById('progressCorrect');
+            progressElement.style.width = progressCorrect + '%';
+        }
+
+        async function correctedTask(amount) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    progressCorrect += amount;  // Update directly
+                    updateBarCorrect();
+                    resolve();
+                }, 300);  // Delay for realism, but updates are sequenced
+            });
+        }
+
+        document.getElementById('startCorrect').addEventListener('click', async () => {
+            progressCorrect = 0;  // Reset
+            updateBarCorrect();
+            await correctedTask(20);  // Task 1: Add 20% sequentially
+            await correctedTask(30);  // Task 2: Add 30%
+            await correctedTask(40);  // Task 3: Add 40%
+            // Final progress will always be exactly 90%, as tasks run one after another
+        });
+    </script>
+</body>
+</html>

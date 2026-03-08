@@ -5,84 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Binary Search Visualization</title>
     <style>
+        #numbers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
         .box {
-            display: inline-block;
             width: 30px;
             height: 30px;
+            background-color: lightblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             border: 1px solid black;
-            text-align: center;
-            line-height: 30px;
-            margin: 5px;
         }
         .highlight {
             background-color: yellow;
         }
         .search-range {
-            border: 2px solid blue;
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
     <input id="target" type="number" placeholder="Target">
+    <button id="start">Start</button>
     <button id="step">Step</button>
-    <div id="array-container"></div>
+    <div id="numbers"></div>
     <div id="result"></div>
 
     <script>
-        // Initialize array and target
-        let array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+        let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         let target = 0;
         let low = 0;
-        let high = array.length - 1;
+        let high = numbers.length - 1;
         let found = false;
 
-        // Render array
-        const arrayContainer = document.getElementById('array-container');
-        arrayContainer.innerHTML = '';
-        array.forEach(num => {
-            const box = document.createElement('div');
-            box.classList.add('box');
-            box.textContent = num;
-            arrayContainer.appendChild(box);
+        const numbersDiv = document.getElementById('numbers');
+        const targetInput = document.getElementById('target');
+        const startButton = document.getElementById('start');
+        const stepButton = document.getElementById('step');
+        const resultDiv = document.getElementById('result');
+
+        startButton.addEventListener('click', () => {
+            target = parseInt(targetInput.value);
+            low = 0;
+            high = numbers.length - 1;
+            found = false;
+            renderNumbers();
+            resultDiv.innerText = '';
         });
 
-        // Add event listener to step button
-        document.getElementById('step').addEventListener('click', () => {
-            target = parseInt(document.getElementById('target').value);
-            if (isNaN(target)) return;
-
+        stepButton.addEventListener('click', () => {
             if (low > high) {
-                document.getElementById('result').textContent = 'Not found';
+                resultDiv.innerText = 'Not found';
                 return;
             }
 
-            const mid = Math.floor((low + high) / 2);
-            const boxes = arrayContainer.children;
+            let mid = Math.floor((low + high) / 2);
+            renderNumbers(low, high, mid);
 
-            // Clear previous highlights
-            for (let i = 0; i < boxes.length; i++) {
-                boxes[i].classList.remove('highlight', 'search-range');
-            }
-
-            // Highlight search range
-            for (let i = low; i <= high; i++) {
-                boxes[i].classList.add('search-range');
-            }
-
-            // Highlight middle element
-            boxes[mid].classList.add('highlight');
-
-            // Check if target is found
-            if (array[mid] === target) {
+            if (numbers[mid] === target) {
+                resultDiv.innerText = 'Found!';
                 found = true;
-                document.getElementById('result').textContent = 'Found';
-                return;
-            } else if (array[mid] < target) {
+                low = high + 1;
+            } else if (numbers[mid] < target) {
                 low = mid + 1;
             } else {
                 high = mid - 1;
             }
         });
+
+        function renderNumbers(low = 0, high = numbers.length - 1, mid = -1) {
+            numbersDiv.innerHTML = '';
+            for (let i = 0; i < numbers.length; i++) {
+                let box = document.createElement('div');
+                box.classList.add('box');
+                if (i >= low && i <= high) {
+                    box.classList.add('search-range');
+                }
+                if (i === mid) {
+                    box.classList.add('highlight');
+                }
+                box.innerText = numbers[i];
+                numbersDiv.appendChild(box);
+            }
+        }
     </script>
 </body>
 </html>

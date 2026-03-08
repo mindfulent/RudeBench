@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation with Real-time Regex Feedback & Limitations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        form {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't increase total width */
+            transition: border-color 0.3s ease;
+        }
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .valid {
+            border-color: #28a745 !important; /* Green */
+        }
+        .invalid {
+            border-color: #dc3545 !important; /* Red */
+        }
+        .feedback-message {
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .explanation {
+            margin-top: 40px;
+            padding: 20px;
+            border: 1px dashed #007bff;
+            border-radius: 8px;
+            background-color: #e6f2ff;
+        }
+        .explanation ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .explanation li {
+            margin-bottom: 10px;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #c7254e;
+        }
+        strong {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Email Validation Demo</h1>
+
+    <form>
+        <label for="emailInput">Enter your email address:</label>
+        <input type="email" id="emailInput" placeholder="e.g., test@example.com">
+        <p class="feedback-message">
+            (This regex is reasonably comprehensive but NOT fully RFC-compliant)
+        </p>
+        <button type="submit">Submit (form won't actually submit)</button>
+    </form>
+
+    <div class="explanation">
+        <h2>Why Regex Alone is Fundamentally Limited for Email Validation (RFC Perspective)</h2>
+        <p>
+            It's a common misconception that a single regular expression can perfectly validate all email addresses according to the official specifications (like RFC 5322 and RFC 5321). While regex can catch many common format errors, it fails to encompass the full complexity and nuance of the RFCs.
+        </p>
+        <h3>Key Limitations of Regex for RFC-Compliant Email Validation:</h3>
+        <ul>
+            <li>
+                <strong>Complexity and Edge Cases:</strong> The RFCs allow for an incredibly wide range of characters and structures in both the "local-part" (before the '@') and the "domain-part" (after the '@'). This includes:
+                <ul>
+                    <li>
+                        <strong>Quoted Strings:</strong> The local-part can be a "quoted string" allowing almost any character (including spaces, special characters, and even backslashes and quotes if escaped) within double quotes. E.g., <code>"John Doe"@example.com</code>, <code>"user name"@domain.com</code>, <code>"user\"name"@domain.com</code>. A regex for this becomes extremely convoluted and prone to "catastrophic backtracking."
+                    </li>
+                    <li>
+                        <strong>Comments:</strong> Comments enclosed in parentheses <code>()</code> are allowed in various places, including the local-part and domain-part, and should be ignored for the actual address. E.g., <code>user(comment)@example.com</code>. Regex struggles to parse and ignore these without making the pattern unreadable or inefficient.
+                    </li>
+                    <li>
+                        <strong>IP Address Literals:</strong> The domain part can technically be an IP address literal (e.g., <code>user@[192.168.1.1]</code> or <code>user@[IPv6:2001:db8::1]</code>). While rarely used in practice, it's valid per RFCs.
+                    </li>
+                    <li>
+                        <strong>Internationalized Domain Names (IDN):</strong> While modern systems use Punycode (e.g., <code>xn--mller-kva.com</code>), the display often shows the original Unicode. A regex would need to account for both or rely on external libraries.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>Ambiguity and Readability:</strong> A regex attempting to cover even a significant portion of RFCs becomes incredibly long, complex, and virtually unreadable. This makes it difficult to maintain, debug, and ensure correctness. Many "RFC-compliant" regexes you find online are either incomplete or suffer from catastrophic backtracking issues.
+            </li>
+            <li>
+                <strong>Contextual Rules:</strong> Some RFC rules are contextual. For example, a dot <code>.</code> cannot be the first or last character of the local-part, nor can two dots appear consecutively (<code>..</code>). While regex can handle some of these, combining them all becomes unwieldy.
+            </li>
+            <li>
+                <strong>What Validation *Really* Means:</strong> An email address is essentially a routing instruction. The only true way to "validate" an email address is to send an email to it and see if it's received and confirmed by the user. Everything else is just a guess at its format or existence.
+            </li>
+        </ul>
+
+        <h3>Better Alternatives for Production Use:</h3>
+        <p>Given the limitations, here's what's recommended for robust email validation in production environments:</p>
+        <ol>
+            <li>
+                <strong>Leverage Built-in Browser Validation (Initial Client-Side):</strong>
+                <p>Browsers have a basic, but often sufficient, level of validation for <code>&lt;input type="email"&gt;</code>. This handles many common cases and is a good first line of defense. It's what this demo uses implicitly for some base checks, though our JS adds more.</p>
+                <pre><code>&lt;input type="email" required&gt;</code></pre>
+            </li>
+            <li>
+                <strong>Use a Robust Library/API (Server-Side):</strong>
+                <p>For server-side validation, use a battle-tested library in your chosen programming language that understands the nuances of email RFCs. These libraries often involve more than just regex; they might parse the address into its components, check for valid domain syntax, and sometimes even perform DNS lookups (MX records).</p>
+                <ul>
+                    <li><strong>Python:</strong> <code>email.utils.parseaddr</code> (part of the standard library, but for parsing, not full validation), <code>email_validator</code> package.</li>
+                    <li><strong>PHP:</strong> <code>filter_var($email, FILTER_VALIDATE_EMAIL)</code> is excellent and handles many RFC complexities.</li>
+                    <li><strong>JavaScript (Node.js):</strong> Libraries like <code>validator.js</code> (specifically <code>validator.isEmail()</code>) or more specialized email parsing libraries.</li>
+                    <li><strong>Java:</strong> Apache Commons Validator.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Send a Confirmation Email (The Gold Standard):</strong>
+                <p>This is the only method that truly verifies two things:</p>
+                <ul>
+                    <li>The email address is syntactically valid enough to receive mail.</li>
+                    <li>The user actually owns or has access to that email address.</li>
+                </ul>
+                <p>Implement a "double opt-in" or "email verification" flow where a unique link is sent to the provided address, and the user must click it to confirm.</p>
+            </li>
+            <li>
+                <strong>Domain Verification (MX Records):</strong>
+                <p>For an extra layer, you can perform a DNS lookup for MX (Mail Exchange) records on the domain part of the email address. If no MX records exist, it's highly unlikely mail can be delivered to that domain. This is often part of more comprehensive validation libraries/services.</p>
+            </li>
+        </ol>
+        <p>
+            In summary, while a client-side regex like the one in this demo can provide good immediate feedback for common cases, <strong>never rely solely on client-side regex for security or critical data integrity</strong>. Always perform robust validation on the server, ideally with a combination of a good library and an email confirmation step.
+        </p>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('emailInput');
+        const feedbackMessage = document.querySelector('.feedback-message');
+
+        // This regex is a commonly used, reasonably comprehensive one for client-side feedback.
+        // It is NOT fully RFC-compliant for the reasons explained above, but covers most common patterns.
+        // For example, it *doesn't* handle quoted strings, comments, or IP address literals in domains.
+        const emailRegex = new RegExp(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        );
+
+        function validateEmail() {
+            const email = emailInput.value;
+            if (email === "") {
+                emailInput.classList.remove('valid', 'invalid');
+                feedbackMessage.textContent = "(This regex is reasonably comprehensive but NOT fully RFC-compliant)";
+                feedbackMessage.style.color = '#666';
+                return;
+            }
+
+            if (emailRegex.test(email)) {
+                emailInput.classList.remove('invalid');
+                emailInput.classList.add('valid');
+                feedbackMessage.textContent = "Looks like a valid email format!";
+                feedbackMessage.style.color = '#28a745';
+            } else {
+                emailInput.classList.remove('valid');
+                emailInput.classList.add('invalid');
+                feedbackMessage.textContent = "Invalid email format according to our regex.";
+                feedbackMessage.style.color = '#dc3545';
+            }
+        }
+
+        emailInput.addEventListener('input', validateEmail);
+
+        // Prevent form submission for this demo
+        document.querySelector('form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            alert('Form submission prevented for this demo. Check the console for more details.');
+            console.log('Email input value:', emailInput.value);
+            console.log('Regex test result:', emailRegex.test(emailInput.value));
+        });
+
+        // Initial validation on load if there's pre-filled content (e.g., browser autofill)
+        validateEmail();
+    </script>
+
+</body>
+</html>

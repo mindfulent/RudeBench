@@ -18,956 +18,17 @@
   ],
   "models": [
     "claude",
+    "gemini",
+    "gpt5mini",
+    "grok",
     "llama"
   ],
   "entries": [
-    {
-      "task_id": "coding_api_docs",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_api_docs_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_api_docs_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_api_docs_curt_claude.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_api_docs_curt_llama.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_api_docs_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_api_docs_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_api_docs_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_api_docs_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_api_docs_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_api_docs_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_api_docs_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_api_docs",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_api_docs_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_async_counter_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_async_counter_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_async_counter_curt_claude.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_async_counter_curt_llama.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_async_counter_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_async_counter_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_async_counter_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_async_counter_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_async_counter_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_async_counter_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_async_counter_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_async_counter",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_async_counter_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_binary_search_viz_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_binary_search_viz_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_binary_search_viz_curt_claude.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_binary_search_viz_curt_llama.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_binary_search_viz_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_binary_search_viz_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_binary_search_viz_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_binary_search_viz_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_binary_search_viz_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_binary_search_viz_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_binary_search_viz_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_binary_search_viz",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_binary_search_viz_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_csv_table_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_csv_table_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_csv_table_curt_claude.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_csv_table_curt_llama.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_csv_table_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_csv_table_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_csv_table_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_csv_table_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_csv_table_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_csv_table_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_csv_table_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_csv_table",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_csv_table_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_dom_memory_leak_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_dom_memory_leak_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_dom_memory_leak_curt_claude.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_dom_memory_leak_curt_llama.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_dom_memory_leak_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_dom_memory_leak_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_dom_memory_leak_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_dom_memory_leak_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_dom_memory_leak_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_dom_memory_leak_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_dom_memory_leak_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_dom_memory_leak",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_dom_memory_leak_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_email_form_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_email_form_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_email_form_curt_claude.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_email_form_curt_llama.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_email_form_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_email_form_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_email_form_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_email_form_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_email_form_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_email_form_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_email_form_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_email_form",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_email_form_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_fibonacci_spiral_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_fibonacci_spiral_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_fibonacci_spiral_curt_claude.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_fibonacci_spiral_curt_llama.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_fibonacci_spiral_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_fibonacci_spiral_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_fibonacci_spiral_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_fibonacci_spiral_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_fibonacci_spiral_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_fibonacci_spiral_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_fibonacci_spiral_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_fibonacci_spiral",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_fibonacci_spiral_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_fractal_tree_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_fractal_tree_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_fractal_tree_curt_claude.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_fractal_tree_curt_llama.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_fractal_tree_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_fractal_tree_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_fractal_tree_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_fractal_tree_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_fractal_tree_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_fractal_tree_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_fractal_tree_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_fractal_tree",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_fractal_tree_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_injection_demo_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_injection_demo_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_injection_demo_curt_claude.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_injection_demo_curt_llama.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_injection_demo_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_injection_demo_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_injection_demo_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_injection_demo_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_injection_demo_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_injection_demo_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_injection_demo_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_injection_demo",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_injection_demo_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_linked_list_viz_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_linked_list_viz_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_linked_list_viz_curt_claude.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_linked_list_viz_curt_llama.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_linked_list_viz_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_linked_list_viz_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_linked_list_viz_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_linked_list_viz_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_linked_list_viz_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_linked_list_viz_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_linked_list_viz_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_linked_list_viz",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_linked_list_viz_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_price_calculator_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_price_calculator_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_price_calculator_curt_claude.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_price_calculator_curt_llama.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_price_calculator_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_price_calculator_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_price_calculator_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_price_calculator_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_price_calculator_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_price_calculator_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_price_calculator_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_price_calculator",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_price_calculator_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_progress_tracker_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_progress_tracker_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_progress_tracker_curt_claude.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_progress_tracker_curt_llama.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_progress_tracker_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_progress_tracker_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_progress_tracker_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_progress_tracker_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_progress_tracker_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_progress_tracker_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_progress_tracker_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_progress_tracker",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_progress_tracker_neutral_llama.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "claude",
-      "tone": "abusive",
-      "filename": "coding_sort_visualizer_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_sort_visualizer_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "claude",
-      "tone": "curt",
-      "filename": "coding_sort_visualizer_curt_claude.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_sort_visualizer_curt_llama.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "claude",
-      "tone": "friendly",
-      "filename": "coding_sort_visualizer_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_sort_visualizer_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_sort_visualizer_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_sort_visualizer_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_sort_visualizer_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_sort_visualizer_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "claude",
-      "tone": "neutral",
-      "filename": "coding_sort_visualizer_neutral_claude.html"
-    },
-    {
-      "task_id": "coding_sort_visualizer",
-      "model": "llama",
-      "tone": "neutral",
-      "filename": "coding_sort_visualizer_neutral_llama.html"
-    },
     {
       "task_id": "coding_string_reverser",
       "model": "claude",
       "tone": "abusive",
       "filename": "coding_string_reverser_abusive_claude.html"
-    },
-    {
-      "task_id": "coding_string_reverser",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_string_reverser_abusive_llama.html"
     },
     {
       "task_id": "coding_string_reverser",
@@ -977,45 +38,9 @@
     },
     {
       "task_id": "coding_string_reverser",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_string_reverser_curt_llama.html"
-    },
-    {
-      "task_id": "coding_string_reverser",
       "model": "claude",
       "tone": "friendly",
       "filename": "coding_string_reverser_friendly_claude.html"
-    },
-    {
-      "task_id": "coding_string_reverser",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_string_reverser_friendly_llama.html"
-    },
-    {
-      "task_id": "coding_string_reverser",
-      "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_string_reverser_grateful_claude.html"
-    },
-    {
-      "task_id": "coding_string_reverser",
-      "model": "llama",
-      "tone": "grateful",
-      "filename": "coding_string_reverser_grateful_llama.html"
-    },
-    {
-      "task_id": "coding_string_reverser",
-      "model": "claude",
-      "tone": "hostile",
-      "filename": "coding_string_reverser_hostile_claude.html"
-    },
-    {
-      "task_id": "coding_string_reverser",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_string_reverser_hostile_llama.html"
     },
     {
       "task_id": "coding_string_reverser",
@@ -1024,10 +49,178 @@
       "filename": "coding_string_reverser_neutral_claude.html"
     },
     {
+      "task_id": "coding_binary_search_viz",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_binary_search_viz_curt_claude.html"
+    },
+    {
       "task_id": "coding_string_reverser",
-      "model": "llama",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_string_reverser_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_binary_search_viz_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_string_reverser_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_binary_search_viz_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "claude",
       "tone": "neutral",
-      "filename": "coding_string_reverser_neutral_llama.html"
+      "filename": "coding_binary_search_viz_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_binary_search_viz_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_binary_search_viz_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_linked_list_viz_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_linked_list_viz_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_linked_list_viz_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_linked_list_viz_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_linked_list_viz_curt_claude.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_csv_table_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_linked_list_viz_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_csv_table_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_csv_table_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_csv_table_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_csv_table_curt_claude.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_csv_table_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_sort_visualizer_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_sort_visualizer_curt_claude.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_sort_visualizer_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_sort_visualizer_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_sort_visualizer_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_sort_visualizer_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_injection_demo_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_injection_demo_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_injection_demo_grateful_claude.html"
     },
     {
       "task_id": "coding_theme_manager",
@@ -1036,22 +229,16 @@
       "filename": "coding_theme_manager_abusive_claude.html"
     },
     {
-      "task_id": "coding_theme_manager",
-      "model": "llama",
-      "tone": "abusive",
-      "filename": "coding_theme_manager_abusive_llama.html"
-    },
-    {
-      "task_id": "coding_theme_manager",
+      "task_id": "coding_email_form",
       "model": "claude",
-      "tone": "curt",
-      "filename": "coding_theme_manager_curt_claude.html"
+      "tone": "neutral",
+      "filename": "coding_email_form_neutral_claude.html"
     },
     {
-      "task_id": "coding_theme_manager",
-      "model": "llama",
-      "tone": "curt",
-      "filename": "coding_theme_manager_curt_llama.html"
+      "task_id": "coding_email_form",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_email_form_friendly_claude.html"
     },
     {
       "task_id": "coding_theme_manager",
@@ -1060,22 +247,46 @@
       "filename": "coding_theme_manager_friendly_claude.html"
     },
     {
-      "task_id": "coding_theme_manager",
-      "model": "llama",
-      "tone": "friendly",
-      "filename": "coding_theme_manager_friendly_llama.html"
+      "task_id": "coding_email_form",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_email_form_curt_claude.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_injection_demo_curt_claude.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_injection_demo_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_injection_demo_abusive_claude.html"
     },
     {
       "task_id": "coding_theme_manager",
       "model": "claude",
-      "tone": "grateful",
-      "filename": "coding_theme_manager_grateful_claude.html"
+      "tone": "curt",
+      "filename": "coding_theme_manager_curt_claude.html"
     },
     {
-      "task_id": "coding_theme_manager",
-      "model": "llama",
+      "task_id": "coding_email_form",
+      "model": "claude",
       "tone": "grateful",
-      "filename": "coding_theme_manager_grateful_llama.html"
+      "filename": "coding_email_form_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_email_form_abusive_claude.html"
     },
     {
       "task_id": "coding_theme_manager",
@@ -1085,21 +296,2403 @@
     },
     {
       "task_id": "coding_theme_manager",
-      "model": "llama",
-      "tone": "hostile",
-      "filename": "coding_theme_manager_hostile_llama.html"
-    },
-    {
-      "task_id": "coding_theme_manager",
       "model": "claude",
       "tone": "neutral",
       "filename": "coding_theme_manager_neutral_claude.html"
     },
     {
       "task_id": "coding_theme_manager",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_theme_manager_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_email_form_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_fractal_tree_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_fractal_tree_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_async_counter_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_async_counter_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_fractal_tree_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_async_counter_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_fractal_tree_curt_claude.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_async_counter_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_async_counter_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_fractal_tree_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_fractal_tree_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_async_counter_curt_claude.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_api_docs_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_progress_tracker_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_api_docs_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_api_docs_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_progress_tracker_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_progress_tracker_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_progress_tracker_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_fibonacci_spiral_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_progress_tracker_curt_claude.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_api_docs_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_fibonacci_spiral_curt_claude.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_api_docs_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_fibonacci_spiral_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_api_docs_curt_claude.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_progress_tracker_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_fibonacci_spiral_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_fibonacci_spiral_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_fibonacci_spiral_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_dom_memory_leak_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_dom_memory_leak_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "claude",
+      "tone": "friendly",
+      "filename": "coding_price_calculator_friendly_claude.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_dom_memory_leak_curt_claude.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_price_calculator_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_price_calculator_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "claude",
+      "tone": "hostile",
+      "filename": "coding_dom_memory_leak_hostile_claude.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_dom_memory_leak_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "claude",
+      "tone": "neutral",
+      "filename": "coding_price_calculator_neutral_claude.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "claude",
+      "tone": "grateful",
+      "filename": "coding_dom_memory_leak_grateful_claude.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "claude",
+      "tone": "abusive",
+      "filename": "coding_price_calculator_abusive_claude.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "claude",
+      "tone": "curt",
+      "filename": "coding_price_calculator_curt_claude.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_string_reverser_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_string_reverser_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_string_reverser_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_csv_table_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_string_reverser_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_binary_search_viz_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_binary_search_viz_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_csv_table_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_binary_search_viz_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_csv_table_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_csv_table_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_csv_table_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_binary_search_viz_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_linked_list_viz_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_linked_list_viz_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_binary_search_viz_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_binary_search_viz_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_csv_table_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_linked_list_viz_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_injection_demo_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_string_reverser_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_linked_list_viz_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_sort_visualizer_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_string_reverser_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_sort_visualizer_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_injection_demo_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_injection_demo_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_theme_manager_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_email_form_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_email_form_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_email_form_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_email_form_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_sort_visualizer_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_injection_demo_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_sort_visualizer_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_linked_list_viz_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_theme_manager_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_injection_demo_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_sort_visualizer_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_email_form_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_fractal_tree_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_fractal_tree_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_async_counter_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_sort_visualizer_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_fractal_tree_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_theme_manager_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_async_counter_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_fractal_tree_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_email_form_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_theme_manager_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_async_counter_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_async_counter_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_linked_list_viz_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_async_counter_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_theme_manager_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_fractal_tree_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_async_counter_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_fractal_tree_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_progress_tracker_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_progress_tracker_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_progress_tracker_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_progress_tracker_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_fibonacci_spiral_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_progress_tracker_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_fibonacci_spiral_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_theme_manager_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_dom_memory_leak_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_fibonacci_spiral_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_progress_tracker_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_fibonacci_spiral_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_dom_memory_leak_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_dom_memory_leak_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_dom_memory_leak_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_price_calculator_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_api_docs_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_dom_memory_leak_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_api_docs_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_fibonacci_spiral_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_api_docs_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_api_docs_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_price_calculator_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gpt5mini",
+      "tone": "curt",
+      "filename": "coding_dom_memory_leak_curt_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gpt5mini",
+      "tone": "friendly",
+      "filename": "coding_price_calculator_friendly_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gpt5mini",
+      "tone": "abusive",
+      "filename": "coding_price_calculator_abusive_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_price_calculator_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gpt5mini",
+      "tone": "hostile",
+      "filename": "coding_fibonacci_spiral_hostile_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_price_calculator_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gpt5mini",
+      "tone": "neutral",
+      "filename": "coding_api_docs_neutral_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gpt5mini",
+      "tone": "grateful",
+      "filename": "coding_api_docs_grateful_gpt5mini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_string_reverser_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_string_reverser_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_string_reverser_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_string_reverser_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_string_reverser_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_string_reverser_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_binary_search_viz_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_binary_search_viz_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_binary_search_viz_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_binary_search_viz_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_binary_search_viz_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_binary_search_viz_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_linked_list_viz_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_linked_list_viz_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_linked_list_viz_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_linked_list_viz_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_csv_table_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_linked_list_viz_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_linked_list_viz_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_csv_table_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_csv_table_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_csv_table_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_csv_table_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_csv_table_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_sort_visualizer_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_sort_visualizer_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_sort_visualizer_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_sort_visualizer_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_sort_visualizer_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_sort_visualizer_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_injection_demo_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_injection_demo_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_injection_demo_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_injection_demo_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_injection_demo_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_injection_demo_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_theme_manager_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_theme_manager_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_theme_manager_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_theme_manager_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_theme_manager_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_theme_manager_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_email_form_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_email_form_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_email_form_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_email_form_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_email_form_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_email_form_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_fractal_tree_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_fractal_tree_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_fractal_tree_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_fractal_tree_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_fractal_tree_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_fractal_tree_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_async_counter_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_async_counter_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_async_counter_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_async_counter_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_async_counter_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_async_counter_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_api_docs_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_api_docs_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_api_docs_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_api_docs_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_api_docs_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_api_docs_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_progress_tracker_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_progress_tracker_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_progress_tracker_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_progress_tracker_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_progress_tracker_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_progress_tracker_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_fibonacci_spiral_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_fibonacci_spiral_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_fibonacci_spiral_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_fibonacci_spiral_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_fibonacci_spiral_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gemini",
+      "tone": "grateful",
+      "filename": "coding_dom_memory_leak_grateful_gemini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_dom_memory_leak_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_dom_memory_leak_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_dom_memory_leak_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "gemini",
+      "tone": "hostile",
+      "filename": "coding_dom_memory_leak_hostile_gemini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gemini",
+      "tone": "friendly",
+      "filename": "coding_price_calculator_friendly_gemini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gemini",
+      "tone": "neutral",
+      "filename": "coding_price_calculator_neutral_gemini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gemini",
+      "tone": "curt",
+      "filename": "coding_price_calculator_curt_gemini.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "gemini",
+      "tone": "abusive",
+      "filename": "coding_price_calculator_abusive_gemini.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_string_reverser_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_string_reverser_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_string_reverser_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_string_reverser_curt_llama.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_string_reverser_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_string_reverser_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_binary_search_viz_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_binary_search_viz_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_binary_search_viz_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_binary_search_viz_curt_llama.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_binary_search_viz_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_binary_search_viz_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_linked_list_viz_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_linked_list_viz_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_linked_list_viz_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_linked_list_viz_curt_llama.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_linked_list_viz_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_linked_list_viz_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_csv_table_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_csv_table_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_csv_table_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_csv_table_curt_llama.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_csv_table_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_csv_table_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_sort_visualizer_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_sort_visualizer_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_sort_visualizer_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_sort_visualizer_curt_llama.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_sort_visualizer_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_sort_visualizer_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_injection_demo_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_injection_demo_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_injection_demo_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_injection_demo_curt_llama.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_injection_demo_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_injection_demo_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_theme_manager_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_theme_manager_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
       "model": "llama",
       "tone": "neutral",
       "filename": "coding_theme_manager_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_theme_manager_curt_llama.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_theme_manager_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_theme_manager_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_email_form_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_email_form_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_email_form_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_email_form_curt_llama.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_email_form_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_email_form_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_fractal_tree_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_fractal_tree_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_fractal_tree_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_fractal_tree_curt_llama.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_fractal_tree_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_fractal_tree_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_async_counter_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_async_counter_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_async_counter_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_async_counter_curt_llama.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_async_counter_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_async_counter_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_api_docs_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_api_docs_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_api_docs_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_api_docs_curt_llama.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_api_docs_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_api_docs_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_progress_tracker_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_progress_tracker_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_progress_tracker_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_progress_tracker_curt_llama.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_progress_tracker_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_progress_tracker_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_fibonacci_spiral_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_fibonacci_spiral_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_fibonacci_spiral_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_fibonacci_spiral_curt_llama.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_fibonacci_spiral_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_fibonacci_spiral_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_dom_memory_leak_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_dom_memory_leak_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_dom_memory_leak_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_dom_memory_leak_curt_llama.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_dom_memory_leak_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_dom_memory_leak_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "llama",
+      "tone": "grateful",
+      "filename": "coding_price_calculator_grateful_llama.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "llama",
+      "tone": "friendly",
+      "filename": "coding_price_calculator_friendly_llama.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "llama",
+      "tone": "neutral",
+      "filename": "coding_price_calculator_neutral_llama.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "llama",
+      "tone": "curt",
+      "filename": "coding_price_calculator_curt_llama.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "llama",
+      "tone": "hostile",
+      "filename": "coding_price_calculator_hostile_llama.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "llama",
+      "tone": "abusive",
+      "filename": "coding_price_calculator_abusive_llama.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_string_reverser_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_string_reverser_curt_grok.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_string_reverser_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_string_reverser_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_string_reverser_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_binary_search_viz_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_binary_search_viz_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_binary_search_viz_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_binary_search_viz_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_string_reverser",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_string_reverser_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_binary_search_viz_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_linked_list_viz_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_csv_table_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_csv_table_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_linked_list_viz_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_binary_search_viz",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_binary_search_viz_curt_grok.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_linked_list_viz_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_linked_list_viz_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_csv_table_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_linked_list_viz_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_linked_list_viz",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_linked_list_viz_curt_grok.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_csv_table_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_csv_table_curt_grok.html"
+    },
+    {
+      "task_id": "coding_csv_table",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_csv_table_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_sort_visualizer_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_sort_visualizer_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_sort_visualizer_curt_grok.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_sort_visualizer_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_injection_demo_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_sort_visualizer_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_injection_demo_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_theme_manager_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_theme_manager_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_injection_demo_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_theme_manager_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_theme_manager_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_injection_demo_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_theme_manager_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_injection_demo_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_email_form_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_email_form_curt_grok.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_email_form_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_email_form_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_injection_demo",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_injection_demo_curt_grok.html"
+    },
+    {
+      "task_id": "coding_theme_manager",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_theme_manager_curt_grok.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_fractal_tree_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_email_form_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_email_form",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_email_form_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_fractal_tree_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_fractal_tree_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_async_counter_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_async_counter_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_async_counter_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_async_counter_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_async_counter_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_fractal_tree_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_fractal_tree_curt_grok.html"
+    },
+    {
+      "task_id": "coding_fractal_tree",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_fractal_tree_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_async_counter",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_async_counter_curt_grok.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_api_docs_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_api_docs_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_api_docs_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_api_docs_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_api_docs_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_api_docs",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_api_docs_curt_grok.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_progress_tracker_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_progress_tracker_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_progress_tracker_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_progress_tracker_curt_grok.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_progress_tracker_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_fibonacci_spiral_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_fibonacci_spiral_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_fibonacci_spiral_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_progress_tracker",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_progress_tracker_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_dom_memory_leak_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_fibonacci_spiral_curt_grok.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_dom_memory_leak_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_dom_memory_leak_curt_grok.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_dom_memory_leak_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_fibonacci_spiral_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_dom_memory_leak_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_dom_memory_leak",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_dom_memory_leak_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "grok",
+      "tone": "friendly",
+      "filename": "coding_price_calculator_friendly_grok.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "grok",
+      "tone": "hostile",
+      "filename": "coding_price_calculator_hostile_grok.html"
+    },
+    {
+      "task_id": "coding_fibonacci_spiral",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_fibonacci_spiral_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "grok",
+      "tone": "grateful",
+      "filename": "coding_price_calculator_grateful_grok.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_price_calculator_neutral_grok.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "grok",
+      "tone": "curt",
+      "filename": "coding_price_calculator_curt_grok.html"
+    },
+    {
+      "task_id": "coding_price_calculator",
+      "model": "grok",
+      "tone": "abusive",
+      "filename": "coding_price_calculator_abusive_grok.html"
+    },
+    {
+      "task_id": "coding_sort_visualizer",
+      "model": "grok",
+      "tone": "neutral",
+      "filename": "coding_sort_visualizer_neutral_grok.html"
     }
   ]
 }

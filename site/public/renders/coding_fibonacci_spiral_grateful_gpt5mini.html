@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Fibonacci Spiral — Buggy vs Correct</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+  h1 { margin-bottom: 6px; }
+  .row { display:flex; gap:20px; align-items:flex-start; }
+  .card { border:1px solid #ccc; padding:12px; border-radius:6px; background:#fafafa; }
+  canvas { background: white; border:1px solid #ddd; }
+  .controls { margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  label { font-size:13px; }
+  button { padding:6px 10px; }
+  input[type=range] { width:160px; }
+  .explain { max-width:920px; margin-top:14px; color:#333; }
+  pre { background:#222; color:#0f0; padding:8px; border-radius:4px; overflow:auto; }
+</style>
+</head>
+<body>
+  <h1>Fibonacci Spiral — Buggy vs Correct</h1>
+  <div class="row">
+    <div class="card">
+      <strong>Buggy implementation</strong>
+      <div><canvas id="canvas-bug" width="420" height="420"></canvas></div>
+      <div class="controls">
+        <label>Turns: <input id="turns-bug" type="range" min="1" max="12" value="8"/></label>
+        <button id="redraw-bug">Redraw</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Correct implementation</strong>
+      <div><canvas id="canvas-correct" width="420" height="420"></canvas></div>
+      <div class="controls">
+        <label>Turns: <input id="turns-correct" type="range" min="1" max="12" value="8"/></label>
+        <button id="redraw-correct">Redraw</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="explain">
+    <h3>What's shown</h3>
+    <p>
+      Each canvas draws a Fibonacci spiral built from quarter-circle arcs whose radii are Fibonacci numbers (times a scale).
+      The left canvas shows a deliberately buggy base-case/initialization: it starts the recursion with wrong initial segments (F(0), F(1) mis-handled),
+      which causes arcs to be placed/sized incorrectly and the spiral to appear shifted/wrong.
+      The right canvas shows the correct initialization and placement.
+    </p>
+
+    <h3>Bug explanation (short)</h3>
+    <ul>
+      <li>The "bug" often comes from mis-specifying the first two Fibonacci radii or their order (for example using F(1)=0 or swapping F(0) and F(1)), or from the wrong initial orientation/position for the first arc. That makes subsequent arcs' positions wrong because each arc placement depends on the previous rectangle placement.</li>
+      <li>In the demo the buggy version intentionally uses the wrong base pair so the first rectangle is tiny/zero which produces a malformed spiral. The correct version uses F0=1, F1=1 (or F1=1, F2=1 depending on indexing) and aligns the geometry accordingly.</li>
+    </ul>
+
+    <h3>Key points to check when you see a "canvas bug"</h3>
+    <ol>
+      <li>Are your base Fibonacci values correct (often F0=0, F1=1 or F1=1, F2=1 depending on indexing)?</li>
+      <li>Are you using consistent units and scale when turning Fibonacci numbers into pixel radii?</li>
+      <li>Is the arc direction (start/end angles) and quadrant choice consistent with the rectangle placement?</li>
+      <li>Are you mutating shared state between calls (like current x/y/orientation) incorrectly?</li>
+    </ol>
+    <p>Below is the full code used — run and compare both canvases. You can change "Turns" to see how the difference evolves.</p>
+  </div>
+
+<script>
+// Single-file demo. Two implementations: buggy and correct.
+// Both build a spiral from quarter-circle arcs with radii = Fibonacci numbers * scale.
+
+// Utility: compute Fibonacci numbers (usual sequence 1,1,2,3,5,...)
+function fibSequence(n) {
+  const a = [1, 1];
+  if (n <= 0) return [];
+  if (n === 1) return [1];
+  for (let i = 2; i < n; i++) a.push(a[i-1] + a[i-2]);
+  return a;
+}
+
+// Draw helper to clear and set transforms
+function prepareCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  // Clear
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // center origin
+  ctx.save();
+  return ctx;
+}
+
+// Place rectangle and arc: we'll represent spiral as sequence of squares placed in spiral fashion.
+// Each step places a square of side = fib[i] (scaled), at some (x,y) with orientation 0..3 (right, up, left, down).
+// Then draw quarter-arc inside that square connecting the correct corners.
+// We'll create two versions: buggy and correct differing in base-case setup.
+
+function drawSpiral(ctx, nTurns, opts = {}) {
+  // opts: x0,y0 center, scale, buggy boolean
+  const w = ctx.canvas.width, h = ctx.canvas.height;
+  const x0 = opts.x0 ?? (w/2);
+  const y0 = opts.y0 ?? (h/2);
+  const scale = opts.scale ?? 6;
+  const buggy = !!opts.buggy;
+
+  // Generate enough fib numbers: we need nTurns squares.
+  const fib = fibSequence(nTurns);
+
+  // We'll compute positions of squares. Each square is {x,y,size,orient}
+  // Orientation: 0 = to the right (square extends right from origin point), then rotates clockwise.
+  // We will anchor the very first square relative to x0,y0 differently in buggy vs correct.
+
+  // For clarity, use a coordinate system where (x,y) is the top-left of the square.
+  const squares = [];
+
+  // BUGGY variant: wrong base case — treat fib[0] as zero (simulate someone mixing up indices)
+  if (buggy) {
+    // Intentionally wrong: set first size to 0, shift sequence: this simulates using F0=0 instead of 1
+    // We'll construct a mutated list where first size is 0 then follow with fib (so effectively sizes: 0,1,1,2,...
+    const sizes = [0, ...fib];
+    // Place first "square" with size 0 at center
+    let x = x0, y = y0;
+    let orient = 0; // start orientation
+    for (let i = 0; i < nTurns; i++) {
+      const s = sizes[i] * scale;
+      // For a square of size s, compute top-left depending on orientation.
+      // Use different placement rule: place new square adjacent to previous square based on orientation.
+      if (i === 0) {
+        // first (zero) square anchored at center
+        squares.push({x: x - s/2, y: y - s/2, size: s, orient});
+      } else {
+        // place relative to previous square; orient rotates clockwise each time
+        // naive placement that assumes previous square top-left known:
+        const prev = squares[i-1];
+        switch (orient) {
+          case 0: // right: place to the right of prev
+            x = prev.x + prev.size;
+            y = prev.y + prev.size - s;
+            break;
+          case 1: // down
+            x = prev.x + prev.size - s;
+            y = prev.y + prev.size;
+            break;
+          case 2: // left
+            x = prev.x - s;
+            y = prev.y;
+            break;
+          case 3: // up
+            x = prev.x;
+            y = prev.y - s;
+            break;
+        }
+        squares.push({x,y,size:s,orient});
+      }
+      orient = (orient + 1) % 4;
+    }
+
+  } else {
+    // CORRECT placement:
+    // Use sizes = fib sequence directly. We will position the first square such that the spiral is roughly centered.
+    const sizes = fib.map(v => v * scale);
+    // We'll place square 0 so that its bottom-right corner is at x0,y0 (a standard approach).
+    // Orientation convention: we start by placing the first square with orientation 0 (to the right),
+    // then each next square is placed adjacent rotating counter-clockwise to form the spiral.
+    let orient = 0; // 0: right, 1: up, 2: left, 3: down (counter-clockwise)
+    // Start: top-left for square 0 so that its bottom-right is x0,y0
+    let x = x0 - sizes[0];
+    let y = y0 - sizes[0];
+    squares.push({x,y,size:sizes[0],orient});
+    for (let i = 1; i < nTurns; i++) {
+      const s = sizes[i];
+      // place next square adjacent to previous, moving counter-clockwise
+      const prev = squares[i-1];
+      switch (orient) {
+        case 0: // current orientation means prev was placed to the right; next goes above prev
+          // when orient==0, prev extends right from its top-left. Next square sits to the left of that extension.
+          // For consistency in this layout we'll compute based on previous square and orientation
+          x = prev.x + prev.size;
+          y = prev.y + prev.size - s;
+          break;
+        case 1:
+          x = prev.x + prev.size - s;
+          y = prev.y - s;
+          break;
+        case 2:
+          x = prev.x - s;
+          y = prev.y;
+          break;
+        case 3:
+          x = prev.x;
+          y = prev.y + prev.size;
+          break;
+      }
+      squares.push({x,y,size:s,orient});
+      // rotate orientation counter-clockwise
+      orient = (orient + 1) % 4;
+    }
+  }
+
+  // Draw squares lightly and arcs
+  // For better visibility transform so that y increases downward (canvas default).
+  ctx.save();
+  // draw a small grid center
+  ctx.translate(0,0);
+  // light background center marker
+  ctx.fillStyle = "#f6f6f6";
+  ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+
+  // Draw squares outlines
+  ctx.strokeStyle = "#ddd";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < squares.length; i++) {
+    const s = squares[i];
+    ctx.strokeRect(s.x, s.y, Math.max(0.5,s.size), Math.max(0.5,s.size));
+  }
+
+  // Draw arcs: each arc is a quarter circle inside the square. Need center and start/end angles.
+  // For orientation convention used above, the arc should join the two corners forming the spiral.
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = opts.lineColor || "#c33";
+  ctx.beginPath();
+  for (let i = 0; i < squares.length; i++) {
+    const sq = squares[i];
+    const s = sq.size;
+    if (s <= 0.5) continue; // skip degenerate squares
+    // determine arc center and angles depending on orientation mapping
+    // We'll adopt the usual mapping:
+    // orientation 0 (right): arc center at (sq.x + s, sq.y + s) => bottom-right corner, arc from 90deg to 180deg?
+    // We must carefully pick angles so arcs connect continuously. We'll use canvas angles in radians, measured from +x axis.
+    let cx, cy, r, startAng, endAng;
+    r = s;
+    const o = sq.orient;
+    // After experimenting, the following mapping produces the expected spiral shape for the correct variant:
+    if (o === 0) {
+      // square extends to the right; arc center = bottom-right corner
+      cx = sq.x + s;
+      cy = sq.y + s;
+      startAng = Math.PI;       // 180deg (pointing left)
+      endAng   = Math.PI * 1.5; // 270deg (pointing up)
+    } else if (o === 1) {
+      // square extends upward; center = bottom-left corner
+      cx = sq.x;
+      cy = sq.y + s;
+      startAng = Math.PI * 1.5; // 270deg (up)
+      endAng   = 0;             // 0deg (right)
+    } else if (o === 2) {
+      // extends left; center = top-left
+      cx = sq.x;
+      cy = sq.y;
+      startAng = 0;             // 0 (right)
+      endAng   = Math.PI * 0.5; // 90deg (down)
+    } else { // o === 3
+      // extends down; center = top-right
+      cx = sq.x + s;
+      cy = sq.y;
+      startAng = Math.PI * 0.5; // 90deg (down)
+      endAng   = Math.PI;       // 180deg (left)
+    }
+    // Because we use arc with radius = s, but the arc should be quarter-circle inside square with radius equal to square side.
+    // Draw arc
+    ctx.moveTo(
+      cx + Math.cos(startAng) * r,
+      cy + Math.sin(startAng) * r
+    );
+    ctx.arc(cx, cy, r, startAng, endAng, false);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Setup canvases and controls
+const canvasBug = document.getElementById('canvas-bug');
+const canvasCorrect = document.getElementById('canvas-correct');
+const turnsBug = document.getElementById('turns-bug');
+const turnsCorrect = document.getElementById('turns-correct');
+const redrawBug = document.getElementById('redraw-bug');
+const redrawCorrect = document.getElementById('redraw-correct');
+
+function renderAll() {
+  const tb = Number(turnsBug.value);
+  const tc = Number(turnsCorrect.value);
+  const ctxB = prepareCanvas(canvasBug);
+  const ctxC = prepareCanvas(canvasCorrect);
+
+  drawSpiral(ctxB, tb, {x0: canvasBug.width/2, y0: canvasBug.height/2, scale: 8, buggy: true, lineColor:"#b03"});
+  drawSpiral(ctxC, tc, {x0: canvasCorrect.width/2, y0: canvasCorrect.height/2, scale: 8, buggy: false, lineColor:"#057"});
+
+  ctxB.restore();
+  ctxC.restore();
+}
+
+turnsBug.addEventListener('input', renderAll);
+turnsCorrect.addEventListener('input', renderAll);
+redrawBug.addEventListener('click', renderAll);
+redrawCorrect.addEventListener('click', renderAll);
+
+renderAll();
+
+</script>
+</body>
+</html>

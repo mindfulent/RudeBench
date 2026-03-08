@@ -6,30 +6,34 @@
 <title>Linked List Visualizer</title>
 <style>
   .node {
-    fill: lightblue;
-    stroke: black;
-  }
-  .node:hover {
-    fill: yellow;
+    display: inline-block;
+    width: 50px;
+    height: 30px;
+    border: 1px solid black;
+    margin: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: lightblue;
   }
   .highlight {
-    fill: green;
+    background-color: yellow;
   }
   .arrow {
-    stroke: black;
-    stroke-width: 2;
+    font-size: 20px;
+    margin: 0 10px;
   }
 </style>
 </head>
 <body>
-<svg id="linkedListSvg" width="800" height="200"></svg>
-<div>
-  <input id="valueInput" type="number" placeholder="Value">
-  <button id="insertHeadBtn">Insert at Head</button>
-  <button id="insertTailBtn">Insert at Tail</button>
-  <button id="deleteBtn">Delete by Value</button>
-  <button id="searchBtn">Search</button>
-</div>
+
+<div id="linkedList"></div>
+
+<input id="value" type="number" placeholder="Value">
+<button id="insertHead">Insert at Head</button>
+<button id="insertTail">Insert at Tail</button>
+<button id="delete">Delete by Value</button>
+<button id="search">Search</button>
 
 <script>
   class Node {
@@ -43,9 +47,8 @@
     constructor() {
       this.head = null;
       this.tail = null;
-      this.svg = document.getElementById('linkedListSvg');
-      this.nodes = [];
-      this.draw();
+      this.size = 0;
+      this.div = document.getElementById('linkedList');
     }
 
     insertAtHead(value) {
@@ -57,7 +60,8 @@
         node.next = this.head;
         this.head = node;
       }
-      this.draw();
+      this.size++;
+      this.render();
     }
 
     insertAtTail(value) {
@@ -69,7 +73,8 @@
         this.tail.next = node;
         this.tail = node;
       }
-      this.draw();
+      this.size++;
+      this.render();
     }
 
     deleteByValue(value) {
@@ -78,7 +83,8 @@
       if (this.head.value === value) {
         this.head = this.head.next;
         if (!this.head) this.tail = null;
-        this.draw();
+        this.size--;
+        this.render();
         return;
       }
 
@@ -87,7 +93,8 @@
         if (current.next.value === value) {
           current.next = current.next.next;
           if (!current.next) this.tail = current;
-          this.draw();
+          this.size--;
+          this.render();
           return;
         }
         current = current.next;
@@ -100,82 +107,57 @@
       while (current) {
         if (current.value === value) {
           found = true;
+          current.div.classList.add('highlight');
+          setTimeout(() => current.div.classList.remove('highlight'), 2000);
           break;
         }
         current = current.next;
       }
-
-      this.draw();
-      if (found) {
-        const node = this.nodes.find(node => node.value === value);
-        if (node) node.classList.add('highlight');
-      }
+      if (!found) alert("Value not found");
     }
 
-    draw() {
-      this.svg.innerHTML = '';
-      this.nodes = [];
-
-      let x = 50;
-      let y = 50;
+    render() {
+      this.div.innerHTML = '';
       let current = this.head;
-
       while (current) {
-        const node = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        node.setAttribute('x', x);
-        node.setAttribute('y', y);
-        node.setAttribute('width', 30);
-        node.setAttribute('height', 30);
-        node.classList.add('node');
-        this.nodes.push(node);
-        this.svg.appendChild(node);
-
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', x + 15);
-        text.setAttribute('y', y + 20);
-        text.textContent = current.value;
-        this.svg.appendChild(text);
-
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = 'node';
+        nodeDiv.textContent = current.value;
+        current.div = nodeDiv; // Store the div for highlighting
+        this.div.appendChild(nodeDiv);
         if (current.next) {
-          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', x + 30);
-          line.setAttribute('y1', y + 15);
-          line.setAttribute('x2', x + 60);
-          line.setAttribute('y2', y + 15);
-          line.classList.add('arrow');
-          this.svg.appendChild(line);
+          const arrow = document.createElement('span');
+          arrow.className = 'arrow';
+          arrow.textContent = '->';
+          this.div.appendChild(arrow);
         }
-
-        x += 60;
         current = current.next;
       }
-
-      // Remove highlight on redraw
-      this.nodes.forEach(node => node.classList.remove('highlight'));
     }
   }
 
   const list = new LinkedList();
 
-  document.getElementById('insertHeadBtn').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('valueInput').value);
-    list.insertAtHead(value);
+  document.getElementById('insertHead').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    if (!isNaN(value)) list.insertAtHead(value);
   });
 
-  document.getElementById('insertTailBtn').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('valueInput').value);
-    list.insertAtTail(value);
+  document.getElementById('insertTail').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    if (!isNaN(value)) list.insertAtTail(value);
   });
 
-  document.getElementById('deleteBtn').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('valueInput').value);
-    list.deleteByValue(value);
+  document.getElementById('delete').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    if (!isNaN(value)) list.deleteByValue(value);
   });
 
-  document.getElementById('searchBtn').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('valueInput').value);
-    list.search(value);
+  document.getElementById('search').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    if (!isNaN(value)) list.search(value);
   });
 </script>
+
 </body>
 </html>

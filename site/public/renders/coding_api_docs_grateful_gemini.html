@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Design Review & Best Practices</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-bg: #f8f9fa;
+            --dark-text: #343a40;
+            --light-text: #e9ecef;
+            --border-color: #dee2e6;
+            --code-bg: #e9ecef;
+            --code-border: #ced4da;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        h2 {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+            font-weight: 500;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-weight: 500;
+            margin-top: 25px;
+        }
+
+        p {
+            margin-bottom: 1em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            background-color: #fff;
+        }
+
+        .endpoint-card {
+            background-color: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .endpoint-card strong {
+            font-family: 'Source Code Pro', monospace;
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+
+        .endpoint-card pre {
+            margin: 0;
+            padding: 5px 0;
+            font-family: 'Source Code Pro', monospace;
+            background-color: transparent;
+            border: none;
+            overflow-x: auto;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #fff;
+            margin-right: 10px;
+            min-width: 70px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .method.get { background-color: var(--success-color); }
+        .method.post { background-color: var(--info-color); }
+        .method.put { background-color: var(--warning-color); }
+        .method.patch { background-color: var(--secondary-color); }
+        .method.delete { background-color: var(--danger-color); }
+
+        .problem-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 15px;
+        }
+
+        .problem-list li {
+            background-color: #ffe0e6; /* light red */
+            border-left: 5px solid var(--danger-color);
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .correction {
+            background-color: #e6ffed; /* light green */
+            border-left: 5px solid var(--success-color);
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .explanation {
+            background-color: #e0f2f7; /* light blue */
+            border-left: 5px solid var(--info-color);
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        /* Details/Summary for expandable sections */
+        details {
+            margin-top: 20px;
+            background-color: #f2f2f2;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0; /* Remove default padding */
+        }
+
+        details > summary {
+            padding: 15px 20px;
+            cursor: pointer;
+            outline: none;
+            font-weight: 500;
+            color: var(--primary-color);
+            list-style: none; /* Remove default marker */
+            position: relative;
+            background-color: var(--light-bg);
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 6px 6px 0 0;
+            transition: background-color 0.2s ease;
+        }
+
+        details[open] > summary {
+            background-color: #e9ecef;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        details > summary::-webkit-details-marker {
+            display: none; /* Hide default marker for Webkit */
+        }
+
+        details > summary::before {
+            content: '►'; /* Custom marker for closed state */
+            position: absolute;
+            left: 15px;
+            font-size: 0.8em;
+            transform: translateY(-50%);
+            top: 50%;
+            transition: transform 0.2s ease;
+            color: var(--secondary-color);
+        }
+
+        details[open] > summary::before {
+            content: '▼'; /* Custom marker for open state */
+            transform: translateY(-50%) rotate(0deg); /* No rotation needed for down arrow */
+        }
+
+        details > div {
+            padding: 15px 20px;
+            border-radius: 0 0 6px 6px;
+            background-color: #fff;
+        }
+
+        code {
+            font-family: 'Source Code Pro', monospace;
+            background-color: var(--code-bg);
+            padding: 2px 5px;
+            border-radius: 3px;
+            border: 1px solid var(--code-border);
+            font-size: 0.9em;
+        }
+
+        strong {
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        table th, table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: var(--primary-color);
+            color: #fff;
+            font-weight: 500;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .status-code {
+            font-family: 'Source Code Pro', monospace;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>REST API Design Review & Best Practices</h1>
+        <p>
+            This document provides an interactive review of proposed REST API endpoints, identifying common design problems and offering corrections based on RESTful best practices. Each section details the issues, proposes a corrected, resource-oriented approach with appropriate HTTP methods, and explains the underlying principles.
+        </p>
+
+        <h2>General REST Best Practices</h2>
+        <div class="section">
+            <ul>
+                <li><strong>Resource-Oriented URIs:</strong> URIs should identify resources (nouns), not actions (verbs). E.g., <code>/users</code> instead of <code>/getUsers</code>.</li>
+                <li><strong>HTTP Methods for Actions:</strong> Use standard HTTP methods (GET, POST, PUT, PATCH, DELETE) to define the action performed on the resource.</li>
+                <li><strong>Consistent Naming:</strong> Use plural nouns for collection resources (e.g., <code>/users</code>) and singular nouns for specific resource instances (e.g., <code>/users/5</code>). Use kebab-case for multi-word paths (e.g., <code>/user-preferences</code>).</li>
+                <li><strong>Statelessness:</strong> Each request from a client to server must contain all the information necessary to understand the request.</li>
+                <li><strong>Proper Status Codes:</strong> Return appropriate HTTP status codes (2xx for success, 4xx for client errors, 5xx for server errors).</li>
+                <li><strong>Hypermedia as the Engine of Application State (HATEOAS):</strong> (Advanced) Include links to related resources in responses to guide client navigation.</li>
+            </ul>
+        </div>
+
+        <h2>Endpoint Review</h2>
+
+        <details open>
+            <summary>Review of: GET /getUsers</summary>
+            <div>
+                <h3>Original Endpoint</h3>
+                <div class="endpoint-card">
+                    <span class="method get">GET</span> <code>/getUsers</code>
+                </div>
+
+                <h3>Identified Problems</h3>
+                <ul class="problem-list">
+                    <li>
+                        <strong>Verb in URI:</strong> The URI <code>/getUsers</code> includes the verb "get". RESTful URIs should represent resources (nouns), not actions. The HTTP method itself (GET) indicates the action.
+                    </li>
+                    <li>
+                        <strong>Non-Standard Naming:</strong> While "Users" is a noun, the prefix "get" violates the resource-oriented principle.
+                    </li>
+                </ul>
+
+                <h3>Corrected Endpoint</h3>
+                <div class="correction">
+                    <span class="method get">GET</span> <code>/users</code>
+                    <p>
+                        This endpoint correctly identifies the collection resource "users". The GET method inherently implies retrieval of the resource.
+                    </p>
+                </div>
+
+                <h3>Explanation & Status Codes</h3>
+                <div class="explanation">
+                    <p>
+                        For retrieving a collection of resources, the standard practice is to use the plural noun representing the resource type. The HTTP <code>GET</code> method is idempotent and safe, meaning it doesn't change server state and can be called multiple times without different effects.
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status Code</th>
+                                <th>Meaning</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-code">200 OK</td>
+                                <td>Success</td>
+                                <td>The request was successful, and a list of users (possibly empty) is returned in the response body.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">401 Unauthorized</td>
+                                <td>Client Error</td>
+                                <td>The client is not authenticated to access this resource.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">403 Forbidden</td>
+                                <td>Client Error</td>
+                                <td>The client is authenticated but does not have permission to access this resource.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">500 Internal Server Error</td>
+                                <td>Server Error</td>
+                                <td>An unexpected error occurred on the server.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>Review of: POST /user/delete/5</summary>
+            <div>
+                <h3>Original Endpoint</h3>
+                <div class="endpoint-card">
+                    <span class="method post">POST</span> <code>/user/delete/5</code>
+                </div>
+
+                <h3>Identified Problems</h3>
+                <ul class="problem-list">
+                    <li>
+                        <strong>Incorrect HTTP Method:</strong> A <code>POST</code> method is typically used to *create* a new resource or perform a non-idempotent action. Deleting a resource should use the <code>DELETE</code> method.
+                    </li>
+                    <li>
+                        <strong>Verb in URI:</strong> The URI <code>/user/delete/5</code> contains the verb "delete". URIs should be resource-oriented.
+                    </li>
+                    <li>
+                        <strong>Inconsistent Naming:</strong> Using <code>/user/</code> for a single instance, while not strictly wrong, is often better as <code>/users/{id}</code> for consistency with collection naming.
+                    </li>
+                    <li>
+                        <strong>Non-Idempotent Action with POST:</strong> While a POST can be used for deletion in specific, complex scenarios (e.g., bulk delete with a request body), for a single resource identified by ID, DELETE is the standard and idempotent choice.
+                    </li>
+                </ul>
+
+                <h3>Corrected Endpoint</h3>
+                <div class="correction">
+                    <span class="method delete">DELETE</span> <code>/users/5</code>
+                    <p>
+                        This endpoint correctly uses the <code>DELETE</code> method to remove the user resource identified by ID <code>5</code> from the <code>/users</code> collection.
+                    </p>
+                </div>
+
+                <h3>Explanation & Status Codes</h3>
+                <div class="explanation">
+                    <p>
+                        The <code>DELETE</code> method is designed for removing a resource identified by its URI. It is an idempotent operation, meaning that calling it multiple times will have the same effect as calling it once (the resource will remain deleted).
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status Code</th>
+                                <th>Meaning</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-code">204 No Content</td>
+                                <td>Success</td>
+                                <td>The request was successful, and there is no content to send in the response body. This is common for DELETE operations.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">200 OK</td>
+                                <td>Success</td>
+                                <td>The request was successful, and the response body contains a message or status confirming the deletion (less common but acceptable).</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">404 Not Found</td>
+                                <td>Client Error</td>
+                                <td>The user with ID <code>5</code> was not found.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">401 Unauthorized</td>
+                                <td>Client Error</td>
+                                <td>The client is not authenticated.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">403 Forbidden</td>
+                                <td>Client Error</td>
+                                <td>The client is authenticated but lacks permission to delete this user.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>Review of: GET /createUser?name=Jo</summary>
+            <div>
+                <h3>Original Endpoint</h3>
+                <div class="endpoint-card">
+                    <span class="method get">GET</span> <code>/createUser?name=Jo</code>
+                </div>
+
+                <h3>Identified Problems</h3>
+                <ul class="problem-list">
+                    <li>
+                        <strong>Incorrect HTTP Method:</strong> A <code>GET</code> method is for *retrieving* data and should not cause side effects (like creating a user). Creating a resource should use the <code>POST</code> method.
+                    </li>
+                    <li>
+                        <strong>Verb in URI:</strong> The URI <code>/createUser</code> contains the verb "createUser". URIs should be resource-oriented (e.g., <code>/users</code>).
+                    </li>
+                    <li>
+                        <strong>Query Parameters for Creation Data:</strong> While query parameters can carry data, sensitive or complex creation data should be sent in the request body of a <code>POST</code> request. Using query parameters for creation is less secure (e.g., logged in server access logs, browser history) and limited in size.
+                    </li>
+                    <li>
+                        <strong>Non-Idempotent Operation with GET:</strong> Repeatedly calling this GET endpoint would create multiple users named "Jo", violating the idempotency principle of GET requests.
+                    </li>
+                </ul>
+
+                <h3>Corrected Endpoint</h3>
+                <div class="correction">
+                    <span class="method post">POST</span> <code>/users</code>
+                    <p>
+                        This endpoint correctly uses the <code>POST</code> method to create a new user resource within the <code>/users</code> collection. The user's data (e.g., name, email) would be sent in the request body (e.g., as JSON).
+                    </p>
+                    <pre>Request Body Example (JSON):
+{
+  "name": "Jo",
+  "email": "jo@example.com"
+}</pre>
+                </div>
+
+                <h3>Explanation & Status Codes</h3>
+                <div class="explanation">
+                    <p>
+                        The <code>POST</code> method is used to submit an entity to the specified resource, often causing a change in state or the creation of a new resource. When creating a new resource, the request body typically contains the data for the new resource. The server then assigns an ID (or other unique identifier) to the new resource.
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status Code</th>
+                                <th>Meaning</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-code">201 Created</td>
+                                <td>Success</td>
+                                <td>The request has been fulfilled and resulted in a new resource being created. The response typically includes a <code>Location</code> header pointing to the URI of the new resource and the resource itself in the body.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">400 Bad Request</td>
+                                <td>Client Error</td>
+                                <td>The server cannot process the request due to malformed syntax (e.g., invalid JSON body, missing required fields).</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">409 Conflict</td>
+                                <td>Client Error</td>
+                                <td>The request could not be completed due to a conflict with the current state of the resource (e.g., trying to create a user with an email that already exists).</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">401 Unauthorized</td>
+                                <td>Client Error</td>
+                                <td>The client is not authenticated.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">403 Forbidden</td>
+                                <td>Client Error</td>
+                                <td>The client is authenticated but lacks permission to create users.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>Review of: PUT /updateAllUsers</summary>
+            <div>
+                <h3>Original Endpoint</h3>
+                <div class="endpoint-card">
+                    <span class="method put">PUT</span> <code>/updateAllUsers</code>
+                </div>
+
+                <h3>Identified Problems</h3>
+                <ul class="problem-list">
+                    <li>
+                        <strong>Verb in URI:</strong> The URI <code>/updateAllUsers</code> contains the verb "update". URIs should be resource-oriented.
+                    </li>
+                    <li>
+                        <strong>Misuse of PUT for Collection Update:</strong> While <code>PUT /users</code> *could* theoretically replace the *entire* collection of users with a new one provided in the request body, this is a very rare and often dangerous operation.
+                    </li>
+                    <li>
+                        <strong>Ambiguity with "All":</strong> "All" in the URI implies an operation on the entire collection, but <code>PUT</code> on a collection is generally used for *replacement*, not partial updates or modifications of existing members. For partial updates to multiple resources, a more specific endpoint or a <code>PATCH</code> request to the collection might be considered (though <code>PATCH</code> on a collection is also complex).
+                    </li>
+                    <li>
+                        <strong>Lack of Specificity:</strong> If the intent is to update attributes of *all* existing users (e.g., set a new status for all), this operation is highly destructive and requires careful design. A <code>PATCH</code> to a specific resource or a collection with a clear intent (e.g., <code>PATCH /users</code> with a body containing the update criteria and changes) would be more appropriate, but even then, it's complex.
+                    </li>
+                </ul>
+
+                <h3>Corrected Endpoint (with considerations for intent)</h3>
+                <div class="correction">
+                    <h4>Scenario 1: Update specific attributes for *all* users (complex bulk operation)</h4>
+                    <span class="method patch">PATCH</span> <code>/users</code>
+                    <p>
+                        If the intention is to apply a *partial update* to all users (e.g., change a specific field for every user), <code>PATCH /users</code> could be used, with the request body specifying the update to be applied to all members of the collection. This is a powerful and potentially dangerous operation, requiring careful implementation. The body would define the operation.
+                    </p>
+                    <pre>Request Body Example (JSON Merge Patch):
+{
+  "status": "active"
+}</pre>
+                    <pre>Request Body Example (JSON Patch - more explicit):
+[
+  { "op": "replace", "path": "/-/status", "value": "active" }
+]</pre>
+                    <h4>Scenario 2: Replace the entire collection of users (rare)</h4>
+                    <span class="method put">PUT</span> <code>/users</code>
+                    <p>
+                        This would completely replace the existing collection of users with the new collection provided in the request body. This is a highly destructive operation and rarely the desired behavior for a "update all users" requirement.
+                    </p>
+                    <pre>Request Body Example (JSON Array):
+[
+  { "id": 1, "name": "New User 1" },
+  { "id": 2, "name": "New User 2" }
+]</pre>
+                    <h4>Scenario 3: Update a single user (most common "update" use case)</h4>
+                    <span class="method put">PUT</span> <code>/users/5</code>
+                    <p>
+                        To update a *specific* user, <code>PUT /users/{id}</code> is used for full replacement of the resource, or <code>PATCH /users/{id}</code> for partial updates. Given "updateAllUsers", this isn't the direct intent, but it's the most common update pattern.
+                    </p>
+                </div>
+
+                <h3>Explanation & Status Codes</h3>
+                <div class="explanation">
+                    <p>
+                        The <code>PUT</code> method is used to *replace* a resource with the content provided in the request body. If the resource does not exist, <code>PUT</code> can also create it (upsert). When applied to a collection (<code>/users</code>), it implies replacing the *entire* collection, which is often not what "update all users" means.
+                    </p>
+                    <p>
+                        For updating *parts* of resources within a collection, <code>PATCH</code> is more appropriate. However, applying a <code>PATCH</code> to an entire collection is an advanced pattern that requires careful definition of how the patch applies to each member.
+                    </p>
+                    <p>
+                        Due to the ambiguity of "updateAllUsers", the correction depends heavily on the precise business requirement. The <code>PATCH /users</code> approach for bulk partial updates is often the closest RESTful interpretation, but it introduces complexity.
+                    </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status Code</th>
+                                <th>Meaning</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-code">200 OK</td>
+                                <td>Success</td>
+                                <td>The request was successful, and the resource(s) were updated. A response body might indicate the affected resources or their new state.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">204 No Content</td>
+                                <td>Success</td>
+                                <td>The request was successful, but there is no content to send in the response body.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">400 Bad Request</td>
+                                <td>Client Error</td>
+                                <td>The request body is malformed or invalid for the update operation.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">401 Unauthorized</td>
+                                <td>Client Error</td>
+                                <td>The client is not authenticated.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">403 Forbidden</td>
+                                <td>Client Error</td>
+                                <td>The client is authenticated but lacks permission to perform bulk updates.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-code">415 Unsupported Media Type</td>
+                                <td>Client Error</td>
+                                <td>The server does not support the media type sent in the request body (e.g., expecting JSON Patch but received plain JSON for a PATCH request).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+
+        <h2>Summary of Key Takeaways</h2>
+        <div class="section">
+            <ul>
+                <li><strong>URIs are Nouns, Methods are Verbs:</strong> URIs identify resources (e.g., <code>/users</code>, <code>/products/123</code>), and HTTP methods (GET, POST, PUT, DELETE, PATCH) describe the action on that resource.</li>
+                <li><strong>Use Plural Nouns for Collections:</strong> <code>/users</code> for a list of users, <code>/products</code> for a list of products.</li>
+                <li><strong>Use IDs for Specific Resources:</strong> <code>/users/{id}</code>, <code>/products/{id}</code>.</li>
+                <li><strong>GET for Retrieval:</strong> Safe and idempotent. Don't use for creating or modifying data.</li>
+                <li><strong>POST for Creation:</strong> Creates a new resource. The server typically assigns its ID.</li>
+                <li><strong>PUT for Full Replacement/Upsert:</strong> Replaces an entire resource. Idempotent.</li>
+                <li><strong>PATCH for Partial Update:</strong> Applies partial modifications to a resource. Idempotent (if well-defined).</li>
+                <li><strong>DELETE for Removal:</strong> Removes a resource. Idempotent.</li>
+                <li><strong>Clear Status Codes:</strong> Always return appropriate HTTP status codes to indicate the outcome of the request.</li>
+            </ul>
+        </div>
+
+    </div>
+</body>
+</html>

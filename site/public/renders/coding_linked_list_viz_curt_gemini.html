@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singly Linked List Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        #controls {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+            min-width: 150px;
+            flex-grow: 1;
+        }
+
+        .control-group label {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        #controls input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #controls button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            white-space: nowrap;
+        }
+
+        #controls button:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        #controls button:active {
+            transform: translateY(0);
+        }
+
+        #list-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap; /* Prevent wrapping nodes */
+            gap: 0px; /* Nodes and arrows will manage their own spacing */
+            min-height: 100px;
+            width: 95%;
+            max-width: calc(100% - 40px);
+            overflow-x: auto; /* Allow horizontal scrolling if many nodes */
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            position: relative; /* For absolute positioning of arrows */
+            margin-bottom: 20px;
+        }
+
+        .empty-list-message {
+            color: #7f8c8d;
+            font-style: italic;
+            font-size: 1.2em;
+            width: 100%;
+            text-align: center;
+        }
+
+        .node {
+            background-color: #fdfdff;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 15px 25px;
+            margin: 0 30px; /* Space for arrows */
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            min-width: 60px;
+            text-align: center;
+            flex-shrink: 0; /* Prevent nodes from shrinking */
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.1s ease;
+            position: relative; /* For arrow positioning */
+        }
+
+        .node.highlight {
+            background-color: #f1c40f;
+            border-color: #e67e22;
+            transform: scale(1.05);
+        }
+
+        .node.deletion-candidate {
+            background-color: #e74c3c;
+            border-color: #c0392b;
+            color: white;
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        .arrow {
+            position: absolute;
+            height: 100%; /* Take full height of list-container */
+            pointer-events: none; /* Allow clicks to pass through */
+            z-index: 10; /* Ensure arrows are above nodes */
+        }
+
+        .arrow svg {
+            overflow: visible; /* Allow path to draw outside bounds if needed */
+        }
+
+        .arrow path {
+            stroke: #34495e;
+            stroke-width: 3;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        #arrowhead {
+            fill: #34495e;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .control-group {
+                min-width: unset;
+                width: 100%;
+            }
+            #controls button {
+                width: 100%;
+            }
+            .node {
+                font-size: 1.2em;
+                padding: 10px 15px;
+                margin: 0 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Singly Linked List Visualizer</h1>
+
+    <div id="controls">
+        <div class="control-group">
+            <label for="insertHeadInput">Insert at Head:</label>
+            <input type="text" id="insertHeadInput" placeholder="Value">
+            <button id="insertHeadBtn">Insert Head</button>
+        </div>
+
+        <div class="control-group">
+            <label for="insertTailInput">Insert at Tail:</label>
+            <input type="text" id="insertTailInput" placeholder="Value">
+            <button id="insertTailBtn">Insert Tail</button>
+        </div>
+
+        <div class="control-group">
+            <label for="deleteValueInput">Delete by Value:</label>
+            <input type="text" id="deleteValueInput" placeholder="Value to delete">
+            <button id="deleteBtn">Delete</button>
+        </div>
+
+        <div class="control-group">
+            <label for="searchValueInput">Search by Value:</label>
+            <input type="text" id="searchValueInput" placeholder="Value to search">
+            <button id="searchBtn">Search</button>
+        </div>
+    </div>
+
+    <div id="list-container">
+        <!-- Nodes and arrows will be rendered here by JavaScript -->
+        <div class="empty-list-message">List is empty.</div>
+    </div>
+
+    <script>
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+            }
+        }
+
+        class LinkedList {
+            constructor() {
+                this.head = null;
+                this.size = 0;
+            }
+
+            isEmpty() {
+                return this.size === 0;
+            }
+
+            insertAtHead(value) {
+                const newNode = new Node(value);
+                newNode.next = this.head;
+                this.head = newNode;
+                this.size++;
+            }
+
+            insertAtTail(value) {
+                const newNode = new Node(value);
+                if (this.isEmpty()) {
+                    this.head = newNode;
+                } else {
+                    let current = this.head;
+                    while (current.next !== null) {
+                        current = current.next;
+                    }
+                    current.next = newNode;
+                }
+                this.size++;
+            }
+
+            deleteByValue(value) {
+                if (this.isEmpty()) {
+                    return false;
+                }
+
+                if (this.head.value == value) { // Use == for loose comparison as input is string
+                    this.head = this.head.next;
+                    this.size--;
+                    return true;
+                }
+
+                let prev = this.head;
+                let current = this.head.next;
+                while (current !== null && current.value != value) {
+                    prev = current;
+                    current = current.next;
+                }
+
+                if (current !== null) { // Found the node to delete
+                    prev.next = current.next;
+                    this.size--;
+                    return true;
+                }
+                return false; // Value not found
+            }
+
+            search(value) {
+                if (this.isEmpty()) {
+                    return null;
+                }
+                let current = this.head;
+                while (current !== null) {
+                    if (current.value == value) {
+                        return current;
+                    }
+                    current = current.next;
+                }
+                return null; // Not found
+            }
+
+            toArray() {
+                const arr = [];
+                let current = this.head;
+                while (current !== null) {
+                    arr.push(current);
+                    current = current.next;
+                }
+                return arr;
+            }
+        }
+
+        const linkedList = new LinkedList();
+        const listContainer = document.getElementById('list-container');
+
+        // Helper for input parsing
+        function getInputValue(id) {
+            const input = document.getElementById(id);
+            const value = input.value.trim();
+            input.value = ''; // Clear input after use
+            return value;
+        }
+
+        function renderList() {
+            listContainer.innerHTML = ''; // Clear previous visualization
+            const nodes = linkedList.toArray();
+
+            if (nodes.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-list-message';
+                emptyMessage.textContent = 'List is empty.';
+                listContainer.appendChild(emptyMessage);
+                return;
+            }
+
+            const renderedNodeElements = [];
+
+            nodes.forEach((node, index) => {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node';
+                nodeDiv.textContent = node.value;
+                nodeDiv.dataset.value = node.value; // Store value for easy lookup
+                listContainer.appendChild(nodeDiv);
+                renderedNodeElements.push(nodeDiv);
+
+                // Add a temporary spacer to ensure arrows have space to draw
+                // This is a common trick for flexbox layouts with absolute positioned elements in between
+                if (index < nodes.length - 1) {
+                    const spacer = document.createElement('div');
+                    spacer.style.width = '60px'; /* Adjust this based on your arrow width */
+                    spacer.style.flexShrink = '0';
+                    listContainer.appendChild(spacer);
+                }
+            });
+
+            // After all nodes are in the DOM, draw arrows
+            // This is important because we need the computed positions of the elements
+            setTimeout(() => { // Small delay to ensure browser has rendered elements
+                for (let i = 0; i < renderedNodeElements.length - 1; i++) {
+                    drawArrow(renderedNodeElements[i], renderedNodeElements[i+1]);
+                }
+            }, 50);
+        }
+
+        function drawArrow(fromElement, toElement) {
+            const containerRect = listContainer.getBoundingClientRect();
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+
+            // Calculate positions relative to the list-container
+            const startX = (fromRect.right - containerRect.left);
+            const startY = (fromRect.top + fromRect.height / 2 - containerRect.top);
+            const endX = (toRect.left - containerRect.left);
+            const endY = (toRect.top + toRect.height / 2 - containerRect.top);
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'arrow');
+            svg.style.left = `${startX}px`;
+            svg.style.top = `${Math.min(startY, endY) - 5}px`; // Adjust top slightly for vertical alignment
+            svg.style.width = `${endX - startX}px`;
+            svg.style.height = `${Math.abs(endY - startY) + 10}px`; // Add buffer for arrow head
+
+            // Define arrowhead marker
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '8');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            // Path: Move to start, then draw a horizontal line to end
+            // Adjust coordinates relative to SVG's own viewBox
+            const pathStartX = 0;
+            const pathStartY = startY - (Math.min(startY, endY) - 5);
+            const pathEndX = endX - startX;
+            const pathEndY = endY - (Math.min(startY, endY) - 5);
+
+            line.setAttribute('d', `M ${pathStartX} ${pathStartY} L ${pathEndX} ${pathEndY}`);
+            svg.appendChild(line);
+
+            listContainer.appendChild(svg);
+        }
+
+
+        function animateSearch(nodeElement) {
+            nodeElement.classList.add('highlight');
+            setTimeout(() => {
+                nodeElement.classList.remove('highlight');
+            }, 1000); // Highlight for 1 second
+        }
+
+        function animateDeletion(nodeElement) {
+            nodeElement.classList.add('deletion-candidate');
+            // Remove after a short delay, then re-render
+            setTimeout(() => {
+                // The re-render will completely remove it
+                renderList();
+            }, 500); // Show candidate for 0.5 seconds
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('insertHeadBtn').addEventListener('click', () => {
+            const value = getInputValue('insertHeadInput');
+            if (value) {
+                linkedList.insertAtHead(value);
+                renderList();
+            } else {
+                alert('Please enter a value to insert at head.');
+            }
+        });
+
+        document.getElementById('insertTailBtn').addEventListener('click', () => {
+            const value = getInputValue('insertTailInput');
+            if (value) {
+                linkedList.insertAtTail(value);
+                renderList();
+            } else {
+                alert('Please enter a value to insert at tail.');
+            }
+        });
+
+        document.getElementById('deleteBtn').addEventListener('click', () => {
+            const valueToDelete = getInputValue('deleteValueInput');
+            if (valueToDelete) {
+                const nodeToDeleteElement = listContainer.querySelector(`.node[data-value="${valueToDelete}"]`);
+                if (nodeToDeleteElement) {
+                    animateDeletion(nodeToDeleteElement);
+                    // The actual deletion and re-render happens after the animation starts
+                    // so the user sees the node before it disappears
+                    setTimeout(() => {
+                        if (linkedList.deleteByValue(valueToDelete)) {
+                            // renderList() is called by animateDeletion's setTimeout
+                        } else {
+                            alert(`Value ${valueToDelete} not found for deletion.`);
+                            renderList(); // Re-render in case animation started for a non-existent value
+                        }
+                    }, 200); // Small delay before actual deletion logic
+                } else {
+                    alert(`Value ${valueToDelete} not found in the list.`);
+                }
+            } else {
+                alert('Please enter a value to delete.');
+            }
+        });
+
+
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const searchValue = getInputValue('searchValueInput');
+            if (searchValue) {
+                const foundNode = linkedList.search(searchValue);
+                if (foundNode) {
+                    const nodeElement = listContainer.querySelector(`.node[data-value="${searchValue}"]`);
+                    if (nodeElement) {
+                        animateSearch(nodeElement);
+                    }
+                } else {
+                    alert(`Value ${searchValue} not found in the list.`);
+                }
+            } else {
+                alert('Please enter a value to search.');
+            }
+        });
+
+        // Initial render
+        renderList();
+
+        // Optional: Add some initial nodes for demonstration
+        linkedList.insertAtHead('A');
+        linkedList.insertAtTail('B');
+        linkedList.insertAtTail('C');
+        linkedList.insertAtHead('X');
+        renderList();
+
+    </script>
+</body>
+</html>

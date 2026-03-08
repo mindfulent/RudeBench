@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree with Recursion Depth Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        canvas {
+            border: 2px solid #0056b3;
+            background-color: #fff;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 30px;
+            background-color: #e9f5ff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .controls label {
+            font-weight: bold;
+            color: #004085;
+        }
+        .controls input[type="range"] {
+            width: 200px;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+        .controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .controls input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .controls #depthValue {
+            font-weight: bold;
+            color: #007bff;
+            min-width: 20px; /* To prevent layout shift */
+            text-align: center;
+        }
+        .explanation {
+            max-width: 800px;
+            text-align: left;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+        .explanation h3 {
+            color: #0056b3;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .explanation p {
+            margin-bottom: 10px;
+        }
+        .explanation ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .explanation li {
+            margin-bottom: 5px;
+        }
+        .explanation strong {
+            color: #004085;
+        }
+        code {
+            background-color: #eef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recursive Fractal Tree Generator</h1>
+
+    <div class="controls">
+        <label for="depthSlider">Recursion Depth:</label>
+        <input type="range" id="depthSlider" min="1" max="12" value="6">
+        <span id="depthValue">6</span>
+    </div>
+
+    <canvas id="fractalCanvas" width="800" height="600"></canvas>
+
+    <div class="explanation">
+        <h2>Understanding Recursion Depth and Stack Overflow</h2>
+
+        <p>This fractal tree is drawn using a <strong>recursive function</strong>. A recursive function is one that calls itself to solve smaller sub-problems. In our case, each branch of the tree recursively calls itself to draw its sub-branches.</p>
+
+        <h3>Recursion Depth Limits</h3>
+        <p>Every time a function is called, information about that call (like its local variables and where to return to) is pushed onto a special memory area called the <strong>call stack</strong>. This "depth" of nested function calls is what we refer to as recursion depth.</p>
+        <p>Browsers and JavaScript engines impose a practical limit on how deep the call stack can grow. This limit isn't fixed but typically ranges from several thousand to tens of thousands of calls, depending on the browser, system resources, and the complexity of each stack frame. For example:</p>
+        <ul>
+            <li><strong>Chrome/Edge:</strong> Often around 10,000 to 12,000.</li>
+            <li><strong>Firefox:</strong> Can be similar, sometimes slightly higher or lower.</li>
+            <li><strong>Node.js:</strong> Defaults to around 10,000.</li>
+        </ul>
+        <p>While 12 levels for our tree might seem small, a simple recursive factorial function could easily hit limits at much higher numbers. Each level of our fractal tree, however, spawns multiple new branches, leading to a rapid increase in total function calls for deeper recursion.</p>
+
+        <h3>Why Deep Recursion Can Cause Stack Overflow Errors</h3>
+        <p>When a recursive function calls itself too many times, and the call stack exceeds its allotted memory space, the program will terminate with a <strong>"Stack Overflow" error</strong>. This is because there's no more room on the stack to push new function call information.</p>
+        <p>The error message often looks something like: <code>"Uncaught RangeError: Maximum call stack size exceeded"</code>.</p>
+        <p>In the context of our fractal tree:</p>
+        <ul>
+            <li>Each recursive call to <code>drawBranch</code> adds a new frame to the call stack.</li>
+            <li>A single branch might call <code>drawBranch</code> twice (for its left and right sub-branches).</li>
+            <li>The total number of calls grows exponentially with depth. Even though we limit the depth to 12, the number of individual branch drawing operations becomes quite large, but the *depth* of the call stack itself is capped at 12 (plus the initial call). If we were to try drawing a tree with a depth of, say, 1000, we would quickly hit the stack limit.</li>
+        </ul>
+
+        <h3>Practical Solutions to Avoid Stack Overflow</h3>
+        <p>When faced with the potential for deep recursion, several strategies can be employed:</p>
+        <ol>
+            <li>
+                <strong>Iterative Conversion:</strong>
+                <p>The most common and robust solution is to convert the recursive algorithm into an iterative one, typically using an explicit loop and a data structure like a stack or a queue to manage pending tasks. This avoids the call stack overhead entirely.</p>
+                <p><em>Example:</em> Instead of recursive calls, you could push branch parameters onto an array (acting as a custom stack) and process them in a loop until the array is empty.</p>
+            </li>
+            <li>
+                <strong>Tail Call Optimization (TCO):</strong>
+                <p>Some programming languages and JavaScript engines implement Tail Call Optimization. TCO allows a function call that is the very last operation in another function (a "tail call") to be optimized by reusing the current stack frame instead of creating a new one. This effectively turns tail recursion into iteration, preventing stack growth.</p>
+                <p><strong>Status in JavaScript:</strong> While TCO was part of the ES6 specification, it was later removed due to implementation complexities and browser inconsistencies. As of now, <strong>JavaScript engines generally do NOT perform TCO reliably or at all</strong>. Therefore, you cannot rely on TCO in modern JavaScript to prevent stack overflows.</p>
+            </li>
+            <li>
+                <strong>Memoization/Dynamic Programming:</strong>
+                <p>For problems where the same sub-problems are computed multiple times (e.g., Fibonacci sequence), memoization (caching results) can drastically reduce the number of recursive calls, though it doesn't directly solve the stack depth issue for *deep*, unique paths.</p>
+            </li>
+            <li>
+                <strong>Increasing Stack Size (System-level):</strong>
+                <p>In some environments (like Node.js or C++), you might be able to configure the maximum stack size. However, this is generally a last resort and not recommended for web browsers as it's not portable and can lead to resource issues.</p>
+            </li>
+        </ol>
+        <p>For most practical JavaScript applications that might hit recursion depth limits, <strong>iterative conversion is the preferred and most reliable solution.</strong></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('fractalCanvas');
+        const ctx = canvas.getContext('2d');
+        const depthSlider = document.getElementById('depthSlider');
+        const depthValueSpan = document.getElementById('depthValue');
+
+        const CANVAS_WIDTH = canvas.width;
+        const CANVAS_HEIGHT = canvas.height;
+
+        // Function to draw a single branch
+        function drawBranch(startX, startY, length, angle, depth, maxDepth) {
+            if (depth > maxDepth) {
+                return;
+            }
+
+            // Calculate end point of the branch
+            const endX = startX + length * Math.cos(angle);
+            const endY = startY + length * Math.sin(angle);
+
+            // Set line properties based on depth
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineWidth = Math.max(1, (maxDepth - depth + 1) * 1.5); // Thicker for lower depth branches
+            ctx.strokeStyle = `hsl(120, 50%, ${30 + (depth / maxDepth) * 40}%)`; // Greenish, lighter for higher depth
+            ctx.stroke();
+
+            // Recursively draw two new branches
+            // Angle adjustments and length scaling for sub-branches
+            const newLength = length * 0.75;
+            const angleOffset = Math.PI / 6; // 30 degrees
+
+            // Left branch
+            drawBranch(endX, endY, newLength, angle - angleOffset, depth + 1, maxDepth);
+            // Right branch
+            drawBranch(endX, endY, newLength, angle + angleOffset, depth + 1, maxDepth);
+        }
+
+        // Function to clear canvas and draw the full tree
+        function drawFractalTree() {
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Clear the entire canvas
+
+            const maxDepth = parseInt(depthSlider.value);
+            depthValueSpan.textContent = maxDepth;
+
+            // Initial branch parameters
+            const initialLength = CANVAS_HEIGHT / 4; // Starting length of the trunk
+            const startX = CANVAS_WIDTH / 2;
+            const startY = CANVAS_HEIGHT; // Start at the bottom center
+            const initialAngle = -Math.PI / 2; // Pointing upwards
+
+            // Draw the initial trunk (or the first set of branches directly)
+            // We can call drawBranch for the trunk itself, or just directly call for its children.
+            // For simplicity and consistency with the recursive definition, we'll draw the "trunk" as the first branch.
+            drawBranch(startX, startY, initialLength, initialAngle, 1, maxDepth);
+        }
+
+        // Event listener for slider changes
+        depthSlider.addEventListener('input', drawFractalTree);
+
+        // Initial draw when the page loads
+        drawFractalTree();
+    </script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Debugging</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            margin-bottom: 20px;
+        }
+        h1, h2, p {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fibonacci Spiral Debugging Puzzle</h1>
+    <p>This page demonstrates two Fibonacci spirals. One contains a common base case error, and the other is corrected.</p>
+    <p>The "bug" often lies in the calculation of the Fibonacci sequence itself, specifically its starting values, rather than the canvas rendering API.</p>
+
+    <div class="container">
+        <div class="canvas-wrapper">
+            <h2>Buggy Version (Incorrect Base Cases)</h2>
+            <canvas id="buggyCanvas" width="400" height="400"></canvas>
+            <p>This version uses `[1, 1]` or similar for its initial Fibonacci numbers, leading to an offset and distorted spiral.</p>
+        </div>
+
+        <div class="canvas-wrapper">
+            <h2>Corrected Version</h2>
+            <canvas id="correctCanvas" width="400" height="400"></canvas>
+            <p>This version uses `[0, 1]` or `[1, 1]` correctly, ensuring the spiral starts from the origin and expands properly.</p>
+        </div>
+    </div>
+
+    <script>
+        // Function to generate Fibonacci numbers
+        function getFibonacciSequence(n, initialFibs) {
+            const fib = [...initialFibs];
+            while (fib.length < n) {
+                fib.push(fib[fib.length - 1] + fib[fib.length - 2]);
+            }
+            return fib;
+        }
+
+        // Function to draw a Fibonacci spiral
+        function drawFibonacciSpiral(canvasId, initialFibSequence, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error(`Canvas with ID '${canvasId}' not found.`);
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color;
+
+            const maxFibCount = 10; // Number of Fibonacci numbers to use for the spiral
+            const fibs = getFibonacciSequence(maxFibCount, initialFibSequence);
+
+            // Start drawing from the center, adjust as needed
+            let currentX = canvas.width / 2;
+            let currentY = canvas.height / 2;
+
+            // Scale factor to make the spiral visible within the canvas
+            const scale = 15;
+
+            // Initial direction (0: right, 1: down, 2: left, 3: up)
+            let direction = 0;
+
+            // Move to the starting point (relative to the first two "squares")
+            // This setup assumes the spiral starts growing from the origin of a square system.
+            // For the [0, 1] sequence, the 0 doesn't create a square, but the 1 does.
+            // We adjust the starting point to make the spiral visually appealing.
+            if (initialFibSequence[0] === 0 && initialFibSequence[1] === 1) {
+                 // For [0, 1, 1, 2, 3, 5...]
+                // The first '1' square
+                currentX += fibs[1] * scale;
+            } else if (initialFibSequence[0] === 1 && initialFibSequence[1] === 1) {
+                // For [1, 1, 2, 3, 5...]
+                // The first '1' square
+                currentX += fibs[0] * scale;
+            }
+
+
+            for (let i = 1; i < fibs.length; i++) {
+                const radius = fibs[i] * scale;
+                const prevFib = fibs[i - 1] * scale;
+
+                ctx.beginPath();
+
+                switch (direction) {
+                    case 0: // Arc starts from top-right, goes down-right
+                        // Adjust currentX/Y to the center of the arc's square
+                        // For the first arc, it's relative to the previous square.
+                        currentX -= prevFib; // Move back by the previous square size
+                        ctx.arc(currentX, currentY, radius, Math.PI * 0, Math.PI * 0.5);
+                        currentY += radius; // Move to the end of the arc
+                        break;
+                    case 1: // Arc starts from bottom-right, goes bottom-left
+                        currentY -= prevFib;
+                        ctx.arc(currentX, currentY, radius, Math.PI * 0.5, Math.PI * 1);
+                        currentX -= radius;
+                        break;
+                    case 2: // Arc starts from bottom-left, goes top-left
+                        currentX += prevFib;
+                        ctx.arc(currentX, currentY, radius, Math.PI * 1, Math.PI * 1.5);
+                        currentY -= radius;
+                        break;
+                    case 3: // Arc starts from top-left, goes top-right
+                        currentY += prevFib;
+                        ctx.arc(currentX, currentY, radius, Math.PI * 1.5, Math.PI * 2);
+                        currentX += radius;
+                        break;
+                }
+                ctx.stroke();
+                direction = (direction + 1) % 4; // Cycle direction
+            }
+        }
+
+        // Draw the buggy version (e.g., starting with 1, 1 but expecting 0, 1 behavior)
+        // A common "bug" is to directly use [1, 1] or similar when a proper Fibonacci sequence for a spiral often implies [0, 1, 1, 2...]
+        // or to misinterpret how the first squares are formed.
+        // For demonstration, let's use [1, 1] as a "buggy" start where the first two numbers are both 1.
+        // This causes the spiral to be offset and not grow from the expected origin point.
+        drawFibonacciSpiral('buggyCanvas', [1, 1], 'red');
+
+        // Draw the corrected version (using 0, 1 for the initial sequence, which is more common for the mathematical definition of Fibonacci and spirals)
+        // Or if the developer expects [1, 1] to be the base, ensure the drawing logic accounts for it correctly.
+        // For this example, let's assume the "correct" mathematical spiral uses 0, 1 as its true starting point,
+        // even though the first 'square' would have a side of 1.
+        drawFibonacciSpiral('correctCanvas', [0, 1], 'green');
+    </script>
+</body>
+</html>

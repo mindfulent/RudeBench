@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { RenderIndex, Tone } from '../lib/types';
 import { TONES } from '../lib/types';
-import { TONE_COLORS, TONE_LABELS } from '../lib/colors';
+import { TONE_COLORS, TONE_LABELS, MODEL_DISPLAY_NAMES } from '../lib/colors';
 
 interface Props {
   index: RenderIndex;
@@ -36,7 +36,7 @@ export default function RenderViewer({ index }: Props) {
   return (
     <div className="space-y-6">
       {/* Desktop-only notice */}
-      <div className="sm:hidden rounded-lg border border-amber-700/30 bg-amber-900/20 p-3 text-sm text-amber-400">
+      <div className="sm:hidden rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
         The HTML render viewer is optimized for desktop. On mobile, you can view the task/model
         selector but the render grid works best on larger screens.
       </div>
@@ -64,7 +64,7 @@ export default function RenderViewer({ index }: Props) {
             className="bg-[var(--color-surface-2)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-md px-3 py-1.5 text-sm"
           >
             {index.models.map(m => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m}>{MODEL_DISPLAY_NAMES[m] || m}</option>
             ))}
           </select>
         </div>

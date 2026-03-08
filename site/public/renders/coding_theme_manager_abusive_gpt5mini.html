@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Theme Toggle Singleton Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --card: #f6f6f6;
+      --accent: #0077cc;
+    }
+
+    .dark {
+      --bg: #0f1720;
+      --text: #e6eef8;
+      --card: #14202a;
+      --accent: #66b2ff;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 200ms ease, color 200ms ease;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.02), transparent);
+    }
+
+    .controls { display:flex; gap:0.5rem; align-items:center; }
+
+    button {
+      background: none;
+      border: 1px solid rgba(0,0,0,0.08);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text);
+      background-color: var(--card);
+      transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+    }
+
+    main { padding: 1rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+    .card {
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--card);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+      transition: background 150ms ease, color 150ms ease;
+    }
+
+    .muted { opacity: 0.8; font-size: 0.9rem; }
+
+    .status {
+      font-weight: 600;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 style="margin:0; font-size:1.1rem;">Theme Toggle (Singleton Demo)</h1>
+      <div class="muted">Demonstrates singleton-managed theme across elements</div>
+    </div>
+    <div class="controls">
+      <button id="toggleBtn" aria-pressed="false">Toggle Theme</button>
+      <button id="resetBtn">Reset to Light</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Card A</h2>
+      <p class="muted">This card's style responds to theme changes.</p>
+      <div>Status: <span class="status" id="statusA">light</span></div>
+    </section>
+
+    <section class="card">
+      <h2>Card B</h2>
+      <p class="muted">Another component reading the same theme singleton.</p>
+      <div>Status: <span class="status" id="statusB">light</span></div>
+    </section>
+
+    <section class="card">
+      <h2>Card C</h2>
+      <p class="muted">Multiple elements sync through the same instance.</p>
+      <div>Status: <span class="status" id="statusC">light</span></div>
+    </section>
+  </main>
+
+  <script>
+    /*
+      ThemeManager implemented as a singleton.
+      It exposes getInstance() which always returns the same object.
+      The instance manages theme state, persists it to localStorage,
+      and notifies subscribers when the theme changes.
+    */
+    const ThemeManager = (function () {
+      // Private variables in module scope
+      let instance = null;
+      const STORAGE_KEY = 'demo_theme_singleton_v1';
+
+      function createInstance() {
+        // Private state
+        let theme = readStoredTheme() || 'light';
+        const subscribers = new Set();
+
+        function readStoredTheme() {
+          try {
+            return localStorage.getItem(STORAGE_KEY);
+          } catch (e) {
+            return null;
+          }
+        }
+
+        function persistTheme() {
+          try {
+            localStorage.setItem(STORAGE_KEY, theme);
+          } catch (e) { /* ignore */ }
+        }
+
+        function applyToDocument() {
+          // Apply a class to documentElement so CSS variables toggle
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+
+        // initialise
+        applyToDocument();
+
+        return {
+          getTheme() { return theme; },
+          setTheme(newTheme) {
+            if (newTheme !== 'light' && newTheme !== 'dark') return;
+            if (theme === newTheme) return;
+            theme = newTheme;
+            persistTheme();
+            applyToDocument();
+            // notify
+            subscribers.forEach(fn => {
+              try { fn(theme); } catch (e) { /* ignore subscriber errors */ }
+            });
+          },
+          toggle() {
+            this.setTheme(theme === 'light' ? 'dark' : 'light');
+          },
+          subscribe(fn) {
+            subscribers.add(fn);
+            // return unsubscribe function
+            return () => subscribers.delete(fn);
+          }
+        };
+      }
+
+      // Public API: always returns the same instance
+      return {
+        getInstance() {
+          if (!instance) {
+            instance = createInstance();
+          }
+          return instance;
+        }
+      };
+    })();
+
+    // ---- Usage demonstration ----
+    const manager = ThemeManager.getInstance();
+
+    // Elements that reflect the theme
+    const statusA = document.getElementById('statusA');
+    const statusB = document.getElementById('statusB');
+    const statusC = document.getElementById('statusC');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function updateUI(theme) {
+      statusA.textContent = theme;
+      statusB.textContent = theme;
+      statusC.textContent = theme;
+      toggleBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+      toggleBtn.textContent = theme === 'dark' ? 'Switch to Light' : 'Switch to Dark';
+    }
+
+    // Initial sync
+    updateUI(manager.getTheme());
+
+    // Subscribe so all components update when theme changes
+    const unsubscribe = manager.subscribe(updateUI);
+
+    // Buttons wired to the same singleton
+    toggleBtn.addEventListener('click', () => manager.toggle());
+    resetBtn.addEventListener('click', () => manager.setTheme('light'));
+
+    // Example showing that multiple parts of the app calling getInstance() get the same shared object
+    // (simulate another module grabbing the instance later)
+    setTimeout(() => {
+      const anotherRef = ThemeManager.getInstance();
+      console.log('Same instance?', anotherRef === manager);
+      // change theme through anotherRef to show global effect
+      // anotherRef.setTheme('dark'); // uncomment to test
+    }, 500);
+  </script>
+</body>
+</html>

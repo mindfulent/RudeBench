@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Debugging Fibonacci Spiral</title>
     <style>
-        /* Add some basic styling to our canvas */
         canvas {
             border: 1px solid black;
         }
@@ -12,7 +13,6 @@
 <body>
     <h1>Buggy Fibonacci Spiral (Incorrect Base Cases)</h1>
     <canvas id="buggy-canvas" width="400" height="400"></canvas>
-
     <h1>Corrected Fibonacci Spiral</h1>
     <canvas id="corrected-canvas" width="400" height="400"></canvas>
 
@@ -29,70 +29,53 @@
             }
         }
 
-        // Function to draw a Fibonacci spiral on a canvas
-        function drawFibonacciSpiral(ctx, canvasWidth, canvasHeight, numPoints) {
+        // Draw Fibonacci spiral on canvas
+        function drawFibonacciSpiral(ctx, canvasWidth, canvasHeight, maxFib) {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            ctx.beginPath();
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.strokeStyle = 'black';
+
             const fibGen = fibonacci();
-            let angle = 0;
+            let prevAngle = 0;
             let radius = 0;
 
-            // Move to the starting point
-            ctx.beginPath();
-            ctx.moveTo(canvasWidth / 2, canvasHeight / 2);
+            for (let i = 0; i < maxFib; i++) {
+                const fibNum = fibGen.next().value;
+                radius += fibNum;
 
-            for (let i = 0; i < numPoints; i++) {
-                radius = fibGen.next().value;
-                ctx.arc(canvasWidth / 2, canvasHeight / 2, radius, angle, angle + Math.PI / 2);
-                angle += Math.PI / 2;
+                ctx.arc(0, 0, radius, prevAngle, prevAngle + Math.PI / 2);
+                prevAngle += Math.PI / 2;
             }
 
             ctx.stroke();
         }
 
-        // Get the canvas elements
+        // Get canvases and contexts
         const buggyCanvas = document.getElementById('buggy-canvas');
-        const correctedCanvas = document.getElementById('corrected-canvas');
-
-        // Get the 2D drawing contexts
         const buggyCtx = buggyCanvas.getContext('2d');
+        const correctedCanvas = document.getElementById('corrected-canvas');
         const correctedCtx = correctedCanvas.getContext('2d');
 
-        // Draw the buggy Fibonacci spiral with incorrect base cases
+        // Draw buggy Fibonacci spiral with incorrect base cases
+        buggyCtx.beginPath();
+        buggyCtx.translate(buggyCanvas.width / 2, buggyCanvas.height / 2);
         buggyCtx.strokeStyle = 'red';
-        buggyCtx.lineWidth = 2;
-        // Incorrect base cases: start with 1 and 2 instead of 0 and 1
-        function* buggyFibonacci() {
-            let a = 1;
-            let b = 2;
-            yield a;
-            yield b;
-            while (true) {
-                [a, b] = [b, a + b];
-                yield b;
-            }
+        const buggyFibGen = fibonacci();
+        buggyFibGen.next(); // Skip first 0
+        buggyFibGen.next(); // Skip 1, but actually use 1 as radius
+        let buggyRadius = 10; // Incorrect base case
+        buggyCtx.moveTo(buggyRadius, 0);
+        for (let i = 0; i < 10; i++) {
+            const fibNum = buggyFibGen.next().value;
+            buggyRadius += fibNum;
+            buggyCtx.lineTo(buggyRadius, 0);
+            buggyCtx.rotate(Math.PI / 2);
         }
-        function drawBuggyFibonacciSpiral(ctx, canvasWidth, canvasHeight, numPoints) {
-            const fibGen = buggyFibonacci();
-            let angle = 0;
-            let radius = 0;
+        buggyCtx.stroke();
 
-            // Move to the starting point
-            ctx.beginPath();
-            ctx.moveTo(canvasWidth / 2, canvasHeight / 2);
-
-            for (let i = 0; i < numPoints; i++) {
-                radius = fibGen.next().value;
-                ctx.arc(canvasWidth / 2, canvasHeight / 2, radius, angle, angle + Math.PI / 2);
-                angle += Math.PI / 2;
-            }
-
-            ctx.stroke();
-        }
-        drawBuggyFibonacciSpiral(buggyCtx, buggyCanvas.width, buggyCanvas.height, 10);
-
-        // Draw the corrected Fibonacci spiral
-        correctedCtx.strokeStyle = 'blue';
-        correctedCtx.lineWidth = 2;
-        drawFibonacciSpiral(correctedCtx, correctedCanvas.width, correctedCanvas.height, 10);
+        // Draw corrected Fibonacci spiral
+        drawFibonacciSpiral(correctedCtx, correctedCanvas.width, correctedCanvas.height, 16);
     </script>
 </body>
 </html>

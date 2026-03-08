@@ -1,185 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Linked List Visualizer</title>
-<style>
-  .node {
-    display: inline-block;
-    padding: 10px;
-    border: 1px solid black;
-    margin: 5px;
-    position: relative;
-  }
-  .highlight {
-    background-color: yellow;
-  }
-  .arrow {
-    position: absolute;
-    right: -20px;
-    top: 15px;
-    font-size: 20px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Visualizer</title>
+    <style>
+        .node {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid black;
+            border-radius: 5px;
+            width: 50px;
+            text-align: center;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+        .arrow {
+            font-size: 20px;
+            margin: 0 10px;
+        }
+    </style>
 </head>
 <body>
+    <div id="listContainer"></div>
+    <input id="valueInput" type="number" placeholder="Value">
+    <button id="insertHeadBtn">Insert at Head</button>
+    <button id="insertTailBtn">Insert at Tail</button>
+    <button id="deleteBtn">Delete</button>
+    <button id="searchBtn">Search</button>
+    <button id="clearBtn">Clear List</button>
 
-<div id="linkedList"></div>
-
-<input id="value" type="number" placeholder="Value">
-<button id="insertHead">Insert at Head</button>
-<button id="insertTail">Insert at Tail</button>
-<button id="deleteNode">Delete Node</button>
-<button id="searchNode">Search Node</button>
-
-<script>
-  class Node {
-    constructor(value) {
-      this.value = value;
-      this.next = null;
-    }
-  }
-
-  class LinkedList {
-    constructor() {
-      this.head = null;
-      this.tail = null;
-    }
-
-    insertAtHead(value) {
-      const node = new Node(value);
-      if (!this.head) {
-        this.head = node;
-        this.tail = node;
-      } else {
-        node.next = this.head;
-        this.head = node;
-      }
-    }
-
-    insertAtTail(value) {
-      const node = new Node(value);
-      if (!this.tail) {
-        this.head = node;
-        this.tail = node;
-      } else {
-        this.tail.next = node;
-        this.tail = node;
-      }
-    }
-
-    deleteNode(value) {
-      if (!this.head) return;
-
-      if (this.head.value === value) {
-        this.head = this.head.next;
-        if (!this.head) this.tail = null;
-        return;
-      }
-
-      let current = this.head;
-      while (current.next) {
-        if (current.next.value === value) {
-          current.next = current.next.next;
-          if (!current.next) this.tail = current;
-          return;
-        }
-        current = current.next;
-      }
-    }
-
-    searchNode(value) {
-      let current = this.head;
-      while (current) {
-        if (current.value === value) {
-          return current;
-        }
-        current = current.next;
-      }
-      return null;
-    }
-
-    render() {
-      const linkedListDiv = document.getElementById('linkedList');
-      linkedListDiv.innerHTML = '';
-
-      let current = this.head;
-      let prevNodeDiv = null;
-      while (current) {
-        const nodeDiv = document.createElement('div');
-        nodeDiv.classList.add('node');
-        nodeDiv.innerText = current.value;
-
-        if (prevNodeDiv) {
-          const arrowSpan = document.createElement('span');
-          arrowSpan.classList.add('arrow');
-          arrowSpan.innerText = '→';
-          prevNodeDiv.appendChild(arrowSpan);
+    <script>
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+            }
         }
 
-        linkedListDiv.appendChild(nodeDiv);
-        prevNodeDiv = nodeDiv;
-        current = current.next;
-      }
-    }
+        class LinkedList {
+            constructor() {
+                this.head = null;
+                this.tail = null;
+            }
 
-    highlightNode(value) {
-      const linkedListDiv = document.getElementById('linkedList');
-      linkedListDiv.innerHTML = '';
+            insertAtHead(value) {
+                const newNode = new Node(value);
+                if (!this.head) {
+                    this.head = this.tail = newNode;
+                } else {
+                    newNode.next = this.head;
+                    this.head = newNode;
+                }
+            }
 
-      let current = this.head;
-      let prevNodeDiv = null;
-      while (current) {
-        const nodeDiv = document.createElement('div');
-        nodeDiv.classList.add('node');
-        if (current.value === value) nodeDiv.classList.add('highlight');
-        nodeDiv.innerText = current.value;
+            insertAtTail(value) {
+                const newNode = new Node(value);
+                if (!this.tail) {
+                    this.head = this.tail = newNode;
+                } else {
+                    this.tail.next = newNode;
+                    this.tail = newNode;
+                }
+            }
 
-        if (prevNodeDiv) {
-          const arrowSpan = document.createElement('span');
-          arrowSpan.classList.add('arrow');
-          arrowSpan.innerText = '→';
-          prevNodeDiv.appendChild(arrowSpan);
+            delete(value) {
+                if (!this.head) return;
+
+                if (this.head.value === value) {
+                    this.head = this.head.next;
+                    if (!this.head) this.tail = null;
+                    return;
+                }
+
+                let current = this.head;
+                while (current.next) {
+                    if (current.next.value === value) {
+                        current.next = current.next.next;
+                        if (!current.next) this.tail = current;
+                        return;
+                    }
+                    current = current.next;
+                }
+            }
+
+            search(value) {
+                let current = this.head;
+                while (current) {
+                    if (current.value === value) {
+                        return current;
+                    }
+                    current = current.next;
+                }
+                return null;
+            }
         }
 
-        linkedListDiv.appendChild(nodeDiv);
-        prevNodeDiv = nodeDiv;
-        current = current.next;
-      }
-    }
-  }
+        const list = new LinkedList();
+        const container = document.getElementById('listContainer');
+        const valueInput = document.getElementById('valueInput');
 
-  const linkedList = new LinkedList();
+        function renderList(highlightNode = null) {
+            container.innerHTML = '';
+            let current = list.head;
+            while (current) {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.classList.add('node');
+                if (current === highlightNode) nodeDiv.classList.add('highlight');
+                nodeDiv.textContent = current.value;
+                container.appendChild(nodeDiv);
 
-  document.getElementById('insertHead').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('value').value);
-    linkedList.insertAtHead(value);
-    linkedList.render();
-  });
+                if (current.next) {
+                    const arrowSpan = document.createElement('span');
+                    arrowSpan.classList.add('arrow');
+                    arrowSpan.textContent = '->';
+                    container.appendChild(arrowSpan);
+                }
+                current = current.next;
+            }
+        }
 
-  document.getElementById('insertTail').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('value').value);
-    linkedList.insertAtTail(value);
-    linkedList.render();
-  });
+        document.getElementById('insertHeadBtn').addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (!isNaN(value)) {
+                list.insertAtHead(value);
+                renderList();
+            }
+        });
 
-  document.getElementById('deleteNode').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('value').value);
-    linkedList.deleteNode(value);
-    linkedList.render();
-  });
+        document.getElementById('insertTailBtn').addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (!isNaN(value)) {
+                list.insertAtTail(value);
+                renderList();
+            }
+        });
 
-  document.getElementById('searchNode').addEventListener('click', function() {
-    const value = parseInt(document.getElementById('value').value);
-    const foundNode = linkedList.searchNode(value);
-    if (foundNode) {
-      linkedList.highlightNode(value);
-    } else {
-      alert('Node not found');
-    }
-  });
-</script>
+        document.getElementById('deleteBtn').addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (!isNaN(value)) {
+                list.delete(value);
+                renderList();
+            }
+        });
 
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (!isNaN(value)) {
+                const foundNode = list.search(value);
+                renderList(foundNode);
+            }
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            list.head = list.tail = null;
+            renderList();
+        });
+    </script>
 </body>
 </html>

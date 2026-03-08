@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Theme Toggle with Singleton State (Dark / Light)</title>
+  <style>
+    /* Base layout */
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --muted: #666666;
+      --card-bg: #f5f5f7;
+      --accent: #0066cc;
+      --accent-strong: #004a99;
+      --border: #e0e0e5;
+      --code-bg: #f0f0f3;
+      --shadow: 0 6px 18px rgba(16,24,40,0.06);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b0d10;
+      --text: #e6eef8;
+      --muted: #98a2b3;
+      --card-bg: #0f1720;
+      --accent: #4ea8ff;
+      --accent-strong: #78bfff;
+      --border: rgba(255,255,255,0.08);
+      --code-bg: rgba(255,255,255,0.035);
+      --shadow: 0 6px 18px rgba(0,0,0,0.6);
+    }
+
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,var(--bg), color-mix(in srgb, var(--bg) 92%, black 8%));
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 36px auto;
+      padding: 24px;
+    }
+
+    header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .logo {
+      width:56px;
+      height:56px;
+      border-radius:12px;
+      background: linear-gradient(135deg,var(--accent), var(--accent-strong));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:700;
+      box-shadow: var(--shadow);
+      flex:0 0 56px;
+    }
+
+    h1 { margin:0; font-size:1.4rem; }
+    p.lead { margin:4px 0 0; color:var(--muted); font-size:0.95rem; }
+
+    .controls {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    button, input[type="button"], .btn {
+      background: var(--accent);
+      border: 1px solid transparent;
+      color: white;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow: none;
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* Layout grid */
+    main {
+      display:grid;
+      grid-template-columns: 1fr 340px;
+      gap:20px;
+    }
+
+    .content {
+      min-height:300px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius:12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      color: var(--text);
+    }
+
+    section + section { margin-top: 16px; }
+
+    .row {
+      display:flex;
+      gap:12px;
+      align-items: center;
+    }
+
+    /* Code block */
+    pre {
+      background: var(--code-bg);
+      padding:12px;
+      border-radius:8px;
+      overflow:auto;
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    /* Table */
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:8px;
+    }
+    th,td {
+      text-align:left;
+      padding:8px;
+      border-bottom: 1px dashed var(--border);
+    }
+    th { color:var(--muted); font-weight:600; font-size:13px; }
+
+    /* Form */
+    label { display:block; font-size:13px; margin-bottom:6px; color:var(--muted); }
+    input[type="text"], select, textarea {
+      width:100%;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      outline:none;
+    }
+
+    .image-grid {
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:8px;
+      margin-top:12px;
+    }
+    .image-grid img {
+      width:100%;
+      border-radius:8px;
+      display:block;
+      border: 1px solid var(--border);
+    }
+
+    footer {
+      margin-top:22px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* small tweaks */
+    .muted { color: var(--muted); font-size:0.95rem; }
+    .badge { background: var(--accent-strong); color: white; padding:4px 8px; border-radius:999px; font-size:12px; }
+
+    /* theme-transition for smooth toggle */
+    :root, [data-theme] {
+      transition: background 280ms ease, color 220ms ease;
+    }
+    .card, pre, input, select, textarea, .logo {
+      transition: background-color 280ms ease, color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+    }
+
+    /* Responsive */
+    @media (max-width: 880px) {
+      main { grid-template-columns: 1fr; }
+      .image-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">TS</div>
+        <div>
+          <h1>Theme Toggle — Singleton Example</h1>
+          <p class="lead">Light & Dark theme toggle using a JS singleton for centralized theme state.</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div id="themeLabel" class="muted" aria-live="polite">Theme: <strong>Light</strong></div>
+        <button id="toggleBtn" aria-pressed="false" title="Toggle theme">Toggle Theme</button>
+        <button id="resetBtn" class="secondary" title="Reset to system">Reset</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="content">
+        <section class="card" id="intro">
+          <h2>Overview</h2>
+          <p>This page demonstrates theme switching implemented using the singleton design pattern for managing the theme state. The singleton exposes a simple API (get, set, subscribe) so multiple UI components can react to theme changes consistently.</p>
+
+          <div class="row" style="margin-top:12px;">
+            <div class="badge">Singleton</div>
+            <div style="flex:1">
+              <p class="muted" style="margin:0">Centralized state, minimal wiring — great for small apps or single-responsibility global services.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" id="content-samples">
+          <h2>Content Samples</h2>
+          <p>Below are varied elements styled with CSS variables so they respond to theme changes.</p>
+
+          <h3>Text & Lists</h3>
+          <p>Normal paragraph text, <span class="muted">muted text</span>, and an inline <code>code</code> sample.</p>
+          <ul>
+            <li>Unordered list item</li>
+            <li>Another item with <strong>emphasis</strong></li>
+            <li>Third item</li>
+          </ul>
+
+          <h3>Table</h3>
+          <table>
+            <thead><tr><th>Feature</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Theme toggle</td><td>Works</td></tr>
+              <tr><td>Transitions</td><td>Smooth</td></tr>
+              <tr><td>Persistence</td><td id="storageStatus">Not saved</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:12px">Code Block</h3>
+          <pre><code id="sampleCode">// Example: how to call the singleton
+ThemeManager.getInstance().setTheme('dark');</code></pre>
+        </section>
+
+        <section class="card" id="form-sample">
+          <h2>Form & Interactive Controls</h2>
+          <form onsubmit="return false;">
+            <div style="margin-bottom:12px;">
+              <label for="name">Name</label>
+              <input id="name" type="text" placeholder="Enter your name">
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn" id="saveBtn">Save</button>
+              <button type="button" class="secondary" id="cancelBtn">Cancel</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card" id="images">
+          <h2>Images & Cards</h2>
+          <div class="image-grid" aria-hidden="true">
+            <img src="https://picsum.photos/seed/101/400/300" alt="Random 1">
+            <img src="https://picsum.photos/seed/102/400/300" alt="Random 2">
+            <img src="https://picsum.photos/seed/103/400/300" alt="Random 3">
+          </div>
+
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <div class="card" style="flex:1">
+              <h4>Card A</h4>
+              <p class="muted">Cards adapt their background, border and text color with the theme.</p>
+            </div>
+            <div class="card" style="flex:1">
+              <h4>Card B</h4>
+              <p class="muted">Try toggling to see effects on shadows & borders.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" id="singleton-discussion">
+          <h2>Singleton: Pros & Cons</h2>
+          <p>This section explains the singleton pattern and discusses trade-offs.</p>
+
+          <h3>Pros</h3>
+          <ul>
+            <li>Single source of truth for global state (easy to access from anywhere).</li>
+            <li>Simple API surface — often just getInstance(), getters, setters, and events.</li>
+            <li>Good for small apps or utilities (theme manager, logger, config reader).</li>
+          </ul>
+
+          <h3>Cons</h3>
+          <ul>
+            <li>Global state can make testing harder (tests must reset or mock the singleton).</li>
+            <li>Hides dependencies — modules using the singleton may be less explicit about their requirements.</li>
+            <li>Can introduce tight coupling and make large codebases harder to maintain.</li>
+            <li>Lifecycle control and replacement (e.g., swapping implementations) are more difficult.</li>
+          </ul>
+
+          <h3>When to prefer alternatives (e.g., Dependency Injection)</h3>
+          <p>Use DI or explicit dependency passing when you want:</p>
+          <ul>
+            <li>Clear, testable components where dependencies are explicit and easily mocked.</li>
+            <li>Multiple implementations (e.g., different theme providers for testing/production).</li>
+            <li>Better control over lifecycle and scope (per-request, per-component instances).</li>
+            <li>To avoid hidden coupling — DI makes dependency graphs explicit.</li>
+          </ul>
+
+          <p class="muted">In short: singletons are convenient for small-scale global services. For medium/large systems, or when you need testability and flexible composition, dependency injection is usually a better choice.</p>
+        </section>
+
+      </div>
+
+      <aside>
+        <div class="card" aria-label="Theme controls" style="margin-bottom:12px;">
+          <h3>Current Theme</h3>
+          <p id="currentThemeText">Light</p>
+          <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+          <div style="display:flex; gap:8px;">
+            <button id="darkBtn">Dark</button>
+            <button id="lightBtn" class="secondary">Light</button>
+          </div>
+        </div>
+
+        <div class="card" aria-label="Preferences">
+          <h3>Preferences</h3>
+          <label for="persist">Persist theme</label>
+          <select id="persist">
+            <option value="none">Don't save</option>
+            <option value="local">LocalStorage</option>
+          </select>
+
+          <div style="margin-top:12px;">
+            <label>System preference</label>
+            <div id="systemPref" class="muted">Detecting…</div>
+          </div>
+        </div>
+
+        <footer>
+          <div>Built with a singleton ThemeManager. Demo only.</div>
+        </footer>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    /*****************************************************************************
+     * ThemeManager Singleton
+     *
+     * Features:
+     * - getInstance(): returns the single ThemeManager instance.
+     * - getTheme(): returns 'light' or 'dark'.
+     * - setTheme(theme): sets theme and notifies subscribers.
+     * - subscribe(fn): register listener(fn(theme)) -> returns unsubscribe function.
+     * - setPersistence(mode): 'none' or 'local', controls whether to save to localStorage.
+     * - resetToSystem(): apply system preference.
+     *
+     * Implementation note: we use an IIFE to create a closure and ensure only one
+     * instance can be created. Consumers call ThemeManager.getInstance().
+     *****************************************************************************/
+
+    const ThemeManager = (function () {
+      // Private variables inside closure
+      let instance = null;
+
+      // Constructor for the singleton
+      function createInstance() {
+        // Defaults
+        let theme = 'light';
+        let persistence = 'none'; // 'none' | 'local'
+        const subscribers = new Set();
+
+        const STORAGE_KEY = 'theme-manager:theme';
+
+        // detect system preference
+        const mql = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+
+        function applyTheme(t) {
+          document.documentElement.setAttribute('data-theme', t);
+          theme = t;
+          subscribers.forEach(fn => {
+            try { fn(t); } catch (e) { console.error('Subscriber error', e); }
+          });
+        }
+
+        function loadFromStorage() {
+          try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved === 'dark' || saved === 'light') {
+              return saved;
+            }
+          } catch (e) {
+            // ignoring storage errors
+          }
+          return null;
+        }
+
+        // Initialize: check storage if available
+        const stored = loadFromStorage();
+        if (stored) {
+          theme = stored;
+          applyTheme(theme);
+        } else if (mql && mql.matches) {
+          theme = 'dark';
+          applyTheme(theme);
+        } else {
+          theme = 'light';
+          applyTheme(theme);
+        }
+
+        // Listen to system changes (optional)
+        if (mql && typeof mql.addEventListener === 'function') {
+          mql.addEventListener('change', (ev) => {
+            // If persistence is disabled, follow system change
+            if (persistence === 'none') {
+              const sys = ev.matches ? 'dark' : 'light';
+              applyTheme(sys);
+            }
+          });
+        }
+
+        return {
+          getTheme() { return theme; },
+
+          setTheme(t) {
+            if (t !== 'dark' && t !== 'light') {
+              console.warn('ThemeManager.setTheme: invalid theme', t);
+              return;
+            }
+            applyTheme(t);
+            if (persistence === 'local') {
+              try { localStorage.setItem(STORAGE_KEY, t); } catch (e) {}
+            }
+          },
+
+          toggle() {
+            this.setTheme(theme === 'dark' ? 'light' : 'dark');
+          },
+
+          subscribe(fn) {
+            if (typeof fn !== 'function') throw new Error('Subscriber must be a function');
+            subscribers.add(fn);
+            // Immediately call with current theme
+            try { fn(theme); } catch (e) { console.error(e); }
+            return () => subscribers.delete(fn);
+          },
+
+          setPersistence(mode) {
+            if (mode !== 'none' && mode !== 'local') {
+              throw new Error('Unknown persistence mode: ' + mode);
+            }
+            persistence = mode;
+            if (mode === 'local') {
+              try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+            } else {
+              try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            }
+          },
+
+          resetToSystem() {
+            const sys = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            persistence = 'none';
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            applyTheme(sys);
+          },
+
+          // exposed for debugging only
+          __internal: {
+            subscribersCount() { return subscribers.size; },
+          }
+        };
+      }
+
+      return {
+        getInstance() {
+          if (!instance) {
+            instance = createInstance();
+          }
+          return instance;
+        }
+      };
+    })();
+
+    // ---------------------------------------------------------
+    // Wiring the UI to the ThemeManager singleton
+    // ---------------------------------------------------------
+    (function init() {
+      const manager = ThemeManager.getInstance();
+
+      // UI elements
+      const toggleBtn = document.getElementById('toggleBtn');
+      const themeLabel = document.getElementById('themeLabel');
+      const currentThemeText = document.getElementById('currentThemeText');
+      const darkBtn = document.getElementById('darkBtn');
+      const lightBtn = document.getElementById('lightBtn');
+      const persistSelect = document.getElementById('persist');
+      const storageStatus = document.getElementById('storageStatus');
+      const resetBtn = document.getElementById('resetBtn');
+      const systemPref = document.getElementById('systemPref');
+      const saveBtn = document.getElementById('saveBtn');
+
+      // Reflect initial system preference
+      function updateSystemPrefDisplay() {
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        systemPref.textContent = isDark ? 'Dark' : 'Light';
+      }
+      updateSystemPrefDisplay();
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addEventListener) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateSystemPrefDisplay);
+      }
+
+      // Subscribe to theme changes
+      manager.subscribe((t) => {
+        themeLabel.innerHTML = 'Theme: <strong>' + capitalize(t) + '</strong>';
+        currentThemeText.textContent = capitalize(t);
+        toggleBtn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+      });
+
+      // Buttons
+      toggleBtn.addEventListener('click', () => {
+        manager.toggle();
+      });
+      darkBtn.addEventListener('click', () => manager.setTheme('dark'));
+      lightBtn.addEventListener('click', () => manager.setTheme('light'));
+      resetBtn.addEventListener('click', () => {
+        manager.resetToSystem();
+        persistSelect.value = 'none';
+        storageStatus.textContent = 'Not saved';
+      });
+
+      // Persistence
+      persistSelect.addEventListener('change', () => {
+        const val = persistSelect.value;
+        manager.setPersistence(val === 'local' ? 'local' : 'none');
+        storageStatus.textContent = val === 'local' ? 'Saved to localStorage' : 'Not saved';
+      });
+
+      // Simulate saving data to show interactivity
+      saveBtn.addEventListener('click', () => {
+        const name = document.getElementById('name').value || '(empty)';
+        alert('Pretend to save: ' + name + '\\nCurrent theme: ' + capitalize(manager.getTheme()));
+      });
+
+      // Update initial UI persistence state based on localStorage
+      try {
+        const ls = localStorage.getItem('theme-manager:theme');
+        if (ls === 'dark' || ls === 'light') {
+          persistSelect.value = 'local';
+          storageStatus.textContent = 'Saved to localStorage';
+          manager.setPersistence('local');
+        } else {
+          persistSelect.value = 'none';
+          storageStatus.textContent = 'Not saved';
+        }
+      } catch (e) {
+        persistSelect.value = 'none';
+        storageStatus.textContent = 'Not saved';
+      }
+
+      // tiny helper
+      function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    })();
+
+    // Expose ThemeManager globally for testing in console (optional)
+    window.ThemeManager = ThemeManager;
+
+  </script>
+</body>
+</html>

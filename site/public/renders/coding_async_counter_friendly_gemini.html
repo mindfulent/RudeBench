@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Counter Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+        .widget {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 25px;
+            text-align: center;
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+        }
+        .widget h2 {
+            margin-top: 0;
+            color: #007bff;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        .count-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #28a745;
+        }
+        .explanation {
+            background-color: #e9f5ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #333;
+        }
+        .explanation strong {
+            color: #0056b3;
+        }
+        .bug-highlight {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .fix-highlight {
+            color: #28a745;
+            font-weight: bold;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:active {
+            background-color: #004085;
+        }
+        p.warning {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Race Condition Counter Demonstration</h1>
+
+    <div class="container">
+        <!-- Buggy Counter -->
+        <div class="widget">
+            <h2>Buggy Counter <span class="bug-highlight">(Race Condition)</span></h2>
+            <div id="buggyCountDisplay" class="count-display">0</div>
+            <button id="buggyIncrementButton">Increment (Buggy)</button>
+            <p class="warning">Click rapidly to observe the count falling behind!</p>
+
+            <div class="explanation">
+                <h3>Why the Race Condition Occurs:</h3>
+                <p>
+                    This counter demonstrates a <strong class="bug-highlight">race condition</strong>.
+                    Each click triggers an asynchronous update using <code>setTimeout</code>.
+                    The update process involves these steps:
+                </p>
+                <ol>
+                    <li><strong class="bug-highlight">READ:</strong> The function reads the current value of <code>buggyCount</code>.</li>
+                    <li><strong class="bug-highlight">MODIFY:</strong> It calculates the new value (current + 1).</li>
+                    <li><strong class="bug-highlight">WRITE:</strong> After a short delay (simulating network latency or complex computation), it writes the new value back.</li>
+                </ol>
+                <p>
+                    If you click rapidly, multiple "read" operations can happen
+                    <strong>before</strong> the first "write" operation completes.
+                    For example:
+                </p>
+                <ul>
+                    <li>Click 1: Reads 0. Schedules to write 1.</li>
+                    <li>Click 2: Reads 0 (because Click 1 hasn't written yet). Schedules to write 1.</li>
+                    <li>Click 1's timeout fires, writes 1.</li>
+                    <li>Click 2's timeout fires, writes 1 (overwriting Click 1's result).</li>
+                </ul>
+                <p>
+                    The result is that some increments are lost because they all started with an outdated value.
+                </p>
+            </div>
+        </div>
+
+        <!-- Corrected Counter -->
+        <div class="widget">
+            <h2>Corrected Counter <span class="fix-highlight">(No Race Condition)</span></h2>
+            <div id="correctedCountDisplay" class="count-display">0</div>
+            <button id="correctedIncrementButton">Increment (Corrected)</button>
+            <p class="fix-highlight">This counter will always be accurate, even with rapid clicks.</p>
+
+            <div class="explanation">
+                <h3>How the Race Condition is Fixed:</h3>
+                <p>
+                    This counter prevents the race condition by using a <strong class="fix-highlight">queueing mechanism</strong>.
+                    Instead of directly updating the count, each click adds an "increment" operation to a queue.
+                </p>
+                <p>
+                    A separate function then processes this queue <strong class="fix-highlight">one item at a time</strong>.
+                    It waits for the current update to fully complete (read, modify, write) before taking the next item from the queue.
+                </p>
+                <p>
+                    This ensures that each increment operation starts with the most up-to-date count,
+                    preventing any "reads" from stale data. This is a common pattern for managing
+                    asynchronous operations that modify shared state, often implemented with techniques
+                    like promises, async/await with locks (in environments that support them), or simple queues like this.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Buggy Counter Logic ---
+        let buggyCount = 0;
+        const buggyCountDisplay = document.getElementById('buggyCountDisplay');
+        const buggyIncrementButton = document.getElementById('buggyIncrementButton');
+
+        buggyIncrementButton.addEventListener('click', () => {
+            // Simulate an asynchronous operation (e.g., fetching data, complex calculation)
+            // that takes some time.
+            setTimeout(() => {
+                // Buggy read-modify-write cycle
+                const currentValue = buggyCount; // READ: Get the current value
+                const newValue = currentValue + 1; // MODIFY: Calculate the new value
+                buggyCount = newValue; // WRITE: Update the shared variable
+                buggyCountDisplay.textContent = buggyCount; // Update UI
+            }, 100); // A small delay to make the race condition more apparent
+        });
+
+
+        // --- Corrected Counter Logic ---
+        let correctedCount = 0;
+        const correctedCountDisplay = document.getElementById('correctedCountDisplay');
+        const correctedIncrementButton = document.getElementById('correctedIncrementButton');
+
+        // A queue to hold pending increment operations
+        const updateQueue = [];
+        let isProcessingQueue = false;
+
+        // Function to simulate an async increment and update the UI
+        function asyncIncrementCorrected() {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    correctedCount++; // Directly increment, as this is the only operation touching it now
+                    correctedCountDisplay.textContent = correctedCount;
+                    resolve();
+                }, 100); // Same delay as the buggy version
+            });
+        }
+
+        // Function to process the queue
+        async function processQueue() {
+            if (isProcessingQueue) return; // Already processing
+
+            isProcessingQueue = true;
+            while (updateQueue.length > 0) {
+                const operation = updateQueue.shift(); // Get the next operation
+                await operation(); // Wait for it to complete
+            }
+            isProcessingQueue = false;
+        }
+
+        correctedIncrementButton.addEventListener('click', () => {
+            // Add the increment operation to the queue
+            updateQueue.push(asyncIncrementCorrected);
+            // Start processing the queue if not already
+            processQueue();
+        });
+
+    </script>
+</body>
+</html>

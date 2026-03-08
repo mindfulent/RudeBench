@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management API Documentation</title>
+    <style>
+        /* Basic styling for a professional look */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        
+        h1, h2 {
+            color: #2c3e50; /* Dark blue for headers */
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        section {
+            margin-bottom: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        details {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        summary {
+            padding: 10px;
+            background-color: #3498db; /* Blue for expanders */
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        details[open] summary {
+            background-color: #2980b9; /* Darker blue when open */
+            border-radius: 5px 5px 0 0;
+        }
+        
+        details p, details ul, details table {
+            padding: 10px 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: #fff;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            
+            thead {
+                display: none;
+            }
+            
+            tr {
+                margin-bottom: 10px;
+            }
+            
+            td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+            }
+            
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0;
+                width: 45%;
+                padding-left: 10px;
+                font-weight: bold;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>User Management API Documentation</h1>
+    <p>This document reviews the proposed REST API endpoints for a user management system and provides corrections based on REST best practices. It includes:</p>
+    <ul>
+        <li>An analysis of design problems in the original endpoints.</li>
+        <li>Corrected endpoints with proper HTTP methods, consistent naming, and status codes.</li>
+    </ul>
+    
+    <section>
+        <h2>1. Design Problems in Original Endpoints</h2>
+        <p>The original endpoints are:</p>
+        <ul>
+            <li>GET /getUsers</li>
+            <li>POST /user/delete/5</li>
+            <li>GET /createUser?name=Jo</li>
+            <li>PUT /updateAllUsers</li>
+        </ul>
+        
+        <p>Below is a detailed list of design problems for each endpoint. These issues violate REST principles such as using HTTP methods correctly, employing resource-based nouns (not verbs) in paths, and handling data appropriately (e.g., avoiding query parameters for actions that modify data).</p>
+        
+        <details>
+            <summary>Expand to view problems for all endpoints</summary>
+            <p>Here is a table summarizing the problems:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Original Endpoint</th>
+                        <th>Problems</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-label="Original Endpoint">GET /getUsers</td>
+                        <td data-label="Problems">
+                            <ul>
+                                <li>The path uses a verb ("getUsers") instead of a noun, which is not RESTful. REST endpoints should represent resources (e.g., "users") rather than actions.</li>
+                                <li>This makes the API inconsistent and harder to understand, as it doesn't follow the standard of using nouns for resources.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td data-label="Original Endpoint">POST /user/delete/5</td>
+                        <td data-label="Problems">
+                            <ul>
+                                <li>The HTTP method is incorrect: POST is typically for creating resources, but this endpoint is for deletion. It should use DELETE for removing resources.</li>
+                                <li>The path includes an action ("delete") and is not resource-based. A proper path should be something like /users/5, without verbs.</li>
+                                <li>This endpoint mixes concerns and could lead to confusion or security issues, as POST is not idempotent like DELETE.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td data-label="Original Endpoint">GET /createUser?name=Jo</td>
+                        <td data-label="Problems">
+                            <ul>
+                                <li>The HTTP method is incorrect: GET is for retrieving data, not creating resources. Creation should use POST to allow for a request body.</li>
+                                <li>The path uses a verb ("createUser") instead of a noun, violating REST conventions.</li>
+                                <li>Data (e.g., "name=Jo") is passed via query parameters, which is insecure and inappropriate for mutable operations. Sensitive data should be in the request body, not the URL.</li>
+                                <li>This design could expose data in logs and is not idempotent or safe.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td data-label="Original Endpoint">PUT /updateAllUsers</td>
+                        <td data-label="Problems">
+                            <ul>
+                                <li>The path uses a verb ("updateAllUsers") instead of a noun, making it inconsistent with REST principles.</li>
+                                <li>Updating all users at once is not a standard or recommended practice, as it could lead to unintended side effects. REST typically focuses on individual resources or specific collections with filters.</li>
+                                <li>PUT is for replacing an entire resource, but the endpoint implies a bulk update, which might be better suited to PATCH for partial updates. However, the path needs to be resource-based.</li>
+                                <li>This could result in poor performance and error handling, as changes to all records should be handled carefully.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </details>
+    </section>
+    
+    <section>
+        <h2>2. Corrected Endpoints</h2>
+        <p>Below are the corrected endpoints, redesigned to follow REST best practices. Key improvements include:</p>
+        <ul>
+            <li><strong>Proper HTTP methods:</strong> E.g., GET for reading, POST for creating, DELETE for removing, PUT or PATCH for updating.</li>
+            <li><strong>Consistent naming:</strong> Using nouns (e.g., "users") and resource identifiers (e.g., /users/{id} for specific resources).</li>
+            <li><strong>Status codes:</strong> Specifying expected HTTP status codes for responses (e.g., 200 OK for success, 201 Created for new resources).</li>
+            <li><strong>Additional details:</strong> Including descriptions, request bodies, and response examples for clarity.</li>
+        </ul>
+        
+        <details>
+            <summary>Expand to view corrected endpoints</summary>
+            <p>Here is a table of the corrected endpoints:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Corrected Endpoint</th>
+                        <th>HTTP Method</th>
+                        <th>Description</th>
+                        <th>Request Body (if applicable)</th>
+                        <th>Response Status Codes</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-label="Corrected Endpoint">/users</td>
+                        <td data-label="HTTP Method">GET</td>
+                        <td data-label="Description">Retrieve a list of all users. This replaces the original GET /getUsers.</td>
+                        <td data-label="Request Body">N/A</td>
+                        <td data-label="Response Status Codes">200 OK (success), 404 Not Found (if no users exist), 500 Internal Server Error (for server issues)</td>
+                        <td data-label="Example">GET /users<br>Response: [ { "id": 1, "name": "Alice" }, { "id": 2, "name": "Bob" } ]</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Corrected Endpoint">/users/5</td>
+                        <td data-label="HTTP Method">DELETE</td>
+                        <td data-label="Description">Delete a specific user by ID. This replaces the original POST /user/delete/5.</td>
+                        <td data-label="Request Body">N/A</td>
+                        <td data-label="Response Status Codes">204 No Content (successfully deleted), 404 Not Found (if user ID doesn't exist), 400 Bad Request (if ID is invalid)</td>
+                        <td data-label="Example">DELETE /users/5<br>Response: No content (204)</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Corrected Endpoint">/users</td>
+                        <td data-label="HTTP Method">POST</td>
+                        <td data-label="Description">Create a new user. This replaces the original GET /createUser?name=Jo. Data should be sent in the request body for security and standardization.</td>
+                        <td data-label="Request Body">JSON object, e.g., { "name": "Jo" }</td>
+                        <td data-label="Response Status Codes">201 Created (success, with the new resource in the response), 400 Bad Request (if data is invalid), 409 Conflict (if a user with the same name exists)</td>
+                        <td data-label="Example">POST /users<br>Body: { "name": "Jo" }<br>Response: { "id": 3, "name": "Jo" } (201 Created)</td>
+                    </tr>
+                    <tr>
+                        <td data-label="Corrected Endpoint">/users</td>
+                        <td data-label="HTTP Method">PATCH</td>
+                        <td data-label="Description">Update one or more users in the collection. This replaces the original PUT /updateAllUsers. Use PATCH for partial updates, and include specific user IDs in the request body to avoid updating all users at once, which is not recommended.</td>
+                        <td data-label="Request Body">JSON object, e.g., [ { "id": 5, "name": "Updated Name" } ]</td>
+                        <td data-label="Response Status Codes">200 OK (success), 400 Bad Request (if data is invalid), 404 Not Found (if a specified ID doesn't exist), 204 No Content (if no changes were made)</td>
+                        <td data-label="Example">PATCH /users<br>Body: [ { "id": 5, "name": "Updated Name" } ]<br>Response: [ { "id": 5, "name": "Updated Name" } ] (200 OK)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><strong>Notes on Corrections:</strong></p>
+            <ul>
+                <li>All paths now use nouns (e.g., "users") and avoid verbs for consistency.</li>
+                <li>HTTP methods are aligned with standard uses: GET for reading, POST for creating, DELETE for removing, and PATCH for partial updates.</li>
+                <li>Status codes are included to indicate expected outcomes, helping developers handle responses.</li>
+                <li>For the original PUT /updateAllUsers, we changed it to PATCH /users with targeted updates to promote safer and more granular operations.</li>
+            </ul>
+        </details>
+    </section>
+    
+    <footer>
+        <p>Generated by Grok, an AI built by xAI. Last updated: [Current Date].</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation with Real-time Feedback</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        #emailInput {
+            width: calc(100% - 22px); /* Account for padding and border */
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        #emailInput.valid {
+            border-color: #28a745; /* Green */
+        }
+        #emailInput.invalid {
+            border-color: #dc3545; /* Red */
+        }
+        .feedback-section {
+            background-color: #e9f7ff;
+            border-left: 5px solid #007bff;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+        .feedback-section h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .feedback-section ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .feedback-section li {
+            margin-bottom: 8px;
+        }
+        .suggestion-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .suggestion-section h3 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Email Address Validation</h1>
+
+        <p>Enter an email address below to see real-time formatting validation.</p>
+
+        <label for="emailInput">Email Address:</label>
+        <input type="email" id="emailInput" placeholder="example@domain.com">
+
+        <div class="feedback-section">
+            <h3>Why Regular Expressions (Regex) Cannot Fully Validate Email Addresses per RFC Specifications</h3>
+            <p>While regex is excellent for pattern matching and providing real-time *syntactic* feedback, it's inherently limited when it comes to fully validating email addresses according to the complex and evolving RFC (Request for Comments) specifications (e.g., RFC 5322, RFC 6531).</p>
+            <ul>
+                <li><strong>Extreme Complexity of RFCs:</strong> The official RFCs allow for incredibly complex email address formats, including quoted strings, comments, IP literal domains, and internationalized domain names (IDNs) and local parts (e.g., using non-ASCII characters). A regex that fully adheres to these would be monstrously long, unreadable, and virtually impossible to maintain.</li>
+                <li><strong>Contextual Validation:</strong> Regex only checks the pattern. It cannot determine if a domain actually exists, if an MX (Mail eXchanger) record is configured, or if an email address is actually deliverable.</li>
+                <li><strong>Dynamic Standards:</strong> Email standards evolve. A "perfect" regex today might be outdated tomorrow.</li>
+                <li><strong>False Positives/Negatives:</strong> Overly strict regex can reject perfectly valid emails, while overly lenient ones can accept invalid ones that look plausible.</li>
+                <li><strong>Deliverability vs. Format:</strong> The primary goal of email validation is often to ensure deliverability, not just format. Regex cannot achieve this.</li>
+            </ul>
+            <p>The regex used in this example (<code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code>) is a commonly used, pragmatic compromise that checks for a basic <code>text@text.text</code> structure. It's good for quick client-side feedback but far from RFC-compliant.</p>
+        </div>
+
+        <div class="suggestion-section">
+            <h3>Practical Alternatives and Best Practices for Production Use:</h3>
+            <ul>
+                <li><strong>Server-Side Validation:</strong> ALWAYS perform server-side validation. Client-side validation is for user experience; server-side validation is for security and data integrity. Use robust libraries in your chosen backend language (e.g., `email-validator` in Python, `validator.js` with Node.js, PHP's `filter_var` with `FILTER_VALIDATE_EMAIL`).</li>
+                <li><strong>SMTP Verification (Deliverability Check):</strong> For critical applications (e.g., preventing sign-ups with fake emails), perform SMTP verification. This involves trying to connect to the mail server for the domain and checking if the mailbox exists. Be cautious, as this can be slow, rate-limited, and some servers might block such probes. Consider third-party services for this.</li>
+                <li><strong>Confirmation Emails:</strong> The most reliable method to ensure an email address is valid and owned by the user is to send a confirmation email with a unique link that the user must click to activate their account or confirm their address.</li>
+                <li><strong>Domain Name System (DNS) Checks:</strong> Verify that the domain part of the email address has valid DNS records (A, AAAA, MX records). This doesn't guarantee the email exists but rules out completely bogus domains.</li>
+                <li><strong>Blacklists/Whitelists:</strong> Maintain lists of known disposable email providers, spam domains, or legitimate domains to enhance validation.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('emailInput');
+
+        // A common, pragmatic regex for basic email format validation.
+        // It checks for:
+        // - At least one non-whitespace/non-@ character before @
+        // - At least one non-whitespace/non-@ character after @
+        // - A dot (.) followed by at least one non-whitespace/non-@ character
+        // This is NOT RFC-compliant, but a good balance for client-side UX.
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        emailInput.addEventListener('input', function() {
+            const email = this.value;
+
+            // Remove existing validation classes
+            this.classList.remove('valid', 'invalid');
+
+            if (email.trim() === '') {
+                // If input is empty, don't apply any border color
+                return;
+            }
+
+            if (emailRegex.test(email)) {
+                this.classList.add('valid');
+            } else {
+                this.classList.add('invalid');
+            }
+        });
+    </script>
+
+</body>
+</html>

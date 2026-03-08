@@ -60,4 +60,10 @@ export const MODEL_DISPLAY_NAMES: Record<string, string> = {
   'gemini-2.5-flash': 'Gemini 2.5 Flash',
   'llama-4-scout': 'Llama 4 Scout',
   'grok-3-mini': 'Grok 3 mini',
+  // Short names used by render index
+  'claude': 'Claude Sonnet 4.6',
+  'gpt5mini': 'GPT-5 mini',
+  'gemini': 'Gemini 2.5 Flash',
+  'llama': 'Llama 4 Scout',
+  'grok': 'Grok 3 mini',
 };

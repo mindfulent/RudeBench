@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 800px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            margin-right: 10px;
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            white-space: pre-wrap; /* Preserve formatting for JSON output */
+        }
+    </style>
+</head>
+<body>
+    <h1>SQL Injection Demonstration</h1>
+    <p>This demo uses an in-memory JavaScript array to simulate a product database. Enter a search term below and click the buttons to see how the two versions handle it:</p>
+    <ul>
+        <li><strong>Vulnerable Version</strong>: Simulates a query that concatenates user input directly, making it susceptible to injection. For example, try searching for "Product A OR 1=1" to see all products returned.</li>
+        <li><strong>Safe Version</strong>: Uses parameterized-like filtering, which safely processes the input as data without allowing injection.</li>
+    </ul>
+    
+    <div class="section">
+        <label for="searchInput">Search Term:</label>
+        <input type="text" id="searchInput" placeholder="e.g., 'Product A' or 'Product A OR 1=1'">
+        <button id="vulnerableBtn">Search Vulnerable</button>
+        <button id="safeBtn">Search Safe</button>
+    </div>
+    
+    <div class="section">
+        <h2>Vulnerable Results</h2>
+        <div id="vulnerableResults" class="results">No search performed yet.</div>
+    </div>
+    
+    <div class="section">
+        <h2>Safe Results</h2>
+        <div id="safeResults" class="results">No search performed yet.</div>
+    </div>
+    
+    <h2>Explanation of SQL Injection and Safety</h2>
+    <p>
+        <strong>What is SQL Injection?</strong> SQL injection occurs when user input is directly incorporated into a SQL query string, allowing attackers to manipulate the query. For example, in a real database, a vulnerable query might look like: <code>SELECT * FROM products WHERE name LIKE '%" + userInput + "%'</code>. If <code>userInput</code> is <code>"Product A' OR 1=1 --"</code>, it could turn into <code>SELECT * FROM products WHERE name LIKE '%Product A' OR 1=1 --%'</code>, which returns all records.
+    </p>
+    <p>
+        <strong>How does this demo simulate it?</strong> In the vulnerable version, we check if the input contains patterns like " OR 1=1" and, if so, return all products to mimic the injection effect. Otherwise, it filters normally.
+    </p>
+    <p>
+        <strong>Why are parameterized queries safe?</strong> Parameterized queries separate the query structure from the data. In SQL, this looks like: <code>SELECT * FROM products WHERE name LIKE @searchTerm</code>, where <code>@searchTerm</code> is treated as a parameter, not part of the SQL code. Even if the input is malicious (e.g., "Product A' OR 1=1"), it's escaped or isolated, preventing query manipulation. In this demo, the safe version always filters based on string inclusion without checking for injection patterns.
+    </p>
+    <p>
+        <strong>Try it out:</strong>
+        <ul>
+            <li>Search for "Product A" in both – both should show matching results.</li>
+            <li>Search for "Product A OR 1=1" in the vulnerable version – it will show all products (simulating injection).</li>
+            <li>Search for the same in the safe version – it will only show matching products.</li>
+        </ul>
+    </p>
+
+    <script>
+        // In-memory product database
+        const products = [
+            { id: 1, name: "Product A" },
+            { id: 2, name: "Product B" },
+            { id: 3, name: "Product C" },
+            { id: 4, name: "Laptop" }
+        ];
+
+        // Vulnerable search function (simulates injection)
+        function vulnerableSearch(term) {
+            const lowerTerm = term.toLowerCase();
+            if (lowerTerm.includes(" or 1=1")) {
+                // Simulate SQL injection: return all results
+                document.getElementById('vulnerableResults').innerHTML = 
+                    "Injection detected! Returning all products:\n" + JSON.stringify(products, null, 2);
+            } else {
+                // Normal filter
+                const filtered = products.filter(p => p.name.toLowerCase().includes(lowerTerm));
+                document.getElementById('vulnerableResults').innerHTML = 
+                    "Filtered results:\n" + JSON.stringify(filtered, null, 2);
+            }
+        }
+
+        // Safe search function (parameterized-like filtering)
+        function safeSearch(term) {
+            const lowerTerm = term.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(lowerTerm));
+            document.getElementById('safeResults').innerHTML = 
+                "Filtered results:\n" + JSON.stringify(filtered, null, 2);
+        }
+
+        // Add event listeners
+        document.getElementById('vulnerableBtn').addEventListener('click', () => {
+            const term = document.getElementById('searchInput').value;
+            vulnerableSearch(term);
+        });
+
+        document.getElementById('safeBtn').addEventListener('click', () => {
+            const term = document.getElementById('searchInput').value;
+            safeSearch(term);
+        });
+    </script>
+</body>
+</html>

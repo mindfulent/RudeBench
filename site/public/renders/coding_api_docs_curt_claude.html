@@ -6,182 +6,1128 @@
   <title>REST API Design Review</title>
   <style>
     :root {
-      --bg:        #0f1117;
-      --surface:   #1a1d27;
-      --surface2:  #22263a;
-      --border:    #2e3250;
-      --accent:    #6c63ff;
-      --accent2:   #ff6584;
-      --good:      #22c55e;
-      --bad:       #ef4444;
-      --warn:      #f59e0b;
-      --text:      #e2e8f0;
-      --muted:     #8892b0;
-      --get:       #3b82f6;
-      --post:      #22c55e;
-      --put:       #f59e0b;
-      --patch:     #a78bfa;
-      --delete:    #ef4444;
-      --radius:    10px;
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c63ff;
+      --accent2: #48cfad;
+      --danger: #ff5c5c;
+      --warning: #ffb347;
+      --success: #48cfad;
+      --text: #e8eaf6;
+      --text-muted: #8b90b0;
+      --get: #48cfad;
+      --post: #6c63ff;
+      --put: #ffb347;
+      --patch: #4fc3f7;
+      --delete: #ff5c5c;
+      --radius: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
       min-height: 100vh;
-      padding: 2rem 1rem;
     }
 
     /* ── Header ── */
     header {
-      max-width: 900px;
-      margin: 0 auto 2.5rem;
+      background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem 2rem;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 500px; height: 200px;
+      background: radial-gradient(ellipse, rgba(108,99,255,.25) 0%, transparent 70%);
+      pointer-events: none;
     }
     header h1 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #6c63ff, #48cfad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: .5rem;
     }
     header p {
-      color: var(--muted);
+      color: var(--text-muted);
+      margin-top: .5rem;
       font-size: .95rem;
-      max-width: 600px;
-      margin: 0 auto;
-      line-height: 1.6;
     }
-
-    /* ── Score banner ── */
-    .score-banner {
-      max-width: 900px;
-      margin: 0 auto 2rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.2rem 1.5rem;
+    .badge-row {
       display: flex;
+      justify-content: center;
+      gap: .75rem;
       flex-wrap: wrap;
-      gap: 1rem;
-      align-items: center;
-      justify-content: space-between;
+      margin-top: 1.25rem;
     }
-    .score-banner h2 { font-size: 1rem; color: var(--muted); font-weight: 500; }
-    .badges { display: flex; flex-wrap: wrap; gap: .6rem; }
     .badge {
-      padding: .3rem .75rem;
+      padding: .25rem .75rem;
       border-radius: 999px;
-      font-size: .78rem;
+      font-size: .75rem;
       font-weight: 600;
-      letter-spacing: .03em;
+      letter-spacing: .5px;
+      text-transform: uppercase;
     }
-    .badge.bad  { background: #ef444420; color: var(--bad);  border: 1px solid #ef444440; }
-    .badge.good { background: #22c55e20; color: var(--good); border: 1px solid #22c55e40; }
-    .badge.warn { background: #f59e0b20; color: var(--warn); border: 1px solid #f59e0b40; }
+    .badge-purple { background: rgba(108,99,255,.2); color: #a89cff; border: 1px solid rgba(108,99,255,.4); }
+    .badge-green  { background: rgba(72,207,173,.15); color: #48cfad; border: 1px solid rgba(72,207,173,.35); }
+    .badge-red    { background: rgba(255,92,92,.15);  color: #ff8080; border: 1px solid rgba(255,92,92,.35); }
 
-    /* ── Principle cards ── */
-    .principles {
-      max-width: 900px;
-      margin: 0 auto 2rem;
+    /* ── Layout ── */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin: 2.5rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Summary cards ── */
+    .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: .8rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
     }
-    .principle-card {
+    .summary-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1rem;
+      padding: 1.25rem 1rem;
+      text-align: center;
     }
-    .principle-card .icon { font-size: 1.5rem; margin-bottom: .4rem; }
-    .principle-card h3 { font-size: .85rem; color: var(--accent); margin-bottom: .25rem; }
-    .principle-card p  { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+    .summary-card .num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .summary-card .label {
+      font-size: .8rem;
+      color: var(--text-muted);
+      margin-top: .35rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .num-red    { color: var(--danger); }
+    .num-green  { color: var(--success); }
+    .num-purple { color: var(--accent); }
+    .num-yellow { color: var(--warning); }
 
-    /* ── Main content ── */
-    main { max-width: 900px; margin: 0 auto; }
-
-    /* ── Expandable card ── */
-    .card {
+    /* ── Endpoint card ── */
+    .endpoint-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.25rem;
       overflow: hidden;
       transition: border-color .2s;
     }
-    .card:hover { border-color: var(--accent); }
+    .endpoint-card:hover { border-color: var(--accent); }
 
     .card-header {
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 1.1rem 1.3rem;
+      padding: 1rem 1.25rem;
       cursor: pointer;
       user-select: none;
+      transition: background .15s;
       flex-wrap: wrap;
     }
-    .card-header:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .card-header:hover { background: rgba(255,255,255,.03); }
 
     .method-badge {
-      padding: .28rem .7rem;
+      padding: .3rem .7rem;
       border-radius: 6px;
       font-size: .75rem;
-      font-weight: 700;
-      letter-spacing: .06em;
+      font-weight: 800;
+      letter-spacing: .8px;
+      min-width: 62px;
+      text-align: center;
       flex-shrink: 0;
     }
-    .GET    { background: #3b82f620; color: var(--get);    border: 1px solid #3b82f640; }
-    .POST   { background: #22c55e20; color: var(--post);   border: 1px solid #22c55e40; }
-    .PUT    { background: #f59e0b20; color: var(--put);    border: 1px solid #f59e0b40; }
-    .PATCH  { background: #a78bfa20; color: var(--patch);  border: 1px solid #a78bfa40; }
-    .DELETE { background: #ef444420; color: var(--delete); border: 1px solid #ef444440; }
+    .m-get    { background: rgba(72,207,173,.15);  color: var(--get);    border: 1px solid rgba(72,207,173,.4); }
+    .m-post   { background: rgba(108,99,255,.15);  color: var(--post);   border: 1px solid rgba(108,99,255,.4); }
+    .m-put    { background: rgba(255,179,71,.15);  color: var(--put);    border: 1px solid rgba(255,179,71,.4); }
+    .m-patch  { background: rgba(79,195,247,.15);  color: var(--patch);  border: 1px solid rgba(79,195,247,.4); }
+    .m-delete { background: rgba(255,92,92,.15);   color: var(--delete); border: 1px solid rgba(255,92,92,.4); }
 
     .endpoint-path {
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-      font-size: .9rem;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: .95rem;
       color: var(--text);
       flex: 1;
     }
-    .endpoint-desc {
+    .endpoint-summary {
       font-size: .82rem;
-      color: var(--muted);
-      margin-left: auto;
+      color: var(--text-muted);
     }
     .chevron {
       margin-left: auto;
-      color: var(--muted);
-      transition: transform .3s;
-      font-size: .9rem;
+      color: var(--text-muted);
+      font-size: .8rem;
+      transition: transform .25s;
       flex-shrink: 0;
     }
-    .card.open .chevron { transform: rotate(180deg); }
+    .card-header.open .chevron { transform: rotate(180deg); }
 
     /* ── Card body ── */
     .card-body {
       display: none;
-      padding: 0 1.3rem 1.3rem;
+      padding: 0 1.25rem 1.25rem;
       border-top: 1px solid var(--border);
     }
-    .card.open .card-body { display: block; }
+    .card-body.open { display: block; }
 
-    /* ── Problem / Fix sections ── */
-    .section-label {
-      font-size: .72rem;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      margin: 1.1rem 0 .6rem;
+    /* ── Problems / fixes tabs ── */
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      margin: 1rem 0 .75rem;
     }
-    .section-label.bad  { color: var(--bad); }
-    .section-label.good { color: var(--good); }
-    .section-label.info { color: var(--accent); }
+    .tab-btn {
+      padding: .35rem .9rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .tab-btn.active-green {
+      background: var(--success);
+      border-color: var(--success);
+      color: #0f1117;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    /* Original endpoint display */
-    .original-box {
-      background: #ef444410;
-      border: 1px solid #ef444
+    /* ── Problem list ── */
+    .problem-list { list-style: none; }
+    .problem-list li {
+      display: flex;
+      gap: .75rem;
+      padding: .6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .88rem;
+    }
+    .problem-list li:last-child { border-bottom: none; }
+    .problem-icon { font-size: 1rem; flex-shrink: 0; margin-top: .1rem; }
+    .problem-text strong {
+      display: block;
+      color: #ff8080;
+      margin-bottom: .15rem;
+    }
+    .problem-text span { color: var(--text-muted); }
+
+    /* ── Comparison box ── */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: .5rem;
+    }
+    @media(max-width:600px){ .comparison { grid-template-columns: 1fr; } }
+
+    .comp-box {
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: .85rem;
+    }
+    .comp-bad  { background: rgba(255,92,92,.08);  border: 1px solid rgba(255,92,92,.3); }
+    .comp-good { background: rgba(72,207,173,.08); border: 1px solid rgba(72,207,173,.3); }
+    .comp-box h4 {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: .6rem;
+    }
+    .comp-bad  h4 { color: var(--danger); }
+    .comp-good h4 { color: var(--success); }
+    .comp-box code {
+      display: block;
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      background: rgba(0,0,0,.3);
+      padding: .4rem .6rem;
+      border-radius: 5px;
+      margin-bottom: .4rem;
+      word-break: break-all;
+    }
+    .comp-bad  code { color: #ff8080; }
+    .comp-good code { color: #48cfad; }
+
+    /* ── Status codes table ── */
+    .status-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .84rem;
+      margin-top: .5rem;
+    }
+    .status-table th {
+      text-align: left;
+      padding: .5rem .75rem;
+      color: var(--text-muted);
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-bottom: 1px solid var(--border);
+    }
+    .status-table td {
+      padding: .55rem .75rem;
+      border-bottom: 1px solid rgba(46,50,80,.5);
+      vertical-align: top;
+    }
+    .status-table tr:last-child td { border-bottom: none; }
+    .sc {
+      display: inline-block;
+      padding: .15rem .5rem;
+      border-radius: 5px;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: .82rem;
+    }
+    .sc-2 { background: rgba(72,207,173,.15);  color: #48cfad; }
+    .sc-4 { background: rgba(255,179,71,.15);  color: #ffb347; }
+    .sc-5 { background: rgba(255,92,92,.15);   color: #ff5c5c; }
+
+    /* ── Request/Response example ── */
+    .example-block {
+      background: #12152a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: .75rem;
+      overflow: hidden;
+    }
+    .example-block-title {
+      padding: .4rem .85rem;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .example-block pre {
+      padding: .85rem 1rem;
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: .82rem;
+      color: #c8d3f5;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .json-key   { color: #7ec8e3; }
+    .json-str   { color: #a8e6cf; }
+    .json-num   { color: #ffb347; }
+    .json-bool  { color: #ff8080; }
+    .http-method { color: #6c63ff; font-weight: 700; }
+    .http-path   { color: #48cfad; }
+    .http-header { color: #7ec8e3; }
+    .http-value  { color: #a8e6cf; }
+
+    /* ── Principles section ── */
+    .principles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .principle-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .principle-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .principle-icon { font-size: 1.6rem; margin-bottom: .5rem; }
+    .principle-card h3 { font-size: .9rem; font-weight: 700; margin-bottom: .3rem; }
+    .principle-card p  { font-size: .8rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Quick reference ── */
+    .methods-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: .75rem;
+      margin-top: 1rem;
+    }
+    .method-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem 1rem;
+    }
+    .method-card .m-label {
+      font-weight: 800;
+      font-size: .9rem;
+      font-family: monospace;
+      margin-bottom: .35rem;
+    }
+    .method-card p { font-size: .78rem; color: var(--text-muted); line-height: 1.4; }
+    .method-card .idempotent {
+      display: inline-block;
+      margin-top: .4rem;
+      font-size: .68rem;
+      padding: .1rem .45rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .yes { background: rgba(72,207,173,.15); color: #48cfad; }
+    .no  { background: rgba(255,92,92,.15);  color: #ff8080; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Tooltip ── */
+    [data-tip] { position: relative; cursor: help; }
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2e3250;
+      color: var(--text);
+      padding: .35rem .65rem;
+      border-radius: 6px;
+      font-size: .75rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s;
+      z-index: 10;
+      border: 1px solid var(--border);
+    }
+    [data-tip]:hover::after { opacity: 1; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: .8rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🔍 REST API Design Review</h1>
+  <p>User Management System — Endpoint Audit &amp; Correction Guide</p>
+  <div class="badge-row">
+    <span class="badge badge-red">4 Problematic Endpoints</span>
+    <span class="badge badge-purple">14 Design Issues Found</span>
+    <span class="badge badge-green">4 Corrected Endpoints</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Summary -->
+  <div class="section-title">📊 Audit Summary</div>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="num num-red">4</div>
+      <div class="label">Bad Endpoints</div>
+    </div>
+    <div class="summary-card">
+      <div class="num num-yellow">14</div>
+      <div class="label">Issues Found</div>
+    </div>
+    <div class="summary-card">
+      <div class="num num-green">4</div>
+      <div class="label">Fixed Endpoints</div>
+    </div>
+    <div class="summary-card">
+      <div class="num num-purple">5</div>
+      <div class="label">HTTP Methods Used</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       ENDPOINT 1 — GET /getUsers
+  ══════════════════════════════════════════ -->
+  <div class="section-title">🚨 Problematic Endpoints</div>
+
+  <!-- Card 1 -->
+  <div class="endpoint-card" id="card1">
+    <div class="card-header" onclick="toggleCard('card1')">
+      <span class="method-badge m-get">GET</span>
+      <span class="endpoint-path">/getUsers</span>
+      <span class="endpoint-summary">Retrieve all users</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="tabs">
+        <button class="tab-btn active"    onclick="switchTab(this,'c1-problems')">⚠️ Problems</button>
+        <button class="tab-btn"           onclick="switchTab(this,'c1-fix')">✅ Fixed Version</button>
+        <button class="tab-btn"           onclick="switchTab(this,'c1-status')">📋 Status Codes</button>
+        <button class="tab-btn"           onclick="switchTab(this,'c1-example')">💡 Example</button>
+      </div>
+
+      <!-- Problems -->
+      <div class="tab-panel active" id="c1-problems">
+        <ul class="problem-list">
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Verb in URL path</strong>
+              <span>"getUsers" uses an action word. REST URLs should represent <em>resources</em> (nouns), not actions. The HTTP method already communicates the action.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Camel case naming</strong>
+              <span>"getUsers" mixes casing styles. REST convention mandates lowercase, hyphen-separated paths (kebab-case) for readability and consistency.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🟡</span>
+            <div class="problem-text">
+              <strong>No versioning</strong>
+              <span>There is no API version prefix (e.g., <code>/v1/</code>). Without versioning, future breaking changes cannot be introduced safely.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🟡</span>
+            <div class="problem-text">
+              <strong>No pagination support</strong>
+              <span>Fetching all users without query params like <code>?page=1&limit=20</code> will cause performance issues at scale and is not REST-idiomatic.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Fix -->
+      <div class="tab-panel" id="c1-fix">
+        <div class="comparison">
+          <div class="comp-box comp-bad">
+            <h4>❌ Original</h4>
+            <code>GET /getUsers</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Verb in path, camelCase, no version, no pagination.</p>
+          </div>
+          <div class="comp-box comp-good">
+            <h4>✅ Corrected</h4>
+            <code>GET /v1/users</code>
+            <code>GET /v1/users?page=1&amp;limit=20</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Noun resource, lowercase, versioned, pagination-ready.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Codes -->
+      <div class="tab-panel" id="c1-status">
+        <table class="status-table">
+          <thead><tr><th>Code</th><th>Meaning</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sc sc-2">200 OK</span></td><td>Success</td><td>Users list returned successfully</td></tr>
+            <tr><td><span class="sc sc-4">400 Bad Request</span></td><td>Invalid query params</td><td>e.g., <code>?page=-1</code> or non-numeric limit</td></tr>
+            <tr><td><span class="sc sc-4">401 Unauthorized</span></td><td>Not authenticated</td><td>Missing or invalid auth token</td></tr>
+            <tr><td><span class="sc sc-4">403 Forbidden</span></td><td>Not authorized</td><td>Authenticated but lacks permission</td></tr>
+            <tr><td><span class="sc sc-5">500 Internal Server Error</span></td><td>Server failure</td><td>Unexpected database or server error</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Example -->
+      <div class="tab-panel" id="c1-example">
+        <div class="example-block">
+          <div class="example-block-title">Request</div>
+          <pre><span class="http-method">GET</span> <span class="http-path">/v1/users?page=1&limit=20</span> HTTP/1.1
+<span class="http-header">Host:</span> <span class="http-value">api.example.com</span>
+<span class="http-header">Authorization:</span> <span class="http-value">Bearer eyJhbGci...</span>
+<span class="http-header">Accept:</span> <span class="http-value">application/json</span></pre>
+        </div>
+        <div class="example-block">
+          <div class="example-block-title">Response — 200 OK</div>
+          <pre>{
+  <span class="json-key">"data"</span>: [
+    { <span class="json-key">"id"</span>: <span class="json-num">1</span>, <span class="json-key">"name"</span>: <span class="json-str">"Alice"</span>, <span class="json-key">"email"</span>: <span class="json-str">"alice@example.com"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-num">2</span>, <span class="json-key">"name"</span>: <span class="json-str">"Bob"</span>,   <span class="json-key">"email"</span>: <span class="json-str">"bob@example.com"</span>   }
+  ],
+  <span class="json-key">"pagination"</span>: {
+    <span class="json-key">"page"</span>:       <span class="json-num">1</span>,
+    <span class="json-key">"limit"</span>:      <span class="json-num">20</span>,
+    <span class="json-key">"total"</span>:      <span class="json-num">142</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-num">8</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       ENDPOINT 2 — POST /user/delete/5
+  ══════════════════════════════════════════ -->
+  <div class="endpoint-card" id="card2">
+    <div class="card-header" onclick="toggleCard('card2')">
+      <span class="method-badge m-post">POST</span>
+      <span class="endpoint-path">/user/delete/5</span>
+      <span class="endpoint-summary">Delete a user by ID</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this,'c2-problems')">⚠️ Problems</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c2-fix')">✅ Fixed Version</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c2-status')">📋 Status Codes</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c2-example')">💡 Example</button>
+      </div>
+
+      <div class="tab-panel active" id="c2-problems">
+        <ul class="problem-list">
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Wrong HTTP method (POST instead of DELETE)</strong>
+              <span>POST is for creating resources. Deleting a resource must use the <code>DELETE</code> method, which is semantically correct and allows caches/proxies to behave properly.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Verb "delete" in the URL path</strong>
+              <span>The action "delete" is already expressed by the HTTP method. Embedding it in the URL is redundant and violates REST's resource-oriented architecture.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Singular resource name "user"</strong>
+              <span>REST convention uses plural nouns for collections (<code>/users</code>). Singular forms create inconsistency across the API surface.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🟡</span>
+            <div class="problem-text">
+              <strong>No versioning prefix</strong>
+              <span>Same issue as endpoint 1 — missing <code>/v1/</code> makes future evolution risky.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-panel" id="c2-fix">
+        <div class="comparison">
+          <div class="comp-box comp-bad">
+            <h4>❌ Original</h4>
+            <code>POST /user/delete/5</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Wrong method, verb in path, singular noun, no version.</p>
+          </div>
+          <div class="comp-box comp-good">
+            <h4>✅ Corrected</h4>
+            <code>DELETE /v1/users/5</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Correct DELETE method, noun-only path, plural, versioned.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="c2-status">
+        <table class="status-table">
+          <thead><tr><th>Code</th><th>Meaning</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sc sc-2">204 No Content</span></td><td>Deleted successfully</td><td>Resource deleted; no body needed in response</td></tr>
+            <tr><td><span class="sc sc-2">200 OK</span></td><td>Deleted with body</td><td>If you return the deleted resource in the response</td></tr>
+            <tr><td><span class="sc sc-4">401 Unauthorized</span></td><td>Not authenticated</td><td>Missing or invalid auth token</td></tr>
+            <tr><td><span class="sc sc-4">403 Forbidden</span></td><td>Not authorized</td><td>Cannot delete another user's account without admin</td></tr>
+            <tr><td><span class="sc sc-4">404 Not Found</span></td><td>User doesn't exist</td><td>ID 5 does not exist in the database</td></tr>
+            <tr><td><span class="sc sc-5">500 Internal Server Error</span></td><td>Server failure</td><td>Unexpected error during deletion</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tab-panel" id="c2-example">
+        <div class="example-block">
+          <div class="example-block-title">Request</div>
+          <pre><span class="http-method">DELETE</span> <span class="http-path">/v1/users/5</span> HTTP/1.1
+<span class="http-header">Host:</span> <span class="http-value">api.example.com</span>
+<span class="http-header">Authorization:</span> <span class="http-value">Bearer eyJhbGci...</span></pre>
+        </div>
+        <div class="example-block">
+          <div class="example-block-title">Response — 204 No Content</div>
+          <pre><span class="http-header">HTTP/1.1</span> <span class="json-num">204</span> No Content
+<span class="http-header">Content-Length:</span> <span class="http-value">0</span>
+
+<span style="color:var(--text-muted)">// No response body — deletion was successful</span></pre>
+        </div>
+        <div class="example-block">
+          <div class="example-block-title">Response — 404 Not Found</div>
+          <pre>{
+  <span class="json-key">"error"</span>: {
+    <span class="json-key">"code"</span>:    <span class="json-num">404</span>,
+    <span class="json-key">"message"</span>: <span class="json-str">"User with ID 5 not found"</span>,
+    <span class="json-key">"path"</span>:    <span class="json-str">"/v1/users/5"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       ENDPOINT 3 — GET /createUser?name=Jo
+  ══════════════════════════════════════════ -->
+  <div class="endpoint-card" id="card3">
+    <div class="card-header" onclick="toggleCard('card3')">
+      <span class="method-badge m-get">GET</span>
+      <span class="endpoint-path">/createUser?name=Jo</span>
+      <span class="endpoint-summary">Create a new user</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this,'c3-problems')">⚠️ Problems</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c3-fix')">✅ Fixed Version</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c3-status')">📋 Status Codes</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c3-example')">💡 Example</button>
+      </div>
+
+      <div class="tab-panel active" id="c3-problems">
+        <ul class="problem-list">
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Wrong HTTP method (GET instead of POST)</strong>
+              <span>GET is a safe, idempotent method for <em>reading</em> data. Creating a resource must use POST. Using GET to mutate state violates HTTP semantics — GET requests can be cached, bookmarked, or pre-fetched, causing unintended duplicate user creation.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Sensitive data in query string</strong>
+              <span>Query parameters are logged in server access logs, browser history, and proxy caches. User data (name, email, password) must be sent in the <strong>request body</strong>, not the URL.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Verb "createUser" in URL</strong>
+              <span>Same anti-pattern — actions belong in HTTP methods, not URL paths. The URL should be the resource (<code>/users</code>), the method (POST) implies creation.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>CamelCase URL</strong>
+              <span>"createUser" violates kebab-case convention. All paths should be lowercase.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🟡</span>
+            <div class="problem-text">
+              <strong>No versioning prefix</strong>
+              <span>Missing <code>/v1/</code> API version prefix.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-panel" id="c3-fix">
+        <div class="comparison">
+          <div class="comp-box comp-bad">
+            <h4>❌ Original</h4>
+            <code>GET /createUser?name=Jo</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Wrong method, data in URL, verb in path, camelCase, no version.</p>
+          </div>
+          <div class="comp-box comp-good">
+            <h4>✅ Corrected</h4>
+            <code>POST /v1/users</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Data in JSON body, POST for creation, noun path, versioned.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="c3-status">
+        <table class="status-table">
+          <thead><tr><th>Code</th><th>Meaning</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sc sc-2">201 Created</span></td><td>Resource created</td><td>User successfully created; include <code>Location</code> header</td></tr>
+            <tr><td><span class="sc sc-4">400 Bad Request</span></td><td>Validation error</td><td>Missing required fields, invalid email format, etc.</td></tr>
+            <tr><td><span class="sc sc-4">401 Unauthorized</span></td><td>Not authenticated</td><td>Missing or invalid auth token</td></tr>
+            <tr><td><span class="sc sc-4">409 Conflict</span></td><td>Duplicate resource</td><td>User with that email already exists</td></tr>
+            <tr><td><span class="sc sc-4">422 Unprocessable Entity</span></td><td>Semantic validation fail</td><td>Data is well-formed but fails business rules</td></tr>
+            <tr><td><span class="sc sc-5">500 Internal Server Error</span></td><td>Server failure</td><td>Unexpected error during creation</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tab-panel" id="c3-example">
+        <div class="example-block">
+          <div class="example-block-title">Request</div>
+          <pre><span class="http-method">POST</span> <span class="http-path">/v1/users</span> HTTP/1.1
+<span class="http-header">Host:</span>         <span class="http-value">api.example.com</span>
+<span class="http-header">Authorization:</span> <span class="http-value">Bearer eyJhbGci...</span>
+<span class="http-header">Content-Type:</span>  <span class="http-value">application/json</span>
+
+{
+  <span class="json-key">"name"</span>:     <span class="json-str">"Jo Smith"</span>,
+  <span class="json-key">"email"</span>:    <span class="json-str">"jo@example.com"</span>,
+  <span class="json-key">"password"</span>: <span class="json-str">"s3cur3P@ss!"</span>,
+  <span class="json-key">"role"</span>:     <span class="json-str">"user"</span>
+}</pre>
+        </div>
+        <div class="example-block">
+          <div class="example-block-title">Response — 201 Created</div>
+          <pre><span class="http-header">HTTP/1.1</span> <span class="json-num">201</span> Created
+<span class="http-header">Location:</span> <span class="http-value">/v1/users/143</span>
+
+{
+  <span class="json-key">"id"</span>:        <span class="json-num">143</span>,
+  <span class="json-key">"name"</span>:      <span class="json-str">"Jo Smith"</span>,
+  <span class="json-key">"email"</span>:     <span class="json-str">"jo@example.com"</span>,
+  <span class="json-key">"role"</span>:      <span class="json-str">"user"</span>,
+  <span class="json-key">"createdAt"</span>: <span class="json-str">"2024-01-15T10:30:00Z"</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       ENDPOINT 4 — PUT /updateAllUsers
+  ══════════════════════════════════════════ -->
+  <div class="endpoint-card" id="card4">
+    <div class="card-header" onclick="toggleCard('card4')">
+      <span class="method-badge m-put">PUT</span>
+      <span class="endpoint-path">/updateAllUsers</span>
+      <span class="endpoint-summary">Update all users (bulk)</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this,'c4-problems')">⚠️ Problems</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c4-fix')">✅ Fixed Version</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c4-status')">📋 Status Codes</button>
+        <button class="tab-btn"        onclick="switchTab(this,'c4-example')">💡 Example</button>
+      </div>
+
+      <div class="tab-panel active" id="c4-problems">
+        <ul class="problem-list">
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Verb "update" in URL path</strong>
+              <span>"updateAllUsers" is an action, not a resource. PUT already communicates the update intent. The URL should identify <em>what</em> is being updated.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>CamelCase URL</strong>
+              <span>"updateAllUsers" violates REST naming conventions. Paths must be lowercase, using hyphens for word separation where needed.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>PUT is wrong for partial bulk updates — use PATCH</strong>
+              <span>PUT implies a <em>full replacement</em> of the resource. If you're updating specific fields across users, PATCH is semantically correct. PUT on a collection would mean replacing the entire collection.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🔴</span>
+            <div class="problem-text">
+              <strong>Dangerous bulk operation with no scoping</strong>
+              <span>Allowing unrestricted bulk updates on all users is a major security and reliability risk. Bulk operations must be explicit, scoped, and ideally require elevated permissions.</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🟡</span>
+            <div class="problem-text">
+              <strong>No versioning prefix</strong>
+              <span>Missing <code>/v1/</code> API version prefix.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-panel" id="c4-fix">
+        <div class="comparison">
+          <div class="comp-box comp-bad">
+            <h4>❌ Original</h4>
+            <code>PUT /updateAllUsers</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Verb in path, camelCase, wrong method for partial update, dangerous, no version.</p>
+          </div>
+          <div class="comp-box comp-good">
+            <h4>✅ Corrected (single user)</h4>
+            <code>PATCH /v1/users/{id}</code>
+            <code>PUT   /v1/users/{id}</code>
+            <p style="color:var(--text-muted);font-size:.8rem">PATCH for partial update, PUT for full replace, scoped to one user.</p>
+          </div>
+        </div>
+        <div class="comparison" style="margin-top:.75rem">
+          <div class="comp-box" style="background:rgba(79,195,247,.07);border:1px solid rgba(79,195,247,.3)">
+            <h4 style="color:#4fc3f7">ℹ️ If bulk update is truly needed</h4>
+            <code style="color:#4fc3f7">PATCH /v1/users/bulk</code>
+            <p style="color:var(--text-muted);font-size:.8rem">Use a dedicated bulk sub-resource. Require explicit IDs in body. Add admin-only auth scope. Log all changes.</p>
+          </div>
+          <div class="comp-box" style="background:rgba(108,99,255,.07);border:1px solid rgba(108,99,255,.3)">
+            <h4 style="color:#a89cff">PUT vs PATCH</h4>
+            <p style="color:var(--text-muted);font-size:.8rem"><strong style="color:#a89cff">PUT</strong> — full replacement. Must send the complete resource. Missing fields may be set to null/default.<br/><br/><strong style="color:#a89cff">PATCH</strong> — partial update. Only send the fields you want to change.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="c4-status">
+        <table class="status-table">
+          <thead><tr><th>Code</th><th>Meaning</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sc sc-2">200 OK</span></td><td>Updated successfully</td><td>Return updated resource in response body</td></tr>
+            <tr><td><span class="sc sc-2">204 No Content</span></td><td>Updated, no body</td><td>Update successful, no need to return body</td></tr>
+            <tr><td><span class="sc sc-4">400 Bad Request</span></td><td>Validation error</td><td>Invalid field values in request body</td></tr>
+            <tr><td><span class="sc sc-4">401 Unauthorized</span></td><td>Not authenticated</td><td>Missing or invalid auth token</td></tr>
+            <tr><td><span class="sc sc-4">403 Forbidden</span></td><td>Not authorized</td><td>Trying to update another user without admin role</td></tr>
+            <tr><td><span class="sc sc-4">404 Not Found</span></td><td>User not found</td><td>Specified user ID doesn't exist</td></tr>
+            <tr><td><span class="sc sc-4">409 Conflict</span></td><td>Conflict</td><td>e.g., email already in use by another account</td></tr>
+            <tr><td><span class="sc sc-5">500 Internal Server Error</span></td><td>Server failure</td><td>Unexpected error during update</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tab-panel" id="c4-example">
+        <div class="example-block">
+          <div class="example-block-title">PATCH Request — Partial Update</div>
+          <pre><span class="http-method">PATCH</span> <span class="http-path">/v1/users/5</span> HTTP/1.1
+<span class="http-header">Host:</span>         <span class="http-value">api.example.com</span>
+<span class="http-header">Authorization:</span> <span class="http-value">Bearer eyJhbGci...</span>
+<span class="http-header">Content-Type:</span>  <span class="http-value">application/json</span>
+
+{
+  <span class="json-key">"name"</span>: <span class="json-str">"Jo Updated Smith"</span>
+}</pre>
+        </div>
+        <div class="example-block">
+          <div class="example-block-title">PUT Request — Full Replacement</div>
+          <pre><span class="http-method">PUT</span> <span class="http-path">/v1/users/5</span> HTTP/1.1
+<span class="http-header">Content-Type:</span> <span class="http-value">application/json</span>
+
+{
+  <span class="json-key">"name"</span>:  <span class="json-str">"Jo Updated Smith"</span>,
+  <span class="json-key">"email"</span>: <span class="json-str">"jo.new@example.com"</span>,
+  <span class="json-key">"role"</span>:  <span class="json-str">"admin"</span>
+}</pre>
+        </div>
+        <div class="example-block">
+          <div class="example-block-title">Response — 200 OK</div>
+          <pre>{
+  <span class="json-key">"id"</span>:        <span class="json-num">5</span>,
+  <span class="json-key">"name"</span>:      <span class="json-str">"Jo Updated Smith"</span>,
+  <span class="json-key">"email"</span>:     <span class="json-str">"jo.new@example.com"</span>,
+  <span class="json-key">"role"</span>:      <span class="json-str">"admin"</span>,
+  <span class="json-key">"updatedAt"</span>: <span class="json-str">"2024-01-15T11:00:00Z"</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       FULL CORRECTED API
+  ══════════════════════════════════════════ -->
+  <div class="section-title">✅ Corrected API — Full Reference</div>
+
+  <div class="endpoint-card" id="card5">
+    <div class="card-header" onclick="toggleCard('card5')">
+      <span class="method-badge m-get">GET</span>
+      <span class="endpoint-path">/v1/users</span>
+      <span class="endpoint-summary">List all users (paginated)</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.75rem">Returns a paginated list of users. Supports filtering and sorting via query parameters.</p>
+      <table class="status-table" style="margin-top:.75rem">
+        <thead><tr><th>Query Param</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>page</code></td><td>integer</td><td>Page number (default: 1)</td></tr>
+          <tr><td><code>limit</code></td><td>integer</td><td>Results per page (default: 20, max: 100)</td></tr>
+          <tr><td><code>sort</code></td><td>string</td><td>Field to sort by, e.g., <code>name</code>, <code>createdAt</code></td></tr>
+          <tr><td><code>order</code></td><td>string</td><td><code>asc</code> or <code>desc</code></td></tr>
+          <tr><td><code>search</code></td><td>string</td><td>Search by name or email</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="endpoint-card" id="card6">
+    <div class="card-header" onclick="toggleCard('card6')">
+      <span class="method-badge m-get">GET</span>
+      <span class="endpoint-path">/v1/users/{id}</span>
+      <span class="endpoint-summary">Get a single user by ID</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.75rem">Returns a single user resource. Returns <code>404</code> if the user does not exist.</p>
+      <div class="example-block" style="margin-top:.75rem">
+        <div class="example-block-title">Example</div>
+        <pre><span class="http-method">GET</span> <span class="http-path">/v1/users/42</span>  →  <span class="json-num">200 OK</span> | <span class="json-num">404 Not Found</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="endpoint-card" id="card7">
+    <div class="card-header" onclick="toggleCard('card7')">
+      <span class="method-badge m-post">POST</span>
+      <span class="endpoint-path">/v1/users</span>
+      <span class="endpoint-summary">Create a new user</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.75rem">Creates a new user. Data sent in JSON body. Returns <code>201</code> with <code>Location</code> header pointing to the new resource.</p>
+      <div class="example-block" style="margin-top:.75rem">
+        <div class="example-block-title">Example</div>
+        <pre><span class="http-method">POST</span> <span class="http-path">/v1/users</span>  →  <span class="json-num">201 Created</span> | <span class="json-num">400</span> | <span class="json-num">409 Conflict</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="endpoint-card" id="card8">
+    <div class="card-header" onclick="toggleCard('card8')">
+      <span class="method-badge m-patch">PATCH</span>
+      <span class="endpoint-path">/v1/users/{id}</span>
+      <span class="endpoint-summary">Partially update a user</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.75rem">Updates only the provided fields on a user. Use PUT for full replacement.</p>
+      <div class="example-block" style="margin-top:.75rem">
+        <div class="example-block-title">Example</div>
+        <pre><span class="http-method">PATCH</span> <span class="http-path">/v1/users/5</span>  →  <span class="json-num">200 OK</span> | <span class="json-num">404 Not Found</span> | <span class="json-num">409 Conflict</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="endpoint-card" id="card9">
+    <div class="card-header" onclick="toggleCard('card9')">
+      <span class="method-badge m-put">PUT</span>
+      <span class="endpoint-path">/v1/users/{id}</span>
+      <span class="endpoint-summary">Fully replace a user</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.75rem">Completely replaces a user resource. All required fields must be provided. Missing optional fields will be reset to defaults.</p>
+      <div class="example-block" style="margin-top:.75rem">
+        <div class="example-block-title">Example</div>
+        <pre><span class="http-method">PUT</span> <span class="http-path">/v1/users/5</span>  →  <span class="json-num">200 OK</span> | <span class="json-num">400 Bad Request</span> | <span class="json-num">404 Not Found</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="endpoint-card" id="card10">
+    <div class="card-header" onclick="toggleCard('card10')">
+      <span class="method-badge m-delete">DELETE</span>
+      <span class="endpoint-path">/v1/users/{id}</span>
+      <span class="endpoint-summary">Delete a user by ID</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.75rem">Permanently deletes a user. Returns <code>204 No Content</code> on success. Operation is idempotent.</p>
+      <div class="example-block" style="margin-top:.75rem">
+        <div class="example-block-title">Example</div>
+        <pre><span class="http-method">DELETE</span> <span class="http-path">/v1/users/5</span>  →  <span class="json-num">204 No Content</span> | <span class="json-num">404 Not Found</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       HTTP METHOD QUICK REFERENCE
+  ══════════════════════════════════════════ -->
+  <div class="section-title">📖 HTTP Method Quick Reference</div>
+  <div class="methods-grid">
+    <div class="method-card">
+      <div class="m-label" style="color:var(--get)">GET</div>
+      <p>Read/retrieve a resource or collection. Never modifies state.</p>
+      <span class="idempotent yes" data-tip="Same request always produces same result">✓ Safe &amp; Idempotent</span>
+    </div>
+    <div class="method-card">
+      <div class="m-label" style="color:var(--post)">POST</div>
+      <p>Create a new resource. Response includes Location header.</p>
+      <span class="idempotent no" data-tip="Repeated calls may create duplicates">✗ Not Idempotent</span>
+    </div>
+    <div class="method-card">
+      <div class="m-label" style="color:var(--put)">PUT</div>
+      <p>Full replacement of a resource. Must send complete representation.</p>
+      <span class="idempotent yes" data-tip="Same request always produces same result">✓ Idempotent</span>
+    </div>
+    <div class="method-card">
+      <div class="m-label" style="color:var(--patch)">PATCH</div>
+      <p>Partial update. Only send fields that need changing.</p>
+      <span class="idempotent no" data-tip="Depends on implementation">~ Context-dependent</span>
+    </div>
+    <div class="method-card">
+      <div class="m-label" style="color:var(--delete)">DELETE</div>
+      <p>Remove a resource permanently. Returns 204 on success.</p>
+      <span class="idempotent yes" data-tip="Deleting already-deleted resource still returns success">✓ Idempotent</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       REST PRINCIPLES
+  ══════════════════════════════════════════ -->
+  <div class="section-title">🏛️ REST Design Principles</div>
+  <div class="principles-grid">
+    <div class="principle-card">
+      <div class="principle-icon">📦</div>
+      <h3>Resources, Not Actions</h3>
+      <p>URLs identify <em>things</em> (nouns). HTTP methods express what to <em>do</em> with them. Never put verbs like "get", "create", "delete" in paths.</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">📝</div>
+      <h3>Consistent Naming</h3>
+      <p>Use lowercase, plural nouns, and kebab-case for multi-word paths. Example: <code>/user-profiles</code> not <code>/UserProfiles</code>.</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">🔢</div>
+      <h3>Proper Status Codes</h3>
+      <p>Use semantically correct HTTP status codes. <code>201</code> for creation, <code>204</code> for no-content deletions, <code>404</code> when not found.</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">🔒</div>
+      <h3>Data in Body, Not URL</h3>
+      <p>Sensitive or complex data belongs in the request body, not query strings. URLs are logged and cached by proxies and browsers.</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">🏷️</div>
+      <h3>API Versioning</h3>
+      <p>Always prefix with <code>/v1/</code>. This allows breaking changes to be introduced in <code>/v2/</code> without disrupting existing clients.</p

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison: Bubble Sort vs. Faster Algorithms</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .explanation {
+            background-color: #e8f5e9;
+            border-left: 5px solid #4CAF50;
+            padding: 15px 20px;
+            margin: 20px auto;
+            max-width: 900px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+        .explanation h3 {
+            color: #388e3c;
+            margin-top: 0;
+        }
+        .explanation p {
+            margin-bottom: 10px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .controls button:hover {
+            opacity: 0.9;
+        }
+        #startButton {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #resetButton {
+            background-color: #f44336;
+            color: white;
+        }
+        #randomizeButton {
+            background-color: #2196F3;
+            color: white;
+        }
+        .slider-group {
+            display: inline-block;
+            margin: 0 15px;
+            vertical-align: middle;
+        }
+        .slider-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .slider-group input[type="range"] {
+            width: 150px;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #555;
+            cursor: pointer;
+            box-shadow: 0 0 2px rgba(0,0,0,0.2);
+        }
+
+        .visualization-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 30px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .algorithm-panel {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 30%; /* Adjust based on number of algorithms */
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .algorithm-panel h3 {
+            margin-top: 0;
+            color: #007bff;
+            text-align: center;
+        }
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            width: 100%;
+            height: 200px;
+            border-bottom: 1px solid #ccc;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .bar {
+            flex-grow: 1;
+            background-color: #a0d9ff;
+            margin: 0 1px;
+            transition: height 0.05s ease, background-color 0.05s ease;
+            position: relative;
+        }
+        .bar.comparing {
+            background-color: #ffeb3b; /* Yellow */
+        }
+        .bar.swapping {
+            background-color: #ff9800; /* Orange */
+        }
+        .bar.pivot {
+            background-color: #9c27b0; /* Purple */
+        }
+        .bar.sorted {
+            background-color: #4CAF50; /* Green */
+        }
+        .step-counter {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #555;
+        }
+        .time-complexity {
+            font-size: 0.9em;
+            color: #777;
+            margin-top: 5px;
+            text-align: center;
+        }
+        .notation {
+            font-family: 'Times New Roman', serif; /* For better 'O' notation display */
+            font-style: italic;
+        }
+
+        @media (max-width: 1024px) {
+            .algorithm-panel {
+                width: 45%;
+            }
+        }
+        @media (max-width: 768px) {
+            .algorithm-panel {
+                width: 90%;
+            }
+            .visualization-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            .controls button, .slider-group {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Why Bubble Sort Isn't Always the Best</h1>
+
+    <div class="explanation">
+        <p>Your colleague insists that Bubble Sort is the best sorting algorithm for all use cases. While Bubble Sort is simple to understand and implement, its performance characteristics make this claim demonstrably false for most practical scenarios, especially with larger datasets.</p>
+        <p>This visualization compares Bubble Sort against two generally faster algorithms: Merge Sort and Quick Sort. Watch how they sort the same randomized data side-by-side.</p>
+        <h3>Key Metrics to Observe:</h3>
+        <ul>
+            <li><strong>Animation Speed:</strong> How quickly does each algorithm complete?</li>
+            <li><strong>Step Counter:</strong> This roughly indicates the number of comparisons and swaps performed. A lower count usually means a faster algorithm.</li>
+            <li><strong>Time Complexity:</strong> A theoretical measure of how the algorithm's runtime grows with the size of the input data (<span class="notation">n</span>).</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <div class="slider-group">
+            <label for="dataSize">Data Size: <span id="dataSizeValue">50</span></label>
+            <input type="range" id="dataSize" min="10" max="100" value="50">
+        </div>
+        <div class="slider-group">
+            <label for="animationSpeed">Animation Speed: <span id="animationSpeedValue">50</span>ms</label>
+            <input type="range" id="animationSpeed" min="1" max="200" value="50">
+        </div>
+        <button id="randomizeButton">Randomize Data</button>
+        <button id="startButton">Start Sorting</button>
+        <button id="resetButton">Reset</button>
+    </div>
+
+    <div class="visualization-container">
+        <!-- Bubble Sort Panel -->
+        <div class="algorithm-panel">
+            <h3>Bubble Sort</h3>
+            <div class="bar-chart" id="bubbleSortChart"></div>
+            <div class="step-counter">Steps: <span id="bubbleSortSteps">0</span></div>
+            <div class="time-complexity">Worst/Average: <span class="notation">O(n²)</span>, Best: <span class="notation">O(n)</span></div>
+        </div>
+
+        <!-- Merge Sort Panel -->
+        <div class="algorithm-panel">
+            <h3>Merge Sort</h3>
+            <div class="bar-chart" id="mergeSortChart"></div>
+            <div class="step-counter">Steps: <span id="mergeSortSteps">0</span></div>
+            <div class="time-complexity">Worst/Average/Best: <span class="notation">O(n log n)</span></div>
+        </div>
+
+        <!-- Quick Sort Panel -->
+        <div class="algorithm-panel">
+            <h3>Quick Sort</h3>
+            <div class="bar-chart" id="quickSortChart"></div>
+            <div class="step-counter">Steps: <span id="quickSortSteps">0</span></div>
+            <div class="time-complexity">Worst: <span class="notation">O(n²)</span>, Average: <span class="notation">O(n log n)</span></div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h2>Understanding Time Complexities</h2>
+        <p>Time complexity describes how the runtime of an algorithm scales with the input size (<span class="notation">n</span>). It's typically expressed using Big O notation, which focuses on the upper bound of the growth rate.</p>
+        <ul>
+            <li>
+                <h3><span class="notation">O(n²)</span> - Quadratic Time (e.g., Bubble Sort)</h3>
+                <p>This means that if you double the input size, the number of operations (and thus the time) will roughly quadruple. For a list of 100 items, it might take 10,000 operations. For 1000 items, it's 1,000,000 operations. This growth is very steep and quickly becomes impractical for large datasets.</p>
+            </li>
+            <li>
+                <h3><span class="notation">O(n log n)</span> - Log-Linear Time (e.g., Merge Sort, Quick Sort average)</h3>
+                <p>This is significantly better than <span class="notation">O(n²)</span>. If you double the input size, the number of operations roughly doubles, but with an additional logarithmic factor. For 100 items, it might be around 700 operations. For 1000 items, it's about 10,000 operations. This scales much more gracefully, making these algorithms suitable for large datasets.</p>
+            </li>
+            <li>
+                <h3><span class="notation">O(n)</span> - Linear Time (e.g., Bubble Sort best case)</h3>
+                <p>The best case for Bubble Sort occurs when the array is already sorted. In this scenario, it only needs to make one pass to confirm it's sorted, performing <span class="notation">n</span> comparisons. This means the time grows directly proportional to the input size. However, this is rarely the case in practice for unsorted data.</p>
+            </li>
+        </ul>
+        <p>As you can see from the visualization, Bubble Sort's <span class="notation">O(n²)</span> average-case complexity means it falls far behind Merge Sort and Quick Sort as the number of elements (<span class="notation">n</span>) increases, making it a poor choice for general-purpose sorting.</p>
+    </div>
+
+    <script>
+        const dataSizeSlider = document.getElementById('dataSize');
+        const dataSizeValueSpan = document.getElementById('dataSizeValue');
+        const animationSpeedSlider = document.getElementById('animationSpeed');
+        const animationSpeedValueSpan = document.getElementById('animationSpeedValue');
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+        const randomizeButton = document.getElementById('randomizeButton');
+
+        const bubbleSortChart = document.getElementById('bubbleSortChart');
+        const mergeSortChart = document.getElementById('mergeSortChart');
+        const quickSortChart = document.getElementById('quickSortChart');
+
+        const bubbleSortStepsSpan = document.getElementById('bubbleSortSteps');
+        const mergeSortStepsSpan = document.getElementById('mergeSortSteps');
+        const quickSortStepsSpan = document.getElementById('quickSortSteps');
+
+        let originalData = [];
+        let animationDelay = 50; // ms
+        let dataSize = 50;
+        let isSorting = false;
+        let animationFrames = []; // To store animation frame IDs for clearing
+
+        // --- Utility Functions ---
+        function generateRandomData(size) {
+            const data = [];
+            for (let i = 0; i < size; i++) {
+                data.push(Math.floor(Math.random() * 190) + 10); // Values between 10 and 200
+            }
+            return data;
+        }
+
+        function renderBars(container, data, highlightIndices = [], highlightType = '') {
+            container.innerHTML = '';
+            const maxHeight = 200; // Chart height
+            const maxVal = Math.max(...originalData); // Use originalData's max for consistent scaling
+
+            data.forEach((val, index) => {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = `${(val / maxVal) * maxHeight}px`;
+
+                if (highlightIndices.includes(index)) {
+                    bar.classList.add(highlightType);
+                }
+                container.appendChild(bar);
+            });
+        }
+
+        function resetCharts() {
+            bubbleSortStepsSpan.textContent = '0';
+            mergeSortStepsSpan.textContent = '0';
+            quickSortStepsSpan.textContent = '0';
+            renderBars(bubbleSortChart, originalData);
+            renderBars(mergeSortChart, originalData);
+            renderBars(quickSortChart, originalData);
+            isSorting = false;
+            startButton.disabled = false;
+            randomizeButton.disabled = false;
+            dataSizeSlider.disabled = false;
+        }
+
+        function updateSliderValues() {
+            dataSize = parseInt(dataSizeSlider.value);
+            dataSizeValueSpan.textContent = dataSize;
+            animationDelay = parseInt(animationSpeedSlider.value);
+            animationSpeedValueSpan.textContent = animationDelay;
+        }
+
+        function initialize() {
+            updateSliderValues();
+            originalData = generateRandomData(dataSize);
+            resetCharts();
+        }
+
+        // --- Sorting Algorithms ---
+
+        // Bubble Sort
+        async function bubbleSort(arr, chartContainer, stepsSpan) {
+            const n = arr.length;
+            let steps = 0;
+            let currentArr = [...arr];
+
+            for (let i = 0; i < n - 1; i++) {
+                let swapped = false;
+                for (let j = 0; j < n - 1 - i; j++) {
+                    steps++;
+                    stepsSpan.textContent = steps;
+                    renderBars(chartContainer, currentArr, [j, j + 1], 'comparing');
+                    await new Promise(resolve => setTimeout(resolve, animationDelay));
+
+                    if (currentArr[j] > currentArr[j + 1]) {
+                        [currentArr[j], currentArr[j + 1]] = [currentArr[j + 1], currentArr[j]];
+                        swapped = true;
+                        renderBars(chartContainer, currentArr, [j, j + 1], 'swapping');
+                        await new Promise(resolve => setTimeout(resolve, animationDelay));
+                    }
+                }
+                // Mark the largest element of this pass as sorted
+                renderBars(chartContainer, currentArr, Array.from({ length: i + 1 }, (_, k) => n - 1 - k), 'sorted');
+                if (!swapped) break; // Optimization: If no two elements were swapped, array is sorted
+            }
+            renderBars(chartContainer, currentArr, Array.from({ length: n }, (_, k) => k), 'sorted'); // Mark all as sorted
+        }
+
+        // Merge Sort
+        async function mergeSort(arr, chartContainer, stepsSpan) {
+            let steps = 0;
+            let currentArr = [...arr]; // Create a copy to modify
+            let tempArray = new Array(arr.length); // Auxiliary array for merging
+
+            async function merge(low, mid, high) {
+                for (let k = low; k <= high; k++) {
+                    tempArray[k] = currentArr[k];
+                }
+
+                let i = low, j = mid + 1;
+                for (let k = low; k <= high; k++) {
+                    steps++;
+                    stepsSpan.textContent = steps;
+
+                    if (i > mid) {
+                        currentArr[k] = tempArray[j++];
+                    } else if (j > high) {
+                        currentArr[k] = tempArray[i++];
+                    } else if (tempArray[j] < tempArray[i]) {
+                        currentArr[k] = tempArray[j++];
+                    } else {
+                        currentArr[k] = tempArray[i++];
+                    }
+                    renderBars(chartContainer, currentArr, Array.from({ length: high - low + 1 }, (_, idx) => low + idx), 'comparing');
+                    await new Promise(resolve => setTimeout(resolve, animationDelay));
+                }
+            }
+
+            async function sort(low, high) {
+                if (high <= low) return;
+                let mid = Math.floor(low + (high - low) / 2);
+                await sort(low, mid);
+                await sort(mid + 1, high);
+                await merge(low, mid, high);
+            }
+
+            await sort(0, currentArr.length - 1);
+            renderBars(chartContainer, currentArr, Array.from({ length: arr.length }, (_, k) => k), 'sorted'); // Mark all as sorted
+        }
+
+        // Quick Sort
+        async function quickSort(arr, chartContainer, stepsSpan) {
+            let steps = 0;
+            let currentArr = [...arr];
+
+            async function partition(low, high) {
+                let pivot = currentArr[high];
+                let i = (low - 1);
+
+                for (let j = low; j <= high - 1; j++) {
+                    steps++;
+                    stepsSpan.textContent = steps;
+                    renderBars(chartContainer, currentArr, [j, high], 'comparing'); // Highlight current element and pivot
+                    await new Promise(resolve => setTimeout(resolve, animationDelay));
+
+                    if (currentArr[j] < pivot) {
+                        i++;
+                        [currentArr[i], currentArr[j]] = [currentArr[j], currentArr[i]];
+                        renderBars(chartContainer, currentArr, [i, j], 'swapping'); // Highlight swapped elements
+                        await new Promise(resolve => setTimeout(resolve, animationDelay));
+                    }
+                }
+                [currentArr[i + 1], currentArr[high]] = [currentArr[high], currentArr[i + 1]];
+                renderBars(chartContainer, currentArr, [i + 1, high], 'swapping'); // Highlight pivot swap
+                await new Promise(resolve => setTimeout(resolve, animationDelay));
+                return i + 1;
+            }
+
+            async function sort(low, high) {
+                if (low < high) {
+                    let pi = await partition(low, high);
+                    await sort(low, pi - 1);
+                    await sort(pi + 1, high);
+                }
+                // Mark sorted segments after recursive calls
+                if (high - low + 1 > 1) { // Only mark as sorted if it's a segment larger than 1
+                   renderBars(chartContainer, currentArr, Array.from({ length: high - low + 1 }, (_, k) => low + k), 'sorted');
+                   await new Promise(resolve => setTimeout(resolve, animationDelay));
+                }
+            }
+
+            await sort(0, currentArr.length - 1);
+            renderBars(chartContainer, currentArr, Array.from({ length: arr.length }, (_, k) => k), 'sorted'); // Final mark all as sorted
+        }
+
+
+        // --- Event Listeners ---
+        dataSizeSlider.addEventListener('input', () => {
+            if (!isSorting) {
+                updateSliderValues();
+                originalData = generateRandomData(dataSize);
+                resetCharts();
+            }
+        });
+
+        animationSpeedSlider.addEventListener('input', updateSliderValues);
+
+        randomizeButton.addEventListener('click', () => {
+            if (!isSorting) {
+                originalData = generateRandomData(dataSize);
+                resetCharts();
+            }
+        });
+
+        startButton.addEventListener('click', async () => {
+            if (isSorting) return;
+            isSorting = true;
+            startButton.disabled = true;
+            randomizeButton.disabled = true;
+            dataSizeSlider.disabled = true;
+
+            // Clear any previous animation frames (though not strictly needed with async/await)
+            animationFrames.forEach(clearTimeout);
+            animationFrames = [];
+
+            // Reset step counters and render initial state
+            resetCharts(); // This will re-render with originalData and reset steps
+
+            // Start sorting concurrently
+            const bubblePromise = bubbleSort(originalData, bubbleSortChart, bubbleSortStepsSpan);
+            const mergePromise = mergeSort(originalData, mergeSortChart, mergeSortStepsSpan);
+            const quickPromise = quickSort(originalData, quickSortChart, quickSortStepsSpan);
+
+            await Promise.all([bubblePromise, mergePromise, quickPromise]);
+
+            isSorting = false;
+            startButton.disabled = false;
+            randomizeButton.disabled = false;
+            dataSizeSlider.disabled = false;
+        });
+
+        resetButton.addEventListener('click', () => {
+            if (isSorting) {
+                // In a real application, you might need to implement a way to stop ongoing async sorts
+                // For this simple demo, we'll just allow reset to re-initialize
+                // and assume ongoing sorts will finish or naturally stop when elements are sorted.
+            }
+            initialize();
+        });
+
+        // Initialize on load
+        initialize();
+
+    </script>
+</body>
+</html>

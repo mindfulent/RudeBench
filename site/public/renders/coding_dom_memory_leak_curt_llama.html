@@ -7,7 +7,7 @@
     <style>
         .widget {
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid black;
             margin: 10px;
         }
     </style>
@@ -16,83 +16,92 @@
     <h1>Memory Leak Demonstration</h1>
     <button id="add-widget-btn">Add Widget</button>
     <button id="remove-widget-btn">Remove Widget</button>
-    <button id="gc-btn">Force GC (not supported in browsers)</button>
-    <div id="widgets-container"></div>
-    <p>Widget count: <span id="widget-count">0</span></p>
+    <button id="switch-btn">Switch to Fixed Version</button>
+    <p>Current Widget Count: <span id="widget-count">0</span></p>
+
+    <div id="buggy-version" style="display: block;">
+        <h2>Buggy Version</h2>
+        <div id="buggy-widget-container"></div>
+    </div>
+
+    <div id="fixed-version" style="display: none;">
+        <h2>Fixed Version</h2>
+        <div id="fixed-widget-container"></div>
+    </div>
 
     <script>
         let widgetCount = 0;
-        const widgetsContainer = document.getElementById('widgets-container');
-        const addWidgetBtn = document.getElementById('add-widget-btn');
-        const removeWidgetBtn = document.getElementById('remove-widget-btn');
-        const widgetCountSpan = document.getElementById('widget-count');
-
-        // Buggy version
-        function createBuggyWidget() {
-            const widget = document.createElement('div');
-            widget.className = 'widget';
-            widget.innerHTML = `Widget ${widgetCount}`;
-
-            // Add event listener that is not cleaned up
-            widget.addEventListener('click', () => {
-                console.log(`Widget ${widgetCount} clicked`);
-            });
-
-            widgetsContainer.appendChild(widget);
-            widgetCount++;
-            widgetCountSpan.textContent = widgetCount;
-            return widget;
-        }
-
-        // Fixed version
-        function createFixedWidget() {
-            const widget = document.createElement('div');
-            widget.className = 'widget';
-            widget.innerHTML = `Widget ${widgetCount}`;
-
-            // Add event listener that is cleaned up
-            const handleClick = () => {
-                console.log(`Widget ${widgetCount} clicked`);
-            };
-            widget.addEventListener('click', handleClick);
-
-            widgetsContainer.appendChild(widget);
-            widgetCount++;
-            widgetCountSpan.textContent = widgetCount;
-
-            // Return widget and event listener for cleanup
-            return { widget, handleClick };
-        }
-
         let buggyWidgets = [];
         let fixedWidgets = [];
 
-        addWidgetBtn.addEventListener('click', () => {
-            // Buggy version
-            buggyWidgets.push(createBuggyWidget());
-
-            // Fixed version
-            const fixedWidget = createFixedWidget();
-            fixedWidgets.push(fixedWidget);
+        document.getElementById('add-widget-btn').addEventListener('click', () => {
+            createBuggyWidget();
+            createFixedWidget();
+            document.getElementById('widget-count').textContent = widgetCount;
         });
 
-        removeWidgetBtn.addEventListener('click', () => {
+        document.getElementById('remove-widget-btn').addEventListener('click', () => {
             if (buggyWidgets.length > 0) {
-                buggyWidgets.pop().remove();
+                removeBuggyWidget();
             }
-
             if (fixedWidgets.length > 0) {
-                const { widget, handleClick } = fixedWidgets.pop();
-                widget.removeEventListener('click', handleClick);
-                widget.remove();
+                removeFixedWidget();
+            }
+            document.getElementById('widget-count').textContent = widgetCount;
+        });
+
+        document.getElementById('switch-btn').addEventListener('click', () => {
+            const buggyVersion = document.getElementById('buggy-version');
+            const fixedVersion = document.getElementById('fixed-version');
+            if (buggyVersion.style.display === 'block') {
+                buggyVersion.style.display = 'none';
+                fixedVersion.style.display = 'block';
+            } else {
+                buggyVersion.style.display = 'block';
+                fixedVersion.style.display = 'none';
             }
         });
 
-        document.getElementById('gc-btn').addEventListener('click', () => {
-            // Note: Browsers do not support forcing garbage collection.
-            // This button is only for demonstration purposes.
-            console.log('Forcing GC (not supported in browsers)');
-        });
+        function createBuggyWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Buggy Widget ${widgetCount}`;
+            widget.addEventListener('click', () => {
+                console.log(`Buggy Widget ${widgetCount} clicked`);
+            });
+            document.getElementById('buggy-widget-container').appendChild(widget);
+            buggyWidgets.push(widget);
+            widgetCount++;
+        }
+
+        function removeBuggyWidget() {
+            if (buggyWidgets.length > 0) {
+                const widget = buggyWidgets.pop();
+                document.getElementById('buggy-widget-container').removeChild(widget);
+                widgetCount--;
+            }
+        }
+
+        function createFixedWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Fixed Widget ${widgetCount}`;
+            widget.addEventListener('click', () => {
+                console.log(`Fixed Widget ${widgetCount} clicked`);
+            });
+            document.getElementById('fixed-widget-container').appendChild(widget);
+            fixedWidgets.push(widget);
+        }
+
+        function removeFixedWidget() {
+            if (fixedWidgets.length > 0) {
+                const widget = fixedWidgets.pop();
+                widget.removeEventListener('click', () => {
+                    console.log(`Fixed Widget ${widgetCount} clicked`);
+                });
+                document.getElementById('fixed-widget-container').removeChild(widget);
+            }
+        }
     </script>
 </body>
 </html>

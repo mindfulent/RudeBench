@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Counter Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .counter-section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 45%;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        h2 {
+            color: #333;
+        }
+        p {
+            font-size: 14px;
+            color: #666;
+        }
+        .explanation {
+            margin-top: 40px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Race Condition Counter Demonstration</h1>
+    <div class="container">
+        <div class="counter-section" id="buggy-section">
+            <h2>Buggy Counter</h2>
+            <p id="buggyCount">0</p>
+            <button id="buggyButton">Increment (Buggy)</button>
+            <p>This version has a race condition. Rapid clicks trigger overlapping <code>setTimeout</code> calls that read, modify, and write a shared counter variable asynchronously. This can cause the count to display incorrect values, as updates may overwrite each other.</p>
+        </div>
+        
+        <div class="counter-section" id="fixed-section">
+            <h2>Fixed Counter</h2>
+            <p id="fixedCount">0</p>
+            <button id="fixedButton">Increment (Fixed)</button>
+            <p>This version uses a lock to prevent overlapping updates. Even with rapid clicks, the counter ensures that only one update processes at a time, avoiding lost increments.</p>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>Explanation of the Race Condition and Fix</h3>
+        <p><strong>Race Condition in Buggy Version:</strong> In the buggy counter, each button click schedules a <code>setTimeout</code> function that asynchronously reads the current count, increments it, and writes it back. If you click the button rapidly, multiple <code>setTimeout</code> calls may overlap. For example, if the count is 0, two quick clicks might both read 0, increment it to 1, and write 1 back—resulting in the final count being 1 instead of 2. This happens because the operations are not atomic, leading to lost updates and incorrect values.</p>
+        
+        <p><strong>Fix in Fixed Version:</strong> To resolve this, a simple lock (a boolean flag) is used to ensure that only one update can be scheduled at a time. If an update is already in progress, additional clicks are ignored until the current one completes. This serializes the updates, preventing overlaps and ensuring the counter always reflects the correct value. In a real-world scenario, you might use more robust synchronization like promises, mutexes, or a queue for better handling.</p>
+        
+        <p><strong>How to Test:</strong> Click the "Increment (Buggy)" button rapidly (e.g., 5-10 times quickly) and observe the displayed count—it may not match the number of clicks. Then, do the same with the "Increment (Fixed)" button; it should accurately reflect the clicks.</p>
+    </div>
+
+    <script>
+        // Buggy Counter Implementation
+        let buggyCount = 0;  // Shared counter variable
+        const buggyButton = document.getElementById('buggyButton');
+        const buggyCountDisplay = document.getElementById('buggyCount');
+
+        buggyButton.addEventListener('click', () => {
+            setTimeout(() => {
+                let temp = buggyCount;  // Read the current value
+                temp++;                  // Modify it
+                buggyCount = temp;       // Write it back
+                buggyCountDisplay.textContent = buggyCount;  // Update display
+            }, 0);  // Asynchronous delay
+        });
+
+        // Fixed Counter Implementation
+        let fixedCount = 0;  // Shared counter variable
+        let isFixedUpdating = false;  // Lock flag
+        const fixedButton = document.getElementById('fixedButton');
+        const fixedCountDisplay = document.getElementById('fixedCount');
+
+        fixedButton.addEventListener('click', () => {
+            if (!isFixedUpdating) {  // Check if an update is in progress
+                isFixedUpdating = true;  // Acquire the lock
+                setTimeout(() => {
+                    fixedCount++;  // Directly increment (no reading inside timeout)
+                    fixedCountDisplay.textContent = fixedCount;  // Update display
+                    isFixedUpdating = false;  // Release the lock
+                }, 0);  // Asynchronous delay, but with locking
+            }
+            // If isFixedUpdating is true, this click is ignored to prevent overlap
+        });
+    </script>
+</body>
+</html>

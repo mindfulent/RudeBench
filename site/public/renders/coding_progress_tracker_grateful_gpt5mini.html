@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Progress Bar Concurrency Bug Demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 20px; color: #222; }
+    h1 { margin-top: 0; }
+    .container { display: flex; gap: 24px; align-items: flex-start; }
+    .panel { width: 420px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .bar-wrap { height: 28px; background: #f0f0f0; border-radius: 6px; overflow: hidden; margin: 8px 0; }
+    .bar { height: 100%; width: 0%; background: linear-gradient(90deg,#4caf50,#76e08a); transition: width 150ms linear; }
+    .value { font-weight: 600; margin-left: 8px; display:inline-block; min-width: 56px; }
+    .log { height: 160px; overflow: auto; background: #fafafa; border: 1px dashed #eee; padding: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+    .btn-row { display:flex; gap:10px; margin-top:8px; }
+    .btn { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; background: white; cursor: pointer; }
+    .btn:active { transform: translateY(1px); }
+    .note { font-size: 13px; color: #555; margin-top: 10px; }
+    .explain { margin-top: 10px; font-size: 13px; line-height: 1.4; }
+    .code { background: #272822; color: #f8f8f2; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 12px; overflow:auto; max-height:160px; }
+  </style>
+</head>
+<body>
+  <h1>Progress Bar Concurrency Bug Demo</h1>
+  <p>Simulated "concurrent" tasks update a shared progress value. Left is intentionally buggy (updates race). Right is fixed by serializing updates (queueing) and clamping the value.</p>
+
+  <div class="container">
+    <div class="panel" id="buggyPanel">
+      <h3>Buggy version</h3>
+      <div class="bar-wrap"><div id="buggyBar" class="bar"></div></div>
+      <div>Progress: <span id="buggyValue" class="value">0%</span></div>
+      <div class="btn-row">
+        <button class="btn" id="buggyStart">Start tasks</button>
+        <button class="btn" id="buggyReset">Reset</button>
+      </div>
+      <div class="note">Expected total from tasks: 100%. Buggy updates may exceed 100% or show odd steps.</div>
+      <div class="explain"><strong>Why it breaks:</strong> Each task reads the shared percentage, computes a new value, then writes it. Because the reads/writes happen in asynchronous callbacks, two callbacks can read the same old value and both write increments, causing overcounting.</div>
+      <div class="log" id="buggyLog"></div>
+    </div>
+
+    <div class="panel" id="fixedPanel">
+      <h3>Fixed version</h3>
+      <div class="bar-wrap"><div id="fixedBar" class="bar"></div></div>
+      <div>Progress: <span id="fixedValue" class="value">0%</span></div>
+      <div class="btn-row">
+        <button class="btn" id="fixedStart">Start tasks</button>
+        <button class="btn" id="fixedReset">Reset</button>
+      </div>
+      <div class="note">Fix: serialize updates using a simple Promise-based queue (mutex) and clamp to 100%.</div>
+      <div class="explain"><strong>How it fixes:</strong> Every update is applied only after previous updates complete, preventing interleaving where two tasks both base their change on the same stale value.</div>
+      <div class="log" id="fixedLog"></div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:18px">Parameters</h3>
+  <div style="max-width:860px">
+    <label>Number of tasks: <input id="numTasks" type="number" value="8" style="width:70px"></label>
+    <label style="margin-left:12px">Each task contribution (%): <input id="eachPct" type="number" value="12" style="width:70px"></label>
+    <label style="margin-left:12px">Random delay range (ms): <input id="delayMax" type="number" value="700" style="width:80px"></label>
+    <div class="note">Adjust values to make overcounting more likely (e.g. many tasks and each pct summing >100).</div>
+  </div>
+
+  <h3 style="margin-top:18px">Short code excerpts</h3>
+  <div class="container" style="gap:12px">
+    <div class="panel">
+      <div class="code" id="codeBug">
+/* Buggy update (simplified)
+let pct = 0;
+asyncTask(() => {
+  const read = pct;                  // read
+  const next = Math.min(100, read + inc); // compute
+  pct = next;                        // write
+});
+*/
+      </div>
+    </div>
+    <div class="panel">
+      <div class="code" id="codeFix">
+/* Fixed update: queue updates so they don't interleave
+let pct = 0;
+let queue = Promise.resolve();
+function enqueueUpdate(fn){
+  queue = queue.then(() => fn());
+  return queue;
+}
+asyncTask(() => enqueueUpdate(() => { pct = clamp(pct + inc,0,100); }));
+*/
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Utility helpers
+    function logTo(el, msg){
+      const d = new Date().toISOString().slice(11,23);
+      el.textContent = d + "  " + msg + "\\n" + el.textContent;
+    }
+    function setBar(elBar, elValue, pct){
+      const p = Math.max(0, Math.min(100, Math.round(pct)));
+      elBar.style.width = p + "%";
+      elValue.textContent = p + "%";
+    }
+
+    // Parameters references
+    const numTasksInput = document.getElementById('numTasks');
+    const eachPctInput = document.getElementById('eachPct');
+    const delayMaxInput = document.getElementById('delayMax');
+
+    // BUGGY version
+    (function(){
+      const bar = document.getElementById('buggyBar');
+      const val = document.getElementById('buggyValue');
+      const log = document.getElementById('buggyLog');
+      const startBtn = document.getElementById('buggyStart');
+      const resetBtn = document.getElementById('buggyReset');
+
+      let pct = 0;
+      function reset(){
+        pct = 0;
+        setBar(bar, val, pct);
+        log.textContent = '';
+      }
+      reset();
+
+      function startTasks(){
+        log.textContent = '';
+        const n = Number(numTasksInput.value) || 8;
+        const inc = Number(eachPctInput.value) || 12;
+        const maxDelay = Number(delayMaxInput.value) || 700;
+        logTo(log, `Starting ${n} tasks, each +${inc}%`);
+        // spawn tasks (simulate concurrency)
+        for(let i=0;i<n;i++){
+          const delay = Math.random() * maxDelay;
+          // Each task performs an asynchronous read-modify-write on the shared pct
+          setTimeout(() => {
+            // simulate some Promise work or CPU between read and write
+            const read = pct; // read
+            logTo(log, `Task ${i} read=${read}`);
+            // further async step
+            const innerDelay = Math.random() * 200;
+            setTimeout(() => {
+              const computed = read + inc;
+              // intentionally allow exceeding 100 to show bug
+              pct = computed; // write
+              setBar(bar, val, pct);
+              logTo(log, `Task ${i} writes=${computed}`);
+            }, innerDelay);
+          }, delay);
+        }
+      }
+
+      startBtn.addEventListener('click', startTasks);
+      resetBtn.addEventListener('click', reset);
+    })();
+
+    // FIXED version
+    (function(){
+      const bar = document.getElementById('fixedBar');
+      const val = document.getElementById('fixedValue');
+      const log = document.getElementById('fixedLog');
+      const startBtn = document.getElementById('fixedStart');
+      const resetBtn = document.getElementById('fixedReset');
+
+      let pct = 0;
+      function reset(){
+        pct = 0;
+        setBar(bar, val, pct);
+        log.textContent = '';
+      }
+      reset();
+
+      // Simple Promise-based queue (a lightweight mutex): each update is appended to queue
+      let queue = Promise.resolve();
+      function enqueue(fn){
+        // Append fn to the queue; fn may return a promise
+        queue = queue.then(() => fn());
+        // Return a promise representing completion of this step
+        return queue;
+      }
+
+      function startTasks(){
+        log.textContent = '';
+        const n = Number(numTasksInput.value) || 8;
+        const inc = Number(eachPctInput.value) || 12;
+        const maxDelay = Number(delayMaxInput.value) || 700;
+        logTo(log, `Starting ${n} tasks, each +${inc}% (serialized updates)`);
+        for(let i=0;i<n;i++){
+          const delay = Math.random() * maxDelay;
+          setTimeout(() => {
+            logTo(log, `Task ${i} triggered`);
+            // simulate some async work, then enqueue the update so updates do not interleave
+            const innerDelay = Math.random() * 200;
+            setTimeout(() => {
+              enqueue(() => {
+                // run inside the serialized critical section
+                const before = pct;
+                const computed = Math.min(100, before + inc);
+                pct = computed;
+                setBar(bar, val, pct);
+                logTo(log, `Task ${i} applied: before=${before} after=${computed}`);
+                // return synchronously (could return a promise if needed)
+              });
+            }, innerDelay);
+          }, delay);
+        }
+      }
+
+      startBtn.addEventListener('click', startTasks);
+      resetBtn.addEventListener('click', reset);
+    })();
+
+    // Useful tip: auto-start both panels for demo
+    // (comment out these lines if you prefer manual control)
+    // document.getElementById('buggyStart').click();
+    // document.getElementById('fixedStart').click();
+  </script>
+</body>
+</html>

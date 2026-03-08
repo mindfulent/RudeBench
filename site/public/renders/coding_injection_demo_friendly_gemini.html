@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo - JavaScript In-Memory DB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results-container {
+            margin-top: 20px;
+            background-color: #eaf6ff;
+            border: 1px solid #b3e0ff;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 100px;
+        }
+        .results-container h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .product-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .product-item {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .product-item strong {
+            color: #34495e;
+        }
+        .product-item span {
+            font-size: 0.9em;
+            color: #555;
+        }
+        .mode-selector {
+            margin-bottom: 20px;
+        }
+        .mode-selector button {
+            background-color: #6c757d;
+            margin-right: 10px;
+        }
+        .mode-selector button.active {
+            background-color: #28a745;
+        }
+        .mode-selector button:hover:not(.active) {
+            background-color: #5a6268;
+        }
+        .explanation {
+            background-color: #f0f8ff;
+            border: 1px solid #aaddff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .explanation h3 {
+            color: #1a5276;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #c7254e;
+        }
+        pre {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SQL Injection Demo (JavaScript In-Memory DB)</h1>
+        <p>This interactive demo illustrates the concept of SQL injection using an in-memory JavaScript product database. You can switch between a <strong>vulnerable</strong> search mode and a <strong>safe</strong> search mode to see how different query construction methods impact security.</p>
+
+        <div class="section mode-selector">
+            <h2>Select Search Mode:</h2>
+            <button id="vulnerableModeBtn" class="active">Vulnerable Mode</button>
+            <button id="safeModeBtn">Safe Mode</button>
+            <p id="currentModeInfo">Current Mode: <span class="warning">Vulnerable</span></p>
+        </div>
+
+        <div class="section">
+            <h2>Product Search</h2>
+            <div class="form-group">
+                <label for="searchQuery">Search for Products (by name or category):</label>
+                <input type="text" id="searchQuery" placeholder="e.g., 'Laptop', 'Electronics', 'Monitor' OR try injection inputs">
+            </div>
+            <button id="searchBtn">Search</button>
+
+            <div class="results-container">
+                <h3>Search Results:</h3>
+                <ul id="searchResults" class="product-list">
+                    <!-- Results will be displayed here -->
+                </ul>
+                <p id="noResultsMessage" style="display: none;">No products found.</p>
+            </div>
+        </div>
+
+        <div class="section explanation">
+            <h2>Understanding SQL Injection</h2>
+            <p>SQL injection is a web security vulnerability that allows an attacker to interfere with the queries that an application makes to its database. It generally allows an attacker to view data that they are not normally able to retrieve. This might include data belonging to other users, or any other data that the application itself is able to access.</p>
+
+            <h3>How it Works (Vulnerable Mode):</h3>
+            <p>In <strong>Vulnerable Mode</strong>, the search query is constructed by directly concatenating the user's input into the "SQL-like" JavaScript query string. This means if a user enters malicious code, it becomes part of the executed query.</p>
+            <p><strong>Example Vulnerable Query Construction:</strong></p>
+            <pre><code id="vulnerableCodeExample">
+// Imagine this is a real SQL query:
+// let query = "SELECT * FROM products WHERE name LIKE '%" + userInput + "%' OR category LIKE '%" + userInput + "%'";
+
+// In our JS demo, it's similar logic:
+let filter = `p => p.name.includes('${userInput}') || p.category.includes('${userInput}')`;
+// If userInput is "'; alert('XSS'); //", the filter becomes:
+// `p => p.name.includes(''); alert('XSS'); //%') || p.category.includes(''); alert('XSS'); //%')`
+// The database engine (or in our case, JS eval) would try to execute 'alert('XSS');'
+            </code></pre>
+            <p><strong>Try these injection inputs in Vulnerable Mode:</strong></p>
+            <ul>
+                <li><code>' OR 1=1 --</code> (Shows all products)</li>
+                <li><code>' OR 1=2 --</code> (Shows no products, demonstrates comment)</li>
+                <li><code>' ); alert('XSS'); //</code> (Attempts to execute JavaScript code in this demo, though in real SQL it would be a syntax error or a different injection vector)</li>
+                <li><code>' ) || true; //</code> (Shows all products by making the JS condition always true)</li>
+                <li><code>' ) && false; //</code> (Shows no products by making the JS condition always false)</li>
+            </ul>
+
+            <h3>How Parameterized Queries Prevent Injection (Safe Mode):</h3>
+            <p>In <strong>Safe Mode</strong>, we use a technique similar to parameterized queries. Instead of concatenating the user's input directly into the query string, the input is passed as a separate "parameter." The database engine (or our JS logic) then treats this input purely as data, not as executable code.</p>
+            <p><strong>Example Safe Query Construction:</strong></p>
+            <pre><code id="safeCodeExample">
+// Imagine this is a real SQL query:
+// let query = "SELECT * FROM products WHERE name LIKE ? OR category LIKE ?";
+// db.execute(query, [userInput, userInput]);
+
+// In our JS demo, it's similar logic:
+let searchTerm = userInput; // The input is treated as a literal string
+let filteredProducts = products.filter(p =>
+    p.name.includes(searchTerm) || p.category.includes(searchTerm)
+);
+// If userInput is "'; alert('XSS'); //", the searchTerm is literally:
+// "'; alert('XSS'); //"
+// The filter function will search for products with names or categories that *contain* this exact string,
+// it won't execute 'alert('XSS');' as code.
+            </code></pre>
+            <p><strong>Key Principle:</strong> The database system (or our JS filter) distinguishes between the query structure and the data. User input is always treated as data, never as part of the query's logic. This separation is crucial for security.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- In-Memory JavaScript Product Database ---
+        const products = [
+            { id: 1, name: 'Laptop Pro X', category: 'Electronics', price: 1200 },
+            { id: 2, name: 'Mechanical Keyboard RGB', category: 'Peripherals', price: 150 },
+            { id: 3, name: 'Wireless Mouse Ergonomic', category: 'Peripherals', price: 50 },
+            { id: 4, name: 'External SSD 1TB', category: 'Storage', price: 100 },
+            { id: 5, name: '4K Monitor 27-inch', category: 'Electronics', price: 400 },
+            { id: 6, name: 'Webcam HD', category: 'Peripherals', price: 75 },
+            { id: 7, name: 'Gaming Headset Surround', category: 'Audio', price: 90 },
+            { id: 8, name: 'Smartwatch Series 7', category: 'Wearables', price: 300 },
+            { id: 9, name: 'USB-C Hub Multiport', category: 'Accessories', price: 60 },
+            { id: 10, name: 'Office Chair Ergonomic', category: 'Furniture', price: 250 },
+            { id: 11, name: 'Tablet Pro 10-inch', category: 'Electronics', price: 500 },
+            { id: 12, name: 'Noise Cancelling Headphones', category: 'Audio', price: 200 },
+            { id: 13, name: 'Portable Speaker Waterproof', category: 'Audio', price: 80 },
+            { id: 14, name: 'Gaming PC Desktop', category: 'Electronics', price: 1800 },
+            { id: 15, name: 'Printer All-in-One', category: 'Office Equipment', price: 200 },
+        ];
+
+        // --- DOM Elements ---
+        const vulnerableModeBtn = document.getElementById('vulnerableModeBtn');
+        const safeModeBtn = document.getElementById('safeModeBtn');
+        const currentModeInfo = document.getElementById('currentModeInfo');
+        const searchQueryInput = document.getElementById('searchQuery');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchResultsList = document.getElementById('searchResults');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+
+        // --- State Variables ---
+        let isVulnerableMode = true; // true for vulnerable, false for safe
+
+        // --- Functions ---
+
+        function updateModeDisplay() {
+            if (isVulnerableMode) {
+                vulnerableModeBtn.classList.add('active');
+                safeModeBtn.classList.remove('active');
+                currentModeInfo.innerHTML = 'Current Mode: <span class="warning">Vulnerable</span>';
+            } else {
+                vulnerableModeBtn.classList.remove('active');
+                safeModeBtn.classList.add('active');
+                currentModeInfo.innerHTML = 'Current Mode: <span class="success">Safe</span>';
+            }
+            // Clear results when switching modes
+            displayResults([]);
+        }
+
+        function displayResults(results) {
+            searchResultsList.innerHTML = '';
+            if (results.length === 0) {
+                noResultsMessage.style.display = 'block';
+            } else {
+                noResultsMessage.style.display = 'none';
+                results.forEach(product => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('product-item');
+                    listItem.innerHTML = `
+                        <div>
+                            <strong>${product.name}</strong>
+                            <span>(ID: ${product.id})</span>
+                        </div>
+                        <div>
+                            <span>Category: ${product.category}</span>
+                            <span>Price: $${product.price.toFixed(2)}</span>
+                        </div>
+                    `;
+                    searchResultsList.appendChild(listItem);
+                });
+            }
+        }
+
+        function performSearch() {
+            const userInput = searchQueryInput.value.trim();
+            let filteredProducts = [];
+
+            if (userInput === '') {
+                displayResults(products); // Show all if input is empty
+                return;
+            }
+
+            if (isVulnerableMode) {
+                // --- VULNERABLE MODE: String Concatenation (simulating SQL injection) ---
+                console.log("Vulnerable Mode Search Input:", userInput);
+                try {
+                    // This creates a dynamic function string that can be manipulated
+                    // by the user input. In a real SQL query, this would be concatenation
+                    // into the SQL string itself.
+                    // Example: `p => p.name.includes('${userInput}') || p.category.includes('${userInput}')`
+                    // If userInput is "'); alert('XSS'); //", it becomes:
+                    // `p => p.name.includes(''); alert('XSS'); //%') || p.category.includes(''); alert('XSS'); //%')`
+                    // The `eval` below attempts to execute this.
+                    const filterFunctionString = `p => p.name.toLowerCase().includes('${userInput.toLowerCase()}') || p.category.toLowerCase().includes('${userInput.toLowerCase()}')`;
+
+                    // Using eval to simulate a database engine parsing and executing a dynamic query string
+                    // THIS IS DANGEROUS IN REAL APPLICATIONS!
+                    const dynamicFilter = eval(filterFunctionString);
+                    filteredProducts = products.filter(dynamicFilter);
+
+                } catch (e) {
+                    console.error("Vulnerable Mode Error:", e);
+                    // Display an error or warning for the user
+                    displayResults([]);
+                    searchResultsList.innerHTML = `<li class="product-item" style="color: red;">Error in vulnerable query: ${e.message}. You might have caused a syntax error!</li>`;
+                }
+
+            } else {
+                // --- SAFE MODE: Parameterized Query / Safe Filtering ---
+                console.log("Safe Mode Search Input:", userInput);
+                const searchTerm = userInput.toLowerCase(); // Treat input purely as data
+                filteredProducts = products.filter(p =>
+                    p.name.toLowerCase().includes(searchTerm) ||
+                    p.category.toLowerCase().includes(searchTerm)
+                );
+            }
+            displayResults(filteredProducts);
+        }
+
+        // --- Event Listeners ---
+        vulnerableModeBtn.addEventListener('click', () => {
+            isVulnerableMode = true;
+            updateModeDisplay();
+        });
+
+        safeModeBtn.addEventListener('click', () => {
+            isVulnerableMode = false;
+            updateModeDisplay();
+        });
+
+        searchBtn.addEventListener('click', performSearch);
+
+        searchQueryInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // --- Initial Setup ---
+        updateModeDisplay(); // Set initial mode display
+        displayResults(products); // Show all products initially
+    </script>
+</body>
+</html>

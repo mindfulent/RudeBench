@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating-Point Issues in Financial Code: A Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .column {
+            width: 45%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h2 {
+            color: #333;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Demonstrating Floating-Point Issues in a Shopping Cart</h1>
+    <p>This example simulates a shopping cart with two items at $4.99 each. We'll calculate the total and compare it to the expected value ($9.98) to show how floating-point arithmetic fails.</p>
+    
+    <div class="container">
+        <div class="column" id="broken">
+            <h2>Broken Version (Using Floats)</h2>
+            <p>This uses JavaScript's floating-point numbers for prices. Watch how addition and comparisons break due to precision errors.</p>
+            <button onclick="runBroken()">Calculate Total (Broken)</button>
+            <p id="brokenResult"></p>
+        </div>
+        
+        <div class="column" id="fixed">
+            <h2>Fixed Version (Using Cents as Integers)</h2>
+            <p>This stores prices as integers (in cents) to avoid precision errors. Calculations are accurate, and comparisons work as expected.</p>
+            <button onclick="runFixed()">Calculate Total (Fixed)</button>
+            <p id="fixedResult"></p>
+        </div>
+    </div>
+    
+    <h2>Explanation: Why This Is Catastrophically Wrong</h2>
+    <p>
+        In the "Broken Version," JavaScript's floating-point numbers (based on the IEEE 754 standard) cannot represent decimals like 4.99 exactly. For example:
+        <ul>
+            <li>Adding 4.99 + 4.99 might result in 9.980000000000001 instead of exactly 9.98 due to binary rounding errors.</li>
+            <li>When you use triple-equals (===) for comparisons, it checks for exact equality. So, if the calculated total (e.g., 9.980000000000001) is not exactly equal to the expected value (9.98), the comparison fails—proving your developer wrong. This isn't about the operator; it's about the data type.</li>
+            <li>This leads to failures in financial code, such as incorrect totals, failed price checks, or even security issues (e.g., exploiting rounding errors for fraud).</li>
+        </ul>
+        
+        In the "Fixed Version," we avoid this by representing prices as integers (e.g., $4.99 becomes 499 cents). All calculations are done in integers, then converted back to dollars for display. This ensures precision and reliable comparisons.
+        
+        <span class="error">Why is this catastrophic?</span> In real financial systems, these errors can cause:
+        <ul>
+            <li>Money to disappear or appear due to rounding (e.g., lost cents adding up to dollars over time).</li>
+            <li>Bugs in e-commerce carts, leading to incorrect billing or abandoned transactions.</li>
+            <li>Legal and financial risks, as seen in historical bugs (e.g., the Pentium FDIV bug or various cryptocurrency exploits).</li>
+        </ul>
+        Solution: Never use floats for money. Use integers (for cents) or libraries like Big.js for arbitrary-precision decimals. Your developer is misguided—test this code yourself!
+    </p>
+    
+    <script>
+        function runBroken() {
+            // Simulate shopping cart with floating-point prices
+            let item1 = 4.99;  // $4.99 as a float
+            let item2 = 4.99;  // $4.99 as a float
+            let total = item1 + item2;  // Expected: 9.98, but likely: 9.980000000000001
+            let expected = 9.98;  // The value we're comparing against
+            
+            // Perform comparison using triple-equals (===)
+            let isEqual = (total === expected);  // This will probably be false due to precision
+            
+            document.getElementById('brokenResult').innerHTML = `
+                Item 1: $${item1}<br>
+                Item 2: $${item2}<br>
+                Calculated Total: $${total}<br>
+                <span class="error">Is Total exactly equal to 9.98? ${isEqual ? 'Yes' : 'No (Failed!)'}</span><br>
+                <span class="error">See the precision error? The total isn't exactly 9.98.</span>
+            `;
+        }
+        
+        function runFixed() {
+            // Simulate shopping cart with prices in cents (as integers)
+            let item1Cents = 499;  // $4.99 as 499 cents
+            let item2Cents = 499;  // $4.99 as 499 cents
+            let totalCents = item1Cents + item2Cents;  // 998 cents
+            let totalDollars = totalCents / 100;  // Convert back to dollars: 9.98
+            let expectedCents = 998;  // Expected total in cents
+            
+            // Perform comparison on integers (cents)
+            let isEqual = (totalCents === expectedCents);  // This will be true
+            
+            document.getElementById('fixedResult').innerHTML = `
+                Item 1: $${(item1Cents / 100).toFixed(2)}<br>
+                Item 2: $${(item2Cents / 100).toFixed(2)}<br>
+                Calculated Total: $${totalDollars.toFixed(2)}<br>
+                Is Total (in cents) exactly equal to 998? ${isEqual ? 'Yes (Success!)' : 'No'}<br>
+                No precision errors here—everything is exact.
+            `;
+        }
+    </script>
+</body>
+</html>

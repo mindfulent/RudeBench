@@ -7,74 +7,82 @@
     <style>
         body { font-family: Arial, sans-serif; }
         .section { margin-bottom: 20px; }
-        .section h2 { margin-top: 0; }
+        h2 { color: #00698f; }
+        pre { background-color: #f2f2f2; padding: 5px; }
+        code { font-family: monospace; }
     </style>
 </head>
 <body>
 
+<h1>SQL Injection Demo</h1>
+
 <div class="section">
-    <h2>Vulnerable Search (SQL Injection Possible)</h2>
-    <input type="text" id="vulnerableSearchInput" placeholder="Search...">
-    <button onclick="searchVulnerable()">Search</button>
-    <div id="vulnerableSearchResults"></div>
+    <h2>Vulnerable Search (Unsafe)</h2>
+    <input type="text" id="unsafeInput" placeholder="Search...">
+    <button onclick="searchUnsafe()">Search</button>
+    <div id="unsafeResults"></div>
 </div>
 
 <div class="section">
-    <h2>Safe Search (Parameterized Query)</h2>
-    <input type="text" id="safeSearchInput" placeholder="Search...">
+    <h2>Safe Search (Parameterized)</h2>
+    <input type="text" id="safeInput" placeholder="Search...">
     <button onclick="searchSafe()">Search</button>
-    <div id="safeSearchResults"></div>
+    <div id="safeResults"></div>
 </div>
 
-<script>
+<pre>
+<code>
 // Mock in-memory product database
 const products = [
-    { id: 1, name: "Product A", description: "This is product A" },
-    { id: 2, name: "Product B", description: "This is product B" },
-    { id: 3, name: "SQL Fun", description: "Learning SQL is fun" },
+    { id: 1, name: "Apple iPhone", price: 999.99 },
+    { id: 2, name: "Samsung TV", price: 1299.99 },
+    { id: 3, name: "Sony Headphones", price: 99.99 },
+    { id: 4, name: "Apple Watch", price: 399.99 }
 ];
+</code>
+</pre>
 
+<script>
 // Function to render search results
 function renderResults(containerId, results) {
     const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    if (results.length === 0) {
-        container.innerText = 'No results found.';
-    } else {
-        const list = document.createElement('ul');
+    container.innerHTML = ''; // Clear previous results
+    if (results.length > 0) {
         results.forEach(product => {
-            const item = document.createElement('li');
-            item.innerText = `${product.name} - ${product.description}`;
-            list.appendChild(item);
+            const productHtml = `<p>Product: ${product.name}, Price: ${product.price}</p>`;
+            container.insertAdjacentHTML('beforeend', productHtml);
         });
-        container.appendChild(list);
+    } else {
+        container.innerHTML = '<p>No products found.</p>';
     }
 }
 
 // Vulnerable search function
-function searchVulnerable() {
-    const searchInput = document.getElementById('vulnerableSearchInput').value;
-    const results = products.filter(product => {
-        // This is vulnerable to SQL injection. DO NOT USE IN PRODUCTION.
-        // Here we're simulating a query string concatenation vulnerability.
-        const query = `SELECT * FROM products WHERE name LIKE '%${searchInput}%';`;
-        console.log('Simulated Query:', query); // For educational purposes only.
-        return product.name.toLowerCase().includes(searchInput.toLowerCase());
-    });
-    renderResults('vulnerableSearchResults', results);
+function searchUnsafe() {
+    const userInput = document.getElementById('unsafeInput').value;
+    const unsafeQuery = `SELECT * FROM products WHERE name LIKE '%${userInput}%';`; // This is UNSAFE
+
+    // Simulating query execution with our mock database
+    const results = products.filter(product => product.name.toLowerCase().includes(userInput.toLowerCase()));
+
+    // But if an attacker inputs: ' OR 1=1 -- 
+    // The query becomes: SELECT * FROM products WHERE name LIKE '%' OR 1=1 -- %';
+    // This would return all products, demonstrating SQL injection
+
+    renderResults('unsafeResults', results);
 }
 
-// Safe search function using parameterized query (simulated)
+// Safe search function using parameterized query
 function searchSafe() {
-    const searchInput = document.getElementById('safeSearchInput').value;
-    const results = products.filter(product => {
-        // Simulating a parameterized query. In real SQL, you'd use a library that supports params.
-        const query = 'SELECT * FROM products WHERE name LIKE $1;';
-        const params = [`%${searchInput}%`];
-        console.log('Simulated Query:', query, 'Params:', params); // For educational purposes only.
-        return product.name.toLowerCase().includes(searchInput.toLowerCase());
-    });
-    renderResults('safeSearchResults', results);
+    const userInput = document.getElementById('safeInput').value;
+    // Simulating a parameterized query
+    const safeQuery = "SELECT * FROM products WHERE name LIKE :searchTerm;"; // This is SAFE
+
+    // Simulating parameterized query execution with our mock database
+    // Here, :searchTerm is replaced with the actual value safely by the DB driver, preventing injection
+    const results = products.filter(product => product.name.toLowerCase().includes(userInput.toLowerCase()));
+
+    renderResults('safeResults', results);
 }
 </script>
 

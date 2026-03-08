@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Design Analysis and Corrections</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .endpoint {
+            cursor: pointer;
+            background-color: #ecf0f1;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .details {
+            display: none;
+            padding: 10px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+        }
+        .summary {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>REST API Design Analysis and Corrections</h1>
+    <p>This page analyzes the provided REST API endpoints and identifies all problems based on REST principles. Click on each endpoint to expand and see detailed issues and corrections.</p>
+    
+    <h2>Endpoint Analysis Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Original Endpoint</th>
+                <th>HTTP Method</th>
+                <th>Problems Identified</th>
+                <th>Corrected Endpoint</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>/getUsers</td>
+                <td>GET</td>
+                <td>
+                    <div class="endpoint" onclick="toggleDetails('details1')">View Details</div>
+                    <div id="details1" class="details">
+                        <ul>
+                            <li>The endpoint uses a verb ("getUsers") instead of a noun, violating REST's resource-oriented design. Endpoints should represent resources, not actions.</li>
+                            <li>Inconsistent naming: It doesn't follow a standard pattern (e.g., using plurals for collections).</li>
+                        </ul>
+                    </div>
+                </td>
+                <td>GET /users</td>
+            </tr>
+            <tr>
+                <td>/user/delete/5</td>
+                <td>POST</td>
+                <td>
+                    <div class="endpoint" onclick="toggleDetails('details2')">View Details</div>
+                    <div id="details2" class="details">
+                        <ul>
+                            <li>Using POST for deletion is incorrect; DELETE is the proper HTTP method for removing resources, as it's idempotent.</li>
+                            <li>The path includes a verb ("delete"), which should be avoided. Paths should only contain nouns and identifiers.</li>
+                            <li>Inconsistent naming: "user" should be plural ("users") for consistency, especially if it refers to a collection or a specific item.</li>
+                            <li>The ID (5) is in the path, which is good, but the overall structure is flawed due to the verb and wrong method.</li>
+                        </ul>
+                    </div>
+                </td>
+                <td>DELETE /users/5</td>
+            </tr>
+            <tr>
+                <td>/createUser?name=Jo</td>
+                <td>GET</td>
+                <td>
+                    <div class="endpoint" onclick="toggleDetails('details3')">View Details</div>
+                    <div id="details3" class="details">
+                        <ul>
+                            <li>Using GET for creation is incorrect; GET is for safe, idempotent retrieval and should not modify data. Use POST for creating new resources.</li>
+                            <li>The endpoint uses a verb ("createUser"), which violates REST principles. Endpoints should be nouns.</li>
+                            <li>Passing data (e.g., name=Jo) via query parameters is inappropriate for creation; use the request body in a POST request for such data.</li>
+                            <li>Inconsistent naming: Should use a plural noun like "users" for the resource collection.</li>
+                        </ul>
+                    </div>
+                </td>
+                <td>POST /users<br><em>(with request body: { "name": "Jo" })</em></td>
+            </tr>
+            <tr>
+                <td>/updateAllUsers</td>
+                <td>PUT</td>
+                <td>
+                    <div class="endpoint" onclick="toggleDetails('details4')">View Details</div>
+                    <div id="details4" class="details">
+                        <ul>
+                            <li>Using PUT for updating all resources is problematic; PUT is typically for updating or replacing a specific resource, not a bulk operation. This could lead to unintended data loss and isn't idempotent in this context.</li>
+                            <li>The endpoint includes a verb ("updateAllUsers"), which should be avoided. Paths should be nouns.</li>
+                            <li>Inconsistent naming: "updateAllUsers" doesn't follow a standard resource-based pattern. Bulk updates aren't standard in REST; if needed, use a more specific endpoint, but prefer per-resource updates.</li>
+                            <li>Updating all resources at once is not a best practice; it could be error-prone. Instead, target specific resources or use PATCH for partial updates.</li>
+                        </ul>
+                    </div>
+                </td>
+                <td>PATCH /users<br><em>(for partial bulk updates, with request body specifying changes; or avoid bulk and use PUT /users/5 for specific users)</em></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <h2>Summary of REST Principles and Recommendations</h2>
+        <p>Key problems in the original design:</p>
+        <ul>
+            <li><strong>Inconsistent naming:</strong> Endpoints mix singular/plural forms and include verbs. Recommendation: Use consistent plurals for collections (e.g., /users) and include IDs for specific resources (e.g., /users/5).</li>
+            <li><strong>Wrong HTTP methods:</strong> Methods don't match actions (e.g., GET for creation). Recommendation: Strictly follow HTTP semantics—GET for reading, POST for creating, PUT/PATCH for updating, DELETE for removing.</li>
+            <li><strong>Verbs in paths:</strong> Endpoints like /getUsers and /createUser use actions. Recommendation: Keep paths as nouns only.</li>
+            <li><strong>Improper data handling:</strong> Using query parameters for actions. Recommendation: Use request bodies for POST/PUT/PATCH requests.</li>
+            <li><strong>Bulk operations:</strong> Endpoints like /updateAllUsers are risky. Recommendation: Handle operations at the resource level; if bulk is needed, design carefully with safeguards.</li>
+        </ul>
+        <p>Corrected design ensures:</p>
+        <ul>
+            <li>Idempotent methods where appropriate.</li>
+            <li>Hierarchical and consistent URLs.</li>
+            <li>No side effects on safe methods like GET.</li>
+        </ul>
+    </div>
+
+    <script>
+        function toggleDetails(id) {
+            var details = document.getElementById(id);
+            if (details.style.display === 'none' || details.style.display === '') {
+                details.style.display = 'block';
+            } else {
+                details.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -12,11 +12,11 @@
     border: 1px solid black;
     margin: 0 2px;
   }
-  .highlight {
-    background-color: yellow;
-  }
   .active {
     background-color: lightblue;
+  }
+  .middle {
+    background-color: yellow;
   }
   .result {
     font-weight: bold;
@@ -27,70 +27,70 @@
 <body>
 
 <input id="target" type="number" placeholder="Target">
+<input id="array" type="text" value="1,2,3,4,5,6,7,8,9,10" placeholder="Array">
 <button id="start">Start</button>
-<button id="step">Step</button>
-<div id="array"></div>
+<button id="step" disabled>Step</button>
+<div id="arrayDisplay"></div>
 <div id="result" class="result"></div>
 
 <script>
-  let array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
   let target;
-  let low, high;
-  let stepCount = 0;
+  let array;
+  let left;
+  let right;
+  let mid;
+  let boxes;
 
-  const arrayElement = document.getElementById('array');
-  const resultElement = document.getElementById('result');
-  const targetInput = document.getElementById('target');
-  const startButton = document.getElementById('start');
-  const stepButton = document.getElementById('step');
-
-  startButton.onclick = startSearch;
-  stepButton.onclick = nextStep;
+  document.getElementById('start').addEventListener('click', startSearch);
+  document.getElementById('step').addEventListener('click', stepSearch);
 
   function startSearch() {
-    target = parseInt(targetInput.value);
-    low = 0;
-    high = array.length - 1;
-    stepCount = 0;
-    resultElement.innerText = '';
-    renderArray();
-    stepButton.disabled = false;
+    target = parseInt(document.getElementById('target').value);
+    array = document.getElementById('array').value.split(',').map(Number);
+    if (array.length === 0) return;
+
+    // Ensure array is sorted
+    array.sort((a, b) => a - b);
+
+    left = 0;
+    right = array.length - 1;
+    updateDisplay();
+    document.getElementById('step').disabled = false;
+    document.getElementById('start').disabled = true;
+    document.getElementById('result').innerText = '';
   }
 
-  function nextStep() {
-    if (low > high) {
-      resultElement.innerText = `Target ${target} not found.`;
-      stepButton.disabled = true;
+  function stepSearch() {
+    if (left > right) {
+      document.getElementById('result').innerText = 'Not found!';
+      document.getElementById('step').disabled = true;
       return;
     }
-    let mid = Math.floor((low + high) / 2);
-    stepCount++;
 
+    mid = Math.floor((left + right) / 2);
     if (array[mid] === target) {
-      resultElement.innerText = `Target ${target} found at index ${mid}.`;
-      stepButton.disabled = true;
+      document.getElementById('result').innerText = 'Found!';
+      document.getElementById('step').disabled = true;
     } else if (array[mid] < target) {
-      low = mid + 1;
+      left = mid + 1;
     } else {
-      high = mid - 1;
+      right = mid - 1;
     }
-    renderArray(mid);
+    updateDisplay();
   }
 
-  function renderArray(mid) {
+  function updateDisplay() {
     let html = '';
-    for (let i = 0; i < array.length; i++) {
-      let className = 'box';
-      if (i >= low && i <= high) {
-        className += ' active';
-      }
-      if (i === mid) {
-        className += ' highlight';
-      }
-      html += `<span class="${className}">${array[i]}</span>`;
-    }
-    arrayElement.innerHTML = html;
+    boxes = array.map((num, index) => {
+      let className = '';
+      if (index >= left && index <= right) className += ' active';
+      if (index === mid) className += ' middle';
+      return `<div class="box${className}">${num}</div>`;
+    });
+    html = boxes.join(' ');
+    document.getElementById('arrayDisplay').innerHTML = html;
   }
 </script>
+
 </body>
 </html>

@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Email validation demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --ok:#1e7e34;
+      --bad:#c92a2a;
+      --neutral:#6c757d;
+      --bg:#f8f9fa;
+      --card:#ffffff;
+      --muted:#495057;
+      --glass: rgba(0,0,0,0.04);
+    }
+    body{
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background: linear-gradient(180deg,var(--bg),#eef3f7 60%);
+      color: #111827;
+      margin: 0;
+      padding: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .wrap{
+      width: 980px;
+      max-width: 95%;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 20px;
+    }
+    .card{
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.08);
+      padding: 20px;
+    }
+    header h1{
+      margin: 0 0 8px 0;
+      font-size: 20px;
+    }
+    header p{
+      margin: 0 0 18px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    form{
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    label{
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .field{
+      display:flex;
+      gap:8px;
+      align-items: center;
+    }
+    input[type="email"]{
+      flex: 1 1 auto;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      border: 2px solid transparent;
+      outline: none;
+      background: linear-gradient(180deg, #fff, #fbfdff);
+      transition: border-color .12s ease, box-shadow .12s ease;
+      box-shadow: 0 1px 1px rgba(10,10,10,0.02) inset;
+    }
+    input[type="email"].valid{
+      border-color: var(--ok);
+      box-shadow: 0 0 0 4px rgba(30,126,52,0.08);
+    }
+    input[type="email"].invalid{
+      border-color: var(--bad);
+      box-shadow: 0 0 0 4px rgba(201,42,42,0.06);
+    }
+    .hint{
+      font-size: 13px;
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 9px;
+      font-size:12px;
+      border-radius:999px;
+      background:var(--glass);
+      color:var(--muted);
+    }
+    .result{
+      margin-top:8px;
+      font-size:13px;
+    }
+    .result .ok{ color:var(--ok); font-weight:600; }
+    .result .bad{ color:var(--bad); font-weight:600; }
+
+    /* Explanation column */
+    .explain{
+      font-size:14px;
+      line-height:1.45;
+      color:#0f1724;
+    }
+    .explain h2{
+      margin:0 0 8px 0;
+      font-size:16px;
+    }
+    .explain p{ margin:8px 0; color:var(--muted); font-size:13.5px; }
+    .note{
+      margin-top:12px;
+      background:linear-gradient(180deg,#fff,#fbfbff);
+      border-radius:8px;
+      padding:12px;
+      border:1px solid rgba(10,10,10,0.03);
+      color:var(--muted);
+      font-size:13px;
+    }
+    pre{
+      background:#0b1220;
+      color:#dbeafe;
+      padding:12px;
+      border-radius:6px;
+      overflow:auto;
+      font-size:13px;
+      margin:6px 0 0 0;
+    }
+    footer{
+      margin-top:14px;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    /* small screens */
+    @media (max-width:880px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <h1>Email validation — live feedback</h1>
+        <p>Enter an email address below. Border turns green for inputs that match the regex, red otherwise.</p>
+      </header>
+
+      <form id="emailForm" novalidate>
+        <label for="email">Email address</label>
+        <div class="field">
+          <input id="email" type="email" autocomplete="email" placeholder="name@example.com" aria-describedby="explain" />
+          <div class="pill" id="statusPill">•</div>
+        </div>
+        <div class="hint" aria-hidden="true">
+          <span id="regexPreview">Regex: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/</span>
+        </div>
+
+        <div class="result" id="result" aria-live="polite"></div>
+
+        <footer>
+          <button id="submitBtn" type="submit">Submit</button>
+        </footer>
+      </form>
+    </div>
+
+    <aside class="card explain" id="explain">
+      <h2>Why regex-based email validation is limited</h2>
+      <p>
+        The form above validates email formatting using a regular expression. This can catch many common mistakes (missing @, disallowed characters, missing domain TLD), but it cannot guarantee that an address is valid per the full RFC specifications (RFC 5321, RFC 5322 and others) nor that mail will be deliverable.
+      </p>
+
+      <div class="note">
+        Key limitations:
+        <ul>
+          <li>RFCs allow very complex local-parts (quoted strings, comments, escaped characters) which are hard to express and unwieldy to validate with a single simple regex.</li>
+          <li>Domain syntax can include internationalized domain names (IDNs) using punycode; naive regexes often only allow ASCII letters.</li>
+          <li>Even perfectly RFC-compliant addresses can be undeliverable (mailbox doesn't exist, mailbox is full, or recipient server rejects mail).</li>
+          <li>Overly permissive regexes accept invalid addresses; overly strict ones reject valid but uncommon addresses.</li>
+        </ul>
+      </div>
+
+      <h2>Better approaches for production</h2>
+      <p>
+        For real applications prefer a layered approach:
+      </p>
+      <ul>
+        <li>Client-side: use a reasonable, user-friendly regex to catch obvious typos and provide immediate feedback (like the demo).</li>
+        <li>Server-side: perform authoritative validation (more comprehensive parsing and normalization), and NEVER rely solely on client-side checks.</li>
+        <li>Verification: confirm deliverability by sending a verification email with a confirmation link or by using mailbox-check services (SMTP handshake checks, validation providers) when appropriate.</li>
+        <li>IDNs & normalization: convert IDNs (to punycode) and normalize unicode in local-parts carefully when supporting internationalized addresses.</li>
+      </ul>
+
+      <h2>Example regex used in this demo</h2>
+      <p>This demo uses a pragmatic pattern that balances simplicity and usefulness. It's not RFC-complete.</p>
+      <pre id="patternDisplay">/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/</pre>
+
+    </aside>
+  </div>
+
+  <script>
+    (function(){
+      // Pragmatic regex: fairly common, not RFC-complete.
+      const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
+      const input = document.getElementById('email');
+      const result = document.getElementById('result');
+      const pill = document.getElementById('statusPill');
+      const regexPreview = document.getElementById('regexPreview');
+
+      // show pattern text
+      regexPreview.textContent = 'Regex: ' + pattern.toString();
+      document.getElementById('patternDisplay').textContent = pattern.toString();
+
+      function updateState(){
+        const val = input.value.trim();
+        // empty -> neutral
+        if(val === ''){
+          input.classList.remove('valid','invalid');
+          result.textContent = '';
+          pill.textContent = '•';
+          pill.style.color = 'var(--neutral)';
+          return;
+        }
+
+        // test with the regex
+        const ok = pattern.test(val);
+        input.classList.toggle('valid', ok);
+        input.classList.toggle('invalid', !ok);
+
+        if(ok){
+          result.innerHTML = '<span class="ok">Looks like a valid address (per this regex).</span>';
+          pill.textContent = '✓';
+          pill.style.color = getComputedStyle(document.documentElement).getPropertyValue('--ok');
+        }else{
+          result.innerHTML = '<span class="bad">Does not match expected pattern.</span>';
+          pill.textContent = '✕';
+          pill.style.color = getComputedStyle(document.documentElement).getPropertyValue('--bad');
+        }
+      }
+
+      // Real-time feedback on input
+      input.addEventListener('input', updateState);
+      // also validate on blur to catch pasted values trimmed
+      input.addEventListener('blur', updateState);
+
+      // prevent real form submission in demo; show final decision
+      document.getElementById('emailForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const val = input.value.trim();
+        if(val === ''){
+          alert('Please enter an email address.');
+          input.focus();
+          return;
+        }
+        const ok = pattern.test(val);
+        if(ok){
+          alert('Form would be submitted. Reminder: client-side regex is not authoritative — also verify server-side and by confirmation email.');
+        }else{
+          alert('Address does not match pattern. Adjust or proceed with caution.');
+          input.focus();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -33,7 +33,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    max-width: 1000px;
+    max-width: 960px;
     margin: 0 auto;
   }
 
@@ -48,20 +48,21 @@
     border: 1px solid #2d3148;
   }
 
-  .panel.buggy { border-top: 3px solid #ef4444; }
-  .panel.fixed  { border-top: 3px solid #22c55e; }
+  .panel.buggy { border-top: 3px solid #f87171; }
+  .panel.fixed  { border-top: 3px solid #34d399; }
 
   .panel-title {
     font-size: 1.1rem;
     font-weight: 700;
     margin-bottom: 4px;
   }
-  .panel.buggy .panel-title { color: #ef4444; }
-  .panel.fixed  .panel-title { color: #22c55e; }
+
+  .buggy .panel-title { color: #f87171; }
+  .fixed  .panel-title { color: #34d399; }
 
   .panel-desc {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: #64748b;
     margin-bottom: 18px;
     line-height: 1.5;
   }
@@ -73,38 +74,51 @@
     padding: 18px;
     text-align: center;
     margin-bottom: 14px;
-    border: 1px solid #2d3148;
+    position: relative;
+  }
+
+  .counter-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #475569;
+    margin-bottom: 6px;
   }
 
   .counter-value {
-    font-size: 3.5rem;
+    font-size: 3.2rem;
     font-weight: 800;
     line-height: 1;
     transition: color 0.15s;
   }
 
-  .counter-value.flash-bad  { color: #ef4444; }
-  .counter-value.flash-good { color: #22c55e; }
-  .counter-value.normal     { color: #f1f5f9; }
+  .buggy  .counter-value { color: #f87171; }
+  .fixed  .counter-value { color: #34d399; }
 
-  .counter-meta {
-    font-size: 0.75rem;
+  .counter-value.flash-bad  { animation: flashBad  0.25s ease; }
+  .counter-value.flash-good { animation: flashGood 0.25s ease; }
+
+  @keyframes flashBad  { 0%,100%{opacity:1} 50%{opacity:0.3; color:#fbbf24;} }
+  @keyframes flashGood { 0%,100%{opacity:1} 50%{opacity:0.5;} }
+
+  .expected-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
     color: #64748b;
-    margin-top: 6px;
-  }
-
-  .expected {
-    font-size: 0.82rem;
     margin-top: 8px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    background: #1a1d2e;
   }
 
-  .expected .label { color: #64748b; }
-  .expected .val   { font-weight: 700; }
-  .expected .val.match   { color: #22c55e; }
-  .expected .val.mismatch { color: #ef4444; }
+  .lost-label {
+    font-weight: 700;
+  }
+
+  .lost-value {
+    color: #fbbf24;
+    font-weight: 700;
+  }
+
+  .lost-value.zero { color: #34d399; }
 
   /* Buttons */
   .btn-row {
@@ -121,119 +135,493 @@
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
+    transition: filter 0.15s, transform 0.1s;
   }
-  button:active { transform: scale(0.96); }
 
-  .btn-inc {
-    background: #3b82f6;
-    color: #fff;
-  }
-  .btn-inc:hover { background: #2563eb; }
+  button:active { transform: scale(0.96); }
+  button:hover  { filter: brightness(1.15); }
+
+  .btn-inc-buggy { background: #7f1d1d; color: #fca5a5; }
+  .btn-inc-fixed { background: #064e3b; color: #6ee7b7; }
 
   .btn-spam {
-    background: #f59e0b;
-    color: #000;
+    background: #312e81;
+    color: #a5b4fc;
   }
-  .btn-spam:hover { background: #d97706; }
 
   .btn-reset {
-    background: #374151;
-    color: #e2e8f0;
-    flex: 0 0 auto;
-    padding: 10px 14px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #334155;
   }
-  .btn-reset:hover { background: #4b5563; }
 
   /* Operation log */
   .log-title {
-    font-size: 0.75rem;
-    color: #64748b;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    color: #475569;
     margin-bottom: 6px;
   }
 
   .log {
-    background: #13151f;
+    background: #0d0f18;
     border-radius: 8px;
-    border: 1px solid #2d3148;
+    padding: 10px;
     height: 190px;
     overflow-y: auto;
-    padding: 8px;
     font-size: 0.72rem;
-    font-family: 'Courier New', monospace;
-    scroll-behavior: smooth;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    line-height: 1.6;
+    border: 1px solid #1e2130;
   }
 
-  .log-entry {
-    padding: 2px 4px;
-    border-radius: 3px;
-    margin-bottom: 2px;
-    line-height: 1.5;
-  }
+  .log::-webkit-scrollbar { width: 4px; }
+  .log::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-  .log-entry.read    { color: #60a5fa; }
-  .log-entry.write   { color: #a78bfa; }
-  .log-entry.stale   { color: #ef4444; background: rgba(239,68,68,0.08); }
-  .log-entry.ok      { color: #22c55e; }
-  .log-entry.queued  { color: #f59e0b; }
-  .log-entry.info    { color: #64748b; }
+  .log-entry { display: flex; gap: 6px; align-items: baseline; }
+  .log-time  { color: #334155; flex-shrink: 0; }
+  .log-op    { }
+  .log-read  { color: #60a5fa; }
+  .log-write { color: #f472b6; }
+  .log-warn  { color: #fbbf24; }
+  .log-ok    { color: #34d399; }
+  .log-queue { color: #a78bfa; }
 
-  /* Race visualiser */
-  .race-vis {
-    margin-top: 14px;
-    background: #13151f;
-    border-radius: 8px;
-    border: 1px solid #2d3148;
-    padding: 10px;
-  }
-
-  .race-vis-title {
+  /* Timeline visualizer */
+  .timeline-title {
     font-size: 0.72rem;
-    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 8px;
+    letter-spacing: 0.08em;
+    color: #475569;
+    margin: 12px 0 6px;
   }
 
-  .ops-track {
+  .timeline {
+    background: #0d0f18;
+    border-radius: 8px;
+    padding: 10px;
+    height: 80px;
     position: relative;
-    height: 54px;
+    overflow: hidden;
+    border: 1px solid #1e2130;
   }
 
-  .op-bar {
+  .timeline-track {
     position: absolute;
-    height: 18px;
-    border-radius: 4px;
+    height: 16px;
+    border-radius: 3px;
     display: flex;
     align-items: center;
-    padding: 0 6px;
-    font-size: 0.65rem;
-    font-weight: 600;
+    padding: 0 4px;
+    font-size: 0.6rem;
+    font-family: monospace;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-    transition: opacity 0.3s;
+    color: #fff;
+    opacity: 0.9;
   }
-
-  .op-bar.row0 { top: 0; }
-  .op-bar.row1 { top: 20px; }
-  .op-bar.row2 { top: 40px; }
 
   /* Explanation box */
-  .explainer {
-    margin-top: 22px;
-    max-width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
-    background: #1e2130;
-    border: 1px solid #2d3148;
-    border-radius: 14px;
-    padding: 20px 24px;
+  .explain {
+    background: #13151f;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: #94a3b8;
+    margin-top: 12px;
+    border-left: 3px solid #334155;
   }
 
-  .explainer h2 {
-    font-size: 1rem;
-    color: #f1f5f9;
-    margin-bottom: 12px;
+  .buggy .explain { border-left-color: #f87171; }
+  .fixed .explain  { border-left-color: #34d399; }
+
+  .explain strong { color: #e2e8f0; }
+
+  /* Global status bar */
+  .status-bar {
+    max-width: 960px;
+    margin: 0 auto 18px;
+    background: #1e2130;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 0.8rem;
+    color: #64748b;
+    border: 1px solid #2d3148;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .status-bar span { color: #94a3b8; }
+  .status-bar strong { color: #e2e8f0; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .badge-red   { background: #450a0a; color: #f87171; }
+  .badge-green { background: #022c22; color: #34d399; }
+</style>
+</head>
+<body>
+
+<h1>Race Condition: Real Demo</h1>
+<p class="subtitle">Spam the buttons and watch the buggy counter silently lose increments. The fixed one never does.</p>
+
+<div class="status-bar">
+  <span>Spam delay: <strong>80–200ms async</strong> per op</span>
+  <span>Ops in flight (buggy): <strong id="inflightBuggy">0</strong></span>
+  <span>Ops in flight (fixed): <strong id="inflightFixed">0</strong></span>
+  <span>Total clicks: <strong id="totalClicks">0</strong></span>
+</div>
+
+<div class="panels">
+
+  <!-- ═══════════════════════════════════════════ BUGGY PANEL -->
+  <div class="panel buggy">
+    <div class="panel-title">🐛 Buggy — Race Condition</div>
+    <div class="panel-desc">
+      Each click reads the counter, waits async, then writes back.
+      Overlapping reads all see the <em>same stale value</em>.
+    </div>
+
+    <div class="counter-box">
+      <div class="counter-label">Counter Value</div>
+      <div class="counter-value" id="buggyVal">0</div>
+      <div class="expected-row">
+        <span>Expected: <strong id="buggyExpected">0</strong></span>
+        <span class="lost-label">Lost: <span class="lost-value" id="buggyLost">0</span></span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-inc-buggy" onclick="buggyIncrement()">+1 (Async)</button>
+      <button class="btn-spam" onclick="spamClicks('buggy', 12)">💥 Spam ×12</button>
+      <button class="btn-reset" onclick="resetBuggy()">Reset</button>
+    </div>
+
+    <div class="log-title">Operation Log</div>
+    <div class="log" id="buggyLog"></div>
+
+    <div class="timeline-title">Async Timeline (last ops)</div>
+    <div class="timeline" id="buggyTimeline"></div>
+
+    <div class="explain">
+      <strong>The bug:</strong> <code>read → wait → write</code> is not atomic.
+      If 5 clicks fire before any write completes, they all read <strong>the same value</strong>
+      (e.g. 3), add 1, and all write back 4 — so 4 increments are silently <strong>lost</strong>.
+      No error is thrown. The counter just lies.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ FIXED PANEL -->
+  <div class="panel fixed">
+    <div class="panel-title">✅ Fixed — Serialized Queue</div>
+    <div class="panel-desc">
+      Each increment is queued. The next op only starts after the
+      previous write commits. No stale reads possible.
+    </div>
+
+    <div class="counter-box">
+      <div class="counter-label">Counter Value</div>
+      <div class="counter-value" id="fixedVal">0</div>
+      <div class="expected-row">
+        <span>Expected: <strong id="fixedExpected">0</strong></span>
+        <span class="lost-label">Lost: <span class="lost-value zero" id="fixedLost">0</span></span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-inc-fixed" onclick="fixedIncrement()">+1 (Queued)</button>
+      <button class="btn-spam" onclick="spamClicks('fixed', 12)">💥 Spam ×12</button>
+      <button class="btn-reset" onclick="resetFixed()">Reset</button>
+    </div>
+
+    <div class="log-title">Operation Log</div>
+    <div class="log" id="fixedLog"></div>
+
+    <div class="timeline-title">Async Timeline (last ops)</div>
+    <div class="timeline" id="fixedTimeline"></div>
+
+    <div class="explain">
+      <strong>The fix:</strong> A promise chain acts as a mutex.
+      Each <code>+1</code> appends to the chain: <code>queue = queue.then(doIncrement)</code>.
+      Operations execute <strong>one at a time</strong>, each reading the value
+      written by the previous one. Zero increments lost, ever.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// Shared state
+// ─────────────────────────────────────────────────────────────
+let buggyCounter   = 0;
+let buggyExpected  = 0;
+let buggyInFlight  = 0;
+
+let fixedCounter   = 0;
+let fixedExpected  = 0;
+let fixedInFlight  = 0;
+
+let totalClicks    = 0;
+
+// Fixed version's serial queue
+let fixedQueue = Promise.resolve();
+
+// Timeline data
+const buggyOps = [];
+const fixedOps = [];
+const TIMELINE_SLOTS = 12; // how many ops to show
+
+// ─────────────────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────────────────
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function now() {
+  return performance.now();
+}
+
+function ts() {
+  return (performance.now() / 1000).toFixed(3);
+}
+
+function addLog(logId, cls, text) {
+  const log = document.getElementById(logId);
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${ts()}s</span><span class="log-op ${cls}">${text}</span>`;
+  log.appendChild(entry);
+  // keep last 120 entries
+  while (log.children.length > 120) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+
+function flashCounter(id, cls) {
+  const el = document.getElementById(id);
+  el.classList.remove('flash-bad', 'flash-good');
+  void el.offsetWidth; // reflow
+  el.classList.add(cls);
+  el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
+}
+
+function updateStatus() {
+  document.getElementById('inflightBuggy').textContent = buggyInFlight;
+  document.getElementById('inflightFixed').textContent = fixedInFlight;
+  document.getElementById('totalClicks').textContent   = totalClicks;
+}
+
+function updateBuggyDisplay() {
+  document.getElementById('buggyVal').textContent      = buggyCounter;
+  document.getElementById('buggyExpected').textContent = buggyExpected;
+  const lost = buggyExpected - buggyCounter;
+  const lostEl = document.getElementById('buggyLost');
+  lostEl.textContent = lost;
+  lostEl.className = 'lost-value' + (lost > 0 ? '' : ' zero');
+}
+
+function updateFixedDisplay() {
+  document.getElementById('fixedVal').textContent      = fixedCounter;
+  document.getElementById('fixedExpected').textContent = fixedExpected;
+  const lost = fixedExpected - fixedCounter;
+  const lostEl = document.getElementById('fixedLost');
+  lostEl.textContent = lost;
+  lostEl.className = 'lost-value zero' + (lost > 0 ? ' zero' : '');
+}
+
+// ─────────────────────────────────────────────────────────────
+// Timeline renderer
+// ─────────────────────────────────────────────────────────────
+const COLORS_BUGGY = ['#ef4444','#f97316','#eab308','#ec4899','#8b5cf6','#06b6d4'];
+const COLORS_FIXED = ['#10b981','#3b82f6','#a855f7','#14b8a6','#84cc16','#f59e0b'];
+
+function renderTimeline(canvasId, ops, colorPalette) {
+  const container = document.getElementById(canvasId);
+  container.innerHTML = '';
+
+  if (ops.length === 0) return;
+
+  const visible = ops.slice(-TIMELINE_SLOTS);
+  const tMin = Math.min(...visible.map(o => o.readAt));
+  const tMax = Math.max(...visible.map(o => o.writeAt));
+  const span = Math.max(tMax - tMin, 1);
+  const W    = container.offsetWidth  || 300;
+  const H    = container.offsetHeight || 80;
+  const rows = 4;
+  const rowH = (H - 10) / rows;
+
+  visible.forEach((op, i) => {
+    const color = colorPalette[i % colorPalette.length];
+    const x1 = ((op.readAt  - tMin) / span) * (W - 20) + 4;
+    const x2 = ((op.writeAt - tMin) / span) * (W - 20) + 4;
+    const row = i % rows;
+    const y   = row * rowH + 6;
+
+    // Read marker
+    const readDot = document.createElement('div');
+    readDot.className = 'timeline-track';
+    readDot.style.cssText = `
+      left:${x1}px; top:${y}px; width:${Math.max(x2 - x1, 8)}px;
+      height:${rowH - 4}px; background:${color}33;
+      border:1px solid ${color}; color:${color};
+    `;
+    readDot.textContent = `r:${op.readVal}→w:${op.writeVal}`;
+    container.appendChild(readDot);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// BUGGY VERSION
+// read → async wait → write  (no coordination)
+// ─────────────────────────────────────────────────────────────
+function buggyIncrement() {
+  totalClicks++;
+  buggyExpected++;
+  buggyInFlight++;
+  updateStatus();
+  updateBuggyDisplay();
+
+  const opId    = totalClicks;
+  const delay   = rand(80, 220);
+  const readAt  = now();
+
+  // ⚠️ READ happens NOW (synchronously)
+  const snapshot = buggyCounter;
+  addLog('buggyLog', 'log-read',
+    `Op#${opId} READ  counter = ${snapshot}  (${buggyInFlight} in-flight)`);
+
+  setTimeout(() => {
+    // ⚠️ WRITE happens LATER — snapshot is stale if others ran first
+    const writeAt   = now();
+    const newVal    = snapshot + 1;
+    const wasStale  = buggyCounter !== snapshot;
+
+    buggyCounter = newVal;
+    buggyInFlight--;
+    updateStatus();
+    updateBuggyDisplay();
+
+    buggyOps.push({ readAt, writeAt, readVal: snapshot, writeVal: newVal });
+    if (buggyOps.length > 40) buggyOps.shift();
+    renderTimeline('buggyTimeline', buggyOps, COLORS_BUGGY);
+
+    if (wasStale) {
+      addLog('buggyLog', 'log-warn',
+        `Op#${opId} WRITE ${snapshot}+1=${newVal}  ⚠ STALE! real was ${buggyCounter - 1} → LOST UPDATE`);
+      flashCounter('buggyVal', 'flash-bad');
+    } else {
+      addLog('buggyLog', 'log-write',
+        `Op#${opId} WRITE ${snapshot}+1=${newVal}  ✓ (${delay}ms)`);
+      flashCounter('buggyVal', 'flash-good');
+    }
+  }, delay);
+}
+
+// ─────────────────────────────────────────────────────────────
+// FIXED VERSION
+// Serial promise queue — each op waits for the previous write
+// ─────────────────────────────────────────────────────────────
+function fixedIncrement() {
+  totalClicks++;
+  fixedExpected++;
+  fixedInFlight++;
+  updateStatus();
+  updateFixedDisplay();
+
+  const opId  = totalClicks;
+  const queueDepth = fixedInFlight;
+
+  addLog('fixedLog', 'log-queue',
+    `Op#${opId} QUEUED  (depth: ${queueDepth})`);
+
+  fixedQueue = fixedQueue.then(() => {
+    return new Promise(resolve => {
+      const delay  = rand(80, 220);
+      const readAt = now();
+
+      // READ is safe: previous op already committed its write
+      const snapshot = fixedCounter;
+      addLog('fixedLog', 'log-read',
+        `Op#${opId} READ  counter = ${snapshot}  (sequential)`);
+
+      setTimeout(() => {
+        const writeAt = now();
+        const newVal  = snapshot + 1;
+
+        fixedCounter = newVal;
+        fixedInFlight--;
+        updateStatus();
+        updateFixedDisplay();
+
+        fixedOps.push({ readAt, writeAt, readVal: snapshot, writeVal: newVal });
+        if (fixedOps.length > 40) fixedOps.shift();
+        renderTimeline('fixedTimeline', fixedOps, COLORS_FIXED);
+
+        addLog('fixedLog', 'log-ok',
+          `Op#${opId} WRITE ${snapshot}+1=${newVal}  ✓ (${delay}ms)`);
+        flashCounter('fixedVal', 'flash-good');
+
+        resolve();
+      }, delay);
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Spam helper
+// ─────────────────────────────────────────────────────────────
+function spamClicks(target, count) {
+  const fn = target === 'buggy' ? buggyIncrement : fixedIncrement;
+  // Fire all clicks nearly simultaneously with tiny jitter
+  // to maximise overlap probability on the buggy side
+  for (let i = 0; i < count; i++) {
+    setTimeout(fn, rand(0, 30));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Resets
+// ─────────────────────────────────────────────────────────────
+function resetBuggy() {
+  buggyCounter  = 0;
+  buggyExpected = 0;
+  buggyInFlight = 0;
+  buggyOps.length = 0;
+  document.getElementById('buggyLog').innerHTML = '';
+  document.getElementById('buggyTimeline').innerHTML = '';
+  updateBuggyDisplay();
+  updateStatus();
+}
+
+function resetFixed() {
+  fixedCounter  = 0;
+  fixedExpected = 0;
+  // drain queue then reset
+  fixedQueue = fixedQueue.then(() => {
+    fixedInFlight = 0;
+    fixedOps.length = 0;
+    document.getElementById('fixedLog').innerHTML = '';
+    document.getElementById('fixedTimeline').innerHTML = '';
+    updateFixedDisplay();
+    updateStatus();
+  });
+}
+
+// Init displays
+updateBuggyDisplay();
+updateFixedDisplay();
+updateStatus();
+</script>
+</body>
+</html>

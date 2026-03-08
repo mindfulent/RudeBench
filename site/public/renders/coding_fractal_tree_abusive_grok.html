@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree with Depth Slider</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid #000;
+            background-color: #f0f0f0;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        #depthLabel {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Fractal Tree</h1>
+    <div id="controls">
+        <label id="depthLabel" for="depthSlider">Depth: 1</label>
+        <input type="range" id="depthSlider" min="1" max="12" value="1">
+    </div>
+    <canvas id="fractalCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('fractalCanvas');
+        const ctx = canvas.getContext('2d');
+        const depthSlider = document.getElementById('depthSlider');
+        const depthLabel = document.getElementById('depthLabel');
+
+        // Event listener for the slider
+        depthSlider.addEventListener('input', function() {
+            const depth = parseInt(depthSlider.value);
+            depthLabel.textContent = `Depth: ${depth}`;  // Update label
+            drawFractalTree(depth);  // Redraw the tree
+        });
+
+        function drawFractalTree(depth) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            const startX = canvas.width / 2;  // Start at the center horizontally
+            const startY = canvas.height - 50;  // Start near the bottom
+            const initialLength = 100;  // Initial branch length
+            const initialAngle = -Math.PI / 2;  // Pointing upwards (90 degrees from positive x-axis)
+
+            ctx.strokeStyle = 'darkgreen';  // Set line color
+            ctx.lineWidth = 2;  // Set line width
+
+            drawBranch(ctx, startX, startY, initialLength, initialAngle, depth);
+        }
+
+        // Recursive function to draw the tree
+        function drawBranch(ctx, startX, startY, length, angle, depth) {
+            if (depth === 0) return;  // Base case: Stop recursion when depth is 0
+
+            // Calculate the end point of the current branch
+            const endX = startX + length * Math.cos(angle);
+            const endY = startY + length * Math.sin(angle);
+
+            // Draw the line for the current branch
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Recursive calls for the sub-branches
+            const newLength = length * 0.7;  // Reduce length for sub-branches
+            const angleOffset = Math.PI / 6;  // 30 degrees for branching
+
+            drawBranch(ctx, endX, endY, newLength, angle - angleOffset, depth - 1);  // Left branch
+            drawBranch(ctx, endX, endY, newLength, angle + angleOffset, depth - 1);  // Right branch
+        }
+    </script>
+</body>
+</html>

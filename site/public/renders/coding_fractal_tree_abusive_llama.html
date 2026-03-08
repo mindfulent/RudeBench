@@ -12,42 +12,42 @@
 <body>
   <canvas id="canvas" width="600" height="600"></canvas>
   <input type="range" id="depth-slider" min="1" max="12" value="6">
-  <label for="depth-slider">Depth: <span id="depth-value">6</span></label>
+  <label for="depth-slider">Depth: <span id="depth-label">6</span></label>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const depthSlider = document.getElementById('depth-slider');
-    const depthValue = document.getElementById('depth-value');
-
-    function drawTree(x, y, angle, depth, length) {
-      if (depth === 0) return;
-
-      const endX = x + Math.cos(angle) * length;
-      const endY = y + Math.sin(angle) * length;
-
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(endX, endY);
-      ctx.stroke();
-
-      drawTree(endX, endY, angle - Math.PI / 6, depth - 1, length * 0.7);
-      drawTree(endX, endY, angle + Math.PI / 6, depth - 1, length * 0.7);
-    }
-
-    function updateTree() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'black';
-      ctx.lineWidth = 2;
-      drawTree(canvas.width / 2, canvas.height, -Math.PI / 2, parseInt(depthSlider.value), 100);
-    }
+    const depthLabel = document.getElementById('depth-label');
 
     depthSlider.addEventListener('input', () => {
-      depthValue.textContent = depthSlider.value;
-      updateTree();
+      depthLabel.textContent = depthSlider.value;
+      drawTree(parseInt(depthSlider.value));
     });
 
-    updateTree();
+    function drawTree(depth) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.translate(canvas.width / 2, canvas.height);
+      ctx.rotate(-Math.PI / 2);
+      drawBranch(100, depth);
+    }
+
+    function drawBranch(length, depth) {
+      if (depth === 0) return;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -length);
+      ctx.stroke();
+      ctx.translate(0, -length);
+      ctx.rotate(Math.PI / 6);
+      drawBranch(length * 0.7, depth - 1);
+      ctx.rotate(-Math.PI / 3);
+      drawBranch(length * 0.7, depth - 1);
+      ctx.rotate(Math.PI / 6);
+      ctx.translate(0, length);
+    }
+
+    drawTree(6);
   </script>
 </body>
 </html>

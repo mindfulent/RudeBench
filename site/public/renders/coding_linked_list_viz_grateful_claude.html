@@ -1,228 +1,571 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singly Linked List Visualizer</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Singly Linked List Visualizer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
-            color: #e0e0e0;
-            padding: 20px;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+    }
 
-        h1 {
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 8px;
-            background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 6px;
+      background: linear-gradient(90deg, #e94560, #0f3460, #533483);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: brightness(2);
+    }
 
-        .subtitle {
-            text-align: center;
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 30px;
-        }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 28px;
+    }
 
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            margin-bottom: 30px;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 30px;
+      background: rgba(255,255,255,0.05);
+      padding: 20px 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      max-width: 780px;
+      width: 100%;
+    }
 
-        .control-group {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            backdrop-filter: blur(10px);
-        }
+    .control-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
-        .control-group label {
-            font-size: 0.8rem;
-            color: #aaa;
-            white-space: nowrap;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    input[type="text"] {
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 0.95rem;
+      width: 110px;
+      outline: none;
+      transition: border 0.2s, background 0.2s;
+    }
 
-        input[type="number"] {
-            width: 80px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.3s;
-        }
+    input[type="text"]:focus {
+      border-color: #e94560;
+      background: rgba(233,69,96,0.1);
+    }
 
-        input[type="number"]:focus {
-            border-color: #00d2ff;
-        }
+    input[type="text"]::placeholder { color: #888; }
 
-        button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            letter-spacing: 0.3px;
-        }
+    button {
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      letter-spacing: 0.3px;
+    }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
+    button:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+    button:active { transform: translateY(0px); }
 
-        button:active {
-            transform: translateY(0);
-        }
+    .btn-head   { background: linear-gradient(135deg, #e94560, #c0392b); color: #fff; }
+    .btn-tail   { background: linear-gradient(135deg, #0f3460, #1a73e8); color: #fff; }
+    .btn-delete { background: linear-gradient(135deg, #533483, #8e44ad); color: #fff; }
+    .btn-search { background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; }
+    .btn-clear  { background: linear-gradient(135deg, #555, #333); color: #ccc; }
 
-        .btn-head {
-            background: linear-gradient(135deg, #00d2ff, #0080ff);
-            color: #fff;
-        }
+    .message-box {
+      min-height: 36px;
+      margin-bottom: 20px;
+      font-size: 0.92rem;
+      padding: 8px 20px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #ccc;
+      text-align: center;
+      max-width: 780px;
+      width: 100%;
+      transition: all 0.3s;
+    }
 
-        .btn-tail {
-            background: linear-gradient(135deg, #7b2ff7, #c850c0);
-            color: #fff;
-        }
+    .message-box.success { border-color: #27ae60; color: #2ecc71; background: rgba(39,174,96,0.1); }
+    .message-box.error   { border-color: #e94560; color: #e94560; background: rgba(233,69,96,0.1); }
+    .message-box.info    { border-color: #1a73e8; color: #74b9ff; background: rgba(26,115,232,0.1); }
 
-        .btn-delete {
-            background: linear-gradient(135deg, #ff416c, #ff4b2b);
-            color: #fff;
-        }
+    .canvas-wrapper {
+      width: 100%;
+      max-width: 960px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px 20px;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: auto;
+      overflow-y: hidden;
+      backdrop-filter: blur(6px);
+    }
 
-        .btn-search {
-            background: linear-gradient(135deg, #f7971e, #ffd200);
-            color: #1a1a2e;
-        }
+    .list-container {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 10px 10px;
+      min-width: max-content;
+    }
 
-        .btn-clear {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ccc;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
+    .node-wrapper {
+      display: flex;
+      align-items: center;
+      animation: nodeAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
 
-        .btn-clear:hover {
-            background: rgba(255, 255, 255, 0.18);
-        }
+    @keyframes nodeAppear {
+      from { opacity: 0; transform: scale(0.5) translateY(-20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
 
-        .canvas-container {
-            max-width: 1100px;
-            margin: 0 auto 24px auto;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 20px;
-            min-height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow-x: auto;
-        }
+    @keyframes nodeRemove {
+      from { opacity: 1; transform: scale(1); }
+      to   { opacity: 0; transform: scale(0.4) translateY(-20px); }
+    }
 
-        #listCanvas {
-            display: block;
-        }
+    .node {
+      display: flex;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.25);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: border-color 0.3s, box-shadow 0.3s;
+      position: relative;
+    }
 
-        .message-box {
-            max-width: 900px;
-            margin: 0 auto 20px auto;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-align: center;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
+    .node.highlighted {
+      border-color: #f1c40f;
+      box-shadow: 0 0 0 3px rgba(241,196,15,0.4), 0 4px 20px rgba(241,196,15,0.3);
+      animation: pulse 0.8s ease-in-out 3;
+    }
 
-        .msg-info {
-            background: rgba(0, 210, 255, 0.1);
-            border: 1px solid rgba(0, 210, 255, 0.3);
-            color: #00d2ff;
-        }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(241,196,15,0.4), 0 4px 20px rgba(241,196,15,0.3); }
+      50%       { box-shadow: 0 0 0 7px rgba(241,196,15,0.2), 0 4px 30px rgba(241,196,15,0.5); }
+    }
 
-        .msg-success {
-            background: rgba(0, 230, 118, 0.1);
-            border: 1px solid rgba(0, 230, 118, 0.3);
-            color: #00e676;
-        }
+    .node-data {
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      min-width: 60px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
 
-        .msg-error {
-            background: rgba(255, 65, 108, 0.1);
-            border: 1px solid rgba(255, 65, 108, 0.3);
-            color: #ff416c;
-        }
+    .node-label {
+      font-size: 0.6rem;
+      font-weight: 400;
+      color: #90cdf4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-        .msg-warning {
-            background: rgba(255, 210, 0, 0.1);
-            border: 1px solid rgba(255, 210, 0, 0.3);
-            color: #ffd200;
-        }
+    .node-next {
+      background: linear-gradient(135deg, #2d3748, #1a202c);
+      padding: 14px 12px;
+      font-size: 0.7rem;
+      color: #a0aec0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-width: 44px;
+    }
 
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            flex-wrap: wrap;
-            max-width: 900px;
-            margin: 0 auto;
-            font-size: 0.8rem;
-            color: #888;
-        }
+    .next-label {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #718096;
+    }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .next-ptr {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #68d391;
+    }
 
-        .legend-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-        }
+    .null-ptr { color: #fc8181 !important; }
 
-        .dot-normal { background: linear-gradient(135deg, #1e3a5f, #2d5986); border: 2px solid #4a9eff; }
-        .dot-head { background: linear-gradient(135deg, #003d7a, #0066cc); border: 2px solid #00d2ff; }
-        .dot-found { background: linear-gradient(135deg, #7a5200, #cc8800); border: 2px solid #ffd200; }
-        .dot-null { background: rgba(255,255,255,0.05); border: 2px dashed #555; }
-    </style>
+    .arrow {
+      display: flex;
+      align-items: center;
+      margin: 0 2px;
+    }
+
+    .arrow svg {
+      width: 36px;
+      height: 24px;
+      overflow: visible;
+    }
+
+    .head-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 14px;
+      gap: 4px;
+    }
+
+    .head-badge {
+      background: linear-gradient(135deg, #e94560, #c0392b);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .head-arrow-down {
+      width: 2px;
+      height: 18px;
+      background: linear-gradient(to bottom, #e94560, transparent);
+      position: relative;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      gap: 10px;
+      color: #555;
+      padding: 20px;
+    }
+
+    .empty-state svg { opacity: 0.3; }
+
+    .empty-state p {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    .empty-state .null-display {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fc8181;
+      background: rgba(252,129,129,0.1);
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px dashed rgba(252,129,129,0.4);
+    }
+
+    .size-info {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #666;
+      text-align: center;
+    }
+
+    ::-webkit-scrollbar { height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+  </style>
 </head>
 <body>
 
-<h1>Singly Linked List</h1>
-<p class="subtitle">Visualizer — Insert, Delete, Search with animations</p>
+  <h1>Singly Linked List</h1>
+  <p class="subtitle">Interactive Visualizer — Insert, Delete, Search</p>
 
-<div class="controls">
+  <div class="controls">
     <div class="control-group">
+      <input type="text" id="headInput" placeholder="Value" maxlength="8" />
+      <button class="btn-head" onclick="insertAtHead()">Insert Head</button>
+    </div>
+    <div class="control-group">
+      <input type="text" id="tailInput" placeholder="Value" maxlength="8" />
+      <button class="btn-tail" onclick="insertAtTail()">Insert Tail</button>
+    </div>
+    <div class="control-group">
+      <input type="text" id="deleteInput" placeholder="Value" maxlength="8" />
+      <button class="btn-delete" onclick="deleteNode()">Delete</button>
+    </div>
+    <div class="control-group">
+      <input type="text" id="searchInput" placeholder="Value" maxlength="8" />
+      <button class="btn-search" onclick="searchNode()">Search</button>
+    </div>
+    <div class="control-group">
+      <button class="btn-clear" onclick="clearList()">Clear All</button>
+    </div>
+  </div>
+
+  <div class="message-box" id="messageBox">Ready — try inserting some values!</div>
+
+  <div class="canvas-wrapper">
+    <div class="list-container" id="listContainer"></div>
+  </div>
+
+  <div class="size-info" id="sizeInfo">List size: 0 nodes</div>
+
+  <script>
+    // ─── Data Structure ───────────────────────────────────────────────
+    class ListNode {
+      constructor(val) {
+        this.val = val;
+        this.next = null;
+        this.id = Math.random().toString(36).substr(2, 9);
+      }
+    }
+
+    class LinkedList {
+      constructor() { this.head = null; this.size = 0; }
+
+      insertHead(val) {
+        const node = new ListNode(val);
+        node.next = this.head;
+        this.head = node;
+        this.size++;
+      }
+
+      insertTail(val) {
+        const node = new ListNode(val);
+        if (!this.head) { this.head = node; this.size++; return; }
+        let cur = this.head;
+        while (cur.next) cur = cur.next;
+        cur.next = node;
+        this.size++;
+      }
+
+      delete(val) {
+        if (!this.head) return false;
+        if (this.head.val === val) {
+          this.head = this.head.next;
+          this.size--;
+          return true;
+        }
+        let cur = this.head;
+        while (cur.next) {
+          if (cur.next.val === val) {
+            cur.next = cur.next.next;
+            this.size--;
+            return true;
+          }
+          cur = cur.next;
+        }
+        return false;
+      }
+
+      search(val) {
+        let cur = this.head, idx = 0;
+        while (cur) {
+          if (cur.val === val) return { node: cur, index: idx };
+          cur = cur.next;
+          idx++;
+        }
+        return null;
+      }
+
+      toArray() {
+        const arr = [];
+        let cur = this.head;
+        while (cur) { arr.push(cur); cur = cur.next; }
+        return arr;
+      }
+    }
+
+    // ─── State ────────────────────────────────────────────────────────
+    const ll = new LinkedList();
+    let highlightedId = null;
+
+    // ─── Rendering ───────────────────────────────────────────────────
+    function render(highlightId = null) {
+      const container = document.getElementById('listContainer');
+      container.innerHTML = '';
+
+      const nodes = ll.toArray();
+      document.getElementById('sizeInfo').textContent =
+        `List size: ${ll.size} node${ll.size !== 1 ? 's' : ''}`;
+
+      if (nodes.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5">
+              <rect x="3" y="8" width="18" height="8" rx="2"/>
+              <line x1="21" y1="12" x2="24" y2="12" stroke-dasharray="2 2"/>
+            </svg>
+            <p>The list is empty</p>
+            <div class="null-display">HEAD → NULL</div>
+          </div>`;
+        return;
+      }
+
+      // HEAD label
+      const headLabel = document.createElement('div');
+      headLabel.className = 'head-label';
+      headLabel.innerHTML = `
+        <div class="head-badge">HEAD</div>
+        <div class="head-arrow-down"></div>`;
+      container.appendChild(headLabel);
+
+      nodes.forEach((node, i) => {
+        const isLast = i === nodes.length - 1;
+        const isHighlighted = node.id === highlightId;
+
+        // Node wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'node-wrapper';
+        wrapper.id = 'node-' + node.id;
+
+        // Node box
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'node' + (isHighlighted ? ' highlighted' : '');
+        nodeEl.innerHTML = `
+          <div class="node-data">
+            <span class="node-label">data</span>
+            <span>${escapeHtml(node.val)}</span>
+          </div>
+          <div class="node-next">
+            <span class="next-label">next</span>
+            <span class="next-ptr ${isLast ? 'null-ptr' : ''}">
+              ${isLast ? 'NULL' : '→'}
+            </span>
+          </div>`;
+
+        wrapper.appendChild(nodeEl);
+
+        // Arrow between nodes
+        if (!isLast) {
+          const arrowEl = document.createElement('div');
+          arrowEl.className = 'arrow';
+          arrowEl.innerHTML = `
+            <svg viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="0" y1="12" x2="28" y2="12" stroke="#4a9eff" stroke-width="2"/>
+              <polygon points="28,7 36,12 28,17" fill="#4a9eff"/>
+            </svg>`;
+          wrapper.appendChild(arrowEl);
+        }
+
+        container.appendChild(wrapper);
+      });
+    }
+
+    // ─── Message Helper ──────────────────────────────────────────────
+    function showMessage(text, type = '') {
+      const box = document.getElementById('messageBox');
+      box.textContent = text;
+      box.className = 'message-box ' + type;
+    }
+
+    // ─── Input Helper ────────────────────────────────────────────────
+    function getInput(id) {
+      const el = document.getElementById(id);
+      const val = el.value.trim();
+      el.value = '';
+      return val;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // ─── Operations ──────────────────────────────────────────────────
+    function insertAtHead() {
+      const val = getInput('headInput');
+      if (!val) { showMessage('⚠ Please enter a value to insert at head.', 'error'); return; }
+      ll.insertHead(val);
+      render();
+      showMessage(`✔ "${val}" inserted at the head.`, 'success');
+    }
+
+    function insertAtTail() {
+      const val = getInput('tailInput');
+      if (!val) { showMessage('⚠ Please enter a value to insert at tail.', 'error'); return; }
+      ll.insertTail(val);
+      render();
+      showMessage(`✔ "${val}" inserted at the tail.`, 'success');
+    }
+
+    function deleteNode() {
+      const val = getInput('deleteInput');
+      if (!val) { showMessage('⚠ Please enter a value to delete.', 'error'); return; }
+      if (ll.size === 0) { showMessage('⚠ The list is already empty.', 'error'); return; }
+      const deleted = ll.delete(val);
+      if (deleted) {
+        render();
+        showMessage(`✔ Node with value "${val}" was deleted.`, 'success');
+      } else {
+        showMessage(`✘ Value "${val}" not found in the list.`, 'error');
+        render();
+      }
+    }
+
+    function searchNode() {
+      const val = getInput('searchInput');
+      if (!val) { showMessage('⚠ Please enter a value to search.', 'error'); return; }
+      if (ll.size === 0) { showMessage('⚠ The list is empty — nothing to search.', 'error'); return; }
+      const result = ll.search(val);
+      if (result) {
+        render(result.node.id);
+        showMessage(`🔍 Found "${val}" at index ${result.index} (0-based).`, 'info');
+      } else {
+        render();
+        showMessage(`✘ Value "${val}" not found in the list.`, 'error');
+      }
+    }
+
+    function clearList() {
+      ll.head = null;
+      ll.size = 0;
+      render();
+      showMessage('🗑 List cleared.', 'info');
+    }
+
+    // ─── Enter key support ───────────────────────────────────────────
+    document.getElementById('headInput').addEventListener('keydown',   e => e.key === 'Enter' && insertAtHead());
+    document.getElementById('tailInput').addEventListener('keydown',   e => e.key === 'Enter' && insertAtTail());
+    document.getElementById('deleteInput').addEventListener('keydown', e => e.key === 'Enter' && deleteNode());
+    document.getElementById('searchInput').addEventListener('keydown', e => e.key === 'Enter' && searchNode());
+
+    // ─── Initial render ──────────────────────────────────────────────
+    render();
+
+    // ─── Seed some demo data ─────────────────────────────────────────
+    ['10', '20', '30', '40'].forEach(v => ll.insertTail(v));
+    render();
+    showMessage('👋 Demo list loaded! Try inserting, deleting, or searching.', 'info');
+  </script>
+</body>
+</html>

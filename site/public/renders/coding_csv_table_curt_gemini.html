@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to HTML Table Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            box-sizing: border-box; /* Include padding in width */
+            resize: vertical;
+        }
+        button {
+            display: block;
+            width: 200px;
+            padding: 12px 20px;
+            margin: 0 auto 30px auto;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #tableOutput {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #495057;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa; /* Lighter alternating row color */
+        }
+        tr:nth-child(odd) {
+            background-color: #ffffff; /* White alternating row color */
+        }
+        tr:hover {
+            background-color: #e2f0ff; /* Hover effect */
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CSV to HTML Table Converter</h1>
+
+        <label for="csvInput">Paste your CSV data here:</label>
+        <textarea id="csvInput" placeholder="Paste CSV data here. Example:
+Name,Age,City
+"John Doe",30,"New York"
+"Jane Smith",25,"London, UK"
+"Peter, Jones",40,"Paris"
+"Quoted ""Value""",50,"Berlin""></textarea>
+
+        <button id="parseButton">Parse CSV</button>
+
+        <div id="tableOutput">
+            <!-- Table will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('parseButton').addEventListener('click', function() {
+            const csvInput = document.getElementById('csvInput').value;
+            const tableOutput = document.getElementById('tableOutput');
+            tableOutput.innerHTML = ''; // Clear previous output
+
+            if (!csvInput.trim()) {
+                tableOutput.innerHTML = '<p class="error">Please paste some CSV data.</p>';
+                return;
+            }
+
+            try {
+                const data = parseCSV(csvInput);
+                if (data.length === 0) {
+                    tableOutput.innerHTML = '<p class="error">No data found in CSV.</p>';
+                    return;
+                }
+                tableOutput.appendChild(createTable(data));
+            } catch (e) {
+                tableOutput.innerHTML = `<p class="error">Error parsing CSV: ${e.message}</p>`;
+            }
+        });
+
+        function parseCSV(csvString) {
+            const lines = csvString.split(/\r?\n/);
+            const result = [];
+
+            lines.forEach(line => {
+                if (line.trim() === '') return; // Skip empty lines
+
+                const row = [];
+                let inQuote = false;
+                let field = '';
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+
+                    if (char === '"') {
+                        // Handle escaped quote inside a quoted field
+                        if (inQuote && line[i + 1] === '"') {
+                            field += '"';
+                            i++; // Skip the next quote
+                        } else {
+                            inQuote = !inQuote;
+                        }
+                    } else if (char === ',' && !inQuote) {
+                        row.push(field.trim());
+                        field = '';
+                    } else {
+                        field += char;
+                    }
+                }
+                row.push(field.trim()); // Add the last field
+                result.push(row);
+            });
+
+            return result;
+        }
+
+        function createTable(data) {
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Find the maximum number of columns to handle varying column counts
+            let maxCols = 0;
+            data.forEach(row => {
+                if (row.length > maxCols) {
+                    maxCols = row.length;
+                }
+            });
+
+            // Assuming the first non-empty row contains headers
+            // We'll use this for header generation, but ensure all rows have enough cells
+            let headerRowData = [];
+            if (data.length > 0) {
+                // Find the first row that actually has data for headers
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i].some(cell => cell.trim() !== '')) {
+                        headerRowData = data[i];
+                        // Remove header row from data if it's treated as such
+                        // For simplicity, we'll just use it for headers and keep it in data for now.
+                        // If you want to *remove* the first row from the data after using it as header,
+                        // uncomment: data.shift();
+                        break;
+                    }
+                }
+            }
+
+
+            // Create Header Row (if data exists)
+            if (headerRowData.length > 0) {
+                const tr = document.createElement('tr');
+                for (let i = 0; i < maxCols; i++) {
+                    const th = document.createElement('th');
+                    th.textContent = headerRowData[i] || `Column ${i + 1}`; // Use actual header or generic
+                    tr.appendChild(th);
+                }
+                thead.appendChild(tr);
+                table.appendChild(thead);
+
+                // If the first row was used as header, remove it from the data for body
+                // This assumes the first line is *always* the header.
+                // If headers can be optional or not the first line, you might need a more complex logic.
+                data.shift();
+            }
+
+
+            // Create Body Rows
+            data.forEach(rowData => {
+                if (rowData.some(cell => cell.trim() !== '')) { // Only add rows with actual content
+                    const tr = document.createElement('tr');
+                    for (let i = 0; i < maxCols; i++) {
+                        const td = document.createElement('td');
+                        td.textContent = rowData[i] || ''; // Handle missing cells for varying column counts
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+            });
+
+            table.appendChild(tbody);
+            return table;
+        }
+    </script>
+</body>
+</html>

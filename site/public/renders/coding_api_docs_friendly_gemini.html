@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST Endpoint Review & Best Practices</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 40px;
+            color: #007bff;
+        }
+        h2 {
+            color: #0056b3;
+        }
+        h3 {
+            color: #34495e;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .section {
+            margin-bottom: 20px;
+            background-color: #fefefe;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+        }
+        .collapsible {
+            background-color: #f1f1f1;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: 0.3s;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .active, .collapsible:hover {
+            background-color: #ddd;
+        }
+        .content {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: #f9f9f9;
+            border-left: 3px solid #007bff;
+            margin-top: -5px; /* Adjust to visually connect with collapsible */
+            padding-bottom: 10px;
+        }
+        .content p {
+            margin-bottom: 10px;
+        }
+        code {
+            background-color: #e8e8e8;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: #c7254e;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            border-radius: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .http-method {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: white;
+            display: inline-block;
+            margin-right: 5px;
+            min-width: 60px;
+            text-align: center;
+        }
+        .method-get { background-color: #28a745; } /* Green */
+        .method-post { background-color: #007bff; } /* Blue */
+        .method-put { background-color: #ffc107; color: #333; } /* Yellow */
+        .method-delete { background-color: #dc3545; } /* Red */
+        .method-patch { background-color: #6c757d; } /* Gray */
+
+        .status-code {
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
+        .status-2xx { background-color: #d4edda; color: #155724; }
+        .status-4xx { background-color: #f8d7da; color: #721c24; }
+        .status-5xx { background-color: #ffeeba; color: #856404; }
+
+        .problem {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .solution {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>REST Endpoint Review & Best Practices</h1>
+
+        <p>This document provides a review of the provided REST endpoints, identifies design problems, and proposes corrected endpoints following REST best practices. Each section is expandable for detailed explanations.</p>
+
+        <div class="section">
+            <button class="collapsible">Original Endpoints Submitted for Review</button>
+            <div class="content">
+                <p>Here are the original endpoints that were submitted for review:</p>
+                <ul>
+                    <li><code>GET /getUsers</code></li>
+                    <li><code>POST /user/delete/5</code></li>
+                    <li><code>GET /createUser?name=Jo</code></li>
+                    <li><code>PUT /updateAllUsers</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <button class="collapsible">Identification of Design Problems</button>
+            <div class="content">
+                <p>Below is a detailed list of design problems identified in the original endpoints, categorized for clarity.</p>
+
+                <h3>1. Incorrect HTTP Method Usage</h3>
+                <p>RESTful APIs leverage HTTP methods (GET, POST, PUT, DELETE, PATCH) to indicate the intended action on a resource. Misusing these methods leads to confusion, breaks caching mechanisms, and violates the principle of "safe" and "idempotent" operations.</p>
+                <ul>
+                    <li><span class="problem"><code>GET /getUsers</code>:</span> The method name <code>getUsers</code> is redundant. GET already implies retrieval.</li>
+                    <li><span class="problem"><code>POST /user/delete/5</code>:</span> DELETE is the appropriate method for deleting a resource. Using POST for deletion is incorrect and can prevent proper caching and idempotency guarantees.</li>
+                    <li><span class="problem"><code>GET /createUser?name=Jo</code>:</span> GET requests are for retrieving data, not creating it. Creating a resource should use POST. Also, passing creation data in query parameters for a GET request is highly unusual and not best practice.</li>
+                    <li><span class="problem"><code>PUT /updateAllUsers</code>:</span> While PUT is for updates, updating *all* users typically implies a bulk operation or replacement of the entire collection, which can be dangerous and is rarely the actual intent. If it's a partial update to a collection, PATCH might be more appropriate, or a POST to a specific collection endpoint for bulk updates. If it's a full replacement of the collection, PUT to <code>/users</code> might be acceptable but requires careful consideration.</li>
+                </ul>
+
+                <h3>2. Non-Resource-Oriented Naming</h3>
+                <p>REST APIs should focus on resources (nouns) rather than actions (verbs). Endpoints should represent collections or specific instances of resources.</p>
+                <ul>
+                    <li><span class="problem"><code>/getUsers</code>:</span> Contains a verb ("get"). The resource is "users".</li>
+                    <li><span class="problem"><code>/createUser</code>:</span> Contains a verb ("create"). The resource is "users".</li>
+                    <li><span class="problem"><code>/updateAllUsers</code>:</span> Contains a verb ("update"). The resource is "users".</li>
+                </ul>
+
+                <h3>3. Inconsistent URL Structure & Pluralization</h3>
+                <p>Consistency in URL structure (e.g., always using plural nouns for collections) makes an API predictable and easier to understand.</p>
+                <ul>
+                    <li><span class="problem"><code>/user/delete/5</code>:</span> Uses singular "user" for what appears to be a resource collection, while other endpoints might imply plural. It also embeds an action verb in the URL.</li>
+                </ul>
+
+                <h3>4. Data Transmission Issues (Query Params for Creation/Update)</h3>
+                <p>For operations that modify resources (POST, PUT, PATCH), data should typically be sent in the request body, especially for complex or sensitive information.</p>
+                <ul>
+                    <li><span class="problem"><code>GET /createUser?name=Jo</code>:</span> Sending creation data via query parameters for a GET request is fundamentally flawed. Query parameters are meant for filtering, sorting, or pagination, not for the primary payload of a resource creation.</li>
+                </ul>
+
+                <h3>5. Lack of Idempotency & Safety Considerations</h3>
+                <p>
+                    <ul>
+                        <li><span class="problem"><code>GET /createUser?name=Jo</code>:</span> GET requests are supposed to be "safe" (no side effects) and "idempotent" (multiple identical requests have the same effect as a single one). This endpoint violates the "safe" principle by creating a user.</li>
+                        <li><span class="problem"><code>POST /user/delete/5</code>:</span> While DELETE is idempotent, using POST for it removes the explicit signal of idempotency that a DELETE method provides.</li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <button class="collapsible">Corrected Endpoints (REST Best Practices)</button>
+            <div class="content">
+                <p>Here are the corrected endpoints, adhering to REST best practices. We focus on resource-oriented naming, proper HTTP methods, and consistent URL structures.</p>
+
+                <h3>Resource: Users</h3>
+                <p>The primary resource here is "users". We'll use the plural noun <code>/users</code> for the collection.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Original Endpoint</th>
+                            <th>Problem(s)</th>
+                            <th>Corrected Endpoint</th>
+                            <th>Description</th>
+                            <th>Expected Status Codes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>GET /getUsers</code></td>
+                            <td><span class="problem">Redundant verb in URI.</span></td>
+                            <td><span class="method-get">GET</span> <code>/users</code></td>
+                            <td>Retrieves a list of all users. This is a read-only operation.</td>
+                            <td><span class="status-2xx">200 OK</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>POST /user/delete/5</code></td>
+                            <td><span class="problem">Incorrect HTTP method (POST instead of DELETE). Verb in URI. Inconsistent pluralization.</span></td>
+                            <td><span class="method-delete">DELETE</span> <code>/users/{id}</code><br>(e.g., <code>/users/5</code>)</td>
+                            <td>Deletes a specific user identified by <code>{id}</code>.</td>
+                            <td><span class="status-2xx">204 No Content</span> (on successful deletion)<br><span class="status-4xx">404 Not Found</span> (if user does not exist)</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET /createUser?name=Jo</code></td>
+                            <td><span class="problem">Incorrect HTTP method (GET instead of POST). Verb in URI. Creation data in query params.</span></td>
+                            <td><span class="method-post">POST</span> <code>/users</code></td>
+                            <td>Creates a new user. The user data (e.g., <code>{"name": "Jo"}</code>) should be sent in the request body as JSON.</td>
+                            <td><span class="status-2xx">201 Created</span> (on successful creation, with <code>Location</code> header)<br><span class="status-4xx">400 Bad Request</span> (if input data is invalid)</td>
+                        </tr>
+                        <tr>
+                            <td><code>PUT /updateAllUsers</code></td>
+                            <td><span class="problem">Verb in URI. Ambiguous "All" (full replacement vs. bulk update).</span></td>
+                            <td>
+                                <span class="method-put">PUT</span> <code>/users</code> (if replacing the *entire* collection)<br>
+                                <span class="method-patch">PATCH</span> <code>/users</code> (for bulk *partial* updates, with specific request body)<br>
+                                <span class="method-put">PUT</span> <code>/users/{id}</code> (for full replacement of a *single* user)<br>
+                                <span class="method-patch">PATCH</span> <code>/users/{id}</code> (for partial update of a *single* user)
+                            </td>
+                            <td>
+                                This endpoint is ambiguous.
+                                <ul>
+                                    <li>If the intent is to <strong>replace the entire collection of users</strong> with a new set, use <span class="method-put">PUT</span> <code>/users</code> with the full collection in the body. (Rare, use with caution).</li>
+                                    <li>If the intent is to perform a <strong>bulk partial update</strong> on multiple users (e.g., change status for a list of IDs), <span class="method-post">POST</span> <code>/users/bulk-update</code> or <span class="method-patch">PATCH</span> <code>/users</code> with a specific bulk update payload might be considered.</li>
+                                    <li>For updating a <strong>single user</strong>, use <span class="method-put">PUT</span> <code>/users/{id}</code> (full replacement) or <span class="method-patch">PATCH</span> <code>/users/{id}</code> (partial update).</li>
+                                </ul>
+                                Given the original "updateAllUsers", a bulk update scenario is most likely.
+                            </td>
+                            <td><span class="status-2xx">200 OK</span><br><span class="status-2xx">204 No Content</span> (if no content to return)<br><span class="status-4xx">400 Bad Request</span><br><span class="status-4xx">404 Not Found</span> (for single user update)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Summary of REST Principles Applied:</h3>
+                <ul>
+                    <li><strong>Resource-Oriented URIs:</strong> Endpoints represent nouns (resources) like <code>/users</code>, not verbs.</li>
+                    <li><strong>Appropriate HTTP Methods:</strong>
+                        <ul>
+                            <li><span class="method-get">GET</span> for retrieving resources.</li>
+                            <li><span class="method-post">POST</span> for creating new resources.</li>
+                            <li><span class="method-put">PUT</span> for full replacement/update of a resource (or collection).</li>
+                            <li><span class="method-patch">PATCH</span> for partial updates of a resource.</li>
+                            <li><span class="method-delete">DELETE</span> for removing resources.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Consistent Naming:</strong> Using plural nouns for collections (e.g., <code>/users</code>) and singular for specific instances (e.g., <code>/users/{id}</code>).</li>
+                    <li><strong>Data in Request Body:</strong> For POST, PUT, and PATCH, send the data payload in the request body, typically as JSON.</li>
+                    <li><strong>Idempotency and Safety:</strong> Ensuring GET requests are safe and idempotent, and other methods behave as expected.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <button class="collapsible">General REST Best Practices</button>
+            <div class="content">
+                <p>Beyond the specific corrections, here are some general best practices for designing robust REST APIs:</p>
+                <ul>
+                    <li><strong>Use Plural Nouns for Collections:</strong> Always use plural nouns for collection resources (e.g., <code>/users</code>, <code>/products</code>).</li>
+                    <li><strong>Use Nouns, Not Verbs, in URIs:</strong> URIs should identify resources, not actions (e.g., <code>/users</code> not <code>/getUsers</code>). The HTTP method defines the action.</li>
+                    <li><strong>Leverage HTTP Methods Appropriately:</strong>
+                        <ul>
+                            <li><span class="method-get">GET</span>: Retrieve a resource or a list of resources. (Safe & Idempotent)</li>
+                            <li><span class="method-post">POST</span>: Create a new resource. (Not Idempotent)</li>
+                            <li><span class="method-put">PUT</span>: Update/replace an existing resource, or create if it doesn't exist (full replacement). (Idempotent)</li>
+                            <li><span class="method-patch">PATCH</span>: Partially update an existing resource. (Idempotent)</li>
+                            <li><span class="method-delete">DELETE</span>: Remove a resource. (Idempotent)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Use Clear Status Codes:</strong> Return appropriate HTTP status codes to indicate the outcome of the request (e.g., <code>200 OK</code>, <code>201 Created</code>, <code>204 No Content</code>, <code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>403 Forbidden</code>, <code>404 Not Found</code>, <code>500 Internal Server Error</code>).</li>
+                    <li><strong>Provide Meaningful Error Messages:</strong> When an error occurs, return a JSON object with a clear error code, message, and potentially details for developers.</li>
+                    <li><strong>Support Filtering, Sorting, Pagination:</strong> For collection endpoints (e.g., <code>GET /users</code>), allow clients to filter, sort, and paginate results using query parameters (e.g., <code>/users?status=active&sort=name,asc&page=2&limit=10</code>).</li>
+                    <li><strong>Versioning:</strong> Use versioning (e.g., <code>/v1/users</code>) to manage changes to your API without breaking existing clients.</li>
+                    <li><strong>Use HATEOAS (Optional but Recommended):</strong> Include links to related resources in your API responses to guide clients on possible next actions.</li>
+                    <li><strong>Secure Your API:</strong> Implement authentication (e.g., OAuth2, JWT) and authorization. Use HTTPS.</li>
+                    <li><strong>Document Your API:</strong> Tools like OpenAPI (Swagger) can help generate and maintain interactive documentation.</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        var coll = document.getElementsByClassName("collapsible");
+        var i;
+
+        for (i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.maxHeight){
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        }
+
+        // Optional: Expand first section by default
+        document.addEventListener('DOMContentLoaded', (event) => {
+            if (coll.length > 0) {
+                coll[0].click(); // Simulate click on the first collapsible to open it
+            }
+        });
+    </script>
+</body>
+</html>

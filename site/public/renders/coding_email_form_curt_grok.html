@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation with Real-Time Feedback</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 600px;
+        }
+        
+        /* Styles for the email input field */
+        #emailInput {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc; /* Default border */
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+        
+        #emailInput.valid {
+            border-color: green; /* Green border for valid emails */
+        }
+        
+        #emailInput.invalid {
+            border-color: red; /* Red border for invalid emails */
+        }
+        
+        /* Styles for the explanation section */
+        #explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Email Validation Demo</h1>
+    <p>Enter your email address below. You'll see real-time feedback based on a basic regex validation.</p>
+    
+    <input type="text" id="emailInput" placeholder="Enter your email address">
+    
+    <div id="explanation">
+        <h2>Limitations of Regex for Email Validation</h2>
+        <p>Regular expressions (like the one used here) provide a simple way to check for a basic email format, but they cannot fully validate emails according to the official RFC 5322 specifications. RFC 5322 defines a complex set of rules for email addresses, including support for quoted strings, comments, international characters (e.g., non-ASCII), and various edge cases that are difficult or impossible to capture with a single regex pattern. For example, regex might incorrectly flag valid emails with unusual formats as invalid.</p>
+        
+        <h3>Practical Alternatives for Production Use</h3>
+        <p>For more reliable email validation in real-world applications, consider these alternatives:</p>
+        <ul>
+            <li><strong>Use dedicated libraries:</strong> Libraries like <a href="https://github.com/validatorjs/validator.js" target="_blank" rel="noopener noreferrer">validator.js</a> in JavaScript provide more comprehensive checks, including basic syntax validation and additional features like domain checks.</li>
+            <li><strong>Server-side validation:</strong> Perform full validation on the server by verifying the domain (e.g., using DNS lookups), checking against mail server rules, or even sending a verification email to confirm the address.</li>
+            <li><strong>HTML5 and browser features:</strong> Use the <code>type="email"</code> attribute on input fields for basic browser validation, combined with custom JavaScript for enhanced checks.</li>
+            <li><strong>API services:</strong> Integrate with third-party services like Abstract API or ZeroBounce for advanced validation, including syntax checks, disposable email detection, and deliverability testing.</li>
+        </ul>
+        <p>Remember, no single method is foolproof, so always combine validation with user education and error handling for the best results.</p>
+    </div>
+    
+    <script>
+        // JavaScript for real-time email validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('emailInput');
+            
+            // Basic regex for email validation (not RFC 5322 compliant)
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            emailInput.addEventListener('input', function() {
+                const emailValue = emailInput.value.trim();  // Get and trim the input value
+                
+                if (emailRegex.test(emailValue)) {
+                    // Valid email: Add 'valid' class and remove 'invalid'
+                    emailInput.classList.add('valid');
+                    emailInput.classList.remove('invalid');
+                } else {
+                    // Invalid email: Add 'invalid' class and remove 'valid'
+                    emailInput.classList.add('invalid');
+                    emailInput.classList.remove('valid');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,242 +5,554 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fractal Tree – Recursion Explorer</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       background: #0d1117;
-      color: #c9d1d9;
+      color: #e6edf3;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 24px 16px 48px;
+      gap: 24px;
     }
 
-    h1 {
-      font-size: 2rem;
-      color: #58a6ff;
+    /* ── Header ── */
+    header {
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin-bottom: 6px;
-      text-align: center;
-      letter-spacing: 1px;
     }
-
-    .subtitle {
-      font-size: 0.95rem;
+    header p {
       color: #8b949e;
-      margin-bottom: 22px;
-      text-align: center;
+      font-size: 0.95rem;
     }
 
     /* ── Canvas card ── */
     .canvas-card {
       background: #161b22;
       border: 1px solid #30363d;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 660px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
 
     canvas {
-      display: block;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #0d1117;
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     /* ── Controls ── */
     .controls {
+      width: 100%;
       display: flex;
       flex-direction: column;
-      align-items: center;
       gap: 10px;
-      margin-bottom: 24px;
-      width: 100%;
-      max-width: 560px;
     }
-
-    .slider-row {
+    .controls label {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 14px;
-      width: 100%;
-    }
-
-    .slider-row label {
       font-size: 0.95rem;
-      color: #8b949e;
-      white-space: nowrap;
+      color: #c9d1d9;
+      font-weight: 600;
+    }
+    .depth-badge {
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      color: #0d1117;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 2px 12px;
+      border-radius: 20px;
+      min-width: 36px;
+      text-align: center;
     }
 
     input[type="range"] {
-      flex: 1;
       -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
       height: 6px;
       border-radius: 3px;
       background: #30363d;
       outline: none;
       cursor: pointer;
     }
-
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
+      appearance: none;
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: #58a6ff;
-      border: 2px solid #0d1117;
-      box-shadow: 0 0 6px #58a6ff88;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
       cursor: pointer;
-      transition: background 0.2s;
+      box-shadow: 0 0 6px rgba(88,166,255,0.6);
+      transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      cursor: pointer;
+      border: none;
     }
 
-    input[type="range"]::-webkit-slider-thumb:hover {
-      background: #79c0ff;
-    }
-
-    .depth-badge {
-      min-width: 36px;
-      text-align: center;
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: #58a6ff;
-    }
-
-    .stats-row {
+    .tick-row {
       display: flex;
-      gap: 20px;
-      font-size: 0.85rem;
-      color: #8b949e;
+      justify-content: space-between;
+      padding: 0 2px;
+    }
+    .tick-row span {
+      font-size: 0.72rem;
+      color: #484f58;
     }
 
-    .stats-row span b {
-      color: #e6edf3;
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-
-    /* ── Warning banner ── */
-    .warning {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      background: #2d1b00;
-      border: 1px solid #d29922;
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 0.88rem;
-      color: #e3b341;
-      max-width: 560px;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-
-    .warning.visible { display: flex; }
-
-    .warning-icon { font-size: 1.2rem; }
-
-    /* ── Explanation section ── */
-    .explanation {
-      max-width: 720px;
-      width: 100%;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 12px;
-      padding: 28px 32px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-    }
-
-    .explanation h2 {
-      font-size: 1.3rem;
-      color: #58a6ff;
-      margin-bottom: 18px;
-      border-bottom: 1px solid #30363d;
-      padding-bottom: 10px;
-    }
-
-    .explanation h3 {
-      font-size: 1rem;
-      color: #79c0ff;
-      margin: 20px 0 8px;
-    }
-
-    .explanation p {
-      font-size: 0.92rem;
-      line-height: 1.75;
-      color: #c9d1d9;
-      margin-bottom: 10px;
-    }
-
-    .explanation ul {
-      padding-left: 20px;
-      margin-bottom: 10px;
-    }
-
-    .explanation ul li {
-      font-size: 0.92rem;
-      line-height: 1.75;
-      color: #c9d1d9;
-      margin-bottom: 4px;
-    }
-
-    .explanation ul li b {
-      color: #e6edf3;
-    }
-
-    /* ── Code block ── */
-    .code-block {
+    .stat {
       background: #0d1117;
       border: 1px solid #30363d;
       border-radius: 8px;
-      padding: 14px 16px;
-      font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+      padding: 6px 14px;
       font-size: 0.82rem;
-      line-height: 1.6;
-      color: #e6edf3;
-      overflow-x: auto;
-      margin: 10px 0 14px;
-    }
-
-    .code-block .kw  { color: #ff7b72; }
-    .code-block .fn  { color: #d2a8ff; }
-    .code-block .cm  { color: #8b949e; font-style: italic; }
-    .code-block .nm  { color: #79c0ff; }
-    .code-block .st  { color: #a5d6ff; }
-
-    /* ── Depth meter ── */
-    .depth-meter {
+      color: #8b949e;
       display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-      margin: 8px 0 4px;
+      gap: 6px;
+      align-items: center;
+    }
+    .stat strong { color: #58a6ff; font-size: 0.92rem; }
+
+    /* ── Explanation section ── */
+    .explanation {
+      width: 100%;
+      max-width: 660px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .depth-pip {
-      width: 28px;
-      height: 10px;
-      border-radius: 3px;
-      background: #21262d;
+    .exp-card {
+      background: #161b22;
       border: 1px solid #30363d;
-      transition: background 0.25s, border-color 0.25s;
+      border-radius: 14px;
+      padding: 22px 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .exp-card h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .exp-card h2 .icon {
+      font-size: 1.2rem;
+    }
+    .exp-card p, .exp-card li {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #8b949e;
+    }
+    .exp-card ul, .exp-card ol {
+      padding-left: 20px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .exp-card li strong { color: #c9d1d9; }
+
+    /* Colour-coded headings */
+    .h-blue  { color: #58a6ff; }
+    .h-red   { color: #f85149; }
+    .h-green { color: #3fb950; }
+
+    /* inline code */
+    code {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.82rem;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      color: #e3b341;
     }
 
-    .depth-pip.active {
-      background: #58a6ff;
-      border-color: #58a6ff;
-      box-shadow: 0 0 6px #58a6ff66;
+    /* call-stack visual */
+    .stack-visual {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 4px;
+      align-items: flex-start;
+    }
+    .stack-frame {
+      background: #1f2937;
+      border-left: 3px solid #58a6ff;
+      border-radius: 0 6px 6px 0;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-family: monospace;
+      color: #93c5fd;
+      transition: width 0.4s;
+    }
+    .stack-frame.overflow {
+      border-left-color: #f85149;
+      color: #fca5a5;
+      background: #2d1b1b;
     }
 
-    .depth-pip.warn {
-      background: #d29922;
-      border-color: #d29922;
-      box-shadow: 0 0 6px #d2992266;
+    /* warning box */
+    .warn-box {
+      background: #2d1b1b;
+      border: 1px solid #f85149;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.83rem;
+      color: #fca5a5;
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
     }
 
-    .depth-pip.danger {
-      background: #f85149;
-      border-color: #f85149;
-      box-shadow: 0 0 6px #f8514966;
+    /* solution pills */
+    .solution-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .solution-pill {
+      background: #0d2818;
+      border: 1px solid #3fb950;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .solution-pill h3 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #3fb950;
+      margin-bottom: 4px;
+    }
+    .solution-pill p {
+      font-size: 0.78rem;
+      color: #8b949e;
+      line-height: 1.5;
     }
 
-    /* ── Responsive ── */
-    @media (max-width: 600px) {
-      h1 { font-size
+    /* performance meter */
+    .perf-meter {
+      margin-top: 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 10px;
+    }
+    .perf-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.4s, background 0.4s;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header>
+    <h1>🌳 Fractal Tree Explorer</h1>
+    <p>Visualise recursion depth live — watch complexity grow with every level</p>
+  </header>
+
+  <!-- ── Canvas card ── -->
+  <div class="canvas-card">
+    <canvas id="treeCanvas" width="620" height="440"></canvas>
+
+    <div class="controls">
+      <label>
+        Recursion Depth
+        <span class="depth-badge" id="depthLabel">7</span>
+      </label>
+      <input type="range" id="depthSlider" min="1" max="12" value="7" />
+      <div class="tick-row">
+        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+        <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+        <span>11</span><span>12</span>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">🌿 Branches: <strong id="statBranches">0</strong></div>
+      <div class="stat">📞 Calls:    <strong id="statCalls">0</strong></div>
+      <div class="stat">⏱ Draw:     <strong id="statTime">0 ms</strong></div>
+    </div>
+  </div>
+
+  <!-- ── Explanation section ── -->
+  <section class="explanation">
+
+    <!-- Card 1 – What is recursion depth -->
+    <div class="exp-card">
+      <h2><span class="icon">🔁</span> <span class="h-blue">What Is Recursion Depth?</span></h2>
+      <p>
+        Recursion depth is the number of times a function calls <em>itself</em> before
+        reaching a base case and returning.  Each call is a new stack frame pushed onto
+        the <strong>call stack</strong> — a fixed-size region of memory managed by the
+        JavaScript engine (and virtually every other runtime).
+      </p>
+      <p style="margin-top:10px">
+        In this fractal tree, <code>drawBranch(depth)</code> calls itself twice
+        (left branch + right branch) at <code>depth - 1</code>.  The total number of
+        recursive calls grows as <strong>2<sup>depth</sup> − 1</strong>:
+      </p>
+      <div class="stack-visual" id="stackVisual"></div>
+    </div>
+
+    <!-- Card 2 – Stack overflow -->
+    <div class="exp-card">
+      <h2><span class="icon">💥</span> <span class="h-red">Why Deep Recursion Causes Stack Overflow</span></h2>
+      <p>
+        Every function call reserves a <strong>stack frame</strong> — space for local
+        variables, the return address, and parameters.  The call stack has a hard size
+        limit set by the engine or OS (typically <strong>10 000 – 15 000 frames</strong>
+        in V8/Node, fewer in some browsers).
+      </p>
+      <p style="margin-top:10px">
+        When the limit is exceeded the engine throws a
+        <code>RangeError: Maximum call stack size exceeded</code> — commonly called a
+        <em>stack overflow</em>.  For this binary tree the call count explodes:
+      </p>
+      <ul>
+        <li>Depth 10 → <strong>2 047 calls</strong></li>
+        <li>Depth 20 → <strong>2 097 151 calls</strong></li>
+        <li>Depth 30 → <strong>2 147 483 647 calls</strong> — stack long gone ☠️</li>
+      </ul>
+      <div class="warn-box">
+        ⚠️ <span>This demo safely caps depth at 12.  Even depth 12 generates
+        <strong>8 191 calls</strong>.  Uncapped, a depth of ~14 000+ would crash most
+        JS engines.</span>
+      </div>
+    </div>
+
+    <!-- Card 3 – Solutions -->
+    <div class="exp-card">
+      <h2><span class="icon">✅</span> <span class="h-green">Practical Solutions</span></h2>
+      <p>Four well-established techniques let you work around stack limits:</p>
+      <div class="solution-grid">
+        <div class="solution-pill">
+          <h3>1 · Iterative Conversion</h3>
+          <p>Replace the call stack with an explicit <code>Array</code> stack or queue.
+             No stack frames — memory is only limited by the heap.</p>
+        </div>
+        <div class="solution-pill">
+          <h3>2 · Tail-Call Optimisation</h3>
+          <p>Restructure so the recursive call is the <em>last</em> operation.
+             Engines that support TCO (ES2015 spec, Safari) reuse the current frame.</p>
+        </div>
+        <div class="solution-pill">
+          <h3>3 · Trampolining</h3>
+          <p>Return a <em>thunk</em> (a function) instead of calling directly.
+             A loop repeatedly invokes thunks — constant stack depth, any depth.</p>
+        </div>
+        <div class="solution-pill">
+          <h3>4 · Memoisation + DP</h3>
+          <p>Cache sub-problem results.  Often turns exponential recursion into
+             linear iteration, eliminating deep stacks entirely.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4 – Performance note -->
+    <div class="exp-card">
+      <h2><span class="icon">📊</span> <span class="h-blue">Complexity at a Glance</span></h2>
+      <p>Drag the slider and watch the branch count grow exponentially:</p>
+      <div id="perfRows" style="margin-top:12px; display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+  </section>
+
+<script>
+  // ─────────────────────────────────────────────
+  //  Fractal Tree — core drawing logic
+  // ─────────────────────────────────────────────
+  const canvas  = document.getElementById('treeCanvas');
+  const ctx     = canvas.getContext('2d');
+  const slider  = document.getElementById('depthSlider');
+  const depthLbl = document.getElementById('depthLabel');
+  const statBranches = document.getElementById('statBranches');
+  const statCalls    = document.getElementById('statCalls');
+  const statTime     = document.getElementById('statTime');
+
+  let totalCalls = 0;
+  let totalBranches = 0;
+
+  // Hue shifts as depth increases for a rainbow-gradient effect
+  function branchColor(depth, maxDepth) {
+    const t = 1 - depth / maxDepth;          // 0 (trunk) → 1 (tips)
+    const hue = Math.round(200 - t * 160);   // blue → green → yellow
+    const lightness = 35 + t * 45;
+    return `hsl(${hue}, 80%, ${lightness}%)`;
+  }
+
+  /**
+   * Recursive branch drawing.
+   * @param {number} x       start x
+   * @param {number} y       start y
+   * @param {number} angle   angle in radians (0 = up)
+   * @param {number} length  branch length in px
+   * @param {number} depth   remaining recursion levels
+   * @param {number} maxDepth original max depth (for colouring)
+   */
+  function drawBranch(x, y, angle, length, depth, maxDepth) {
+    totalCalls++;
+    if (depth === 0) return;
+
+    const x2 = x + Math.sin(angle) * length;
+    const y2 = y - Math.cos(angle) * length;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = branchColor(depth, maxDepth);
+    ctx.lineWidth   = Math.max(0.5, depth * 0.8);
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+
+    totalBranches++;
+
+    const spread  = 0.42;          // angle spread (radians)
+    const shrink  = 0.72;          // length multiplier per level
+    const wobble  = 0.06;          // slight asymmetry for natural look
+
+    drawBranch(x2, y2, angle - spread + wobble, length * shrink, depth - 1, maxDepth);
+    drawBranch(x2, y2, angle + spread - wobble, length * shrink, depth - 1, maxDepth);
+  }
+
+  function drawTree(depth) {
+    totalCalls   = 0;
+    totalBranches = 0;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const trunkX      = w / 2;
+    const trunkY      = h - 20;
+    const trunkLength = h * 0.22;
+
+    const t0 = performance.now();
+    drawBranch(trunkX, trunkY, 0, trunkLength, depth, depth);
+    const t1 = performance.now();
+
+    statBranches.textContent = totalBranches.toLocaleString();
+    statCalls.textContent    = totalCalls.toLocaleString();
+    statTime.textContent     = (t1 - t0).toFixed(2) + ' ms';
+  }
+
+  // ─────────────────────────────────────────────
+  //  Stack visual (decorative, not real frames)
+  // ─────────────────────────────────────────────
+  function updateStackVisual(depth) {
+    const container = document.getElementById('stackVisual');
+    container.innerHTML = '';
+    const show = Math.min(depth, 6);
+    for (let i = 0; i <= show; i++) {
+      const frame = document.createElement('div');
+      frame.className = 'stack-frame' + (i === show && depth > 6 ? ' overflow' : '');
+      const w = 80 + i * 28;
+      frame.style.width = w + 'px';
+      frame.textContent = i === 0
+        ? 'drawBranch(0) ← base case'
+        : `drawBranch(${i})`;
+      container.appendChild(frame);
+    }
+    if (depth > 6) {
+      const more = document.createElement('div');
+      more.className = 'stack-frame overflow';
+      more.style.width = '260px';
+      more.textContent = `… ${depth - 6} more frames hidden (depth ${depth})`;
+      container.appendChild(more);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  //  Performance table
+  // ─────────────────────────────────────────────
+  function buildPerfRows(currentDepth) {
+    const container = document.getElementById('perfRows');
+    container.innerHTML = '';
+    const maxCalls = Math.pow(2, 12) - 1;
+
+    for (let d = 1; d <= 12; d++) {
+      const calls  = Math.pow(2, d) - 1;
+      const pct    = (calls / maxCalls) * 100;
+      const active = d === currentDepth;
+
+      const hue = d <= 4 ? 142 : d <= 8 ? 40 : 0;   // green / amber / red
+
+      const row = document.createElement('div');
+      row.style.cssText = `
+        display:flex; align-items:center; gap:10px;
+        opacity:${active ? '1' : '0.55'};
+        transition: opacity 0.3s;
+      `;
+      row.innerHTML = `
+        <span style="font-size:0.75rem;color:#8b949e;width:52px;text-align:right;flex-shrink:0">
+          depth ${d}
+        </span>
+        <div style="flex:1;background:#0d1117;border:1px solid #30363d;border-radius:6px;overflow:hidden;height:8px">
+          <div style="width:${pct.toFixed(1)}%;height:100%;background:hsl(${hue},70%,45%);border-radius:6px;transition:width 0.4s"></div>
+        </div>
+        <span style="font-size:0.75rem;color:#58a6ff;width:72px;flex-shrink:0">
+          ${calls.toLocaleString()} calls
+        </span>
+      `;
+      container.appendChild(row);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  //  Slider event
+  // ─────────────────────────────────────────────
+  function onDepthChange() {
+    const depth = parseInt(slider.value, 10);
+    depthLbl.textContent = depth;
+    drawTree(depth);
+    updateStackVisual(depth);
+    buildPerfRows(depth);
+  }
+
+  slider.addEventListener('input', onDepthChange);
+
+  // Initial draw
+  onDepthChange();
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Singleton Pattern</title>
+    
+    <style>
+        /* Basic reset and global styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            transition: background-color 0.3s, color 0.3s; /* Smooth theme transition */
+        }
+        
+        /* Light theme (default) */
+        body.light-theme {
+            background-color: #ffffff; /* White background */
+            color: #000000; /* Black text */
+        }
+        
+        /* Dark theme */
+        body.dark-theme {
+            background-color: #333333; /* Dark gray background */
+            color: #ffffff; /* White text */
+        }
+        
+        /* Varied elements with theme-specific styles */
+        h1 {
+            font-size: 24px;
+            border-bottom: 2px solid; /* Border will change color based on theme */
+        }
+        
+        body.light-theme h1 {
+            border-bottom-color: #000000; /* Black border in light theme */
+        }
+        
+        body.dark-theme h1 {
+            border-bottom-color: #ffffff; /* White border in dark theme */
+        }
+        
+        p {
+            font-size: 16px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.1); /* Subtle background that changes */
+        }
+        
+        body.light-theme p {
+            background-color: rgba(0, 0, 0, 0.1); /* Light gray in light theme */
+        }
+        
+        body.dark-theme p {
+            background-color: rgba(255, 255, 255, 0.1); /* Light gray in dark theme */
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        body.light-theme button {
+            background-color: #007bff; /* Blue in light theme */
+            color: #ffffff;
+        }
+        
+        body.dark-theme button {
+            background-color: #0056b3; /* Darker blue in dark theme */
+            color: #ffffff;
+        }
+        
+        #content {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid; /* Border will adapt to theme */
+        }
+        
+        body.light-theme #content {
+            border-color: #cccccc; /* Light gray border in light theme */
+            background-color: #f0f0f0; /* Light background */
+        }
+        
+        body.dark-theme #content {
+            border-color: #666666; /* Dark gray border in dark theme */
+            background-color: #444444; /* Dark background */
+        }
+        
+        /* Toggle button styles */
+        #toggleButton {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="light-theme"> <!-- Default to light theme -->
+    <h1 id="header">Welcome to the Theme Toggle Demo</h1>
+    <p id="paragraph">This is a sample paragraph that changes style based on the theme. It's great for demonstrating how the Singleton pattern manages state across multiple elements.</p>
+    <button id="button1">Click Me!</button>
+    <div id="content">
+        <h2>Varied Content Section</h2>
+        <p>This div includes a heading and another paragraph. Notice how the theme affects the background, text color, and borders uniformly.</p>
+        <button id="button2">Another Button</button>
+    </div>
+    <button id="toggleButton">Toggle Theme</button>
+    
+    <hr>
+    
+    <h2>Discussion on the Singleton Pattern</h2>
+    <p>The Singleton pattern is used here to manage the theme state. It ensures that only one instance of the theme manager exists, providing a global point of access to toggle and retrieve the current theme. Below, we discuss its pros, cons, and alternatives.</p>
+    
+    <h3>Pros of the Singleton Pattern:</h3>
+    <ul>
+        <li><strong>Global Access and Control:</strong> It provides a single point of access to the theme state, making it easy to manage and update across the entire application without passing instances around.</li>
+        <li><strong>Resource Efficiency:</strong> In scenarios like this, where you need to control a shared resource (e.g., the theme state), Singleton prevents multiple instances from being created, which can save memory and ensure consistency.</li>
+        <li><strong>Simplicity for Small Applications:</strong> For simple use cases, like this demo, it's straightforward to implement and use, as it centralizes logic in one place.</li>
+    </ul>
+    
+    <h3>Cons of the Singleton Pattern:</h3>
+    <ul>
+        <li><strong>Global State Issues:</strong> Singletons introduce global state, which can lead to tight coupling between parts of the code. This makes the application harder to test, debug, and maintain, as changes in one place can unexpectedly affect others.</li>
+        <li><strong>Difficulty in Testing:</strong> Unit testing becomes challenging because the Singleton's instance is shared, making it hard to mock or isolate dependencies. For example, in this demo, you'd have to reset the theme state manually for each test.</li>
+        <li><strong>Scalability Problems:</strong> As applications grow, Singletons can hinder modularity. They don't play well with modern practices like dependency injection, and in multi-threaded environments (though less relevant in JavaScript), they can cause concurrency issues.</li>
+    </ul>
+    
+    <h3>When is Dependency Injection a Better Choice?</h3>
+    <p>Dependency Injection (DI) is often preferable when you want to make your code more modular, testable, and flexible. Instead of relying on a global Singleton, DI involves passing dependencies (like the theme manager) explicitly to the components that need them. This avoids global state and makes it easier to swap implementations.</p>
+    <p>For instance, in a larger application, you could inject the theme manager into specific components via constructors or functions. This would:</p>
+    <ul>
+        <li>Improve testability by allowing you to mock the theme manager in unit tests.</li>
+        <li>Enhance flexibility, as you can easily change or extend the theme logic without affecting the entire application.</li>
+        <li>Reduce coupling, making the code more reusable and maintainable.</li>
+    </ul>
+    <p>DI is especially useful in frameworks like Angular, React with hooks, or Vue, where components are designed to receive dependencies as props or through context. In this demo, if we were building a more complex app, we'd refactor the Singleton to use DI for better scalability.</p>
+    
+    <script>
+        // Singleton Pattern Implementation for Theme Management
+        class ThemeManager {
+            constructor() {
+                if (ThemeManager.instance) {
+                    return ThemeManager.instance; // Ensure only one instance
+                }
+                
+                ThemeManager.instance = this;
+                this.theme = 'light'; // Default theme
+            }
+            
+            getTheme() {
+                return this.theme;
+            }
+            
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                this.applyTheme();
+            }
+            
+            applyTheme() {
+                document.body.className = this.theme + '-theme'; // Update body class
+                // You could extend this to update other elements if needed
+            }
+        }
+        
+        // Usage: Get the Singleton instance and set up the toggle
+        const themeManager = new ThemeManager(); // Creates the instance
+        const toggleButton = document.getElementById('toggleButton');
+        
+        toggleButton.addEventListener('click', () => {
+            themeManager.toggleTheme(); // Toggle and apply the theme
+            console.log('Current theme:', themeManager.getTheme()); // For debugging
+        });
+        
+        // Initialize the theme on page load (though it's already set in HTML)
+        themeManager.applyTheme();
+    </script>
+</body>
+</html>

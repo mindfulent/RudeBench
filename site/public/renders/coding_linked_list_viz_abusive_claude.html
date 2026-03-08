@@ -20,9 +20,15 @@
 
   h1 {
     font-size: 1.8rem;
-    margin-bottom: 24px;
+    margin-bottom: 6px;
     color: #7eb8f7;
     letter-spacing: 1px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 30px;
   }
 
   .controls {
@@ -31,6 +37,7 @@
     gap: 10px;
     justify-content: center;
     margin-bottom: 30px;
+    width: 100%;
     max-width: 700px;
   }
 
@@ -44,151 +51,170 @@
     width: 80px;
     padding: 8px 10px;
     border-radius: 6px;
-    border: 1px solid #3a3f55;
-    background: #1a1d2e;
+    border: 1px solid #333;
+    background: #1e2130;
     color: #e0e0e0;
     font-size: 0.95rem;
     outline: none;
     transition: border 0.2s;
   }
 
-  input[type="number"]:focus { border-color: #7eb8f7; }
+  input[type="number"]:focus {
+    border-color: #7eb8f7;
+  }
 
   button {
     padding: 8px 16px;
     border-radius: 6px;
     border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 600;
+    cursor: pointer;
     transition: background 0.2s, transform 0.1s;
   }
 
   button:active { transform: scale(0.97); }
 
-  .btn-head  { background: #3b82f6; color: #fff; }
-  .btn-tail  { background: #10b981; color: #fff; }
-  .btn-del   { background: #ef4444; color: #fff; }
-  .btn-search{ background: #f59e0b; color: #111; }
-  .btn-clear { background: #6b7280; color: #fff; }
+  .btn-head  { background: #3a7bd5; color: #fff; }
+  .btn-tail  { background: #2ecc71; color: #fff; }
+  .btn-del   { background: #e74c3c; color: #fff; }
+  .btn-search{ background: #f39c12; color: #fff; }
+  .btn-clear { background: #444; color: #ccc; }
 
-  .btn-head:hover   { background: #2563eb; }
-  .btn-tail:hover   { background: #059669; }
-  .btn-del:hover    { background: #dc2626; }
-  .btn-search:hover { background: #d97706; }
-  .btn-clear:hover  { background: #4b5563; }
+  .btn-head:hover   { background: #2f66bb; }
+  .btn-tail:hover   { background: #27ae60; }
+  .btn-del:hover    { background: #c0392b; }
+  .btn-search:hover { background: #d68910; }
+  .btn-clear:hover  { background: #555; }
 
-  .canvas-wrap {
+  .message {
+    min-height: 24px;
+    font-size: 0.88rem;
+    margin-bottom: 20px;
+    color: #aaa;
+    transition: color 0.3s;
+  }
+
+  .message.success { color: #2ecc71; }
+  .message.error   { color: #e74c3c; }
+  .message.info    { color: #7eb8f7; }
+
+  /* Canvas wrapper — horizontal scroll */
+  .canvas-wrapper {
     width: 100%;
     max-width: 900px;
-    min-height: 160px;
-    background: #1a1d2e;
-    border-radius: 12px;
-    border: 1px solid #2e3250;
     overflow-x: auto;
     overflow-y: visible;
-    padding: 20px 30px;
+    padding: 20px 10px 30px;
+    background: #161822;
+    border-radius: 12px;
+    border: 1px solid #2a2d3e;
+    min-height: 160px;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
   }
 
   .list-container {
     display: flex;
     align-items: center;
     gap: 0;
-    min-height: 100px;
-    position: relative;
+    padding: 10px 20px;
+    min-width: max-content;
   }
 
   .empty-msg {
-    color: #555;
-    font-size: 1.1rem;
-    font-style: italic;
-    margin: auto;
+    color: #444;
+    font-size: 1rem;
     width: 100%;
     text-align: center;
   }
 
   /* Node */
-  .node-wrap {
+  .node-wrapper {
     display: flex;
     align-items: center;
-    gap: 0;
   }
 
   .node {
     display: flex;
     border-radius: 8px;
-    border: 2px solid #3b82f6;
+    border: 2px solid #3a7bd5;
+    background: #1e2130;
     overflow: hidden;
-    background: #1e2235;
     transition: border-color 0.3s, box-shadow 0.3s;
-    flex-shrink: 0;
+    position: relative;
   }
 
-  .node.found {
-    border-color: #f59e0b;
-    box-shadow: 0 0 14px #f59e0b99;
+  .node.highlight-found {
+    border-color: #f39c12;
+    box-shadow: 0 0 14px rgba(243,156,18,0.6);
   }
 
-  .node.not-found {
-    border-color: #ef4444;
-    box-shadow: 0 0 10px #ef444466;
+  .node.highlight-delete {
+    border-color: #e74c3c;
+    box-shadow: 0 0 14px rgba(231,76,60,0.6);
+    animation: shake 0.3s ease;
   }
 
-  .node.new-node {
-    border-color: #10b981;
-    box-shadow: 0 0 12px #10b98166;
-    animation: popIn 0.35s ease;
+  .node.highlight-new {
+    border-color: #2ecc71;
+    box-shadow: 0 0 14px rgba(46,204,113,0.6);
+    animation: pop 0.35s ease;
   }
 
-  @keyframes popIn {
-    from { transform: scale(0.6); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
+  @keyframes pop {
+    0%   { transform: scale(0.7); opacity: 0; }
+    70%  { transform: scale(1.08); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-5px); }
+    75%      { transform: translateX(5px); }
   }
 
   .node-data {
-    padding: 10px 16px;
-    font-size: 1.1rem;
+    padding: 12px 16px;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #e0e0e0;
-    background: #252a40;
-    border-right: 2px solid #3b82f6;
-    min-width: 48px;
+    background: #1e2130;
+    min-width: 52px;
     text-align: center;
-    transition: border-color 0.3s;
+    border-right: 2px solid #3a7bd5;
   }
 
-  .node.found .node-data   { border-right-color: #f59e0b; }
-  .node.not-found .node-data { border-right-color: #ef4444; }
-  .node.new-node .node-data  { border-right-color: #10b981; }
+  .node.highlight-found .node-data { border-right-color: #f39c12; }
+  .node.highlight-delete .node-data { border-right-color: #e74c3c; }
+  .node.highlight-new .node-data { border-right-color: #2ecc71; }
 
-  .node-ptr {
-    padding: 10px 10px;
-    font-size: 0.75rem;
-    color: #7eb8f7;
-    background: #1e2235;
+  .node-next {
+    padding: 12px 10px;
+    font-size: 0.7rem;
+    color: #555;
+    background: #191b28;
+    min-width: 36px;
+    text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 36px;
-    font-family: monospace;
   }
 
   /* Arrow between nodes */
   .arrow {
     display: flex;
     align-items: center;
-    flex-shrink: 0;
-    width: 48px;
     position: relative;
+    width: 48px;
+    flex-shrink: 0;
   }
 
   .arrow-line {
     height: 2px;
-    background: #3b82f6;
+    background: #3a7bd5;
     flex: 1;
-    position: relative;
   }
 
   .arrow-head {
@@ -196,51 +222,273 @@
     height: 0;
     border-top: 6px solid transparent;
     border-bottom: 6px solid transparent;
-    border-left: 10px solid #3b82f6;
+    border-left: 10px solid #3a7bd5;
     flex-shrink: 0;
   }
 
-  /* NULL terminator */
-  .null-block {
+  /* NULL terminal */
+  .null-terminal {
     display: flex;
     align-items: center;
     gap: 0;
-    flex-shrink: 0;
   }
 
-  .null-label {
-    padding: 8px 12px;
+  .null-box {
+    padding: 10px 14px;
+    border: 2px dashed #333;
     border-radius: 6px;
-    border: 2px dashed #4b5563;
-    color: #6b7280;
-    font-size: 0.85rem;
-    font-family: monospace;
-    background: #161824;
-  }
-
-  /* Labels below */
-  .node-outer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .node-label {
-    font-size: 0.72rem;
-    color: #7eb8f7;
-    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+    color: #444;
     font-weight: 600;
-    height: 14px;
+    letter-spacing: 1px;
   }
 
-  /* Status bar */
-  .status {
-    margin-top: 18px;
-    font-size: 0.95rem;
-    color: #a0aec0;
-    min-height: 22px;
-    text-align: center;
+  /* Labels */
+  .node-label {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.68rem;
+    color: #7eb8f7;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<h1>Linked List Visualizer</h1>
+<p class="subtitle">Singly linked list — insert, delete, search</p>
+
+<div class="controls">
+  <div class="control-group">
+    <input type="number" id="inputVal" placeholder="Value" />
+    <button class="btn-head" onclick="insertHead()">Insert Head</button>
+    <button class="btn-tail" onclick="insertTail()">Insert Tail</button>
+  </div>
+  <div class="control-group">
+    <button class="btn-del"    onclick="deleteNode()">Delete</button>
+    <button class="btn-search" onclick="searchNode()">Search</button>
+    <button class="btn-clear"  onclick="clearList()">Clear</button>
+  </div>
+</div>
+
+<div class="message" id="message">List is empty. Add some nodes!</div>
+
+<div class="canvas-wrapper">
+  <div class="list-container" id="listContainer">
+    <span class="empty-msg">— empty list —</span>
+  </div>
+</div>
+
+<script>
+  // ── Data model ──────────────────────────────────────────────
+  class ListNode {
+    constructor(val) {
+      this.val = val;
+      this.next = null;
+      this.id = Math.random().toString(36).slice(2, 8);
+    }
   }
 
-  .status .ok   { color: #10b981; font
+  let head = null;
+  let highlightMap = {}; // id -> class string
+
+  // ── Helpers ─────────────────────────────────────────────────
+  function getInput() {
+    const v = document.getElementById('inputVal').value.trim();
+    if (v === '') { setMsg('Please enter a value.', 'error'); return null; }
+    const n = parseInt(v, 10);
+    if (isNaN(n)) { setMsg('Value must be a number.', 'error'); return null; }
+    return n;
+  }
+
+  function setMsg(text, type = '') {
+    const el = document.getElementById('message');
+    el.textContent = text;
+    el.className = 'message ' + type;
+  }
+
+  function toArray() {
+    const arr = [];
+    let cur = head;
+    while (cur) { arr.push(cur); cur = cur.next; }
+    return arr;
+  }
+
+  // ── Operations ───────────────────────────────────────────────
+  function insertHead() {
+    const val = getInput();
+    if (val === null) return;
+    const node = new ListNode(val);
+    node.next = head;
+    head = node;
+    highlightMap = { [node.id]: 'highlight-new' };
+    render();
+    setMsg(`Inserted ${val} at head.`, 'success');
+    clearHighlightAfter(800);
+  }
+
+  function insertTail() {
+    const val = getInput();
+    if (val === null) return;
+    const node = new ListNode(val);
+    if (!head) { head = node; }
+    else {
+      let cur = head;
+      while (cur.next) cur = cur.next;
+      cur.next = node;
+    }
+    highlightMap = { [node.id]: 'highlight-new' };
+    render();
+    setMsg(`Inserted ${val} at tail.`, 'success');
+    clearHighlightAfter(800);
+  }
+
+  function deleteNode() {
+    const val = getInput();
+    if (val === null) return;
+
+    if (!head) { setMsg('List is empty.', 'error'); return; }
+
+    if (head.val === val) {
+      highlightMap = { [head.id]: 'highlight-delete' };
+      render();
+      setMsg(`Deleted ${val}.`, 'error');
+      setTimeout(() => { head = head.next; highlightMap = {}; render(); }, 500);
+      return;
+    }
+
+    let prev = head, cur = head.next;
+    while (cur) {
+      if (cur.val === val) {
+        highlightMap = { [cur.id]: 'highlight-delete' };
+        render();
+        setMsg(`Deleted ${val}.`, 'error');
+        setTimeout(() => { prev.next = cur.next; highlightMap = {}; render(); }, 500);
+        return;
+      }
+      prev = cur; cur = cur.next;
+    }
+    setMsg(`Value ${val} not found.`, 'error');
+  }
+
+  function searchNode() {
+    const val = getInput();
+    if (val === null) return;
+
+    highlightMap = {};
+    let cur = head, idx = 0, found = false;
+
+    const nodes = toArray();
+    const step = (i) => {
+      if (i >= nodes.length) {
+        if (!found) { setMsg(`Value ${val} not found.`, 'error'); highlightMap = {}; render(); }
+        return;
+      }
+      highlightMap = { [nodes[i].id]: nodes[i].val === val ? 'highlight-found' : 'highlight-delete' };
+      render();
+      if (nodes[i].val === val) {
+        found = true;
+        setMsg(`Found ${val} at index ${i}!`, 'info');
+        clearHighlightAfter(1200);
+        return;
+      }
+      setTimeout(() => step(i + 1), 400);
+    };
+
+    if (!head) { setMsg('List is empty.', 'error'); return; }
+    step(0);
+  }
+
+  function clearList() {
+    head = null;
+    highlightMap = {};
+    render();
+    setMsg('List cleared.', 'info');
+  }
+
+  function clearHighlightAfter(ms) {
+    setTimeout(() => { highlightMap = {}; render(); }, ms);
+  }
+
+  // ── Render ───────────────────────────────────────────────────
+  function render() {
+    const container = document.getElementById('listContainer');
+    container.innerHTML = '';
+
+    const nodes = toArray();
+
+    if (nodes.length === 0) {
+      container.innerHTML = '<span class="empty-msg">— empty list —</span>';
+      return;
+    }
+
+    nodes.forEach((node, i) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'node-wrapper';
+
+      // Node element
+      const nodeEl = document.createElement('div');
+      nodeEl.className = 'node ' + (highlightMap[node.id] || '');
+
+      // Label for head / tail
+      if (i === 0 || i === nodes.length - 1) {
+        const label = document.createElement('div');
+        label.className = 'node-label';
+        if (i === 0 && nodes.length === 1) label.textContent = 'head / tail';
+        else if (i === 0) label.textContent = 'head';
+        else label.textContent = 'tail';
+        nodeEl.appendChild(label);
+      }
+
+      // Data cell
+      const dataEl = document.createElement('div');
+      dataEl.className = 'node-data';
+      dataEl.textContent = node.val;
+
+      // Next pointer cell
+      const nextEl = document.createElement('div');
+      nextEl.className = 'node-next';
+      nextEl.textContent = node.next ? '→' : '∅';
+
+      nodeEl.appendChild(dataEl);
+      nodeEl.appendChild(nextEl);
+      wrapper.appendChild(nodeEl);
+
+      // Arrow + NULL after last node
+      if (i < nodes.length - 1) {
+        const arrow = document.createElement('div');
+        arrow.className = 'arrow';
+        arrow.innerHTML = '<div class="arrow-line"></div><div class="arrow-head"></div>';
+        wrapper.appendChild(arrow);
+      } else {
+        // NULL terminal
+        const arrow = document.createElement('div');
+        arrow.className = 'arrow';
+        arrow.innerHTML = '<div class="arrow-line"></div><div class="arrow-head"></div>';
+        wrapper.appendChild(arrow);
+
+        const nullBox = document.createElement('div');
+        nullBox.className = 'null-box';
+        nullBox.textContent = 'NULL';
+        wrapper.appendChild(nullBox);
+      }
+
+      container.appendChild(wrapper);
+    });
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+  // Seed with a few nodes so it doesn't start blank
+  [10, 20, 30].forEach(v => {
+    const n = new ListNode(v);
+    if (!head) { head = n; }
+    else { let c = head; while (c.next) c = c.next; c.next = n; }
+  });
+  render();
+  setMsg('Ready. Try inserting, deleting, or searching.', 'info');
+</script>
+</body>
+</html>

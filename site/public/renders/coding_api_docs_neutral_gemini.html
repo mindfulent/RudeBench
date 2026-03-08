@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management API Reference</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 2em auto;
+            padding: 0 1em;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+        }
+        h1 { font-size: 2.5em; text-align: center; }
+        h2 { font-size: 1.8em; border-bottom: 2px solid #eee; padding-bottom: 0.5em; }
+        h3 { font-size: 1.4em; color: #34495e; }
+
+        section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 1.5em;
+            margin-bottom: 2em;
+        }
+
+        .endpoint-card {
+            background-color: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 1em;
+            padding: 1em 1.5em;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 0.3em 0.6em;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            margin-right: 0.5em;
+            min-width: 60px;
+            text-align: center;
+        }
+        .method.get { background-color: #007bff; } /* Blue */
+        .method.post { background-color: #28a745; } /* Green */
+        .method.put { background-color: #ffc107; color: #333; } /* Yellow */
+        .method.delete { background-color: #dc3545; } /* Red */
+        .method.patch { background-color: #6f42c1; } /* Purple */
+
+        code {
+            background-color: #e9ecef;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 0.9em;
+            color: #c7254e;
+        }
+        pre code {
+            display: block;
+            padding: 1em;
+            overflow-x: auto;
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 6px;
+            margin-top: 0.5em;
+        }
+
+        details {
+            margin-bottom: 1em;
+            background-color: #f0f4f7;
+            border: 1px solid #dcdcdc;
+            border-radius: 6px;
+        }
+        details summary {
+            padding: 1em 1.5em;
+            cursor: pointer;
+            outline: none;
+            font-weight: bold;
+            color: #34495e;
+            list-style: none; /* Hide default arrow */
+            position: relative;
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details summary::before {
+            content: '▶'; /* Custom arrow */
+            position: absolute;
+            left: 1em;
+            font-size: 0.8em;
+            transition: transform 0.2s;
+        }
+        details[open] summary::before {
+            transform: rotate(90deg);
+        }
+        details .content {
+            padding: 0.5em 1.5em 1.5em 1.5em;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .problem-list {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 0.5em;
+        }
+        .problem-list li {
+            margin-bottom: 0.5em;
+        }
+        .problem-list strong {
+            color: #dc3545;
+        }
+
+        .status-code {
+            display: inline-block;
+            background-color: #6c757d;
+            color: #fff;
+            padding: 0.2em 0.6em;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-left: 0.5em;
+        }
+        .status-code.success { background-color: #28a745; }
+        .status-code.created { background-color: #17a2b8; }
+        .status-code.no-content { background-color: #6c757d; }
+        .status-code.bad-request { background-color: #ffc107; color: #333; }
+        .status-code.not-found { background-color: #dc3545; }
+
+        footer {
+            text-align: center;
+            margin-top: 3em;
+            padding-top: 1.5em;
+            border-top: 1px solid #eee;
+            color: #777;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>User Management API Reference</h1>
+    <p>This document outlines the proposed REST API endpoints for a user management system, identifying design problems in an initial proposal and presenting corrected, RESTful alternatives.</p>
+
+    <section>
+        <h2>Original Endpoints and Design Problems</h2>
+        <p>The following endpoints were proposed. Each entry details the endpoint, its intended purpose, and a list of identified design problems based on REST best practices.</p>
+
+        <details>
+            <summary><span class="method get">GET</span> <code>/getUsers</code></summary>
+            <div class="content">
+                <h3>Intended Purpose:</h3>
+                <p>Retrieve a list of all users.</p>
+                <h3>Design Problems:</h3>
+                <ul class="problem-list">
+                    <li><strong>Verb in URL:</strong> The path <code>/getUsers</code> uses a verb ("getUsers"). REST best practices dictate using nouns (plural) for resource collections. The HTTP method <code>GET</code> already implies retrieval.</li>
+                    <li><strong>Lack of Flexibility:</strong> Does not inherently support common collection operations like pagination, filtering, or sorting via query parameters, which are standard for retrieving lists of resources.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method post">POST</span> <code>/user/delete/5</code></summary>
+            <div class="content">
+                <h3>Intended Purpose:</h3>
+                <p>Delete a specific user with ID <code>5</code>.</p>
+                <h3>Design Problems:</h3>
+                <ul class="problem-list">
+                    <li><strong>Incorrect HTTP Method:</strong> Uses <code>POST</code> for a delete operation. The correct HTTP method for deleting a resource is <code>DELETE</code>.</li>
+                    <li><strong>Verb in URL:</strong> The path <code>/user/delete/5</code> includes the verb "delete," which is redundant given the intended operation.</li>
+                    <li><strong>Inconsistent Resource Path:</strong> The path structure <code>/user/delete/{id}</code> is not standard. It should directly target the resource to be deleted, typically <code>/resource/{id}</code>.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method get">GET</span> <code>/createUser?name=Jo</code></summary>
+            <div class="content">
+                <h3>Intended Purpose:</h3>
+                <p>Create a new user named "Jo".</p>
+                <h3>Design Problems:</h3>
+                <ul class="problem-list">
+                    <li><strong>Incorrect HTTP Method:</strong> Uses <code>GET</code> for a creation operation. <code>GET</code> requests should be idempotent and safe, meaning they do not change server state. The correct method for creating a resource is <code>POST</code>.</li>
+                    <li><strong>Verb in URL:</strong> The path <code>/createUser</code> includes the verb "createUser."</li>
+                    <li><strong>Data in Query Parameters:</strong> Passing data for creation in query parameters is less secure, less flexible, and not suitable for complex data structures compared to sending data in the request body, which is standard for <code>POST</code> requests.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method put">PUT</span> <code>/updateAllUsers</code></summary>
+            <div class="content">
+                <h3>Intended Purpose:</h3>
+                <p>Update properties for all users in the system.</p>
+                <h3>Design Problems:</h3>
+                <ul class="problem-list">
+                    <li><strong>Verb in URL:</strong> The path <code>/updateAllUsers</code> includes the verb "updateAllUsers."</li>
+                    <li><strong>Ambiguous Semantics for <code>PUT</code>:</strong> <code>PUT</code> is typically used to *replace* a *specific* resource entirely, or to create a resource if it doesn't exist (idempotent update/create). Using it to "update all users" without specifying what "update" means (e.g., partial update, full replacement of the collection) is ambiguous and generally not a standard REST pattern for bulk operations.</li>
+                    <li><strong>Lack of Specificity:</strong> Without a request body or clear parameters, it's unclear what properties would be updated across all users. For bulk partial updates, <code>PATCH</code> is often more appropriate, or a specific endpoint for a well-defined bulk action.</li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <section>
+        <h2>Corrected RESTful Endpoints</h2>
+        <p>These endpoints adhere to REST best practices, using appropriate HTTP methods, consistent naming conventions (nouns for resources), and standard status codes.</p>
+
+        <details open>
+            <summary><span class="method get">GET</span> <code>/users</code></summary>
+            <div class="content">
+                <h3>Description:</h3>
+                <p>Retrieves a collection of user resources.</p>
+                <h3>Request:</h3>
+                <p><code>GET /users?page=1&limit=10&sortBy=name&filter[status]=active</code></p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>page</code> (optional, integer): Page number for pagination.</li>
+                    <li><code>limit</code> (optional, integer): Number of items per page.</li>
+                    <li><code>sortBy</code> (optional, string): Field to sort by (e.g., <code>name</code>, <code>email</code>).</li>
+                    <li><code>filter[field]</code> (optional, string): Filter results by specific field values.</li>
+                </ul>
+                <h3>Responses:</h3>
+                <ul>
+                    <li><span class="status-code success">200 OK</span>: Successfully retrieved the list of users.</li>
+                </ul>
+                <h4>Example 200 OK Response:</h4>
+                <pre><code>[
+    {
+        "id": "1",
+        "name": "Alice Smith",
+        "email": "alice@example.com",
+        "status": "active"
+    },
+    {
+        "id": "2",
+        "name": "Bob Johnson",
+        "email": "bob@example.com",
+        "status": "inactive"
+    }
+]</code></pre>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method get">GET</span> <code>/users/{id}</code></summary>
+            <div class="content">
+                <h3>Description:</h3>
+                <p>Retrieves a single user resource by its ID.</p>
+                <h3>Request:</h3>
+                <p><code>GET /users/5</code></p>
+                <h4>Path Parameters:</h4>
+                <ul>
+                    <li><code>id</code> (required, string): The unique identifier of the user.</li>
+                </ul>
+                <h3>Responses:</h3>
+                <ul>
+                    <li><span class="status-code success">200 OK</span>: Successfully retrieved the user.</li>
+                    <li><span class="status-code not-found">404 Not Found</span>: The user with the specified ID does not exist.</li>
+                </ul>
+                <h4>Example 200 OK Response:</h4>
+                <pre><code>{
+    "id": "5",
+    "name": "Jo Doe",
+    "email": "jo.doe@example.com",
+    "status": "active"
+}</code></pre>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method post">POST</span> <code>/users</code></summary>
+            <div class="content">
+                <h3>Description:</h3>
+                <p>Creates a new user resource.</p>
+                <h3>Request:</h3>
+                <p><code>POST /users</code></p>
+                <h4>Request Body (JSON):</h4>
+                <pre><code>{
+    "name": "Jo",
+    "email": "jo@example.com",
+    "password": "securepassword123"
+}</code></pre>
+                <h3>Responses:</h3>
+                <ul>
+                    <li><span class="status-code created">201 Created</span>: User successfully created. The response <code>Location</code> header will contain the URL of the newly created user.</li>
+                    <li><span class="status-code bad-request">400 Bad Request</span>: Invalid input data (e.g., missing required fields, invalid email format).</li>
+                </ul>
+                <h4>Example 201 Created Response:</h4>
+                <pre><code>{
+    "id": "new-user-id-123",
+    "name": "Jo",
+    "email": "jo@example.com",
+    "status": "active"
+}</code></pre>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method put">PUT</span> <code>/users/{id}</code></summary>
+            <div class="content">
+                <h3>Description:</h3>
+                <p>Replaces an existing user resource entirely, or creates it if it doesn't exist (idempotent update).</p>
+                <h3>Request:</h3>
+                <p><code>PUT /users/5</code></p>
+                <h4>Request Body (JSON):</h4>
+                <pre><code>{
+    "id": "5",
+    "name": "Joanne Doe",
+    "email": "joanne.doe@example.com",
+    "status": "inactive"
+}</code></pre>
+                <h3>Responses:</h3>
+                <ul>
+                    <li><span class="status-code success">200 OK</span>: User successfully updated.</li>
+                    <li><span class="status-code created">201 Created</span>: User successfully created (if it didn't exist).</li>
+                    <li><span class="status-code bad-request">400 Bad Request</span>: Invalid input data.</li>
+                    <li><span class="status-code not-found">404 Not Found</span>: The user with the specified ID was not found (if not creating).</li>
+                </ul>
+                <h4>Example 200 OK Response:</h4>
+                <pre><code>{
+    "id": "5",
+    "name": "Joanne Doe",
+    "email": "joanne.doe@example.com",
+    "status": "inactive"
+}</code></pre>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method patch">PATCH</span> <code>/users/{id}</code></summary>
+            <div class="content">
+                <h3>Description:</h3>
+                <p>Applies partial modifications to an existing user resource.</p>
+                <h3>Request:</h3>
+                <p><code>PATCH /users/5</code></p>
+                <h4>Request Body (JSON):</h4>
+                <pre><code>{
+    "status": "active"
+}</code></pre>
+                <h3>Responses:</h3>
+                <ul>
+                    <li><span class="status-code success">200 OK</span>: User successfully partially updated.</li>
+                    <li><span class="status-code bad-request">400 Bad Request</span>: Invalid input data.</li>
+                    <li><span class="status-code not-found">404 Not Found</span>: The user with the specified ID does not exist.</li>
+                </ul>
+                <h4>Example 200 OK Response:</h4>
+                <pre><code>{
+    "id": "5",
+    "name": "Joanne Doe",
+    "email": "joanne.doe@example.com",
+    "status": "active"
+}</code></pre>
+            </div>
+        </details>
+
+        <details>
+            <summary><span class="method delete">DELETE</span> <code>/users/{id}</code></summary>
+            <div class="content">
+                <h3>Description:</h3>
+                <p>Deletes a specific user resource by its ID.</p>
+                <h3>Request:</h3>
+                <p><code>DELETE /users/5</code></p>
+                <h4>Path Parameters:</h4>
+                <ul>
+                    <li><code>id</code> (required, string): The unique identifier of the user to delete.</li>
+                </ul>
+                <h3>Responses:</h3>
+                <ul>
+                    <li><span class="status-code no-content">204 No Content</span>: User successfully deleted (no content returned).</li>
+                    <li><span class="status-code not-found">404 Not Found</span>: The user with the specified ID does not exist.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Optional: Bulk Update/Delete if the original "updateAllUsers" truly meant that -->
+        <details>
+            <summary><span class="method patch">PATCH</span> <code>/users</code> <small>(for bulk partial updates)</small></summary>
+            <div class="content">
+                <h3>Description:</h3>
+                <p>Applies a partial update to multiple user resources based on criteria or a list of IDs. This is an advanced pattern often used for bulk operations, assuming the original <code>/updateAllUsers</code> intended a bulk partial update rather than a full collection replacement.</p>
+                <h3>Request:</h3>
+                <p><code>PATCH /users</code></p>
+                <h4>Request Body (JSON):</h4>
+                <pre><code>{
+    "filter": {
+        "status": "inactive"
+    },
+    "update": {
+        "status": "archived"
+    }
+}</code></pre>
+                <p><em>(This example payload updates all users with status 'inactive' to 'archived'. The exact payload structure depends on the API design for bulk operations.)</em></p>
+                <h3>Responses:</h3>
+                <ul>
+                    <li><span class="status-code success">200 OK</span>: Bulk update successful. Response body might indicate number of records updated.</li>
+                    <li><span class="status-code bad-request">400 Bad Request</span>: Invalid input data.</li>
+                </ul>
+            </div>
+        </details>
+
+    </section>
+
+    <footer>
+        <p>&copy; 2023 API Documentation. All rights reserved.</p>
+    </footer>
+</body>
+</html>

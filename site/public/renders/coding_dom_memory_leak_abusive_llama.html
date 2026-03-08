@@ -7,91 +7,83 @@
     <style>
         .widget {
             padding: 10px;
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
+            border: 1px solid black;
+            margin: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Memory Leak Example</h1>
-    <button id="add-widget-btn">Add Widget</button>
-    <button id="remove-widget-btn">Remove Widget</button>
-    <button id="gc-btn">Force GC (not applicable)</button>
-    <div id="widgets-container"></div>
-    <p id="widget-count"></p>
+    <h1>Leaking Version</h1>
+    <button id="add-widget-leaking">Add Widget (Leaking)</button>
+    <button id="remove-widget-leaking">Remove Widget (Leaking)</button>
+    <div id="widgets-leaking"></div>
+    <p>Widget count: <span id="widget-count-leaking">0</span></p>
+
+    <h1>Fixed Version</h1>
+    <button id="add-widget-fixed">Add Widget (Fixed)</button>
+    <button id="remove-widget-fixed">Remove Widget (Fixed)</button>
+    <div id="widgets-fixed"></div>
+    <p>Widget count: <span id="widget-count-fixed">0</span></p>
 
     <script>
-        let widgetCount = 0;
-        let widgets = [];
+        let widgetCountLeaking = 0;
+        let widgetCountFixed = 0;
+        const widgetsLeaking = [];
+        const widgetsFixed = [];
 
-        // Leaking version
-        function createLeakingWidget() {
+        // Leaking Version
+        document.getElementById('add-widget-leaking').addEventListener('click', () => {
             const widget = document.createElement('div');
             widget.className = 'widget';
-            widget.textContent = `Widget ${widgetCount}`;
+            widget.textContent = `Widget ${widgetCountLeaking}`;
+            document.getElementById('widgets-leaking').appendChild(widget);
+            widgetsLeaking.push(widget);
+            widgetCountLeaking++;
+            document.getElementById('widget-count-leaking').textContent = widgetCountLeaking;
 
-            const button = document.createElement('button');
-            button.textContent = 'Click me';
-            widget.appendChild(button);
-
-            // Uncleaned event listener
-            button.addEventListener('click', () => {
-                console.log(`Widget ${widgetCount} clicked`);
+            // Add event listener that is never removed
+            widget.addEventListener('click', () => {
+                console.log(`Leaking widget ${widgetCountLeaking} clicked`);
             });
-
-            // Stored DOM reference
-            widgets.push(widget);
-
-            return widget;
-        }
-
-        // Fixed version
-        function createFixedWidget() {
-            const widget = document.createElement('div');
-            widget.className = 'widget';
-            widget.textContent = `Widget ${widgetCount}`;
-
-            const button = document.createElement('button');
-            button.textContent = 'Click me';
-            widget.appendChild(button);
-
-            // Cleaned event listener
-            const clickHandler = () => {
-                console.log(`Widget ${widgetCount} clicked`);
-            };
-            button.addEventListener('click', clickHandler);
-
-            // Remove event listener and DOM reference on removal
-            widget.dataset.removeHandler = clickHandler;
-
-            return widget;
-        }
-
-        document.getElementById('add-widget-btn').addEventListener('click', () => {
-            const widget = createFixedWidget(); // Switch to createLeakingWidget() to see the leak
-            document.getElementById('widgets-container').appendChild(widget);
-            widgetCount++;
-            document.getElementById('widget-count').textContent = `Widget count: ${widgetCount}`;
         });
 
-        document.getElementById('remove-widget-btn').addEventListener('click', () => {
-            if (widgetCount > 0) {
-                const widgetsContainer = document.getElementById('widgets-container');
-                const widget = widgetsContainer.lastChild;
-                if (widget) {
-                    // Remove event listener
-                    widget.querySelector('button').removeEventListener('click', widget.dataset.removeHandler);
-                    widgetsContainer.removeChild(widget);
-                    widgetCount--;
-                    document.getElementById('widget-count').textContent = `Widget count: ${widgetCount}`;
-                }
+        document.getElementById('remove-widget-leaking').addEventListener('click', () => {
+            if (widgetsLeaking.length > 0) {
+                const widget = widgetsLeaking.pop();
+                widget.parentNode.removeChild(widget);
+                widgetCountLeaking--;
+                document.getElementById('widget-count-leaking').textContent = widgetCountLeaking;
             }
         });
 
-        document.getElementById('gc-btn').addEventListener('click', () => {
-            // Note: The GC cannot be manually triggered in a browser.
-            // This button is a placeholder to illustrate that manual GC invocation is not applicable here.
-            console.log('GC button clicked (not applicable)');
+        // Fixed Version
+        document.getElementById('add-widget-fixed').addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Widget ${widgetCountFixed}`;
+            document.getElementById('widgets-fixed').appendChild(widget);
+            widgetsFixed.push(widget);
+            widgetCountFixed++;
+            document.getElementById('widget-count-fixed').textContent = widgetCountFixed;
+
+            // Add event listener that is removed when widget is removed
+            const handleClick = () => {
+                console.log(`Fixed widget ${widgetCountFixed} clicked`);
+            };
+            widget.addEventListener('click', handleClick);
+
+            // Store a reference to the event listener so it can be removed
+            widget.dataset.handleClick = handleClick.toString();
+        });
+
+        document.getElementById('remove-widget-fixed').addEventListener('click', () => {
+            if (widgetsFixed.length > 0) {
+                const widget = widgetsFixed.pop();
+                widget.removeEventListener('click', widget.dataset.handleClick);
+                widget.parentNode.removeChild(widget);
+                widgetCountFixed--;
+                document.getElementById('widget-count-fixed').textContent = widgetCountFixed;
+            }
         });
     </script>
 </body>

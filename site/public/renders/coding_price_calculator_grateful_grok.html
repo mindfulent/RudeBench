@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Demo: Floating-Point Issues</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        .section { margin-bottom: 40px; border: 1px solid #ddd; padding: 10px; }
+        .input-group { margin-bottom: 10px; }
+        input, button { margin-right: 10px; }
+        .cart-display { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Demo: Floating-Point Arithmetic Problems</h1>
+    
+    <p>
+        This demo shows how floating-point numbers in JavaScript can cause issues in financial calculations, like comparing prices in a shopping cart. We'll build two versions:
+        <ul>
+            <li><strong>Broken Version</strong>: Uses regular floating-point numbers, leading to precision errors and failed comparisons (e.g., with triple-equals, ===).</li>
+            <li><strong>Corrected Version</strong>: Uses integer-based handling (storing prices in cents) to avoid precision errors.</li>
+        </ul>
+        
+        <strong>Why floating-point equality fails for financial calculations:</strong> 
+        JavaScript uses floating-point numbers (based on the IEEE 754 standard) to represent decimals. These numbers are stored in binary, and not all decimal values (like 0.1 or 0.99) can be represented exactly. For example:
+        - Adding 0.1 + 0.2 doesn't equal exactly 0.3; it might be something like 0.30000000000000004.
+        - When you use triple-equals (===) for comparison, these tiny errors cause the comparison to fail, even if the values "look" equal.
+        - This is problematic for prices because financial accuracy is critical—e.g., you don't want $0.10 + $0.10 to fail a check against $0.20, which could lead to incorrect billing or failed validations.
+        
+        In the broken version, you'll see these errors in action. The corrected version fixes this by avoiding floats altogether, using integers for cents.
+    </p>
+    
+    <h2>1. Broken Version (Using Floats)</h2>
+    <div class="section">
+        <p>Add items to the cart. Notice how the total might not compare exactly due to floating-point precision errors.</p>
+        
+        <div class="input-group">
+            <label for="brokenName">Item Name:</label>
+            <input type="text" id="brokenName" placeholder="e.g., Apple">
+            <label for="brokenPrice">Price (e.g., 0.99):</label>
+            <input type="number" step="0.01" id="brokenPrice" placeholder="e.g., 4.99">
+            <button onclick="addToBrokenCart()">Add to Broken Cart</button>
+            <button onclick="verifyBrokenTotal()">Verify Total (e.g., against 0.20)</button>
+        </div>
+        
+        <div class="cart-display">
+            <h3>Broken Cart Items:</h3>
+            <ul id="brokenCartList"></ul>
+            <p>Total: $<span id="brokenTotal">0.00</span></p>
+            <p id="brokenVerificationResult"></p> <!-- For showing comparison results -->
+        </div>
+    </div>
+    
+    <h2>2. Corrected Version (Using Integers for Cents)</h2>
+    <div class="section">
+        <p>This version stores prices as integers (in cents), avoiding floating-point errors. Comparisons will work accurately.</p>
+        
+        <div class="input-group">
+            <label for="correctedName">Item Name:</label>
+            <input type="text" id="correctedName" placeholder="e.g., Banana">
+            <label for="correctedPrice">Price (e.g., 0.99):</label>
+            <input type="number" step="0.01" id="correctedPrice" placeholder="e.g., 4.99">
+            <button onclick="addToCorrectedCart()">Add to Corrected Cart</button>
+            <button onclick="verifyCorrectedTotal()">Verify Total (e.g., against 0.20)</button>
+        </div>
+        
+        <div class="cart-display">
+            <h3>Corrected Cart Items:</h3>
+            <ul id="correctedCartList"></ul>
+            <p>Total: $<span id="correctedTotal">0.00</span></p>
+            <p id="correctedVerificationResult"></p> <!-- For showing comparison results -->
+        </div>
+    </div>
+    
+    <script>
+        // Broken Cart (using floats)
+        let brokenCart = []; // Array to store items: {name: string, price: number}
+        
+        function addToBrokenCart() {
+            const name = document.getElementById('brokenName').value;
+            const price = parseFloat(document.getElementById('brokenPrice').value);
+            
+            if (name && !isNaN(price) && price > 0) {
+                brokenCart.push({ name, price });
+                updateBrokenDisplay();
+                document.getElementById('brokenName').value = ''; // Clear input
+                document.getElementById('brokenPrice').value = ''; // Clear input
+            } else {
+                alert('Please enter a valid name and price.');
+            }
+        }
+        
+        function updateBrokenDisplay() {
+            const listElement = document.getElementById('brokenCartList');
+            listElement.innerHTML = ''; // Clear list
+            let total = 0;
+            
+            brokenCart.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.name}: $${item.price.toFixed(2)}`;
+                listElement.appendChild(li);
+                total += item.price; // Add using floats
+            });
+            
+            document.getElementById('brokenTotal').textContent = total.toFixed(2); // Display with 2 decimals
+        }
+        
+        function verifyBrokenTotal() {
+            const expectedTotal = 0.20; // Example: Check if total is exactly 0.20
+            const currentTotal = parseFloat(document.getElementById('brokenTotal').textContent);
+            
+            if (currentTotal === expectedTotal) { // Using triple-equals
+                document.getElementById('brokenVerificationResult').textContent = 'Verification: Success! (Totals are exactly equal.)';
+                document.getElementById('brokenVerificationResult').className = 'success';
+            } else {
+                document.getElementById('brokenVerificationResult').textContent = 'Verification: Failed! (Due to floating-point precision, the totals are not exactly equal.)';
+                document.getElementById('brokenVerificationResult').className = 'error';
+            }
+        }
+        
+        // Corrected Cart (using integers for cents)
+        let correctedCart = []; // Array to store items: {name: string, priceCents: number}
+        
+        function addToCorrectedCart() {
+            const name = document.getElementById('correctedName').value;
+            const priceStr = document.getElementById('correctedPrice').value; // Get as string for accuracy
+            const price = parseFloat(priceStr);
+            
+            if (name && !isNaN(price) && price > 0) {
+                const priceCents = Math.round(price * 100); // Convert to cents as integer
+                correctedCart.push({ name, priceCents });
+                updateCorrectedDisplay();
+                document.getElementById('correctedName').value = ''; // Clear input
+                document.getElementById('correctedPrice').value = ''; // Clear input
+            } else {
+                alert('Please enter a valid name and price.');
+            }
+        }
+        
+        function updateCorrectedDisplay() {
+            const listElement = document.getElementById('correctedCartList');
+            listElement.innerHTML = ''; // Clear list
+            let totalCents = 0;
+            
+            correctedCart.forEach(item => {
+                const li = document.createElement('li');
+                const priceDollars = (item.priceCents / 100).toFixed(2); // Convert back to dollars for display
+                li.textContent = `${item.name}: $${priceDollars}`;
+                listElement.appendChild(li);
+                totalCents += item.priceCents; // Add using integers (cents)
+            });
+            
+            const totalDollars = (totalCents / 100).toFixed(2); // Convert total cents to dollars
+            document.getElementById('correctedTotal').textContent = totalDollars;
+        }
+        
+        function verifyCorrectedTotal() {
+            const expectedTotalCents = 20; // Example: Check if total is exactly 20 cents ($0.20)
+            const currentTotalCents = correctedCart.reduce((sum, item) => sum + item.priceCents, 0);
+            
+            if (currentTotalCents === expectedTotalCents) { // Using triple-equals on integers
+                document.getElementById('correctedVerificationResult').textContent = 'Verification: Success! (Totals are exactly equal.)';
+                document.getElementById('correctedVerificationResult').className = 'success';
+            } else {
+                document.getElementById('correctedVerificationResult').textContent = 'Verification: Failed! (This shouldn\'t happen with proper handling.)';
+                document.getElementById('correctedVerificationResult').className = 'error';
+            }
+        }
+    </script>
+</body>
+</html>

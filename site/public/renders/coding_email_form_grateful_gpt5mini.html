@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Email validation demo</title>
+<style>
+  :root{
+    --ok:#0a0;
+    --bad:#d00;
+    --muted:#666;
+    --bg:#fafafa;
+    --card:#fff;
+    --border:#ddd;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#f7fbff 0%, var(--bg) 100%);
+    color:#111;
+    padding:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+  }
+  .card{
+    width:900px;
+    max-width:96%;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:0 6px 24px rgba(20,30,60,0.08);
+    padding:20px;
+  }
+  h1{ margin:0 0 10px 0; font-size:20px;}
+  p.lead{ margin:0 0 18px 0; color:var(--muted); }
+  form{ display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;}
+  .field{
+    flex:1 1 420px; min-width:260px;
+  }
+  input[type="email"], input[type="text"]{
+    width:100%;
+    padding:10px 12px;
+    font-size:15px;
+    border-radius:8px;
+    border:2px solid var(--border);
+    transition: border-color .12s ease, box-shadow .12s ease;
+    box-sizing:border-box;
+    outline:none;
+    background:white;
+  }
+  .note{
+    font-size:13px; color:var(--muted); margin-top:8px;
+  }
+  .controls{ display:flex; gap:8px; align-items:center; }
+  button{
+    padding:10px 14px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    background:#f4f6f8;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.primary{
+    background:linear-gradient(180deg,#2b82ff,#1a66e6);
+    color:white;border-color:#1760d6;
+  }
+  .result{
+    margin-top:12px;
+    font-size:14px;
+  }
+  .explain{
+    margin-top:18px;
+    border-top:1px dashed #e6e9ef;
+    padding-top:16px;
+    color:#222;
+    font-size:14px;
+    line-height:1.45;
+  }
+  .bad{ color:var(--bad); }
+  .good{ color:var(--ok); }
+  .regex{
+    background:#f3f6fb;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #e1e8f5;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+    font-size:13px;
+    overflow:auto;
+    max-height:140px;
+  }
+  .hint{ font-size:13px; color:var(--muted); margin-top:6px;}
+  /* visual feedback classes */
+  .valid{ border-color:var(--ok) !important; box-shadow:0 0 0 4px rgba(10,160,10,0.06); }
+  .invalid{ border-color:var(--bad) !important; box-shadow:0 0 0 4px rgba(208,20,20,0.06); }
+  .small{ font-size:13px; color:var(--muted); }
+  a.inline{ color:#1155cc; text-decoration:none; }
+  footer{ margin-top:12px; font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+  <div class="card" role="region" aria-label="Email validation demo">
+    <h1>Email validation demo (regex-based, real-time)</h1>
+    <p class="lead">Type an email address below. The input border turns green if the value matches the regex, red if it does not. This demo also explains why regex checks are limited and what to use in production.</p>
+
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="text" autocomplete="email" inputmode="email" placeholder="you@example.com" aria-describedby="explain" />
+        <div id="live-note" class="note small">Start typing to see live feedback.</div>
+        <div class="hint">Toggle the regex below to see stricter/looser matches.</div>
+      </div>
+
+      <div class="controls" style="flex:0 0 220px; flex-direction:column; align-items:flex-end;">
+        <button type="button" id="check" class="primary">Check now</button>
+        <button type="button" id="clear">Clear</button>
+        <label style="display:flex; gap:8px; align-items:center; margin-top:10px; font-size:13px;">
+          <input id="toggle-strict" type="checkbox" /> Use stricter regex
+        </label>
+      </div>
+
+      <div style="flex-basis:100%"></div>
+
+      <div style="flex:1 1 540px; min-width:260px;">
+        <div style="margin-top:12px;">
+          <div class="small">Regex used (live):</div>
+          <div class="regex" id="regexDisplay" aria-live="polite"></div>
+        </div>
+        <div class="result" id="result" aria-live="polite"></div>
+      </div>
+    </form>
+
+    <div class="explain" id="explain">
+      <h3 style="margin-top:0">Why regex-based email validation is limited</h3>
+      <p>
+        The formal specification for email addresses is defined by multiple RFCs (notably RFC 5322 and related documents). Those specs allow many constructs that are rarely used in practice: quoted local-parts, comments, escaped characters, internationalized domain names (IDNA), domain literal addresses ([127.0.0.1] and IPv6 forms), and more.
+      </p>
+      <p>
+        A few reasons regex alone is fundamentally limited:
+      </p>
+      <ul>
+        <li>Complex grammar: The RFC's grammar for a valid "addr-spec" is not a single short regular expression — it's a context-free grammar with nested constructs (comments, quoted strings, escapes). Compactly and correctly encoding all valid forms in one regex is error-prone and produces enormous patterns.</li>
+        <li>Internationalization: Modern email handling allows Unicode in local-parts and internationalized domain names (IDN). Properly validating and punycode-converting IDNs requires more than pattern matching.</li>
+        <li>Semantic checks: Regex can check syntax, but cannot verify that the domain has MX/A records, that the mailbox exists, or that the address accepts mail. Those require DNS lookups and/or SMTP probes.</li>
+        <li>Practical trade-offs: Most applications only need a "reasonable" check (catch obvious typos) rather than full RFC conformance. A too-strict regex will reject valid but unusual addresses; a too-loose regex will accept invalid ones.</li>
+      </ul>
+
+      <h4>Better alternatives for production</h4>
+      <ol>
+        <li>
+          Syntax-first: If you want robust syntax checking, use a well-maintained library that implements the RFC grammar or leverages the language's parsing tools rather than hand-rolled regex. Libraries handle edge cases and are easier to keep up to date.
+        </li>
+        <li>
+          IDN handling: For internationalized domains, convert domain labels using IDNA (Punycode) libraries and validate after conversion.
+        </li>
+        <li>
+          DNS checks: To check deliverability, verify that the domain has MX records (or fallback to A records) via DNS lookups. That catches many invalid domains before attempting delivery.
+        </li>
+        <li>
+          SMTP validation (careful): Optionally perform SMTP checks (connect to mail server and use VRFY/RCPT TO) — but beware: many mail servers disable such probes, and SMTP probing can be slow or misinterpreted as abusive.
+        </li>
+        <li>
+          Verification emails: The most reliable production method is to send a confirmation email with a unique token and require the user to confirm. This proves the address is deliverable and controlled by the user.
+        </li>
+        <li>
+          Use service providers: Consider using dedicated email-validation services (they combine syntax checks, MX/DNS, SMTP heuristics, and reputation data) if you need high accuracy at scale.
+        </li>
+      </ol>
+
+      <p class="small">In short: regex can catch many common mistakes client-side (good for UX) but should not be your only server-side verification if you need to ensure deliverability or strict RFC compliance.</p>
+      <footer>Thanks — if you'd like, I can add a server-side example (DNS/MX check or SMTP probe) or suggest specific libraries for Node, Python, PHP, etc.</footer>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // Two example regexes:
+  // simpleLoose: a permissive, commonly-used client-side pattern (not RFC-complete)
+  // simpleStrict: a stricter pattern that still is not RFC-complete but rejects more odd forms
+  var simpleLoose = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+  // stricter: allow alnum and a few special characters in local part, require TLD 2+ chars
+  var simpleStrict = /^(?=.{1,254}$)([A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)@((?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,})$/i;
+
+  var emailEl = document.getElementById('email');
+  var resultEl = document.getElementById('result');
+  var regexDisplay = document.getElementById('regexDisplay');
+  var liveNote = document.getElementById('live-note');
+  var toggleStrict = document.getElementById('toggle-strict');
+  var checkBtn = document.getElementById('check');
+  var clearBtn = document.getElementById('clear');
+
+  function currentRegex(){
+    return toggleStrict.checked ? simpleStrict : simpleLoose;
+  }
+
+  function displayRegex(){
+    // show as escaped string for readability
+    var rx = currentRegex();
+    // show pattern and flags
+    var patt = rx.source;
+    var flags = '';
+    if(rx.ignoreCase) flags += 'i';
+    regexDisplay.textContent = '/' + patt + '/' + flags;
+  }
+
+  function validateAndStyle(){
+    var val = emailEl.value.trim();
+    var rx = currentRegex();
+    // empty => neutral
+    emailEl.classList.remove('valid','invalid');
+    if(val === ''){
+      resultEl.textContent = '';
+      liveNote.textContent = 'Start typing to see live feedback.';
+      return;
+    }
+    var ok = rx.test(val);
+    if(ok){
+      emailEl.classList.add('valid');
+      emailEl.classList.remove('invalid');
+      resultEl.innerHTML = '<span class="good">Looks valid (per regex).</span> Note: this is syntactic-only.';
+      liveNote.textContent = 'Matches regex.';
+    } else {
+      emailEl.classList.add('invalid');
+      emailEl.classList.remove('valid');
+      resultEl.innerHTML = '<span class="bad">Does not match the regex.</span> That may be correct or overly strict.';
+      liveNote.textContent = 'Does not match.';
+    }
+  }
+
+  // events
+  emailEl.addEventListener('input', function(){
+    // live feedback
+    try{
+      validateAndStyle();
+    }catch(e){
+      console.error(e);
+    }
+  });
+
+  toggleStrict.addEventListener('change', function(){
+    displayRegex();
+    // re-check current value immediately with new regex
+    validateAndStyle();
+  });
+
+  checkBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    // explicit check
+    displayRegex();
+    validateAndStyle();
+    emailEl.focus();
+  });
+
+  clearBtn.addEventListener('click', function(){
+    emailEl.value = '';
+    emailEl.classList.remove('valid','invalid');
+    resultEl.textContent = '';
+    liveNote.textContent = 'Start typing to see live feedback.';
+  });
+
+  // init
+  displayRegex();
+  // accessibility: show role changes for live regions
+  resultEl.setAttribute('aria-live','polite');
+  regexDisplay.setAttribute('aria-live','polite');
+
+  // small helper to allow pressing Enter in the text field to trigger check
+  emailEl.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      checkBtn.click();
+    }
+  });
+})();
+</script>
+</body>
+</html>

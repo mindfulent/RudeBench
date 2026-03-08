@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 45%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .explanation {
+            margin-top: 20px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Race Condition Demonstration</h1>
+    <div class="container">
+        <div class="section">
+            <h2>Buggy Version</h2>
+            <p>Count: <span id="buggyCount">0</span></p>
+            <button id="buggyButton">Increment (Buggy)</button>
+            <div class="explanation">
+                <p><strong>Explanation of the Bug:</strong> In this version, each button click schedules an asynchronous update using <code>setTimeout</code>. If you click the button rapidly, multiple updates overlap. They all read the current value of the shared <code>buggyCount</code> variable at the same time, add 1 to their individual copies, and then write back. This causes race conditions, where later updates overwrite earlier ones, resulting in the displayed count being lower than expected (e.g., after 5 rapid clicks, you might see 3 instead of 5).</p>
+                <p><strong>Why it happens:</strong> The operations are not atomic or synchronized, so the shared state is accessed concurrently without protection.</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Corrected Version</h2>
+            <p>Count: <span id="correctedCount">0</span></p>
+            <button id="correctedButton">Increment (Corrected)</button>
+            <div class="explanation">
+                <p><strong>Explanation of the Fix:</strong> This version uses a queue to process updates sequentially. Each button click adds an increment task to the queue, and the queue ensures that tasks are executed one at a time. Even with rapid clicks, the updates wait for the previous one to finish before proceeding, so the shared <code>correctedCount</code> variable is always updated correctly.</p>
+                <p><strong>How it resolves the issue:</strong> By enforcing a sequence (using a queue and callbacks), we prevent overlapping access to the shared state, making the operations effectively atomic in this context. After rapid clicks, the count will accurately reflect the total number of clicks.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Buggy Version Implementation
+        let buggyCount = 0;  // Shared counter variable
+        
+        function buggyIncrement() {
+            setTimeout(() => {
+                // Read the current value
+                let current = buggyCount;
+                // Simulate a delay in modification (though it's instant here)
+                buggyCount = current + 1;  // Modify and write back
+                updateBuggyDisplay();  // Update the display
+            }, 0);  // Asynchronous delay
+        }
+        
+        function updateBuggyDisplay() {
+            document.getElementById('buggyCount').textContent = buggyCount;
+        }
+        
+        // Add event listener for buggy button
+        document.getElementById('buggyButton').addEventListener('click', buggyIncrement);
+        
+        // Corrected Version Implementation
+        let correctedCount = 0;  // Shared counter variable
+        let queue = [];  // Queue to hold tasks
+        
+        function enqueue(task) {
+            queue.push(task);
+            if (queue.length === 1) {  // If queue was empty, start processing
+                processQueue();
+            }
+        }
+        
+        function processQueue() {
+            if (queue.length > 0) {
+                const task = queue[0];  // Get the first task
+                task(() => {  // Execute the task with a callback
+                    queue.shift();  // Remove the completed task
+                    processQueue();  // Process the next one
+                });
+            }
+        }
+        
+        function correctedIncrement() {
+            enqueue(callback => {
+                // Perform the increment
+                correctedCount = correctedCount + 1;
+                updateCorrectedDisplay();
+                // After the task is done, call the callback to continue
+                setTimeout(callback, 0);  // Keep it asynchronous but sequential
+            });
+        }
+        
+        function updateCorrectedDisplay() {
+            document.getElementById('correctedCount').textContent = correctedCount;
+        }
+        
+        // Add event listener for corrected button
+        document.getElementById('correctedButton').addEventListener('click', correctedIncrement);
+    </script>
+</body>
+</html>

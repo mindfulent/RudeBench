@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree with Recursion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        #canvas {
+            border: 1px solid #000;
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
+        
+        #controls {
+            margin-bottom: 20px;
+        }
+        
+        #explanation {
+            max-width: 600px;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border: 1px solid #007bff;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fractal Tree Generator</h1>
+    
+    <div id="controls">
+        <label for="depthSlider">Recursion Depth (1-12): </label>
+        <input type="range" id="depthSlider" min="1" max="12" value="5" oninput="drawTree()">
+    </div>
+    
+    <canvas id="canvas" width="600" height="400"></canvas>
+    
+    <div id="explanation">
+        <h2>Explanation of Recursion in Fractal Trees</h2>
+        <p>This interactive example uses recursion to draw a fractal tree. Recursion involves a function calling itself to handle smaller subproblems, such as drawing branches from a trunk and then sub-branches from those branches, until a base case (like depth 0) is reached.</p>
+        
+        <p><strong>Recursion Depth Limits:</strong> The slider allows depths from 1 to 12. Each level of recursion adds to the call stack, which is a limited resource in JavaScript engines. For instance, depths beyond 10-15 might approach or exceed the typical call stack limit (around 10,000-50,000 calls, depending on the browser and system), leading to performance issues or errors.</p>
+        
+        <p><strong>Stack Overflow Risks:</strong> If the recursion depth is too high (e.g., trying to go beyond 12 here), it can cause a "stack overflow" error. This happens because each recursive call consumes stack space, and if the stack runs out of memory, the program crashes. In this demo, we've capped the slider at 12 to demonstrate this concept safely, but real-world applications must be cautious.</p>
+        
+        <p><strong>Practical Solutions:</strong> To mitigate these risks, recursion can be converted to an iterative approach. For example, instead of using recursive function calls, you could use a loop with a stack data structure (like an array) to simulate the recursion. This avoids stack overflows by managing the "stack" in heap memory, which is more flexible. In a fractal tree context, an iterative version might involve a loop that processes a queue of branch instructions, drawing each level sequentially. This is more memory-efficient for deep structures and is commonly used in production code for performance-critical applications.</p>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function drawTree() {
+            const depth = parseInt(document.getElementById('depthSlider').value);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            ctx.save();  // Save the default state
+            
+            // Set starting position: bottom center of the canvas
+            ctx.translate(canvas.width / 2, canvas.height);  // Move to bottom center
+            ctx.scale(1, -1);  // Flip the y-axis for upward drawing
+            
+            drawBranch(ctx, depth, 100, -Math.PI / 2);  // Start with trunk length 100 and angle upward
+            
+            ctx.restore();  // Restore the default state
+        }
+        
+        function drawBranch(ctx, depth, length, angle) {
+            if (depth === 0) return;  // Base case: Stop recursion
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);  // Start at current position
+            ctx.lineTo(0, -length);  // Draw line upward (due to y-axis flip)
+            ctx.strokeStyle = 'green';  // Green color for branches
+            ctx.lineWidth = depth;  // Make thicker lines for deeper levels
+            ctx.stroke();
+            
+            ctx.translate(0, -length);  // Move to the end of the branch
+            
+            // Recurse for left and right branches
+            const angleOffset = Math.PI / 6;  // 30 degrees in radians
+            
+            ctx.save();
+            ctx.rotate(angleOffset);  // Rotate for left branch
+            drawBranch(ctx, depth - 1, length * 0.7, angle);  // Recursive call
+            ctx.restore();
+            
+            ctx.save();
+            ctx.rotate(-angleOffset);  // Rotate for right branch
+            drawBranch(ctx, depth - 1, length * 0.7, angle);  // Recursive call
+            ctx.restore();
+        }
+        
+        // Initial draw
+        drawTree();
+    </script>
+</body>
+</html>

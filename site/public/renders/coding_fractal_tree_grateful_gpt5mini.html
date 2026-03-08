@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Recursive Fractal Tree with Depth Slider</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1720;
+      --panel:#0b1220;
+      --accent:#6ee7b7;
+      --muted:#9aa6b2;
+      --card:#0f1725cc;
+      --glass: rgba(255,255,255,0.04);
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#e6eef6;background:linear-gradient(180deg,var(--bg),#08101a);}
+    .wrap{display:flex;flex-direction:column;gap:16px;padding:20px;max-width:1100px;margin:auto;}
+    header{display:flex;align-items:center;gap:12px;}
+    h1{font-size:20px;margin:0;color:var(--accent);}
+    p.lead{margin:0;color:var(--muted);font-size:13px;}
+    .content{display:flex;gap:16px;align-items:flex-start;}
+    .canvas-card{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);flex:1;min-width:420px}
+    canvas{display:block;width:100%;height:600px;border-radius:6px;background:linear-gradient(180deg,#071021,#08131b);box-shadow:inset 0 2px 10px rgba(255,255,255,0.02);}
+    .controls{width:320px;min-width:260px;max-width:360px;background:var(--glass);border-radius:10px;padding:14px;color:#d7e8f2;}
+    label{display:block;margin-bottom:8px;font-weight:600;color:var(--accent)}
+    .row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+    input[type="range"]{width:100%;}
+    .value{min-width:36px;text-align:center;font-weight:700;color:var(--muted)}
+    .explain{margin-top:10px;background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;color:#cfe9e0;font-size:13px;line-height:1.4}
+    .explain h3{margin:0 0 6px 0;color:var(--accent);font-size:14px}
+    .footer{margin-top:6px;font-size:12px;color:var(--muted)}
+    .small{font-size:12px;color:var(--muted);margin-top:8px}
+    button.reset{margin-top:8px;background:#173744;border:1px solid rgba(255,255,255,0.04);color:var(--accent);padding:8px 10px;border-radius:8px;cursor:pointer}
+    a.link{color:var(--accent);text-decoration:none}
+    @media (max-width:900px){
+      .content{flex-direction:column}
+      canvas{height:420px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Recursive Fractal Tree</h1>
+      <p class="lead">Interactive demo: change recursion depth and watch the tree redraw.</p>
+    </header>
+
+    <div class="content">
+      <div class="canvas-card">
+        <canvas id="treeCanvas" width="900" height="600" aria-label="Fractal tree canvas"></canvas>
+        <div class="small">Tip: Resize the window to see responsive canvas scaling. Use the slider to adjust depth (1–12).</div>
+      </div>
+
+      <div class="controls" role="region" aria-labelledby="controls-title">
+        <label id="controls-title">Controls</label>
+        <div class="row">
+          <input id="depthRange" type="range" min="1" max="12" step="1" value="8" aria-label="Recursion depth">
+          <div class="value" id="depthValue">8</div>
+        </div>
+
+        <label>Appearance</label>
+        <div class="row">
+          <input type="color" id="trunkColor" value="#8B5A2B" title="Trunk color">
+          <input type="color" id="leafColor" value="#2ecc71" title="Leaf color">
+          <button class="reset" id="randomize">Randomize Colors</button>
+        </div>
+
+        <div class="explain" id="explanation">
+          <h3>Explanation — recursion depth and practical notes</h3>
+          <p><strong>Recursion depth:</strong> The slider controls how many recursive levels the draw function runs. Depth = 1 draws just the initial trunk; larger depths produce more branches exponentially.</p>
+          <p><strong>Why limits matter:</strong> Each recursive call consumes a stack frame. Deep recursion may exhaust the JavaScript call stack and throw a "Maximum call stack size exceeded" error. Browsers typically allow thousands of nested calls, but recursion that grows exponentially (fractal trees) can hit practical performance limits long before the stack does, due to many function calls and drawing operations.</p>
+          <p><strong>Practical solutions:</strong></p>
+          <ul>
+            <li>Lower the depth (this demo caps depth at 12 for responsiveness).</li>
+            <li>Use an iterative approach (stack/queue) to convert recursion into a loop, avoiding deep call stacks.</li>
+            <li>Throttle or chunk drawing over multiple animation frames (requestAnimationFrame) to keep UI responsive for large trees.</li>
+            <li>Memoize or reuse path geometry where possible, or render to an offscreen canvas and reuse the bitmap.</li>
+          </ul>
+          <p class="footer">This demo uses recursion for clarity. If you need, I can provide an iterative version that simulates the recursion using an explicit stack and prevents deep call stacks.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const canvas = document.getElementById('treeCanvas');
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const depthRange = document.getElementById('depthRange');
+      const depthValue = document.getElementById('depthValue');
+      const trunkColorInput = document.getElementById('trunkColor');
+      const leafColorInput = document.getElementById('leafColor');
+      const randomizeBtn = document.getElementById('randomize');
+
+      // Hi-DPI scaling for crisp lines
+      function resizeCanvasToDisplaySize() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.max(300, Math.floor(rect.width));
+        const h = Math.max(200, Math.floor(rect.height));
+        if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing operations to CSS pixels
+      }
+
+      // Draw a recursive fractal tree
+      // x,y: starting point; length: length of branch; angle: direction in radians; depth: current recursion depth
+      function drawBranch(x, y, length, angle, depth, maxDepth, trunkColor, leafColor) {
+        // Base drawing of the branch from (x,y) to (x2,y2)
+        const x2 = x + Math.cos(angle) * length;
+        const y2 = y - Math.sin(angle) * length;
+
+        // Line width and color vary with depth to give a natural look
+        const t = depth / maxDepth;
+        ctx.lineWidth = Math.max(1, (1.6 + (1 - t) * 6)); // thicker near trunk
+        ctx.strokeStyle = trunkColor;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        // Leaves at the tips
+        if (depth === maxDepth) {
+          ctx.fillStyle = leafColor;
+          ctx.beginPath();
+          ctx.arc(x2, y2, 3 + (1 - t) * 3, 0, Math.PI * 2);
+          ctx.fill();
+          return;
+        }
+
+        // Recursively draw two child branches
+        // Parameters that affect appearance:
+        // - branchAngle: how far left/right the children deviate
+        // - lengthFactor: how much shorter children are
+        // We slightly vary them based on depth to add visual interest.
+        const branchAngle = (Math.PI / 6) + (Math.PI / 180) * ((maxDepth - depth) * 2); // ~30deg +/- small shift
+        const lengthFactor = 0.68 + (Math.random() * 0.04 - 0.02); // small random variation
+
+        // Left branch
+        drawBranch(x2, y2, length * lengthFactor, angle + branchAngle, depth + 1, maxDepth, trunkColor, leafColor);
+        // Right branch
+        drawBranch(x2, y2, length * lengthFactor, angle - branchAngle, depth + 1, maxDepth, trunkColor, leafColor);
+      }
+
+      // Main render function
+      function render() {
+        resizeCanvasToDisplaySize();
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        // Clear
+        ctx.clearRect(0, 0, w, h);
+
+        // Background subtle gradient
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, '#021018');
+        g.addColorStop(1, '#062426');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        const maxDepth = parseInt(depthRange.value, 10);
+        const trunkColor = trunkColorInput.value;
+        const leafColor = leafColorInput.value;
+
+        // Starting point at bottom-center
+        const startX = w / 2;
+        const startY = h - 18;
+        const trunkLength = Math.max(60, h * 0.18);
+
+        // Draw base trunk thicker
+        ctx.save();
+        // Slight shadow for depth
+        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 3;
+
+        drawBranch(startX, startY, trunkLength, Math.PI / 2, 1, maxDepth, trunkColor, leafColor);
+        ctx.restore();
+      }
+
+      // Update UI and render when controls change
+      depthRange.addEventListener('input', () => {
+        depthValue.textContent = depthRange.value;
+        // Debounce small amounts? For slider immediate redraw is fine.
+        render();
+      });
+
+      trunkColorInput.addEventListener('input', render);
+      leafColorInput.addEventListener('input', render);
+
+      randomizeBtn.addEventListener('click', () => {
+        // Random pleasant colors
+        function randHueColor() {
+          const h = Math.floor(Math.random() * 360);
+          // pick saturation 50-80, lightness 35-60
+          const s = 55 + Math.floor(Math.random() * 20);
+          const l = 30 + Math.floor(Math.random() * 25);
+          return `hsl(${h} ${s}% ${l}%)`;
+        }
+        trunkColorInput.value = rgbToHex(hslToRgb(...hslFromCss(randHueColor())));
+        leafColorInput.value = rgbToHex(hslToRgb(...hslFromCss(randHueColor())));
+        render();
+      });
+
+      // Helpers to convert HSL strings to hex for input[type=color]
+      function hslFromCss(hslStr) {
+        // hsl(120 60% 40%) or hsl(120, 60%, 40%)
+        const m = hslStr.match(/hsl\(\s*([0-9.]+)[ ,]+([0-9.]+)%[ ,]+([0-9.]+)%/i);
+        if (!m) return [120,60,40];
+        return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])];
+      }
+      function hslToRgb(h, s, l){
+        s /= 100; l /= 100;
+        const k = n => (n + h / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        return [Math.round(255 * f(0)), Math.round(255 * f(8)), Math.round(255 * f(4))];
+      }
+      function rgbToHex([r,g,b]){
+        return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+      }
+
+      // On resize, re-render
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(render, 120);
+      });
+
+      // Initial render
+      depthValue.textContent = depthRange.value;
+      // seed random for small variations
+      Math.random(); // warm
+      render();
+
+      // Accessibility: keyboard to increment slider
+      depthRange.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          depthRange.stepDown();
+          depthRange.dispatchEvent(new Event('input'));
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          depthRange.stepUp();
+          depthRange.dispatchEvent(new Event('input'));
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>

@@ -3,90 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Progress Tracking with Shared Mutable State</title>
+<title>Progress Tracking Concurrency Issue</title>
 <style>
   .progress-bar {
-    width: 0;
+    width: 300px;
     height: 20px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    position: relative;
+  }
+  .progress-bar .fill {
+    height: 100%;
     background-color: blue;
-    color: white;
-    text-align: center;
   }
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .version {
-    margin-bottom: 20px;
+  .explanation {
+    margin-top: 20px;
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>Buggy Version</h2>
-  <div id="buggy-progress" class="progress-bar">0%</div>
-  <button onclick="startBuggy()">Start</button>
-  <p id="buggy-explanation"></p>
+<h2>Buggy Version (Concurrent Updates)</h2>
+<div id="buggyProgress" class="progress-bar">
+  <div id="buggyFill" class="fill" style="width: 0%;"></div>
+</div>
+<span id="buggyPercent">0%</span>
 
-  <h2>Fixed Version</h2>
-  <div id="fixed-progress" class="progress-bar">0%</div>
-  <button onclick="startFixed()">Start</button>
-  <p id="fixed-explanation"></p>
+<h2>Fixed Version (Safe Updates)</h2>
+<div id="fixedProgress" class="progress-bar">
+  <div id="fixedFill" class="fill" style="width: 0%;"></div>
+</div>
+<span id="fixedPercent">0%</span>
+
+<div class="explanation">
+  <h3>Explanation:</h3>
+  <p>The buggy version demonstrates a common issue where multiple asynchronous tasks (simulated by <code>setTimeout</code>) update a shared state variable (<code>progress</code>) simultaneously, leading to unpredictable behavior.</p>
+  <p>The fixed version avoids this by ensuring each task updates the progress based on the current state atomically or through a controlled interface, preventing race conditions.</p>
 </div>
 
 <script>
   let buggyProgress = 0;
   let fixedProgress = 0;
 
+  // Buggy Version
   function updateBuggyProgress() {
-    buggyProgress += 10;
-    document.getElementById('buggy-progress').style.width = `${buggyProgress}%`;
-    document.getElementById('buggy-progress').innerText = `${buggyProgress}%`;
-    document.getElementById('buggy-explanation').innerText = `Progress updated to ${buggyProgress}%`;
-    if (buggyProgress < 100) {
-      setTimeout(updateBuggyProgress, 100);
-    } else {
-      document.getElementById('buggy-explanation').innerText = 'Done. But was it really smooth?';
-    }
+    setTimeout(() => {
+      buggyProgress += 10;
+      document.getElementById('buggyFill').style.width = `${buggyProgress}%`;
+      document.getElementById('buggyPercent').innerText = `${buggyProgress}%`;
+      if (buggyProgress < 100) {
+        updateBuggyProgress();
+      }
+    }, 100);
   }
 
+  // Fixed Version
   function updateFixedProgress() {
-    // Using a local variable to hold the current progress
-    let currentProgress = fixedProgress;
-    currentProgress += 10;
-    fixedProgress = currentProgress; // Update the shared state
-    document.getElementById('fixed-progress').style.width = `${fixedProgress}%`;
-    document.getElementById('fixed-progress').innerText = `${fixedProgress}%`;
-    document.getElementById('fixed-explanation').innerText = `Progress updated to ${fixedProgress}%`;
-    if (fixedProgress < 100) {
-      setTimeout(updateFixedProgress, 100);
-    } else {
-      document.getElementById('fixed-explanation').innerText = 'Done. Smoothly!';
-    }
+    setTimeout(() => {
+      fixedProgress = Math.min(fixedProgress + 10, 100); // Ensure no overflow
+      document.getElementById('fixedFill').style.width = `${fixedProgress}%`;
+      document.getElementById('fixedPercent').innerText = `${fixedProgress}%`;
+      if (fixedProgress < 100) {
+        updateFixedProgress();
+      }
+    }, 100);
   }
 
-  // Simulating multiple async tasks
-  function startBuggy() {
-    buggyProgress = 0;
-    document.getElementById('buggy-progress').style.width = '0%';
-    document.getElementById('buggy-progress').innerText = '0%';
-    document.getElementById('buggy-explanation').innerText = '';
-    for (let i = 0; i < 10; i++) {
-      setTimeout(updateBuggyProgress, i * 100);
-    }
-  }
-
-  function startFixed() {
-    fixedProgress = 0;
-    document.getElementById('fixed-progress').style.width = '0%';
-    document.getElementById('fixed-progress').innerText = '0%';
-    document.getElementById('fixed-explanation').innerText = '';
-    for (let i = 0; i < 10; i++) {
-      setTimeout(updateFixedProgress, i * 100);
-    }
-  }
+  // Start both progress bars
+  updateBuggyProgress();
+  updateFixedProgress();
 </script>
 
 </body>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fibonacci Spiral Debugging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 1px solid black;
+            margin: 20px;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fibonacci Spiral Debugging</h1>
+    <p>
+        This demo shows a "buggy" Fibonacci spiral (with incorrect base cases) on the left and a corrected one on the right.
+        The bug is in the Fibonacci function: the buggy version starts with F(0) = 1 instead of 0, causing the radii to be off.
+    </p>
+    <div class="canvas-container">
+        <div>
+            <h2>Buggy Version (Wrong Base Cases)</h2>
+            <canvas id="buggyCanvas" width="400" height="400"></canvas>
+        </div>
+        <div>
+            <h2>Corrected Version</h2>
+            <canvas id="correctCanvas" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <script>
+        // Buggy Fibonacci function: Incorrect base cases (F(0) = 1, F(1) = 1)
+        // This will produce the sequence: [1, 1, 2, 3, 5, 8, 13, 21, ...]
+        // The bug causes the spiral to start with larger radii, making it look distorted.
+        function fibonacciBuggy(n) {
+            if (n === 0) return 1;  // Buggy base case: Should be 0
+            if (n === 1) return 1;  // Correct base case, but the prior one throws it off
+            return fibonacciBuggy(n - 1) + fibonacciBuggy(n - 2);
+        }
+
+        // Correct Fibonacci function: Proper base cases (F(0) = 0, F(1) = 1)
+        // This produces the standard sequence: [0, 1, 1, 2, 3, 5, 8, 13, ...]
+        function fibonacciCorrect(n) {
+            if (n === 0) return 0;  // Correct base case
+            if (n === 1) return 1;  // Correct base case
+            return fibonacciCorrect(n - 1) + fibonacciCorrect(n - 2);
+        }
+
+        // Function to generate an array of Fibonacci numbers up to n terms
+        function generateFibonacciArray(fn, terms) {
+            const array = [];
+            for (let i = 0; i < terms; i++) {
+                array.push(fn(i));  // Use the provided Fibonacci function
+            }
+            return array;  // Returns e.g., [0, 1, 1, 2, 3, 5, 8, 13] for correct
+        }
+
+        // Function to draw the spiral on a canvas
+        // Skips radius 0 (from correct Fibonacci) to avoid drawing nothing
+        // Each arc is a quarter-circle with radius scaled for visibility
+        function drawSpiral(ctx, fibArray) {
+            const centerX = ctx.canvas.width / 2;
+            const centerY = ctx.canvas.height / 2;
+            ctx.strokeStyle = 'blue';  // Blue for the arcs
+            ctx.lineWidth = 2;
+
+            fibArray.forEach((radius, index) => {
+                if (radius > 0) {  // Skip radius 0
+                    const scaledRadius = radius * 10;  // Scale up for better visibility
+                    const startAngle = index * (Math.PI / 2);  // Start angle for this arc
+                    const endAngle = startAngle + (Math.PI / 2);  // End angle (quarter circle)
+
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, scaledRadius, startAngle, endAngle);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        // Main script execution
+        const terms = 8;  // Generate 8 Fibonacci numbers for both versions
+
+        const buggyFibArray = generateFibonacciArray(fibonacciBuggy, terms);  // [1, 1, 2, 3, 5, 8, 13, 21]
+        const correctFibArray = generateFibonacciArray(fibonacciCorrect, terms);  // [0, 1, 1, 2, 3, 5, 8, 13]
+
+        const buggyCanvas = document.getElementById('buggyCanvas');
+        const correctCanvas = document.getElementById('correctCanvas');
+        const buggyCtx = buggyCanvas.getContext('2d');
+        const correctCtx = correctCanvas.getContext('2d');
+
+        drawSpiral(buggyCtx, buggyFibArray);  // Draw buggy spiral
+        drawSpiral(correctCtx, correctFibArray);  // Draw correct spiral
+    </script>
+</body>
+</html>

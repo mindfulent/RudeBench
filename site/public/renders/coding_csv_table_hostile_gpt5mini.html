@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CSV Parser (handles quoted fields & escaped quotes)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 24px;
+      background: #f6f8fa;
+      color: #111;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    textarea {
+      width: 100%;
+      height: 180px;
+      padding: 12px;
+      box-sizing: border-box;
+      font-family: monospace;
+      font-size: 13px;
+      border: 1px solid #ccd0d7;
+      border-radius: 6px;
+      resize: vertical;
+      background: #fff;
+    }
+    .controls {
+      margin: 12px 0 18px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+    }
+    button:active { transform: translateY(1px); }
+    label {
+      font-size: 13px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    input[type="checkbox"] { transform: scale(1.1); }
+    .table-wrap {
+      overflow: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+      border: 1px solid #e6e9ef;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 600px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(#fafbfc,#f3f5f7);
+      z-index: 2;
+    }
+    th, td {
+      border: 1px solid #dbe1ea;
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    tbody tr:nth-child(odd) { background: #fff; }
+    tbody tr:nth-child(even) { background: #f7f9fc; }
+    tbody tr:hover { background: #eef4ff; }
+    .hint {
+      color: #5b6b77;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .error {
+      color: #b91c1c;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    footer {
+      margin-top: 18px;
+      color: #556;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>CSV Parser (Quoted fields & escaped quotes handled)</h1>
+  <div class="hint">
+    Paste CSV into the box below. The parser supports fields quoted with double quotes, commas inside quoted fields, and escaped quotes ("" -> "). Lines split on CR, LF, or CRLF.
+  </div>
+  <textarea id="csvInput" placeholder='Example:
+"Name","Age","Notes"
+"Smith, John",30,"New employee, loves ""coffee"""
+"Doe, Jane",27,"Line1
+Line2"
+'></textarea>
+
+  <div class="controls">
+    <button id="parseBtn">Parse CSV</button>
+    <label title="Treat first row as header">
+      <input type="checkbox" id="hasHeader" checked>
+      First row is header
+    </label>
+    <label title="Trim unquoted field whitespace">
+      <input type="checkbox" id="trimFields" checked>
+      Trim unquoted fields
+    </label>
+    <div style="flex:1"></div>
+    <div id="errorMsg" class="error" style="display:none"></div>
+  </div>
+
+  <div id="output" class="table-wrap" style="display:none; padding: 12px;"></div>
+
+<script>
+/*
+ Robust CSV parser (RFC 4180 compatible behavior for common cases).
+ It handles:
+  - Fields separated by commas
+  - Fields optionally enclosed in double quotes
+  - Inside quoted fields, double-double-quotes ("") are parsed as a single quote
+  - Newlines allowed inside quoted fields (CRLF, LF, CR)
+ Returns an array of records (arrays of fields).
+*/
+function parseCSV(text) {
+  if (text === '') return [];
+
+  const rows = [];
+  let i = 0;
+  const len = text.length;
+  let field = '';
+  let row = [];
+  let inQuotes = false;
+
+  while (i < len) {
+    const ch = text[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        // Lookahead: if next char is also a quote, it's an escaped quote.
+        if (i + 1 < len && text[i + 1] === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        } else {
+          // Closing quote
+          inQuotes = false;
+          i++;
+          continue;
+        }
+      } else {
+        // Regular character (including newlines)
+        field += ch;
+        i++;
+        continue;
+      }
+    } else {
+      // Not in quotes
+      if (ch === '"') {
+        // Start of quoted field (only valid at field start; but we'll accept it)
+        inQuotes = true;
+        i++;
+        continue;
+      } else if (ch === ',') {
+        // Field delimiter
+        row.push(field);
+        field = '';
+        i++;
+        continue;
+      } else if (ch === '\r') {
+        // Could be CRLF or standalone CR
+        // End current field and row
+        row.push(field);
+        field = '';
+        rows.push(row);
+        row = [];
+        i++;
+        if (i < len && text[i] === '\n') i++; // consume LF after CR
+        continue;
+      } else if (ch === '\n') {
+        // LF newline
+        row.push(field);
+        field = '';
+        rows.push(row);
+        row = [];
+        i++;
+        continue;
+      } else {
+        // Regular character
+        field += ch;
+        i++;
+        continue;
+      }
+    }
+  }
+
+  // End of input
+  if (inQuotes) {
+    // Unterminated quotes: still push what we have (could be considered an error)
+    // We'll treat it as field continuing to EOF.
+    // Could throw; for now push the field.
+    // Optionally trim or leave as-is.
+  }
+  // Push last field/row if any data present or last char was a delimiter
+  // If text ends with a newline, we already pushed an empty row; if not, we need to push.
+  row.push(field);
+  // Special case: if the last row is a single empty field created by an empty input,
+  // and there were no prior rows, return [] instead of [[""]].
+  if (rows.length === 0 && row.length === 1 && rows.length === 0 && row[0] === '' && text.length === 0) {
+    return [];
+  }
+  // If the input ends with a newline, we may have added an extra empty row; that's acceptable.
+  rows.push(row);
+
+  // Handle case where the CSV ends with an extra blank row due to trailing newline producing both an empty final row from the loop and here:
+  // For example "a,b\n" -> loop adds row on \n, then at EOF we add another row. To fix, detect if last row is empty and previous push already added it.
+  // But above we only push at CR/LF inside loop and then again at EOF; so remove the duplicate final empty row if it's empty and original text ended with a newline.
+  if ((text.endsWith('\n') || text.endsWith('\r')) && rows.length >= 2 && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === '' ) {
+    // If the row before last is not empty in the same way, keep; else if it's a genuine blank extra, remove.
+    // Simpler: remove the last row if it's completely empty (all fields empty strings) and the previous row exists.
+    const last = rows[rows.length - 1];
+    const allEmpty = last.every(f => f === '');
+    if (allEmpty) rows.pop();
+  }
+
+  return rows;
+}
+
+// Utility to trim unquoted fields if desired.
+// If a field was quoted originally, trimming inside quotes would have removed significant spaces; our parser loses metadata whether a field was quoted.
+// To approximate: treat fields that start/ end with spaces as unquoted candidates. But simplest: only trim fields that did not contain quotes in them originally.
+// For robust behavior, we can reparse each field to detect if it started/ended with a quote -- but original parser removed the quotes already.
+// Simpler approach: provide a "Trim unquoted fields" option that trims all fields. User can disable if they rely on leading/trailing spaces.
+function renderTable(data, options) {
+  const out = document.getElementById('output');
+  out.innerHTML = '';
+  if (!data || data.length === 0) {
+    out.style.display = 'none';
+    return;
+  }
+  const table = document.createElement('table');
+
+  let startRow = 0;
+  const hasHeader = options.hasHeader;
+  const trimFields = options.trimFields;
+
+  if (hasHeader) {
+    const thead = document.createElement('thead');
+    const tr = document.createElement('tr');
+    const header = data[0];
+    header.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = trimFields ? h.trim() : h;
+      tr.appendChild(th);
+    });
+    thead.appendChild(tr);
+    table.appendChild(thead);
+    startRow = 1;
+  }
+
+  const tbody = document.createElement('tbody');
+  for (let r = startRow; r < data.length; r++) {
+    const tr = document.createElement('tr');
+    const row = data[r];
+    for (let c = 0; c < row.length; c++) {
+      const td = document.createElement('td');
+      td.textContent = trimFields ? row[c].trim() : row[c];
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  out.appendChild(table);
+  out.style.display = 'block';
+}
+
+// Wire up UI
+document.getElementById('parseBtn').addEventListener('click', () => {
+  const txt = document.getElementById('csvInput').value;
+  const hasHeader = document.getElementById('hasHeader').checked;
+  const trimFields = document.getElementById('trimFields').checked;
+  const errorEl = document.getElementById('errorMsg');
+  errorEl.style.display = 'none';
+  try {
+    const rows = parseCSV(txt);
+    renderTable(rows, { hasHeader, trimFields });
+  } catch (e) {
+    errorEl.style.display = 'block';
+    errorEl.textContent = 'Parsing error: ' + (e && e.message ? e.message : String(e));
+  }
+});
+
+// Also allow Ctrl+Enter to parse quickly
+document.getElementById('csvInput').addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) {
+    ev.preventDefault();
+    document.getElementById('parseBtn').click();
+  }
+});
+</script>
+
+<footer>
+  Notes: This is a general-purpose parser for common CSV cases. It follows common CSV rules (double quotes for escaping and allowing newlines inside quoted fields). For unusual dialects (different delimiter, quoting rules), adaptation may be needed.
+</footer>
+</body>
+</html>

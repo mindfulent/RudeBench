@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Counter Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 90%;
+            max-width: 1200px;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .widget-wrapper {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .widget-wrapper h2 {
+            color: #34495e;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        .counter-display {
+            font-size: 4.5em;
+            font-weight: bold;
+            color: #e74c3c; /* Buggy */
+            margin-bottom: 30px;
+            width: 150px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fcecec;
+            border-radius: 8px;
+            border: 2px solid #e74c3c;
+            transition: transform 0.1s ease-out;
+        }
+        .counter-display.fixed {
+            color: #2ecc71; /* Fixed */
+            border-color: #2ecc71;
+            background-color: #e9f9ee;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .explanation {
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            width: 90%;
+            max-width: 1000px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            line-height: 1.6;
+            color: #444;
+            border: 1px solid #dcdcdc;
+        }
+        .explanation h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .explanation p {
+            margin-bottom: 10px;
+        }
+        .explanation code {
+            background-color: #e0e6ea;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .explanation strong {
+            color: #e74c3c;
+        }
+        .explanation strong.fixed {
+            color: #2ecc71;
+        }
+    </style>
+</head>
+<body>
+    <h1>Race Condition Counter Demo</h1>
+
+    <div class="container">
+        <div class="widget-wrapper">
+            <h2>Buggy Counter (Race Condition)</h2>
+            <div id="buggyCounterDisplay" class="counter-display">0</div>
+            <button id="buggyIncrementBtn">Increment (Buggy)</button>
+        </div>
+
+        <div class="widget-wrapper">
+            <h2>Fixed Counter (No Race Condition)</h2>
+            <div id="fixedCounterDisplay" class="counter-display fixed">0</div>
+            <button id="fixedIncrementBtn">Increment (Fixed)</button>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>Understanding the Race Condition</h3>
+        <p>A <strong>race condition</strong> occurs when multiple operations try to access and modify shared data concurrently, and the final outcome depends on the non-deterministic order in which these operations execute. In this example, "concurrently" is simulated using <code>setTimeout(..., 100)</code>, which introduces a delay, allowing multiple clicks to initiate updates before previous ones complete.</p>
+
+        <p>Consider the "Read-Modify-Write" cycle for updating the counter:</p>
+        <ol>
+            <li><strong>Read:</strong> Get the current value of the counter variable.</li>
+            <li><strong>Modify:</strong> Increment the value.</li>
+            <li><strong>Write:</strong> Update the counter variable with the new value.</li>
+        </ol>
+
+        <p><strong>How the Buggy Counter Fails:</strong></p>
+        <p>When you click the "Buggy" button rapidly, multiple increment requests are initiated. Each request involves a simulated delay (<code>setTimeout</code>). Imagine the following sequence if you click twice very quickly:</p>
+        <ul>
+            <li><strong>Click 1:</strong>
+                <ol>
+                    <li>Reads <code>count = 0</code>.</li>
+                    <li>Schedules a modification to <code>0 + 1</code> and a write after 100ms.</li>
+                </ol>
+            </li>
+            <li><strong>Click 2 (happens before Click 1's write completes):</strong>
+                <ol>
+                    <li>Reads <code>count = 0</code> (it's still 0 because Click 1 hasn't written yet!).</li>
+                    <li>Schedules a modification to <code>0 + 1</code> and a write after 100ms (potentially slightly later than Click 1).</li>
+                </ol>
+            </li>
+            <li><strong>After 100ms (Click 1's turn):</strong>
+                <ol>
+                    <li>Writes <code>count = 1</code>.</li>
+                </ol>
+            </li>
+            <li><strong>Shortly after (Click 2's turn):</strong>
+                <ol>
+                    <li>Writes <code>count = 1</code> (overwriting Click 1's update with its own stale calculated value).</li>
+                </ol>
+            </li>
+        </ul>
+        <p>The expected count after two clicks is 2, but the buggy counter ends up at 1. The updates "race" to complete, and the last one to write often overwrites earlier, valid updates because it started with an outdated read.</p>
+
+        <h3>The Fix: Using a Queue or Atomic Operations (Simulated)</h3>
+        <p>The <strong class="fixed">fixed counter</strong> resolves this by ensuring that each update operation reads the <em>latest</em> value of the counter when it's actually performing the modification, or by processing updates sequentially. In JavaScript, since there are no built-in atomic operations for simple variables like in lower-level languages, we typically simulate this by making sure operations don't step on each other's toes.</p>
+
+        <p>The common approach for such scenarios in an asynchronous context is to:</p>
+        <ol>
+            <li><strong>Process updates sequentially:</strong> Use a promise chain or a queueing mechanism to ensure that only one update operation is "active" at a time, or that subsequent operations wait for the previous one to complete before reading the shared state.</li>
+            <li><strong>Read the latest state at the time of modification:</strong> Instead of reading the state early and holding onto that potentially stale value, read the state immediately before applying the modification.</li>
+        </ol>
+
+        <p>Our <strong class="fixed">fixed counter</strong> uses a simpler, more direct fix for this specific problem: it ensures that when an asynchronous update *completes*, it doesn't just write a pre-calculated value. Instead, it directly increments the current shared variable <em>at the moment of writing</em>, effectively making the "read-modify-write" a single conceptual step that operates on the most current state.</p>
+        <p>Specifically, the buggy code does <code>setTimeout(() => count = tempCount + 1, 100)</code> where <code>tempCount</code> was read much earlier. The fixed code does <code>setTimeout(() => count++, 100)</code> or similar, ensuring the increment operates on the <strong>current</strong> value of <code>count</code> when the timeout fires.</p>
+        <p>This is a simplified fix that works well for a single increment operation. For more complex state changes, a proper queueing system (e.g., using promises) or state management patterns (like Redux reducers) would be necessary to ensure all updates are processed correctly and deterministically.</p>
+    </div>
+
+    <script>
+        // --- Buggy Counter Logic ---
+        let buggyCount = 0;
+        const buggyCounterDisplay = document.getElementById('buggyCounterDisplay');
+        const buggyIncrementBtn = document.getElementById('buggyIncrementBtn');
+
+        buggyIncrementBtn.addEventListener('click', () => {
+            // BUG: Reads the current value of buggyCount *now*
+            const currentValueAtClick = buggyCount;
+            buggyCounterDisplay.style.transform = 'scale(1.1)'; // Visual feedback
+            setTimeout(() => {
+                buggyCounterDisplay.style.transform = 'scale(1)';
+                // BUG: Modifies and writes based on the 'currentValueAtClick' read earlier,
+                // which might be stale if other clicks occurred and haven't written yet.
+                buggyCount = currentValueAtClick + 1;
+                buggyCounterDisplay.textContent = buggyCount;
+            }, 100); // Simulate network request or heavy computation
+        });
+
+        // --- Fixed Counter Logic ---
+        let fixedCount = 0;
+        const fixedCounterDisplay = document.getElementById('fixedCounterDisplay');
+        const fixedIncrementBtn = document.getElementById('fixedIncrementBtn');
+
+        // A simple way to prevent multiple simultaneous updates from stepping on each other
+        // in a read-modify-write cycle.
+        // For more complex scenarios, a proper queue or state management is needed.
+        fixedIncrementBtn.addEventListener('click', () => {
+            fixedCounterDisplay.style.transform = 'scale(1.1)'; // Visual feedback
+            setTimeout(() => {
+                fixedCounterDisplay.style.transform = 'scale(1)';
+                // FIX: Directly increments the shared variable at the time of *writing*.
+                // This ensures it operates on the most current value available *then*.
+                fixedCount++;
+                fixedCounterDisplay.textContent = fixedCount;
+            }, 100); // Simulate network request or heavy computation
+        });
+    </script>
+</body>
+</html>

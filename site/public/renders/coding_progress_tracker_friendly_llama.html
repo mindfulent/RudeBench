@@ -3,98 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Concurrency Bug Example</title>
+    <title>Concurrency Bug Demo</title>
     <style>
         .progress-bar {
             width: 0%;
             height: 20px;
-            background-color: #4CAF50;
+            background-color: blue;
+            color: white;
             text-align: center;
-            color: #fff;
         }
-        .progress-bar-container {
-            width: 100%;
-            height: 20px;
-            background-color: #ddd;
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
+        .container {
+            width: 500px;
+            border: 1px solid black;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Shared State Concurrency Bug Example</h1>
-    <h2>Buggy Implementation</h2>
-    <div class="progress-bar-container">
-        <div id="buggy-progress-bar" class="progress-bar">0%</div>
-    </div>
+
+<h2>Buggy Implementation</h2>
+<div class="container">
+    <div id="buggy-progress-bar" class="progress-bar">0%</div>
     <p id="buggy-progress-text">Progress: 0%</p>
+</div>
 
-    <h2>Corrected Implementation</h2>
-    <div class="progress-bar-container">
-        <div id="corrected-progress-bar" class="progress-bar">0%</div>
-    </div>
+<h2>Corrected Implementation</h2>
+<div class="container">
+    <div id="corrected-progress-bar" class="progress-bar">0%</div>
     <p id="corrected-progress-text">Progress: 0%</p>
+</div>
 
-    <script>
-        // Buggy Implementation
-        let buggyProgress = 0;
-        const buggyProgressBar = document.getElementById('buggy-progress-bar');
-        const buggyProgressText = document.getElementById('buggy-progress-text');
+<script>
+    // Shared state for buggy implementation
+    let buggyProgress = 0;
 
-        function updateBuggyProgress(percent) {
+    // Buggy implementation
+    function updateBuggyProgress(percent) {
+        setTimeout(() => {
             buggyProgress += percent;
-            buggyProgressBar.style.width = `${buggyProgress}%`;
-            buggyProgressBar.textContent = `${buggyProgress}%`;
-            buggyProgressText.textContent = `Progress: ${buggyProgress}%`;
-        }
+            document.getElementById('buggy-progress-bar').style.width = `${buggyProgress}%`;
+            document.getElementById('buggy-progress-text').innerText = `Progress: ${buggyProgress}%`;
+            if (buggyProgress > 100) {
+                console.error('Buggy progress exceeded 100%');
+            }
+        }, 100); // Simulate some delay
+    }
 
-        // Simulate concurrent tasks with setTimeout and Promise
-        Promise.all([
-            new Promise(resolve => setTimeout(() => {
-                updateBuggyProgress(30);
-                resolve();
-            }, 100)),
-            new Promise(resolve => setTimeout(() => {
-                updateBuggyProgress(40);
-                resolve();
-            }, 150)),
-            new Promise(resolve => setTimeout(() => {
-                updateBuggyProgress(50);
-                resolve();
-            }, 200)),
-        ]).then(() => console.log('Buggy implementation completed'));
+    // Concurrent tasks for buggy implementation
+    Promise.all([
+        updateBuggyProgress(30),
+        updateBuggyProgress(40),
+        updateBuggyProgress(30)
+    ]).then(() => {
+        console.log('Buggy implementation completed');
+    });
 
-        // Corrected Implementation
-        let correctedProgress = 0;
-        let correctedProgressLock = false;
-        const correctedProgressBar = document.getElementById('corrected-progress-bar');
-        const correctedProgressText = document.getElementById('corrected-progress-text');
+    // Corrected implementation using atomic updates
+    let correctedProgress = 0;
+    let updateLock = false;
 
-        function updateCorrectedProgress(percent) {
-            if (correctedProgressLock) return;
-            correctedProgressLock = true;
-            correctedProgress = Math.min(correctedProgress + percent, 100);
-            correctedProgressBar.style.width = `${correctedProgress}%`;
-            correctedProgressBar.textContent = `${correctedProgress}%`;
-            correctedProgressText.textContent = `Progress: ${correctedProgress}%`;
-            correctedProgressLock = false;
-        }
+    function updateCorrectedProgress(percent) {
+        return new Promise(resolve => {
+            if (updateLock) {
+                // If an update is in progress, queue the update
+                setTimeout(() => {
+                    updateCorrectedProgress(percent).then(resolve);
+                }, 10);
+                return;
+            }
+            updateLock = true;
+            setTimeout(() => {
+                correctedProgress = Math.min(correctedProgress + percent, 100);
+                document.getElementById('corrected-progress-bar').style.width = `${correctedProgress}%`;
+                document.getElementById('corrected-progress-text').innerText = `Progress: ${correctedProgress}%`;
+                updateLock = false;
+                resolve();
+            }, 100); // Simulate some delay
+        });
+    }
 
-        // Simulate concurrent tasks with setTimeout and Promise
-        Promise.all([
-            new Promise(resolve => setTimeout(() => {
-                updateCorrectedProgress(30);
-                resolve();
-            }, 100)),
-            new Promise(resolve => setTimeout(() => {
-                updateCorrectedProgress(40);
-                resolve();
-            }, 150)),
-            new Promise(resolve => setTimeout(() => {
-                updateCorrectedProgress(50);
-                resolve();
-            }, 200)),
-        ]).then(() => console.log('Corrected implementation completed'));
-    </script>
+    // Concurrent tasks for corrected implementation
+    Promise.all([
+        updateCorrectedProgress(30),
+        updateCorrectedProgress(40),
+        updateCorrectedProgress(30)
+    ]).then(() => {
+        console.log('Corrected implementation completed');
+    });
+</script>
+
 </body>
 </html>

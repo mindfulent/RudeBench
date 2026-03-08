@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sorting Algorithms: Bubble vs Merge vs Quick — Visual Comparison</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --bg:#0f1724;
+    --panel:#0b1220;
+    --text:#e6eef8;
+    --muted:#9fb0d0;
+    --accent:#5eead4;
+    --danger:#ff6b6b;
+    --good:#7ee787;
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#081026 0%, #0f1724 100%);color:var(--text);font-family:Inter,Segoe UI,Roboto,system-ui,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:28px auto;padding:20px;}
+  h1{margin:0 0 8px;font-size:20px}
+  p.lead{margin:0 0 18px;color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .btn, button{background:var(--panel);color:var(--text);border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:8px;cursor:pointer}
+  .btn:hover{transform:translateY(-1px)}
+  input[type=range]{width:260px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:14px}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.03)}
+  .panel h3{margin:0 0 8px;font-size:14px}
+  .canvas{height:260px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-radius:8px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
+  .bars{position:absolute;left:8px;right:8px;bottom:8px;top:8px;display:flex;align-items:flex-end;gap:3px}
+  .bar{background:linear-gradient(180deg, var(--accent), rgba(90,200,180,0.6));flex:1;border-radius:4px 4px 2px 2px;position:relative;transition:height 120ms linear, background 120ms}
+  .bar.bubble{background:linear-gradient(180deg,var(--danger),rgba(255,110,110,0.6))}
+  .bar.curr{box-shadow:0 0 8px rgba(255,255,255,0.06) inset}
+  .bar.swap{outline:2px solid rgba(255,255,255,0.06)}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+  .note{margin-top:8px;font-size:12px;color:var(--muted)}
+  .big-o{margin-top:10px;padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);font-size:12px}
+  .humor{color:var(--danger);font-weight:700}
+  footer{margin-top:14px;color:var(--muted);font-size:12px}
+  .speed-value{width:48px;display:inline-block;text-align:right}
+  @media (max-width:880px){
+    .grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sorting Algorithms — Visual Performance Comparison</h1>
+  <p class="lead">Side-by-side animated bar charts show Bubble Sort compared with Merge Sort and Quick Sort on the same data. Step counters, elapsed time, and complexity notes are included. Bubble sort is deliberately slowed and highlighted to illustrate why it's inferior for large inputs.</p>
+
+  <div class="controls">
+    <label>Array size: <input id="size" type="range" min="10" max="120" value="40"> <span id="sizeVal">40</span></label>
+    <label>Speed: <input id="speed" type="range" min="1" max="100" value="40"> <span id="speedVal">40</span></label>
+    <button id="shuffle" class="btn">Shuffle & Reset</button>
+    <button id="start" class="btn">Start</button>
+    <button id="pause" class="btn">Pause</button>
+  </div>
+
+  <div class="grid">
+    <div class="panel" id="p-bubble">
+      <h3>Bubble Sort <span style="float:right;color:var(--danger)">Playful roast mode</span></h3>
+      <div class="canvas"><div class="bars" id="bars-bubble"></div></div>
+      <div class="stats">
+        <div>Steps: <span id="steps-bubble">0</span></div>
+        <div>Swaps: <span id="swaps-bubble">0</span></div>
+        <div>Time: <span id="time-bubble">0.000</span>s</div>
+      </div>
+      <div class="big-o">
+        Complexity: Best O(n), Average O(n^2), Worst O(n^2). Why it's slow: repeated adjacent swaps; many passes.
+      </div>
+    </div>
+
+    <div class="panel" id="p-merge">
+      <h3>Merge Sort <span style="float:right;color:var(--good)">Divide & conquer</span></h3>
+      <div class="canvas"><div class="bars" id="bars-merge"></div></div>
+      <div class="stats">
+        <div>Steps: <span id="steps-merge">0</span></div>
+        <div>Array accesses: <span id="swaps-merge">0</span></div>
+        <div>Time: <span id="time-merge">0.000</span>s</div>
+      </div>
+      <div class="big-o">
+        Complexity: Best/Average/Worst O(n log n). Stable. Good for large datasets.
+      </div>
+    </div>
+
+    <div class="panel" id="p-quick">
+      <h3>Quick Sort <span style="float:right;color:var(--accent)">Fast in practice</span></h3>
+      <div class="canvas"><div class="bars" id="bars-quick"></div></div>
+      <div class="stats">
+        <div>Steps: <span id="steps-quick">0</span></div>
+        <div>Comparisons: <span id="swaps-quick">0</span></div>
+        <div>Time: <span id="time-quick">0.000</span>s</div>
+      </div>
+      <div class="big-o">
+        Complexity: Average O(n log n), Worst O(n^2) (rare with good pivots). In-place, usually very fast.
+      </div>
+    </div>
+  </div>
+
+  <footer>Notes: The visualization exaggerates bubble sort's delay and uses the same initial array for a fair visual comparison. Use smaller sizes to see details; larger sizes exaggerate differences.</footer>
+</div>
+
+<script>
+(function(){
+  // Utilities
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // DOM refs
+  const sizeEl = document.getElementById('size');
+  const sizeVal = document.getElementById('sizeVal');
+  const speedEl = document.getElementById('speed');
+  const speedVal = document.getElementById('speedVal');
+  const shuffleBtn = document.getElementById('shuffle');
+  const startBtn = document.getElementById('start');
+  const pauseBtn = document.getElementById('pause');
+
+  const barsBubble = document.getElementById('bars-bubble');
+  const barsMerge = document.getElementById('bars-merge');
+  const barsQuick = document.getElementById('bars-quick');
+
+  const stepsBubble = document.getElementById('steps-bubble');
+  const swapsBubble = document.getElementById('swaps-bubble');
+  const timeBubble = document.getElementById('time-bubble');
+
+  const stepsMerge = document.getElementById('steps-merge');
+  const swapsMerge = document.getElementById('swaps-merge');
+  const timeMerge = document.getElementById('time-merge');
+
+  const stepsQuick = document.getElementById('steps-quick');
+  const swapsQuick = document.getElementById('swaps-quick');
+  const timeQuick = document.getElementById('time-quick');
+
+  sizeVal.textContent = sizeEl.value;
+  speedVal.textContent = speedEl.value;
+
+  let baseArray = [];
+  let running = false;
+  let paused = false;
+  let controllers = [];
+
+  function randArray(n){
+    const a = Array.from({length:n}, (_,i)=>i+1);
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function buildBars(container, arr, className){
+    container.innerHTML = '';
+    const max = Math.max(...arr);
+    for(let v of arr){
+      const bar = document.createElement('div');
+      bar.className = 'bar ' + (className||'');
+      bar.style.height = Math.max(2, (v/max)*100) + '%';
+      container.appendChild(bar);
+    }
+  }
+
+  function updateBars(container, arr, highlights=[]){
+    const bars = container.children;
+    const max = Math.max(...arr);
+    for(let i=0;i<bars.length;i++){
+      bars[i].style.height = Math.max(2, (arr[i]/max)*100) + '%';
+      bars[i].classList.toggle('curr', highlights.indexOf(i) !== -1);
+    }
+  }
+
+  // Animation pacing: speed slider higher => faster animations
+  function paceMultiplier(){
+    // map speed(1..100) to ms base: lower speed -> bigger ms
+    const s = Number(speedEl.value);
+    const base = 500 - (s * 4.5); // ~50ms..496ms
+    return Math.max(20, base);
+  }
+
+  // Sorting algorithm implementations that yield steps for visualization
+  async function bubbleSort(arr, onStep, ctrl){
+    const n = arr.length;
+    let steps=0, swaps=0;
+    const start = performance.now();
+    for(let i=0;i<n-1;i++){
+      let swapped=false;
+      for(let j=0;j<n-1-i;j++){
+        if(ctrl.stopped) return {steps,swaps,time:(performance.now()-start)/1000};
+        while(ctrl.paused) await sleep(60);
+        steps++;
+        if(onStep) await onStep({type:'compare',i,j,arr,steps,swaps});
+        // intentionally slow for dramatic effect
+        await sleep(paceMultiplier()*1.8);
+        if(arr[j] > arr[j+1]){
+          swaps++;
+          [arr[j],arr[j+1]]=[arr[j+1],arr[j]];
+          swapped=true;
+          if(onStep) await onStep({type:'swap',i,j,arr,steps,swaps});
+          await sleep(paceMultiplier()*1.6);
+        }
+      }
+      if(!swapped) break;
+    }
+    return {steps,swaps,time:(performance.now()-start)/1000};
+  }
+
+  async function mergeSort(arr, onStep, ctrl){
+    let steps=0, accesses=0;
+    const start = performance.now();
+    async function merge(l, m, r){
+      const left = arr.slice(l,m);
+      const right = arr.slice(m,r);
+      let i=0,j=0,k=l;
+      while(i<left.length || j<right.length){
+        if(ctrl.stopped) return;
+        while(ctrl.paused) await sleep(20);
+        steps++; accesses+=2;
+        if(j>=right.length || (i<left.length && left[i]<=right[j])){
+          arr[k++] = left[i++];
+        } else {
+          arr[k++] = right[j++];
+        }
+        if(onStep) await onStep({type:'merge',l,m,r,arr:arr.slice(),steps,accesses});
+        await sleep(paceMultiplier()*0.5);
+      }
+    }
+    async function ms(l,r){
+      if(r-l<=1) return;
+      const m = Math.floor((l+r)/2);
+      await ms(l,m);
+      await ms(m,r);
+      await merge(l,m,r);
+    }
+    await ms(0,arr.length);
+    return {steps,accesses,time:(performance.now()-start)/1000};
+  }
+
+  async function quickSort(arr, onStep, ctrl){
+    let steps=0, comps=0;
+    const start = performance.now();
+    async function qs(l,r){
+      if(l>=r) return;
+      let pivot = arr[Math.floor((l+r)/2)];
+      let i=l, j=r;
+      while(i<=j){
+        if(ctrl.stopped) return;
+        while(ctrl.paused) await sleep(20);
+        while(arr[i]<pivot){ i++; comps++; steps++; if(onStep) await onStep({type:'compare',i,j,arr:arr.slice(),steps,comps}); }
+        while(arr[j]>pivot){ j--; comps++; steps++; if(onStep) await onStep({type:'compare',i,j,arr:arr.slice(),steps,comps}); }
+        if(i<=j){
+          [arr[i],arr[j]]=[arr[j],arr[i]];
+          steps++; if(onStep) await onStep({type:'swap',i,j,arr:arr.slice(),steps,comps});
+          i++; j--;
+          await sleep(paceMultiplier()*0.6);
+        }
+      }
+      if(l<j) await qs(l,j);
+      if(i<r) await qs(i,r);
+    }
+    await qs(0,arr.length-1);
+    return {steps,comps,time:(performance.now()-start)/1000};
+  }
+
+  function makeController(){
+    return {paused:false,stopped:false};
+  }
+
+  async function runAll(){
+    // reset
+    running = true;
+    paused = false;
+    controllers.forEach(c=>{c.stopped=true});
+    controllers=[];
+    const ctrlB = makeController(), ctrlM = makeController(), ctrlQ = makeController();
+    controllers.push(ctrlB, ctrlM, ctrlQ);
+
+    // copies
+    const aB = baseArray.slice();
+    const aM = baseArray.slice();
+    const aQ = baseArray.slice();
+
+    // build UI bars
+    buildBars(barsBubble, aB, 'bubble');
+    buildBars(barsMerge, aM, '');
+    buildBars(barsQuick, aQ, '');
+
+    stepsBubble.textContent = '0'; swapsBubble.textContent='0'; timeBubble.textContent='0.000';
+    stepsMerge.textContent = '0'; swapsMerge.textContent='0'; timeMerge.textContent='0.000';
+    stepsQuick.textContent = '0'; swapsQuick.textContent='0'; timeQuick.textContent='0.000';
+
+    // launch sorts concurrently
+    const pB = bubbleSort(aB, async (state)=>{
+      // update bubble UI
+      stepsBubble.textContent = state.steps;
+      swapsBubble.textContent = state.swaps;
+      updateBars(barsBubble, state.arr, state.type==='swap' ? [state.j, state.j+1] : [state.j]);
+    }, ctrlB).then(res=>{
+      timeBubble.textContent = (res && res.time)? res.time.toFixed(3) : '0.000';
+      // final highlight: make bubble panel flash to "humiliate" playfully
+      const bars = barsBubble.children;
+      for(let i=0;i<bars.length;i++){
+        bars[i].classList.add('bubble');
+      }
+      return res;
+    });
+
+    const pM = mergeSort(aM, async (state)=>{
+      stepsMerge.textContent = state.steps;
+      swapsMerge.textContent = state.accesses || 0;
+      updateBars(barsMerge, state.arr, []);
+      // subtle glow for current merge segment
+      // (not tracking indices precisely to keep code compact)
+    }, ctrlM).then(res=>{
+      timeMerge.textContent = (res && res.time)? res.time.toFixed(3) : '0.000';
+      return res;
+    });
+
+    const pQ = quickSort(aQ, async (state)=>{
+      stepsQuick.textContent = state.steps;
+      swapsQuick.textContent = state.comps || 0;
+      updateBars(barsQuick, state.arr, (state.type==='swap') ? [state.i,state.j] : []);
+    }, ctrlQ).then(res=>{
+      timeQuick.textContent = (res && res.time)? res.time.toFixed(3) : '0.000';
+      return res;
+    });
+
+    // Wait for all or early stop
+    await Promise.all([pB,pM,pQ].map(p=>p.catch(()=>null)));
+    running=false;
+  }
+
+  // Initialize
+  function resetAll(){
+    baseArray = randArray(Number(sizeEl.value));
+    buildBars(barsBubble, baseArray, 'bubble');
+    buildBars(barsMerge, baseArray, '');
+    buildBars(barsQuick, baseArray, '');
+    stepsBubble.textContent = swapsBubble.textContent = timeBubble.textContent = '0';
+    stepsMerge.textContent = swapsMerge.textContent = timeMerge.textContent = '0';
+    stepsQuick.textContent = swapsQuick.textContent = timeQuick.textContent = '0';
+    controllers.forEach(c=>{c.stopped=true});
+    controllers=[];
+    running=false;
+    paused=false;
+  }
+
+  // Events
+  sizeEl.addEventListener('input', ()=>{
+    sizeVal.textContent = sizeEl.value;
+  });
+
+  speedEl.addEventListener('input', ()=>{
+    speedVal.textContent = speedEl.value;
+  });
+
+  shuffleBtn.addEventListener('click', ()=>{ resetAll(); });
+
+  startBtn.addEventListener('click', ()=>{
+    if(running){ // toggle resume if paused
+      controllers.forEach(c=>c.paused=false);
+      paused=false;
+    } else {
+      runAll();
+    }
+  });
+
+  pauseBtn.addEventListener('click', ()=>{
+    if(!running) return;
+    controllers.forEach(c=>c.paused=true);
+    paused=true;
+  });
+
+  // Initial
+  resetAll();
+
+})();
+</script>
+</body>
+</html>

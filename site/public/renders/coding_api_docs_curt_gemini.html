@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Documentation - User Management</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #0056b3;
+        }
+        .section {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 20px;
+        }
+        .section-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #34495e;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+        .section-header:hover {
+            color: #007bff;
+        }
+        .toggle-icon {
+            font-size: 1.5em;
+            transition: transform 0.2s ease-in-out;
+        }
+        .content {
+            display: none;
+            padding-top: 10px;
+        }
+        .content.active .toggle-icon {
+            transform: rotate(90deg);
+        }
+        .content.active {
+            display: block;
+        }
+
+        .endpoint-card {
+            background-color: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .endpoint-card h3 {
+            margin-top: 0;
+            color: #0056b3;
+            font-size: 1.2em;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .original-endpoint, .corrected-endpoint {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        .original-endpoint {
+            background-color: #ffe0e0;
+            border: 1px solid #ffaaaa;
+            color: #a00;
+        }
+        .corrected-endpoint {
+            background-color: #e0ffe0;
+            border: 1px solid #aaffaa;
+            color: #0a0;
+        }
+        .method {
+            font-weight: bold;
+            margin-right: 8px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            color: white;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+        .method.GET { background-color: #28a745; } /* Green */
+        .method.POST { background-color: #007bff; } /* Blue */
+        .method.PUT { background-color: #ffc107; color: #333; } /* Yellow */
+        .method.DELETE { background-color: #dc3545; } /* Red */
+        .method.PATCH { background-color: #17a2b8; } /* Teal */
+
+        .problem-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 10px;
+        }
+        .problem-list li {
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .problem-list li::before {
+            content: '•';
+            color: #dc3545;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+        .status-codes {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .status-codes strong {
+            color: #333;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>User Management REST API Documentation</h1>
+
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            Introduction to REST Principles
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="content">
+            <p>REST (Representational State Transfer) is an architectural style for networked hypermedia applications. When applied to web services, it emphasizes:</p>
+            <ul>
+                <li><strong>Resources:</strong> Everything is a resource (e.g., a user, a list of users). Resources are identified by URLs.</li>
+                <li><strong>HTTP Methods:</strong> Standard HTTP methods (GET, POST, PUT, DELETE, PATCH) are used to perform operations on resources.</li>
+                <li><strong>Statelessness:</strong> Each request from a client to a server must contain all the information needed to understand the request.</li>
+                <li><strong>Uniform Interface:</strong> A consistent way of interacting with resources.</li>
+                <li><strong>HATEOAS (Hypermedia As The Engine Of Application State):</strong> (Advanced) Resources include links to related resources.</li>
+            </ul>
+            <p>Following these principles leads to more scalable, maintainable, and understandable APIs.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            Endpoint 1: User Retrieval
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="content">
+            <h3>Original Endpoint</h3>
+            <div class="original-endpoint"><span class="method GET">GET</span> <code>/getUsers</code></div>
+            <h4>Design Problems:</h4>
+            <ul class="problem-list">
+                <li><strong>Verb in URI:</strong> "getUsers" contains a verb ("get"), which violates the principle of URIs identifying resources (nouns).</li>
+                <li><strong>Redundant Method:</strong> The method "GET" already implies retrieval, making "get" in the URI redundant.</li>
+                <li><strong>Lack of Specificity:</strong> If the intention is to retrieve *all* users, the plural noun is usually sufficient. If it's for a specific user, an ID should be part of the path.</li>
+            </ul>
+            <h3>Corrected Endpoint</h3>
+            <div class="corrected-endpoint"><span class="method GET">GET</span> <code>/users</code></div>
+            <div class="status-codes">
+                <strong>Status Codes:</strong>
+                <ul>
+                    <li><code>200 OK</code>: Successfully retrieved the list of users.</li>
+                    <li><code>204 No Content</code>: If the list is empty (some APIs might return 200 with an empty array/list).</li>
+                    <li><code>401 Unauthorized</code>: If authentication is required but missing/invalid.</li>
+                    <li><code>403 Forbidden</code>: If the authenticated user doesn't have permission to view users.</li>
+                </ul>
+            </div>
+            <p><strong>Explanation:</strong> The URI <code>/users</code> clearly identifies the "users" collection resource. The GET method indicates that we are retrieving the representation of this resource (i.e., a list of all users).</p>
+            <hr/>
+            <p><strong>For retrieving a single user:</strong></p>
+            <div class="corrected-endpoint"><span class="method GET">GET</span> <code>/users/{id}</code></div>
+            <div class="status-codes">
+                <strong>Status Codes:</strong>
+                <ul>
+                    <li><code>200 OK</code>: Successfully retrieved the user.</li>
+                    <li><code>404 Not Found</code>: If a user with the specified ID does not exist.</li>
+                    <li><code>401 Unauthorized</code>: If authentication is required but missing/invalid.</li>
+                    <li><code>403 Forbidden</code>: If the authenticated user doesn't have permission to view this specific user.</li>
+                </ul>
+            </div>
+            <p><strong>Explanation:</strong> <code>/users/{id}</code> identifies a specific user resource within the <code>users</code> collection.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            Endpoint 2: User Deletion
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="content">
+            <h3>Original Endpoint</h3>
+            <div class="original-endpoint"><span class="method POST">POST</span> <code>/user/delete/5</code></div>
+            <h4>Design Problems:</h4>
+            <ul class="problem-list">
+                <li><strong>Incorrect HTTP Method:</strong> "POST" is used for creating resources or performing non-idempotent operations. Deleting a resource should use "DELETE".</li>
+                <li><strong>Verb in URI:</strong> "delete" is a verb in the URI. URIs should identify the resource, not the action.</li>
+                <li><strong>Inconsistent Naming:</strong> Uses "user" (singular) while other endpoints might use "users" (plural) for collections. Consistency is key.</li>
+                <li><strong>Path Variable Placement:</strong> While <code>/5</code> is acceptable for an ID, the structure <code>/user/delete/{id}</code> is overly verbose and action-oriented.</li>
+            </ul>
+            <h3>Corrected Endpoint</h3>
+            <div class="corrected-endpoint"><span class="method DELETE">DELETE</span> <code>/users/{id}</code></div>
+            <div class="status-codes">
+                <strong>Status Codes:</strong>
+                <ul>
+                    <li><code>200 OK</code>: If the resource was successfully deleted and the response body contains confirmation (e.g., status message).</li>
+                    <li><code>204 No Content</code>: If the resource was successfully deleted and no response body is returned (preferred for DELETE).</li>
+                    <li><code>404 Not Found</code>: If a user with the specified ID does not exist.</li>
+                    <li><code>401 Unauthorized</code>: If authentication is required but missing/invalid.</li>
+                    <li><code>403 Forbidden</code>: If the authenticated user doesn't have permission to delete users.</li>
+                </ul>
+            </div>
+            <p><strong>Explanation:</strong> The DELETE method on the <code>/users/{id}</code> resource clearly indicates the intent to remove that specific user resource. The URI now consistently uses the plural "users" for the collection.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            Endpoint 3: User Creation
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="content">
+            <h3>Original Endpoint</h3>
+            <div class="original-endpoint"><span class="method GET">GET</span> <code>/createUser?name=Jo</code></div>
+            <h4>Design Problems:</h4>
+            <ul class="problem-list">
+                <li><strong>Incorrect HTTP Method:</strong> "GET" is for retrieving data and should be idempotent and safe. Creating a resource changes state and should use "POST".</li>
+                <li><strong>Verb in URI:</strong> "createUser" is a verb. URIs identify resources.</li>
+                <li><strong>Query Parameters for Creation:</strong> Sending creation data via query parameters is generally discouraged for several reasons:
+                    <ul>
+                        <li>Limited data size.</li>
+                        <li>Security concerns (data might appear in server logs, browser history).</li>
+                        <li>Less suitable for complex data structures.</li>
+                    </ul>
+                    Data for creation should be in the request body.
+                </li>
+            </ul>
+            <h3>Corrected Endpoint</h3>
+            <div class="corrected-endpoint"><span class="method POST">POST</span> <code>/users</code></div>
+            <div class="status-codes">
+                <strong>Status Codes:</strong>
+                <ul>
+                    <li><code>201 Created</code>: Successfully created the user. The response body should contain the newly created user resource, and the <code>Location</code> header should point to its URI (e.g., <code>/users/123</code>).</li>
+                    <li><code>400 Bad Request</code>: If the request body is missing required fields or data is invalid (e.g., name is too short).</li>
+                    <li><code>401 Unauthorized</code>: If authentication is required but missing/invalid.</li>
+                    <li><code>403 Forbidden</code>: If the authenticated user doesn't have permission to create users.</li>
+                    <li><code>409 Conflict</code>: If a user with the same unique identifier (e.g., email) already exists.</li>
+                </ul>
+            </div>
+            <p><strong>Explanation:</strong> The POST method on the <code>/users</code> collection resource indicates that a new resource should be added to that collection. The user data (e.g., <code>{"name": "Jo", "email": "jo@example.com"}</code>) would be sent in the request body as JSON.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            Endpoint 4: Bulk User Update
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="content">
+            <h3>Original Endpoint</h3>
+            <div class="original-endpoint"><span class="method PUT">PUT</span> <code>/updateAllUsers</code></div>
+            <h4>Design Problems:</h4>
+            <ul class="problem-list">
+                <li><strong>Verb in URI:</strong> "updateAllUsers" contains a verb ("update").</li>
+                <li><strong>Ambiguous Scope:</strong> "AllUsers" is vague. Is it truly *all* users in the system, or a specific subset?</li>
+                <li><strong>PUT Semantics:</strong> PUT is typically used to *replace* an entire resource at a known URI. If this endpoint is meant to modify *parts* of multiple users or perform a complex bulk operation, PUT might not be the most appropriate. If it's replacing the *entire collection* of users with a new one, then PUT on <code>/users</code> could be valid, but this is rare.</li>
+                <li><strong>Lack of Idempotence (Potentially):</strong> If "updateAllUsers" implies applying a change to existing users without fully replacing the entire collection, then repeated calls might have different effects, violating PUT's idempotence principle.</li>
+            </ul>
+            <h3>Corrected Endpoints (Multiple Scenarios)</h3>
+
+            <h4>Scenario 1: Replacing the entire collection of users (less common but valid for PUT)</h4>
+            <div class="corrected-endpoint"><span class="method PUT">PUT</span> <code>/users</code></div>
+            <div class="status-codes">
+                <strong>Status Codes:</strong>
+                <ul>
+                    <li><code>200 OK</code>: Successfully replaced the entire collection.</li>
+                    <li><code>204 No Content</code>: If the replacement was successful and no content is returned.</li>
+                    <li><code>400 Bad Request</code>: If the request body (the new collection) is invalid.</li>
+                    <li><code>401 Unauthorized</code>, <code>403 Forbidden</code>.</li>
+                </ul>
+            </div>
+            <p><strong>Explanation:</strong> This assumes you are sending a complete, new list of users in the request body, which will *replace* the existing <code>/users</code> collection. This is a very powerful and potentially destructive operation, usually not what "updateAllUsers" implies.</p>
+
+            <h4>Scenario 2: Partially updating multiple users (Batch Update)</h4>
+            <div class="corrected-endpoint"><span class="method PATCH">PATCH</span> <code>/users</code></div>
+            <div class="status-codes">
+                <strong>Status Codes:</strong>
+                <ul>
+                    <li><code>200 OK</code>: Successfully applied partial updates to users. Response might contain details of updated users or success/failure for each.</li>
+                    <li><code>207 Multi-Status</code>: (WebDAV extension, sometimes used) If individual updates within the batch can have different outcomes.</li>
+                    <li><code>400 Bad Request</code>: If the batch request format is invalid.</li>
+                    <li><code>401 Unauthorized</code>, <code>403 Forbidden</code>.</li>
+                    <li><code>404 Not Found</code>: If some users in the batch do not exist.</li>
+                </ul>
+            </div>
+            <p><strong>Explanation:</strong> A <code>PATCH</code> request to the <code>/users</code> collection implies applying a set of partial modifications to multiple resources within that collection. The request body would contain instructions on which users to update and what changes to apply (e.g., an array of objects, each specifying a user ID and the fields to change).</p>
+
+            <h4>Scenario 3: Updating a single user (most common "update" scenario)</h4>
+            <div class="corrected-endpoint"><span class="method PUT">PUT</span> <code>/users/{id}</code></div>
+            <p><strong>Explanation:</strong> To *replace* an existing user resource entirely with new data. The request body would contain the complete, updated representation of that user.</p>
+            <div class="corrected-endpoint"><span class="method PATCH">PATCH</span> <code>/users/{id}</code></div>
+            <div class="status-codes">
+                <strong>Status Codes:</strong>
+                <ul>
+                    <li><code>200 OK</code>: Successfully updated the user.</li>
+                    <li><code>400 Bad Request</code>: If the request body is invalid.</li>
+                    <li><code>404 Not Found</code>: If the user with the specified ID does not exist.</li>
+                    <li><code>401 Unauthorized</code>, <code>403 Forbidden</code>.</li>
+                </ul>
+            </div>
+            <p><strong>Explanation:</strong> To *partially modify* an existing user resource. The request body would contain only the fields to be changed.</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(headerElement) {
+            const content = headerElement.nextElementSibling;
+            const icon = headerElement.querySelector('.toggle-icon');
+            if (content.style.display === "block") {
+                content.style.display = "none";
+                icon.textContent = "▶";
+            } else {
+                content.style.display = "block";
+                icon.textContent = "▼";
+            }
+        }
+
+        // Initialize: open the first section, others closed
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstSectionHeader = document.querySelector('.section-header');
+            if (firstSectionHeader) {
+                toggleSection(firstSectionHeader);
+            }
+        });
+    </script>
+</body>
+</html>

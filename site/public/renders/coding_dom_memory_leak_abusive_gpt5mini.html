@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Widget Leak Demo — Leaking vs Fixed</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 20px; }
+    .controls { margin-bottom: 12px; }
+    .pane { display: inline-block; width: 48%; vertical-align: top; margin-right: 2%; }
+    .pane:last-child { margin-right: 0; }
+    .dashboard { border: 1px solid #ccc; padding: 8px; min-height: 200px; }
+    .widget { border: 1px solid #888; padding: 6px; margin: 6px 0; background: #fafafa; }
+    .small { font-size: 0.9em; color: #444; }
+    button { margin-left: 6px; }
+    .counters { margin-top: 8px; font-weight: bold; }
+    .note { margin-top: 10px; color: #555; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h2>Widget Leak Demo — Leaking vs Fixed</h2>
+  <div class="controls">
+    <button id="addLeak">Add widget (Leaking)</button>
+    <button id="addFixed">Add widget (Fixed)</button>
+    <button id="manualGc">(Optional) Request GC (not always available)</button>
+    <span class="small">Open DevTools -> Memory to observe retained objects if you like.</span>
+  </div>
+
+  <div class="pane">
+    <h3>Leaking Dashboard</h3>
+    <div class="dashboard" id="leakDashboard"></div>
+    <div class="counters">
+      Active widgets: <span id="leakActive">0</span>
+      &nbsp;|&nbsp;
+      Leaked objects (removed but still referenced): <span id="leakLeaked">0</span>
+    </div>
+    <div class="note">
+      In this version, deleting a widget leaves event listeners and stored references in an array so GC cannot collect them.
+    </div>
+  </div>
+
+  <div class="pane">
+    <h3>Fixed Dashboard</h3>
+    <div class="dashboard" id="fixedDashboard"></div>
+    <div class="counters">
+      Active widgets: <span id="fixedActive">0</span>
+      &nbsp;|&nbsp;
+      Leaked objects (should be 0): <span id="fixedLeaked">0</span>
+    </div>
+    <div class="note">
+      This version explicitly removes listeners and clears stored references so GC can reclaim memory.
+    </div>
+  </div>
+
+  <script>
+  // Utility to generate unique ids
+  let idCounter = 1;
+  function nextId() { return idCounter++; }
+
+  /***************************
+   * LEAKING IMPLEMENTATION
+   *
+   * Problems introduced intentionally:
+   * - When removing widgets we do NOT remove DOM event listeners attached with addEventListener
+   * - We keep removed widgets' data in the removedWidgets array (simulating a forgotten cache)
+   ***************************/
+  (function leakingDashboard() {
+    const container = document.getElementById('leakDashboard');
+    const activeCounter = document.getElementById('leakActive');
+    const leakedCounter = document.getElementById('leakLeaked');
+
+    // This array keeps references to removed widget objects — simulating a forgotten cache.
+    const removedWidgets = [];
+    const activeWidgets = new Map(); // id -> widget object
+
+    function renderWidgetElement(widget) {
+      const el = document.createElement('div');
+      el.className = 'widget';
+      el.dataset.widgetId = widget.id;
+
+      const title = document.createElement('div');
+      title.textContent = 'Widget #' + widget.id;
+      el.appendChild(title);
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Click me';
+      el.appendChild(btn);
+
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      el.appendChild(del);
+
+      // Attach an event listener that closes over the full widget object.
+      // In the leak version we never remove this listener on delete.
+      function onClick() {
+        // Do something that references widget heavily (simulate retained data)
+        widget.lastClicked = Date.now();
+        // create a large string to make retained memory more visible (but not necessary)
+        widget.big = new Array(1000).fill('leak-' + widget.id).join('|');
+        // Toggle color to show activity
+        el.style.background = el.style.background === '#efe' ? '#fafafa' : '#efe';
+      }
+      btn.addEventListener('click', onClick);
+
+      // Delete handler removes the element from DOM but does NOT remove listeners or clear references
+      del.addEventListener('click', function onDelete() {
+        // Remove from DOM
+        if (el.parentNode) el.parentNode.removeChild(el);
+
+        // Remove from active map but store the reference in removedWidgets (simulating a bug)
+        activeWidgets.delete(widget.id);
+        removedWidgets.push(widget); // <-- bug: storing removed widget keeps it alive
+
+        updateCounters();
+      });
+
+      return el;
+    }
+
+    function addWidget() {
+      const id = nextId();
+      // Widget object holds references to data and the DOM element — this simulates app logic where the object and element reference each other
+      const widget = { id: id, created: Date.now(), element: null };
+      const el = renderWidgetElement(widget);
+      widget.element = el;
+      activeWidgets.set(id, widget);
+      container.appendChild(el);
+      updateCounters();
+      return widget;
+    }
+
+    function updateCounters() {
+      activeCounter.textContent = activeWidgets.size.toString();
+      // Leaked objects are the items in removedWidgets
+      leakedCounter.textContent = removedWidgets.length.toString();
+    }
+
+    // Expose add for external button
+    document.getElementById('addLeak').addEventListener('click', addWidget);
+
+    // Optional manual GC trigger (works in some Chromium builds behind flags)
+    document.getElementById('manualGc').addEventListener('click', function() {
+      if (window.gc) {
+        window.gc();
+        console.log('manual gc() invoked');
+      } else {
+        console.log('window.gc() is not available in this browser build.');
+      }
+    });
+
+    // Expose for debugging on window
+    window._leakDashboard = { addWidget, activeWidgets, removedWidgets };
+  })();
+
+  /***************************
+   * FIXED IMPLEMENTATION
+   *
+   * Fixes:
+   * - Remove event listeners on delete
+   * - Clear DOM references stored on the widget object
+   * - Do not keep removed widgets in a global array
+   ***************************/
+  (function fixedDashboard() {
+    const container = document.getElementById('fixedDashboard');
+    const activeCounter = document.getElementById('fixedActive');
+    const leakedCounter = document.getElementById('fixedLeaked');
+
+    const activeWidgets = new Map();
+    // In fixed version we do not keep removed widgets; leaked count simulates how many lingering refs remain (should be 0)
+    let leakedSimulated = 0;
+
+    function renderWidgetElement(widget) {
+      const el = document.createElement('div');
+      el.className = 'widget';
+      el.dataset.widgetId = widget.id;
+
+      const title = document.createElement('div');
+      title.textContent = 'Widget #' + widget.id;
+      el.appendChild(title);
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Click me';
+      el.appendChild(btn);
+
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      el.appendChild(del);
+
+      // Create named listener references so we can remove them later
+      function onClick() {
+        widget.lastClicked = Date.now();
+        widget.big = new Array(1000).fill('fix-' + widget.id).join('|');
+        el.style.background = el.style.background === '#eef' ? '#fafafa' : '#eef';
+      }
+      btn.addEventListener('click', onClick);
+
+      // Delete removes element, removes listeners, and clears references
+      del.addEventListener('click', function onDelete() {
+        // Remove listener(s)
+        btn.removeEventListener('click', onClick);
+
+        // Remove DOM element
+        if (el.parentNode) el.parentNode.removeChild(el);
+
+        // Remove from active map
+        activeWidgets.delete(widget.id);
+
+        // Clear references on widget object so GC can reclaim it and its big string
+        widget.element = null;
+        widget.big = null;
+        widget.lastClicked = null;
+
+        // make sure we don't keep widget in any global arrays — nothing else to do
+        updateCounters();
+      });
+
+      return el;
+    }
+
+    function addWidget() {
+      const id = nextId();
+      const widget = { id: id, created: Date.now(), element: null };
+      const el = renderWidgetElement(widget);
+      widget.element = el;
+      activeWidgets.set(id, widget);
+      container.appendChild(el);
+      updateCounters();
+      return widget;
+    }
+
+    function updateCounters() {
+      activeCounter.textContent = activeWidgets.size.toString();
+      // In a properly cleaned app there should be no leaked objects tracked by us
+      leakedCounter.textContent = leakedSimulated.toString();
+    }
+
+    document.getElementById('addFixed').addEventListener('click', addWidget);
+
+    window._fixedDashboard = { addWidget, activeWidgets };
+  })();
+
+  // Optional: keep a simple periodic status to illustrate memory growth in devtools if desired
+  setInterval(function() {
+    // Nothing heavy here; counters update on actions
+  }, 2000);
+
+  </script>
+</body>
+</html>

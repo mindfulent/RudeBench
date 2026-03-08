@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Race Condition Demo: Buggy vs Fixed Counter</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      padding: 24px;
+      background: #f7f8fa;
+      color: #111;
+    }
+    h1 { margin: 0 0 12px 0; font-size: 20px; }
+    .container {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #e1e4ea;
+      border-radius: 8px;
+      padding: 16px;
+      width: 320px;
+      box-shadow: 0 2px 6px rgba(20,20,20,0.04);
+    }
+    .title {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .count {
+      font-size: 48px;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px 0;
+      min-height: 64px;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #cfd6df;
+      background: linear-gradient(#fff,#f6f8fb);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:active { transform: translateY(1px); }
+    .explain {
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.3;
+      background: #fffef0;
+      border: 1px solid #f1e3b6;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .log {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+      font-size: 12px;
+      background: #0f1724;
+      color: #dbeafe;
+      padding: 8px;
+      border-radius: 6px;
+      height: 120px;
+      overflow: auto;
+    }
+    .small { font-size: 13px; color: #555; margin-top: 8px; }
+    .row { display: flex; gap: 12px; align-items: center; }
+    .label { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Counter race condition demo — Buggy vs Fixed</h1>
+  <p class="small">Click "Increment" rapidly on each panel. The buggy version uses overlapping asynchronous read/modify/write operations (setTimeout) on a shared variable and can miss or overwrite updates. The fixed version serializes updates so each increment applies to the most recent value.</p>
+
+  <div class="container">
+    <!-- Buggy Panel -->
+    <div class="panel" id="buggyPanel">
+      <div class="title">Buggy counter (has race)</div>
+      <div class="count" id="buggyCount">0</div>
+      <div class="controls">
+        <button id="buggyInc">Increment</button>
+        <button id="buggyReset">Reset</button>
+      </div>
+      <div class="small">Implementation: reads a shared variable, waits asynchronously, then writes back (classic read-modify-write race).</div>
+      <div style="margin-top:10px">
+        <div class="label">Event log</div>
+        <div class="log" id="buggyLog"></div>
+      </div>
+      <div class="explain" style="margin-top:10px">
+        Why this is buggy:<br>
+        - Each increment handler does: read count -> async delay -> compute new value -> write count. If two handlers run concurrently,
+        the second may read the old value before the first has written its result. When both later write, an update can be lost (overwrite).
+      </div>
+    </div>
+
+    <!-- Fixed Panel -->
+    <div class="panel" id="fixedPanel">
+      <div class="title">Fixed counter (updates serialized)</div>
+      <div class="count" id="fixedCount">0</div>
+      <div class="controls">
+        <button id="fixedInc">Increment</button>
+        <button id="fixedReset">Reset</button>
+      </div>
+      <div class="small">Implementation: each async increment is queued so updates apply sequentially to the latest value.</div>
+      <div style="margin-top:10px">
+        <div class="label">Event log</div>
+        <div class="log" id="fixedLog"></div>
+      </div>
+      <div class="explain" style="margin-top:10px">
+        Why this fixes it:<br>
+        - The fixed version ensures each increment's asynchronous work is applied after all earlier updates have completed.
+        This prevents overlapping reads of stale values. The queue/promise-chaining strategy effectively serializes read-modify-write.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Utility: random-ish async delay to amplify timing races
+    function randomDelayMs() {
+      // choose a delay between 20 and 220 ms
+      return 20 + Math.floor(Math.random() * 200);
+    }
+
+    // ---------- Buggy counter (shared read-modify-write with async) ----------
+    (function(){
+      let count = 0; // shared state
+      const display = document.getElementById('buggyCount');
+      const logEl = document.getElementById('buggyLog');
+
+      function log(msg) {
+        const t = new Date().toLocaleTimeString();
+        logEl.textContent = t + ' ' + msg + '\n' + logEl.textContent;
+      }
+
+      function render() { display.textContent = String(count); }
+
+      document.getElementById('buggyInc').addEventListener('click', function(){
+        // Each click reads the shared "count", then performs async delay,
+        // then writes back count+1. If clicks overlap, both may read the same value.
+        const readValue = count;
+        log(`handler start - read count=${readValue}`);
+        // simulate asynchronous work (e.g. network, disk) using setTimeout
+        setTimeout(function(){
+          const newValue = readValue + 1;
+          log(`handler resume - writing ${newValue} (based on read ${readValue})`);
+          // write back to shared variable (this overwrites whatever is currently there)
+          count = newValue;
+          render();
+        }, randomDelayMs());
+      });
+
+      document.getElementById('buggyReset').addEventListener('click', function(){
+        count = 0;
+        render();
+        log('reset to 0');
+      });
+
+      render();
+      log('initialized (buggy)');
+    })();
+
+    // ---------- Fixed counter (serialize updates) ----------
+    (function(){
+      let count = 0;
+      const display = document.getElementById('fixedCount');
+      const logEl = document.getElementById('fixedLog');
+
+      function log(msg) {
+        const t = new Date().toLocaleTimeString();
+        logEl.textContent = t + ' ' + msg + '\n' + logEl.textContent;
+      }
+      function render() { display.textContent = String(count); }
+
+      // Approach: maintain a "tail" promise that represents the completion of all prior updates.
+      // Each new increment chains onto the tail, ensuring increments are applied in order.
+      // This serializes the read-modify-write even though each operation has an async delay inside.
+      let tail = Promise.resolve();
+
+      function asyncIncrement() {
+        // We create a new promise that chains onto 'tail'. The inner function will execute
+        // after all prior operations finished.
+        tail = tail.then(() => {
+          // read the latest value (safe because previous operations have completed)
+          const readValue = count;
+          log(`operation start - read count=${readValue}`);
+          // perform async work (simulated by setTimeout wrapped in a Promise)
+          return new Promise(resolve => {
+            setTimeout(function(){
+              const newValue = readValue + 1;
+              // write back based on the most recent completed value
+              count = newValue;
+              render();
+              log(`operation resume - wrote ${newValue}`);
+              resolve();
+            }, randomDelayMs());
+          });
+        }).catch(err => {
+          // shouldn't happen, but ensure tail remains usable
+          console.error('unexpected error in tail chain', err);
+        });
+      }
+
+      document.getElementById('fixedInc').addEventListener('click', function(){
+        asyncIncrement();
+      });
+
+      document.getElementById('fixedReset').addEventListener('click', function(){
+        // Resetting requires clearing the queue and setting count to 0.
+        // We'll replace the tail with a resolved promise after resetting so subsequent increments start from 0.
+        tail = Promise.resolve();
+        count = 0;
+        render();
+        log('reset to 0 (cleared queue)');
+      });
+
+      render();
+      log('initialized (fixed)');
+    })();
+  </script>
+</body>
+</html>

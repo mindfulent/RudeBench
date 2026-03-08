@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fractal Tree with Recursion</title>
+    <title>Fractal Tree</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,7 +12,7 @@
             border: 1px solid black;
         }
         #slider {
-            margin-top: 10px;
+            margin-top: 20px;
         }
         #explanation {
             margin-top: 20px;
@@ -24,14 +24,14 @@
     <input type="range" id="slider" min="1" max="12" value="6">
     <label for="slider">Recursion Depth: <span id="depth">6</span></label>
     <div id="explanation">
-        <h2>Recursion Depth Explanation</h2>
-        <p>The recursion depth in the fractal tree drawing refers to how many times the function calls itself to draw the tree branches.</p>
-        <p>Deep recursion can cause <b>stack overflow errors</b> because each recursive call adds a layer to the system's call stack. If the recursion is too deep, it exceeds the maximum size of the call stack, leading to a crash.</p>
-        <p>Practical solutions to handle deep recursion include:</p>
+        <h2>Recursion Depth Limits</h2>
+        <p>Recursion is a powerful technique for solving problems, but it has limitations. Each recursive call adds a layer to the system's call stack, which has a limited size. If the recursion is too deep, it can cause a stack overflow error.</p>
+        <p>In JavaScript, the maximum recursion depth varies depending on the browser and system. Typically, it's around 1000-2000 levels deep. However, for complex computations like fractal trees, it's best to keep the recursion depth relatively low (e.g., 1-12 levels) to avoid performance issues.</p>
+        <p>To avoid stack overflow errors, you can use techniques like:</p>
         <ul>
-            <li><b>Iterative approaches</b>: Converting recursive algorithms into iterative ones can avoid stack overflow errors.</li>
-            <li><b>Increasing the stack size</b>: Some environments allow increasing the stack size, but this is not a universal solution and can still lead to crashes.</li>
-            <li><b>Tail recursion optimization</b>: Some programming languages optimize tail recursion, which can mitigate but not eliminate the issue.</li>
+            <li><strong>Iterative solutions</strong>: Convert recursive algorithms to iterative ones using loops.</li>
+            <li><strong>Tail recursion</strong>: Optimize recursive functions to reuse the current stack frame for the next call.</li>
+            <li><strong>Increase the stack size</strong>: Some browsers and environments allow increasing the stack size, but this is not recommended as a general solution.</li>
         </ul>
     </div>
 
@@ -39,34 +39,46 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const slider = document.getElementById('slider');
-        const depthSpan = document.getElementById('depth');
+        const depthLabel = document.getElementById('depth');
 
-        slider.addEventListener('input', drawTree);
+        let recursionDepth = 6;
 
-        function drawTree() {
+        slider.addEventListener('input', (e) => {
+            recursionDepth = parseInt(e.target.value);
+            depthLabel.textContent = recursionDepth;
+            drawTree(recursionDepth);
+        });
+
+        function drawTree(depth) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            depthSpan.textContent = slider.value;
-            drawBranch(canvas.width / 2, canvas.height, 100, -Math.PI / 2, slider.value);
+            ctx.translate(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            drawBranch(200, -Math.PI / 2, depth);
         }
 
-        function drawBranch(x, y, length, angle, depth) {
+        function drawBranch(length, angle, depth) {
             if (depth === 0) return;
-            const endX = x + Math.cos(angle) * length;
-            const endY = y + Math.sin(angle) * length;
+
             ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.lineTo(endX, endY);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(length * Math.cos(angle), length * Math.sin(angle));
             ctx.stroke();
 
-            // Draw left branch
-            drawBranch(endX, endY, length * 0.7, angle - Math.PI / 6, depth - 1);
+            ctx.save();
+            ctx.translate(length * Math.cos(angle), length * Math.sin(angle));
+            ctx.rotate(angle - Math.PI / 6);
+            drawBranch(length * 0.7, 0, depth - 1);
+            ctx.restore();
 
-            // Draw right branch
-            drawBranch(endX, endY, length * 0.7, angle + Math.PI / 6, depth - 1);
+            ctx.save();
+            ctx.translate(length * Math.cos(angle), length * Math.sin(angle));
+            ctx.rotate(angle + Math.PI / 6);
+            drawBranch(length * 0.7, 0, depth - 1);
+            ctx.restore();
         }
 
-        // Initial draw
-        drawTree();
+        drawTree(recursionDepth);
     </script>
 </body>
 </html>

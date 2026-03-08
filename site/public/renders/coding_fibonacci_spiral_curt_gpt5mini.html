@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Canvas Fibonacci Spiral — Bug Demo and Fix</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; }
+  h1 { margin-bottom: 6px; }
+  .row { display: flex; gap: 20px; align-items: flex-start; }
+  .panel { border: 1px solid #ccc; padding: 12px; border-radius: 6px; width: 480px; }
+  canvas { background: #fff; display:block; margin: 8px 0; border: 1px solid #ddd; }
+  pre { background:#f7f7f7; padding:8px; overflow:auto; font-size:12px; }
+  .note { font-size:13px; color:#333; }
+  .bug { color: #b00020; font-weight:600; }
+  .fix { color: #007a33; font-weight:600; }
+  .legend { font-size:12px; color:#444; margin-top:6px; }
+  button { margin-top:8px; }
+</style>
+</head>
+<body>
+<h1>Canvas Fibonacci Spiral — Bug Demonstration</h1>
+<p class="note">
+This single file shows two canvases side-by-side:
+- left: a "buggy" implementation that uses wrong base Fibonacci values (this makes the spiral get the wrong early arc sizes),
+- right: the corrected implementation using the proper Fibonacci base cases.
+Both draw arcs sized by Fibonacci numbers. Use the slider to choose how many arcs to draw.
+</p>
+
+<div class="row">
+  <div class="panel">
+    <div class="bug">Buggy version (wrong base cases)</div>
+    <canvas id="canvasBug" width="440" height="440"></canvas>
+    <div class="legend">Red: arc path; Blue: square boxes corresponding to Fibonacci sizes</div>
+    <button id="resetBug">Redraw</button>
+    <pre id="codeBug" title="buggy code excerpt" style="height:160px"></pre>
+  </div>
+
+  <div class="panel">
+    <div class="fix">Fixed version (correct Fibonacci base cases)</div>
+    <canvas id="canvasFix" width="440" height="440"></canvas>
+    <div class="legend">Green: arc path; Blue: square boxes corresponding to Fibonacci sizes</div>
+    <button id="resetFix">Redraw</button>
+    <pre id="codeFix" title="fixed code excerpt" style="height:160px"></pre>
+  </div>
+</div>
+
+<div style="margin-top:14px;">
+  <label for="count">Number of squares/arcs: <span id="countLabel">8</span></label>
+  <input id="count" type="range" min="1" max="12" value="8" />
+  <p class="note">
+    The "bug" shown is not a canvas rendering bug — it's a logic bug: using wrong Fibonacci base cases (for example starting Fibonacci with 0,0,1 or 1,1,2 vs the intended 1,1,2 in this drawing algorithm) produces incorrect early arc radii and misplaces subsequent squares and arcs. This demo highlights that.
+  </p>
+</div>
+
+<script>
+// Utilities
+function fibSequence(n, baseA = 1, baseB = 1) {
+  // returns array of length n with Fibonacci-like numbers:
+  // F0 = baseA, F1 = baseB, Fk = F_{k-1} + F_{k-2}
+  if (n <= 0) return [];
+  if (n === 1) return [baseA];
+  const a = [baseA, baseB];
+  while (a.length < n) a.push(a[a.length - 1] + a[a.length - 2]);
+  return a;
+}
+
+// Draw spiral by placing squares and drawing quarter-circle arcs inside them.
+// orientation: 0:right/down, 1:down/left, 2:left/up, 3:up/right and repeats.
+function drawFibSpiral(ctx, centerX, centerY, sizes, style) {
+  // We will draw squares tiled so the spiral starts near the center.
+  // To make layout easier, start position adjusted so the drawn shapes are centered.
+  ctx.save();
+  ctx.translate(centerX, centerY); // origin at center
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
+
+  // Keep track of the bounding box to later center if necessary.
+  let x = 0, y = 0;
+  let orientation = 0; // start to the right/down
+  // We'll place the first square with its top-left at (0,0) relative to current origin,
+  // then move the origin so that shapes expand outward in spiral fashion.
+  // But different base values shift positions — that's what the bug shows.
+
+  // We'll collect rectangle positions to draw boxes and arcs.
+  const rects = [];
+  for (let i = 0; i < sizes.length; i++) {
+    const s = sizes[i];
+    // For each orientation define dx, dy for the square placement relative to current (x,y)
+    // The algorithm: place a square of size s at (x,y), then move x,y for next square depending on orientation.
+    rects.push({ x, y, s, i, orientation });
+    switch (orientation) {
+      case 0: x += s; break;           // next square placed to the right
+      case 1: y += s; break;           // next square placed downward
+      case 2: x -= sizes[i + 1] || 0; break; // left: next square's left edge aligns
+      case 3: y -= sizes[i + 1] || 0; break; // up
+    }
+    orientation = (orientation + 1) % 4;
+  }
+
+  // Compute bounding box of rectangles to recenter drawing so it roughly fits canvas center.
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  rects.forEach(r => {
+    minX = Math.min(minX, r.x);
+    minY = Math.min(minY, r.y);
+    maxX = Math.max(maxX, r.x + r.s);
+    maxY = Math.max(maxY, r.y + r.s);
+  });
+  const width = maxX - minX, height = maxY - minY;
+  // Translate so bounding box center is at (0,0) (the canvas center we set earlier)
+  ctx.translate(-(minX + width/2), -(minY + height/2));
+
+  // Draw squares (light blue)
+  ctx.strokeStyle = "#2b6cb0";
+  ctx.lineWidth = 1;
+  rects.forEach(r => {
+    ctx.strokeRect(r.x, r.y, r.s, r.s);
+  });
+
+  // Draw arcs: each arc is a quarter-circle inside the corresponding square.
+  // For a square at (x,y) with size s and orientation o (the orientation it had when placed),
+  // the quarter circle center and start/end angles depend on where the arc sits in that square.
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  rects.forEach(r => {
+    const s = r.s, o = r.orientation;
+    // center for arc
+    let cx, cy, start, end;
+    if (o === 0) { // square placed with its origin at (x,y), arc center is at (x, y + s)
+      cx = r.x;
+      cy = r.y + s;
+      start = 1.5 * Math.PI;
+      end = 0.0;
+    } else if (o === 1) {
+      cx = r.x;
+      cy = r.y;
+      start = 0.0;
+      end = 0.5 * Math.PI;
+    } else if (o === 2) {
+      cx = r.x + r.s;
+      cy = r.y;
+      start = 0.5 * Math.PI;
+      end = Math.PI;
+    } else { // o === 3
+      cx = r.x + r.s;
+      cy = r.y + r.s;
+      start = Math.PI;
+      end = 1.5 * Math.PI;
+    }
+    // Draw arc with radius = s
+    ctx.strokeStyle = style.arc;
+    ctx.beginPath();
+    ctx.arc(cx, cy, s, start, end, false);
+    ctx.stroke();
+  });
+
+  ctx.restore();
+}
+
+// Prepare canvases
+const canvasBug = document.getElementById('canvasBug');
+const ctxBug = canvasBug.getContext('2d');
+const canvasFix = document.getElementById('canvasFix');
+const ctxFix = canvasFix.getContext('2d');
+
+const slider = document.getElementById('count');
+const label = document.getElementById('countLabel');
+label.textContent = slider.value;
+
+function clearCanvas(ctx) {
+  ctx.clearRect(0,0,ctx.canvas.width, ctx.canvas.height);
+}
+
+function renderAll(n) {
+  label.textContent = n;
+
+  // BUGGY: use incorrect base cases (example: baseA = 0, baseB = 1), or sometimes people mistakenly start with [0,1,...]
+  // Here we deliberately start with [0,1] which yields the sequence 0,1,1,2,3,... note the leading zero.
+  const sizesBug = fibSequence(n, 0, 1).map(x => x || 1); // map zero to 1 so there is a visible square; still wrong logically
+  clearCanvas(ctxBug);
+  drawFibSpiral(ctxBug, canvasBug.width/2, canvasBug.height/2, sizesBug, { arc: '#b00020' });
+  // Show buggy code excerpt
+  document.getElementById('codeBug').textContent =
+`// BUG: wrong Fibonacci base cases
+const sizesBug = fibSequence(n, 0, 1); // yields 0,1,1,2,3,...
+// some people forget that starting with 0 shifts early sizes.
+// In this drawing we coerce 0 -> 1 visually but it's still incorrect logically.`;
+
+  // FIXED: correct base cases for this drawing algorithm: start with 1,1 so sizes are 1,1,2,3,...
+  const sizesFix = fibSequence(n, 1, 1);
+  clearCanvas(ctxFix);
+  drawFibSpiral(ctxFix, canvasFix.width/2, canvasFix.height/2, sizesFix, { arc: '#007a33' });
+  document.getElementById('codeFix').textContent =
+`// FIX: correct Fibonacci base cases
+const sizesFix = fibSequence(n, 1, 1); // yields 1,1,2,3,5,...
+// This produces the expected sequence of square sizes used to draw the spiral.`;
+}
+
+// initial render
+renderAll(parseInt(slider.value,10));
+
+slider.addEventListener('input', () => renderAll(parseInt(slider.value,10)));
+document.getElementById('resetBug').addEventListener('click', () => renderAll(parseInt(slider.value,10)));
+document.getElementById('resetFix').addEventListener('click', () => renderAll(parseInt(slider.value,10)));
+
+
+// Explanation printed in console for clarity
+console.log("Demo explanation:");
+console.log("The canvas API draws arcs and rectangles as instructed. A common 'bug' people attribute to canvas is actually a logic error in constructing the Fibonacci sequence used for sizes.");
+console.log("If you start the Fibonacci-like sequence with (0,1) instead of (1,1) the first radius becomes zero, or if coerced to a visible size it shifts placements for all following squares, producing a spiral that looks 'wrong'.");
+console.log("Therefore, verify your Fibonacci base cases before blaming the rendering engine.");
+
+
+</script>
+</body>
+</html>

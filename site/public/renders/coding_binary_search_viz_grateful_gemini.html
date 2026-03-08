@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        #controls label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        #targetInput {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+
+        #startButton {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #startButton:hover {
+            background-color: #0056b3;
+        }
+
+        #stepButton {
+            background-color: #28a745;
+            color: white;
+            opacity: 0.6; /* Initially disabled */
+            cursor: not-allowed;
+        }
+
+        #stepButton.active {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        #stepButton.active:hover {
+            background-color: #218838;
+        }
+
+        #resetButton {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        #resetButton:hover {
+            background-color: #c82333;
+        }
+
+        #arrayContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 90%;
+            gap: 5px; /* Space between boxes */
+        }
+
+        .array-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            margin: 2px;
+            font-weight: bold;
+            background-color: #e9ecef;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            box-sizing: border-box; /* Include padding/border in width/height */
+        }
+
+        .array-box.in-range {
+            background-color: #d1ecf1; /* Light blue for current search range */
+            border-color: #007bff;
+        }
+
+        .array-box.middle {
+            background-color: #ffc107; /* Orange for middle element */
+            border-color: #ff9800;
+            box-shadow: 0 0 8px rgba(255,193,7,0.5);
+            transform: scale(1.05);
+        }
+
+        .array-box.found {
+            background-color: #28a745; /* Green for found element */
+            color: white;
+            border-color: #218838;
+            box-shadow: 0 0 10px rgba(40,167,69,0.7);
+        }
+
+        .array-box.not-found-middle {
+            background-color: #dc3545; /* Red for middle element when target not found */
+            color: white;
+            border-color: #c82333;
+        }
+
+        #status {
+            margin-top: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            padding: 10px 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-width: 300px;
+            text-align: center;
+            min-height: 2em; /* Ensure consistent height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualizer</h1>
+
+    <div id="controls">
+        <label for="targetInput">Target Value:</label>
+        <input type="number" id="targetInput" value="42" min="1" max="100">
+        <button id="startButton">Start Search</button>
+        <button id="stepButton">Next Step</button>
+        <button id="resetButton">Reset</button>
+    </div>
+
+    <div id="status">Enter a target and click "Start Search" to begin.</div>
+
+    <div id="arrayContainer">
+        <!-- Array boxes will be generated here by JavaScript -->
+    </div>
+
+    <script>
+        const arrayContainer = document.getElementById('arrayContainer');
+        const targetInput = document.getElementById('targetInput');
+        const startButton = document.getElementById('startButton');
+        const stepButton = document.getElementById('stepButton');
+        const resetButton = document.getElementById('resetButton');
+        const statusDiv = document.getElementById('status');
+
+        // The sorted array for visualization
+        const sortedArray = Array.from({ length: 25 }, (_, i) => (i + 1) * 3); // Example: [3, 6, 9, ..., 75]
+        let targetValue = null;
+        let low = 0;
+        let high = sortedArray.length - 1;
+        let mid = -1;
+        let searchActive = false;
+        let found = false;
+
+        // --- Initialization and UI Setup ---
+
+        function generateArrayBoxes() {
+            arrayContainer.innerHTML = ''; // Clear previous boxes
+            sortedArray.forEach((value, index) => {
+                const box = document.createElement('div');
+                box.classList.add('array-box');
+                box.dataset.index = index; // Store original index
+                box.textContent = value;
+                arrayContainer.appendChild(box);
+            });
+        }
+
+        function resetVisualization() {
+            targetValue = null;
+            low = 0;
+            high = sortedArray.length - 1;
+            mid = -1;
+            searchActive = false;
+            found = false;
+
+            statusDiv.textContent = 'Enter a target and click "Start Search" to begin.';
+            targetInput.disabled = false;
+            startButton.disabled = false;
+            stepButton.disabled = true;
+            stepButton.classList.remove('active');
+            resetButton.disabled = false; // Always enabled for full reset
+
+            const boxes = document.querySelectorAll('.array-box');
+            boxes.forEach(box => {
+                box.classList.remove('in-range', 'middle', 'found', 'not-found-middle');
+            });
+        }
+
+        // --- Binary Search Logic (Step-by-Step) ---
+
+        function startSearch() {
+            const inputVal = parseInt(targetInput.value);
+            if (isNaN(inputVal)) {
+                alert('Please enter a valid number for the target value.');
+                return;
+            }
+            targetValue = inputVal;
+
+            resetVisualization(); // Reset state but keep generated boxes
+            searchActive = true;
+            targetInput.disabled = true;
+            startButton.disabled = true;
+            stepButton.disabled = false;
+            stepButton.classList.add('active');
+            statusDiv.textContent = `Searching for ${targetValue}...`;
+
+            highlightRange();
+        }
+
+        function highlightRange() {
+            const boxes = document.querySelectorAll('.array-box');
+            boxes.forEach((box, index) => {
+                box.classList.remove('in-range', 'middle', 'found', 'not-found-middle');
+                if (index >= low && index <= high) {
+                    box.classList.add('in-range');
+                }
+            });
+        }
+
+        function takeStep() {
+            if (!searchActive || found) return; // Don't step if not active or already found
+
+            if (low <= high) {
+                mid = Math.floor((low + high) / 2);
+                const midValue = sortedArray[mid];
+
+                // Clear previous middle highlights
+                document.querySelectorAll('.array-box.middle, .array-box.not-found-middle').forEach(box => {
+                    box.classList.remove('middle', 'not-found-middle');
+                });
+
+                // Highlight current middle
+                const midBox = document.querySelector(`.array-box[data-index="${mid}"]`);
+                if (midBox) {
+                    midBox.classList.add('middle');
+                }
+
+                statusDiv.textContent = `Comparing ${targetValue} with middle element ${midValue} at index ${mid}.`;
+
+                if (midValue === targetValue) {
+                    found = true;
+                    if (midBox) {
+                        midBox.classList.remove('middle', 'in-range');
+                        midBox.classList.add('found');
+                    }
+                    statusDiv.textContent = `Target ${targetValue} found at index ${mid}!`;
+                    endSearch();
+                } else if (midValue < targetValue) {
+                    low = mid + 1;
+                    statusDiv.textContent += ` Target is greater, search in right half (index ${low} to ${high}).`;
+                    // Delay range highlight slightly to see middle first
+                    setTimeout(highlightRange, 800);
+                } else { // midValue > targetValue
+                    high = mid - 1;
+                    statusDiv.textContent += ` Target is smaller, search in left half (index ${low} to ${high}).`;
+                    // Delay range highlight slightly to see middle first
+                    setTimeout(highlightRange, 800);
+                }
+            } else {
+                // Search range has collapsed, target not found
+                if (!found) { // Double check if it wasn't found in the last step
+                    statusDiv.textContent = `Target ${targetValue} not found in the array.`;
+                    // If a middle element was the last one checked, mark it as not-found
+                    const lastMidBox = document.querySelector(`.array-box[data-index="${mid}"]`);
+                    if (lastMidBox) {
+                        lastMidBox.classList.remove('middle', 'in-range');
+                        lastMidBox.classList.add('not-found-middle');
+                    }
+                }
+                endSearch();
+            }
+        }
+
+        function endSearch() {
+            searchActive = false;
+            stepButton.disabled = true;
+            stepButton.classList.remove('active');
+            // Allow starting a new search
+            targetInput.disabled = false;
+            startButton.disabled = false;
+        }
+
+        // --- Event Listeners ---
+
+        startButton.addEventListener('click', startSearch);
+        stepButton.addEventListener('click', takeStep);
+        resetButton.addEventListener('click', resetVisualization);
+
+        // Allow pressing Enter in target input to start search
+        targetInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && !startButton.disabled) {
+                startButton.click();
+            }
+        });
+
+        // Initial setup
+        generateArrayBoxes();
+        resetVisualization(); // Ensure initial state is clean
+    </script>
+</body>
+</html>

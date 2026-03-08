@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Sort vs. Faster Algorithms</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        h1, h2 {
+            color: #333;
+        }
+        
+        .explanation {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        
+        .sorter {
+            width: 30%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .bar-chart {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .bar {
+            width: 20px;
+            margin: 0 2px;
+            background-color: #007bff;
+            transition: height 0.5s ease, background-color 0.3s;
+        }
+        
+        .bar.highlight {
+            background-color: #ff5733; /* Highlight for swaps/comparisons */
+        }
+        
+        .step-counter {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bubble Sort vs. Faster Algorithms</h1>
+    <div class="explanation">
+        <p>This demonstration compares Bubble Sort with Quick Sort and Merge Sort on the same randomized data.</p>
+        <p><strong>Bubble Sort:</strong> Repeatedly swaps adjacent elements if they are in the wrong order. Time complexity: O(n²) average and worst case. It's simple but inefficient for large datasets.</p>
+        <p><strong>Quick Sort:</strong> Divides the array into smaller subarrays and sorts them recursively. Time complexity: O(n log n) average, O(n²) worst case (rare).</p>
+        <p><strong>Merge Sort:</strong> Divides the array into halves, sorts them, and merges them back. Time complexity: O(n log n) in all cases. It's stable and efficient.</p>
+        <p>This shows why Bubble Sort isn't the best for everything—faster algorithms like Quick Sort and Merge Sort perform better on average.</p>
+    </div>
+    
+    <button id="startButton">Generate Random Data and Start Sorting</button>
+    
+    <div class="container">
+        <div class="sorter" id="bubbleSort">
+            <h2>Bubble Sort</h2>
+            <div class="bar-chart" id="bubbleChart"></div>
+            <div class="step-counter" id="bubbleSteps">Steps: 0</div>
+        </div>
+        
+        <div class="sorter" id="quickSort">
+            <h2>Quick Sort</h2>
+            <div class="bar-chart" id="quickChart"></div>
+            <div class="step-counter" id="quickSteps">Steps: 0</div>
+        </div>
+        
+        <div class="sorter" id="mergeSort">
+            <h2>Merge Sort</h2>
+            <div class="bar-chart" id="mergeChart"></div>
+            <div class="step-counter" id="mergeSteps">Steps: 0</div>
+        </div>
+    </div>
+    
+    <script>
+        // Generate a random array of 10 numbers between 1 and 100
+        function generateRandomArray(size = 10) {
+            return Array.from({ length: size }, () => Math.floor(Math.random() * 100) + 1);
+        }
+        
+        // Function to render the bar chart
+        function renderBarChart(containerId, array) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear existing bars
+            const maxHeight = 150; // Max height for the tallest bar
+            const maxValue = Math.max(...array);
+            
+            array.forEach(value => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const height = (value / maxValue) * maxHeight;
+                bar.style.height = `${height}px`;
+                bar.dataset.value = value; // Store the value for reference
+                container.appendChild(bar);
+            });
+        }
+        
+        // Bubble Sort implementation with step tracking and async delays for animation
+        async function bubbleSort(array) {
+            const stepsElement = document.getElementById('bubbleSteps');
+            let steps = 0;
+            let arr = array.slice(); // Copy array
+            const n = arr.length;
+            
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    steps++; // Increment for each comparison
+                    stepsElement.textContent = `Steps: ${steps}`;
+                    highlightBars('bubbleChart', j, j+1); // Highlight bars being compared
+                    await sleep(500); // Pause for animation
+                    
+                    if (arr[j] > arr[j + 1]) {
+                        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]; // Swap
+                        steps++; // Increment for swap
+                        stepsElement.textContent = `Steps: ${steps}`;
+                        renderBarChart('bubbleChart', arr); // Re-render chart
+                        await sleep(500); // Pause after swap
+                    }
+                    
+                    unhighlightBars('bubbleChart', j, j+1); // Remove highlight
+                }
+            }
+            return arr;
+        }
+        
+        // Quick Sort implementation (basic version with step tracking)
+        async function quickSort(array, start = 0, end = array.length - 1) {
+            const stepsElement = document.getElementById('quickSteps');
+            let steps = parseInt(stepsElement.textContent.replace('Steps: ', '')); // Get current steps
+            
+            if (start >= end) return array;
+            
+            const pivotIndex = await partition(array, start, end, stepsElement, steps);
+            steps = parseInt(stepsElement.textContent.replace('Steps: ', '')); // Update steps
+            
+            await quickSort(array, start, pivotIndex - 1);
+            await quickSort(array, pivotIndex + 1, end);
+            
+            renderBarChart('quickChart', array); // Re-render after recursion
+            return array;
+        }
+        
+        async function partition(array, start, end, stepsElement, steps) {
+            let pivot = array[end];
+            let i = start - 1;
+            
+            for (let j = start; j < end; j++) {
+                steps++; // Increment for each comparison
+                stepsElement.textContent = `Steps: ${steps}`;
+                highlightBars('quickChart', j, end); // Highlight
+                await sleep(500);
+                
+                if (array[j] < pivot) {
+                    i++;
+                    [array[i], array[j]] = [array[j], array[i]]; // Swap
+                    steps++; // Increment for swap
+                    stepsElement.textContent = `Steps: ${steps}`;
+                    renderBarChart('quickChart', array);
+                    await sleep(500);
+                }
+                unhighlightBars('quickChart', j, end);
+            }
+            
+            [array[i + 1], array[end]] = [array[end], array[i + 1]]; // Final swap
+            steps++; // Increment for final swap
+            stepsElement.textContent = `Steps: ${steps}`;
+            renderBarChart('quickChart', array);
+            await sleep(500);
+            return i + 1;
+        }
+        
+        // Merge Sort implementation with step tracking
+        async function mergeSort(array) {
+            const stepsElement = document.getElementById('mergeSteps');
+            let steps = 0;
+            let arr = array.slice(); // Copy array
+            await mergeSortHelper(arr, 0, arr.length - 1, stepsElement, steps);
+            renderBarChart('mergeChart', arr);
+            return arr;
+        }
+        
+        async function mergeSortHelper(arr, left, right, stepsElement, steps) {
+            if (left >= right) return;
+            
+            const mid = Math.floor((left + right) / 2);
+            await mergeSortHelper(arr, left, mid, stepsElement, steps);
+            await mergeSortHelper(arr, mid + 1, right, stepsElement, steps);
+            
+            await merge(arr, left, mid, right, stepsElement);
+        }
+        
+        async function merge(arr, left, mid, right, stepsElement) {
+            let steps = parseInt(stepsElement.textContent.replace('Steps: ', '')); // Get current steps
+            let tempArray = [];
+            let i = left;
+            let j = mid + 1;
+            
+            while (i <= mid && j <= right) {
+                steps++; // Increment for each comparison
+                stepsElement.textContent = `Steps: ${steps}`;
+                highlightBars('mergeChart', i, j); // Highlight
+                await sleep(500);
+                
+                if (arr[i] <= arr[j]) {
+                    tempArray.push(arr[i]);
+                    i++;
+                } else {
+                    tempArray.push(arr[j]);
+                    j++;
+                }
+                unhighlightBars('mergeChart', i, j);
+            }
+            
+            while (i <= mid) {
+                tempArray.push(arr[i]);
+                i++;
+                steps++; // Increment for remaining elements
+                stepsElement.textContent = `Steps: ${steps}`;
+                await sleep(500);
+            }
+            
+            while (j <= right) {
+                tempArray.push(arr[j]);
+                j++;
+                steps++; // Increment for remaining elements
+                stepsElement.textContent = `Steps: ${steps}`;
+                await sleep(500);
+            }
+            
+            for (let k = 0; k < tempArray.length; k++) {
+                arr[left + k] = tempArray[k];
+                renderBarChart('mergeChart', arr); // Re-render
+                await sleep(500);
+            }
+        }
+        
+        // Helper functions
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        function highlightBars(containerId, index1, index2) {
+            const container = document.getElementById(containerId);
+            const bars = container.children;
+            if (bars[index1]) bars[index1].classList.add('highlight');
+            if (bars[index2]) bars[index2].classList.add('highlight');
+        }
+        
+        function unhighlightBars(containerId, index1, index2) {
+            const container = document.getElementById(containerId);
+            const bars = container.children;
+            if (bars[index1]) bars[index1].classList.remove('highlight');
+            if (bars[index2]) bars[index2].classList.remove('highlight');
+        }
+        
+        // Start button event
+        document.getElementById('startButton').addEventListener('click', async () => {
+            const randomArray = generateRandomArray();
+            renderBarChart('bubbleChart', randomArray);
+            renderBarChart('quickChart', randomArray);
+            renderBarChart('mergeChart', randomArray);
+            
+            document.getElementById('bubbleSteps').textContent = 'Steps: 0';
+            document.getElementById('quickSteps').textContent = 'Steps: 0';
+            document.getElementById('mergeSteps').textContent = 'Steps: 0';
+            
+            await bubbleSort(randomArray);
+            await quickSort(randomArray.slice());  // Pass a copy
+            await mergeSort(randomArray.slice());   // Pass a copy
+        });
+    </script>
+</body>
+</html>

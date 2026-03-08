@@ -19,197 +19,494 @@
       text-align: center;
       font-size: 1.8rem;
       margin-bottom: 0.4rem;
-      color: #f8fafc;
-      letter-spacing: -0.5px;
+      color: #f0f4ff;
+      letter-spacing: 0.02em;
     }
 
     .subtitle {
       text-align: center;
       color: #94a3b8;
+      margin-bottom: 2.5rem;
       font-size: 0.95rem;
+    }
+
+    .panels {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
       margin-bottom: 2.5rem;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      max-width: 1100px;
-      margin: 0 auto 2.5rem;
-    }
-
-    @media (max-width: 700px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    .card {
-      background: #1e2330;
-      border-radius: 16px;
+    .panel {
+      background: #1e2130;
+      border-radius: 14px;
       padding: 1.5rem;
-      border: 1px solid #2d3548;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
+      flex: 1 1 420px;
+      max-width: 500px;
+      border: 1px solid #2d3348;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
 
-    .card h2 {
+    .panel.buggy { border-color: #7f1d1d; }
+    .panel.fixed  { border-color: #14532d; }
+
+    .panel-title {
       font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 999px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
+    .panel.buggy  .panel-title { color: #fca5a5; }
+    .panel.fixed  .panel-title { color: #86efac; }
 
-    .badge-bug  { background: #7f1d1d; color: #fca5a5; }
-    .badge-fix  { background: #14532d; color: #86efac; }
+    .panel-desc {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
 
     canvas {
-      border-radius: 10px;
-      background: #141720;
       display: block;
-      max-width: 100%;
-    }
-
-    /* ── sequence display ── */
-    .seq-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
+      border-radius: 8px;
+      background: #12141f;
       width: 100%;
+      height: auto;
     }
 
-    .seq-pill {
-      font-size: 0.78rem;
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: #2d3548;
-      color: #cbd5e1;
-      font-family: monospace;
-    }
-
-    .seq-pill.wrong { background: #7f1d1d; color: #fca5a5; }
-    .seq-pill.right { background: #14532d; color: #86efac; }
-
-    /* ── explanation box ── */
-    .explain {
-      max-width: 1100px;
-      margin: 0 auto;
-      background: #1e2330;
-      border: 1px solid #2d3548;
-      border-radius: 16px;
+    /* ── Explanation card ── */
+    .explanation {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 14px;
       padding: 1.8rem 2rem;
-      line-height: 1.75;
+      max-width: 1040px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
     }
 
-    .explain h2 {
-      font-size: 1.15rem;
-      color: #f8fafc;
+    .explanation h2 {
+      font-size: 1.2rem;
+      color: #c7d2fe;
       margin-bottom: 1rem;
-      border-bottom: 1px solid #2d3548;
-      padding-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .explain h3 {
-      font-size: 0.95rem;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin: 1.2rem 0 0.4rem;
+    .explanation p { color: #cbd5e1; margin-bottom: 0.8rem; font-size: 0.93rem; }
+    .explanation p:last-child { margin-bottom: 0; }
+
+    .tag {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
 
-    .explain p { color: #cbd5e1; font-size: 0.95rem; }
+    .tag-bug   { background: #7f1d1d; color: #fca5a5; }
+    .tag-fix   { background: #14532d; color: #86efac; }
+    .tag-info  { background: #1e3a5f; color: #93c5fd; }
 
-    .explain code {
-      background: #141720;
-      border: 1px solid #2d3548;
-      border-radius: 6px;
-      padding: 0.05em 0.45em;
-      font-size: 0.88em;
-      color: #7dd3fc;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
+    /* ── Sequence tables ── */
+    .seq-wrap {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      max-width: 1040px;
+      margin: 0 auto 2.5rem;
     }
+
+    .seq-card {
+      flex: 1 1 300px;
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 14px;
+      padding: 1.2rem 1.5rem;
+    }
+
+    .seq-card h3 { font-size: 0.95rem; margin-bottom: 0.8rem; }
+    .seq-card.buggy h3 { color: #fca5a5; }
+    .seq-card.fixed h3 { color: #86efac; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { padding: 0.3rem 0.5rem; text-align: center; }
+    th { color: #94a3b8; border-bottom: 1px solid #2d3348; }
+    td { color: #e2e8f0; }
+    tr:nth-child(even) td { background: #161824; }
+    .highlight-bad { color: #f87171; font-weight: 700; }
+    .highlight-good { color: #4ade80; font-weight: 700; }
+
+    /* ── Code block ── */
+    .code-section {
+      max-width: 1040px;
+      margin: 0 auto 2rem;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .code-card {
+      flex: 1 1 300px;
+      background: #12141f;
+      border-radius: 12px;
+      border: 1px solid #2d3348;
+      overflow: hidden;
+    }
+
+    .code-header {
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .code-card.buggy .code-header { background: #450a0a; color: #fca5a5; }
+    .code-card.fixed .code-header { background: #052e16; color: #86efac; }
 
     pre {
-      background: #141720;
-      border: 1px solid #2d3548;
-      border-radius: 10px;
-      padding: 1rem 1.2rem;
-      overflow-x: auto;
-      font-size: 0.84rem;
+      padding: 1rem;
+      font-size: 0.78rem;
       line-height: 1.6;
-      color: #e2e8f0;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-      margin-top: 0.5rem;
+      overflow-x: auto;
+      color: #cbd5e1;
+      white-space: pre;
     }
 
-    .kw  { color: #c084fc; }
-    .fn  { color: #60a5fa; }
-    .num { color: #34d399; }
-    .cm  { color: #64748b; font-style: italic; }
-    .str { color: #fbbf24; }
-    .err { color: #f87171; text-decoration: underline wavy #f87171; }
-    .ok  { color: #34d399; }
-
-    .diff-block {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-top: 0.5rem;
-    }
-
-    @media (max-width: 600px) { .diff-block { grid-template-columns: 1fr; } }
-
-    .diff-block > div > p {
-      font-size: 0.82rem;
-      margin-bottom: 0.3rem;
-      font-weight: 600;
-    }
-
-    .label-bug { color: #fca5a5; }
-    .label-fix { color: #86efac; }
+    .c-kw   { color: #c084fc; }
+    .c-fn   { color: #60a5fa; }
+    .c-num  { color: #fb923c; }
+    .c-str  { color: #4ade80; }
+    .c-cmt  { color: #475569; font-style: italic; }
+    .c-bad  { color: #f87171; font-weight: bold; }
+    .c-good { color: #4ade80; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<h1>🐛 Fibonacci Spiral — Bug Debug</h1>
+<h1>🐛 Fibonacci Spiral — Canvas Bug Debug</h1>
 <p class="subtitle">Is the Canvas API broken? Let's find out.</p>
 
-<div class="grid">
-  <!-- BUGGY -->
-  <div class="card">
-    <h2>
-      <span>Buggy Version</span>
-      <span class="badge badge-bug">BUG</span>
-    </h2>
-    <canvas id="bugCanvas" width="460" height="380"></canvas>
-    <p style="font-size:0.82rem;color:#94a3b8;text-align:center;">
-      Wrong base cases → sequence starts <strong style="color:#fca5a5">0, 0, 0, 0, 0, 1, 1, 2…</strong>
+<!-- ── Canvases ── -->
+<div class="panels">
+  <div class="panel buggy">
+    <div class="panel-title">❌ Buggy Version</div>
+    <p class="panel-desc">
+      Base cases: <code>fib(0) = 0, fib(1) = 0</code> — wrong!
+      Arcs are mis-sized and the spiral collapses / overlaps.
     </p>
-    <div class="seq-row" id="bugSeq"></div>
+    <canvas id="buggyCanvas" width="460" height="460"></canvas>
   </div>
 
-  <!-- FIXED -->
-  <div class="card">
-    <h2>
-      <span>Corrected Version</span>
-      <span class="badge badge-fix">FIXED</span>
-    </h2>
-    <canvas id="fixCanvas" width="460" height="380"></canvas>
-    <p style="font-size:0.82rem;color:#94a3b8;text-align:center;">
-      Correct base cases → sequence starts <strong style="color:#86efac">1, 1, 2, 3, 5, 8, 13, 21…</strong>
+  <div class="panel fixed">
+    <div class="panel-title">✅ Fixed Version</div>
+    <p class="panel-desc">
+      Base cases: <code>fib(0) = 0, fib(1) = 1</code> — correct!
+      Arcs grow by the golden ratio, producing a proper spiral.
     </p>
-    <div class="seq-row" id="fixSeq"></div>
+    <canvas id="fixedCanvas" width="460" height="460"></canvas>
   </div>
 </div>
 
-<!-- EXPLANATION -->
+<!-- ── Explanation ── -->
+<div class="explanation">
+  <h2>🔍 Root Cause Analysis</h2>
+
+  <p>
+    <span class="tag tag-bug">BUG</span>&nbsp;
+    The bug is <strong>not</strong> in the Canvas API. The Canvas
+    <code>arc()</code> method works perfectly. The bug lives entirely in the
+    <strong>Fibonacci sequence generator</strong>: the second base case was set
+    to <code>fib(1) = 0</code> instead of <code>fib(1) = 1</code>.
+  </p>
+
+  <p>
+    <span class="tag tag-info">WHY IT MATTERS</span>&nbsp;
+    Each quarter-circle arc in a Fibonacci spiral has a radius equal to the
+    n-th Fibonacci number (scaled to pixels). When <code>fib(1) = 0</code>,
+    the sequence starts <code>0, 0, 0, 0, 1, 1, 2, 3…</code> instead of
+    <code>0, 1, 1, 2, 3, 5, 8, 13…</code>. The first several arcs are drawn
+    with radius 0 (invisible dots), and subsequent arcs are offset in position
+    because the cumulative bounding-box math is wrong — making it look like
+    the spiral "jumps" or overlaps randomly.
+  </p>
+
+  <p>
+    <span class="tag tag-fix">FIX</span>&nbsp;
+    Change the seed from <code>let a = 0, b = 0</code> to
+    <code>let a = 0, b = 1</code>. Everything else — the canvas arc calls,
+    the rotation logic, the colour scheme — was correct all along.
+  </p>
+
+  <p>
+    <span class="tag tag-info">LESSON</span>&nbsp;
+    Before blaming a browser API, always verify your input data. A spiral that
+    "looks wrong" is almost always caused by wrong radii, wrong pivot points,
+    or wrong angles — all of which come from application logic, not from
+    <code>CanvasRenderingContext2D</code>.
+  </p>
+</div>
+
+<!-- ── Sequence comparison ── -->
+<div class="seq-wrap">
+  <div class="seq-card buggy">
+    <h3>❌ Buggy sequence (fib(1) = 0)</h3>
+    <table id="buggyTable">
+      <thead><tr><th>n</th><th>fib(n)</th><th>arc radius (×14px)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="seq-card fixed">
+    <h3>✅ Correct sequence (fib(1) = 1)</h3>
+    <table id="fixedTable">
+      <thead><tr><th>n</th><th>fib(n)</th><th>arc radius (×14px)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Code diff ── -->
+<div class="code-section">
+  <div class="code-card buggy">
+    <div class="code-header">❌ buggy fibonacci.js</div>
+    <pre><span class="c-cmt">// Returns first `count` Fibonacci numbers</span>
+<span class="c-kw">function</span> <span class="c-fn">fibSequence</span>(count) {
+  <span class="c-kw">const</span> seq = [];
+  <span class="c-kw">let</span> a = <span class="c-num">0</span>, b = <span class="c-bad">0</span>; <span class="c-cmt">// ← BUG: b should be 1</span>
+  <span class="c-kw">for</span> (<span class="c-kw">let</span> i = <span class="c-num">0</span>; i &lt; count; i++) {
+    seq.<span class="c-fn">push</span>(a);
+    [a, b] = [b, a + b];
+  }
+  <span class="c-kw">return</span> seq;
+}
+<span class="c-cmt">// Produces: 0,0,0,1,1,2,3,5,8,13…</span>
+<span class="c-cmt">// First two arcs have radius 0!</span></pre>
+  </div>
+
+  <div class="code-card fixed">
+    <div class="code-header">✅ fixed fibonacci.js</div>
+    <pre><span class="c-cmt">// Returns first `count` Fibonacci numbers</span>
+<span class="c-kw">function</span> <span class="c-fn">fibSequence</span>(count) {
+  <span class="c-kw">const</span> seq = [];
+  <span class="c-kw">let</span> a = <span class="c-num">0</span>, b = <span class="c-good">1</span>; <span class="c-cmt">// ← FIXED</span>
+  <span class="c-kw">for</span> (<span class="c-kw">let</span> i = <span class="c-num">0</span>; i &lt; count; i++) {
+    seq.<span class="c-fn">push</span>(a);
+    [a, b] = [b, a + b];
+  }
+  <span class="c-kw">return</span> seq;
+}
+<span class="c-cmt">// Produces: 0,1,1,2,3,5,8,13,21,34…</span>
+<span class="c-cmt">// Arcs grow correctly by golden ratio ✓</span></pre>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   FIBONACCI HELPERS
+═══════════════════════════════════════════════════════════════ */
+
+/** Buggy: second seed is 0 instead of 1 */
+function fibSequenceBuggy(count) {
+  const seq = [];
+  let a = 0, b = 0; // ← THE BUG
+  for (let i = 0; i < count; i++) {
+    seq.push(a);
+    [a, b] = [b, a + b];
+  }
+  return seq;
+}
+
+/** Correct: seeds are 0, 1 */
+function fibSequenceFixed(count) {
+  const seq = [];
+  let a = 0, b = 1;
+  for (let i = 0; i < count; i++) {
+    seq.push(a);
+    [a, b] = [b, a + b];
+  }
+  return seq;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SPIRAL RENDERER
+   Each step draws one quarter-circle arc whose radius = fib[i].
+   The pivot corner rotates 90° counter-clockwise each step.
+═══════════════════════════════════════════════════════════════ */
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number[]} fibs   - array of fibonacci values
+ * @param {number}   scale  - pixels per unit
+ */
+function drawSpiral(ctx, fibs, scale) {
+  const W = ctx.canvas.width;
+  const H = ctx.canvas.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // ── background grid ──────────────────────────────────────────
+  ctx.save();
+  ctx.strokeStyle = '#1e2540';
+  ctx.lineWidth = 0.5;
+  const step = scale;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── colour palette for arcs ───────────────────────────────────
+  const palette = [
+    '#f87171','#fb923c','#fbbf24','#a3e635',
+    '#34d399','#22d3ee','#60a5fa','#a78bfa',
+    '#f472b6','#e879f9','#38bdf8','#4ade80',
+  ];
+
+  // ── pivot logic ───────────────────────────────────────────────
+  // We track the "origin" of the current square.
+  // Rotation order: right→up→left→down (CCW quarters).
+  //
+  // Each arc sweeps a quarter circle.
+  // The centre of the arc is the corner of the square opposite
+  // to the direction of travel.
+  //
+  // Angle offsets per rotation step (start, end):
+  //   step 0 (→): arc from 180° to 270°  (bottom-left corner)
+  //   step 1 (↑): arc from 270° to 360°  (bottom-right corner)
+  //   step 2 (←): arc from   0° to  90°  (top-right corner)
+  //   step 3 (↓): arc from  90° to 180°  (top-left corner)
+
+  const TAU = Math.PI * 2;
+  const HALF_PI = Math.PI / 2;
+
+  // Arc definitions per rotation phase [startAngle, endAngle, cx offset, cy offset]
+  // offsets are relative to the square's top-left corner, in units of `r`
+  const arcDefs = [
+    // phase 0: moving right  → arc centre at bottom-left of square
+    { sa: Math.PI,       ea: Math.PI * 1.5, dcx: 0, dcy: 1 },
+    // phase 1: moving up    → arc centre at bottom-right
+    { sa: Math.PI * 1.5, ea: TAU,           dcx: 1, dcy: 1 },
+    // phase 2: moving left  → arc centre at top-right
+    { sa: 0,             ea: HALF_PI,       dcx: 1, dcy: 0 },
+    // phase 3: moving down  → arc centre at top-left
+    { sa: HALF_PI,       ea: Math.PI,       dcx: 0, dcy: 0 },
+  ];
+
+  // Starting position: centre the spiral roughly in the canvas
+  // We place the first square's top-left here.
+  let ox = W / 2 - scale * 1.5;
+  let oy = H / 2 - scale * 1.5;
+
+  // Displacement of top-left corner after each arc, per phase
+  // After drawing a square of size r at (ox,oy):
+  //   phase 0 (→): next square goes right  → ox += r, oy stays
+  //   phase 1 (↑): next square goes up     → oy -= r
+  //   phase 2 (←): next square goes left   → ox -= nextR (handled after)
+  //   phase 3 (↓): next square goes down   → oy += r
+  // Actually it's cleaner to compute the new origin after each step.
+
+  const N = fibs.length;
+
+  for (let i = 0; i < N; i++) {
+    const r = fibs[i] * scale;
+    if (r <= 0) continue; // skip zero-radius arcs (buggy sequence produces these)
+
+    const phase = i % 4;
+    const def   = arcDefs[phase];
+    const color = palette[i % palette.length];
+
+    // Centre of the arc circle
+    const cx = ox + def.dcx * r;
+    const cy = oy + def.dcy * r;
+
+    // ── draw filled square ──────────────────────────────────────
+    ctx.save();
+    ctx.fillStyle = color + '18'; // very transparent fill
+    ctx.strokeStyle = color + '55';
+    ctx.lineWidth = 0.8;
+    ctx.fillRect(ox, oy, r, r);
+    ctx.strokeRect(ox, oy, r, r);
+    ctx.restore();
+
+    // ── draw arc ────────────────────────────────────────────────
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, def.sa, def.ea, false);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+    ctx.restore();
+
+    // ── label the square ────────────────────────────────────────
+    if (r >= 14) {
+      ctx.save();
+      ctx.fillStyle = color + 'cc';
+      ctx.font = `bold ${Math.min(r * 0.28, 13)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(fibs[i], ox + r / 2, oy + r / 2);
+      ctx.restore();
+    }
+
+    // ── advance origin ───────────────────────────────────────────
+    const nextR = (i + 1 < N) ? fibs[i + 1] * scale : 0;
+    switch (phase) {
+      case 0: ox += r;          break; // moved right: next square above current
+      case 1: oy -= nextR;      break; // moved up:   next square to the left
+      case 2: ox -= nextR; oy += r; break; // moved left: next square below
+      case 3: ox += r;   oy += r; break; // moved down: next square to the right
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INITIALISE BOTH CANVASES
+═══════════════════════════════════════════════════════════════ */
+
+const SCALE   = 14;   // pixels per Fibonacci unit
+const COUNT   = 11;   // number of arcs to draw
+
+const buggyCtx = document.getElementById('buggyCanvas').getContext('2d');
+const fixedCtx = document.getElementById('fixedCanvas').getContext('2d');
+
+const buggyFibs = fibSequenceBuggy(COUNT);
+const fixedFibs = fibSequenceFixed(COUNT);
+
+drawSpiral(buggyCtx, buggyFibs, SCALE);
+drawSpiral(fixedCtx, fixedFibs, SCALE);
+
+/* ═══════════════════════════════════════════════════════════════
+   POPULATE SEQUENCE TABLES
+═══════════════════════════════════════════════════════════════ */
+
+function fillTable(tableId, fibs, isBuggy) {
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  fibs.forEach((v, i) => {
+    const tr = document.createElement('tr');
+    const isBad = isBuggy && i < 2; // first two values are wrong in buggy version
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td class="${isBad ? 'highlight-bad' : (i < 2 && !isBuggy ? 'highlight-good' : '')}">${v}</td>
+      <td>${(v * SCALE).toFixed(0)} px</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+fillTable('buggyTable', buggyFibs, true);
+fillTable('fixedTable', fixedFibs, false);
+</script>
+</body>
+</html>

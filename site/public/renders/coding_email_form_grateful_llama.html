@@ -1,60 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Email Validation Form</title>
-<style>
-  .valid {
-    border: 2px solid green;
-  }
-  .invalid {
-    border: 2px solid red;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Form</title>
+    <style>
+        .valid {
+            border: 2px solid green;
+        }
+        .invalid {
+            border: 2px solid red;
+        }
+    </style>
 </head>
 <body>
 
 <h2>Email Validation Form</h2>
 
 <input type="email" id="email" placeholder="Enter your email">
-<script>
-  const emailInput = document.getElementById('email');
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+<div id="feedback"></div>
 
-  emailInput.addEventListener('input', () => {
-    if (emailRegex.test(emailInput.value)) {
-      emailInput.classList.remove('invalid');
-      emailInput.classList.add('valid');
-    } else {
-      emailInput.classList.remove('valid');
-      emailInput.classList.add('invalid');
-    }
-  });
+<script>
+    const emailInput = document.getElementById('email');
+    const feedbackDiv = document.getElementById('feedback');
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    emailInput.addEventListener('input', () => {
+        const email = emailInput.value;
+        if (emailRegex.test(email)) {
+            emailInput.classList.remove('invalid');
+            emailInput.classList.add('valid');
+            feedbackDiv.innerText = 'Email is valid';
+            feedbackDiv.style.color = 'green';
+        } else {
+            emailInput.classList.remove('valid');
+            emailInput.classList.add('invalid');
+            feedbackDiv.innerText = 'Email is not valid';
+            feedbackDiv.style.color = 'red';
+        }
+    });
 </script>
 
 <h2>Limitations of Regex for Email Validation</h2>
 
-<p>Regex (regular expressions) are commonly used for email validation due to their flexibility and power. However, they are fundamentally limited in accurately validating all possible valid email addresses as specified by the RFC 5322 standard.</p>
+<p>Regular expressions (regex) are commonly used for email validation due to their flexibility and power. However, they have fundamental limitations, particularly when it comes to fully validating email addresses according to the official specification (RFC 5322).</p>
 
-<p>The main challenges with using regex for email validation include:</p>
+<p>RFC 5322 defines the Internet Message Format, which includes specifics on email addresses. According to this specification, a valid email address can be much more complex than what most regex patterns can validate. For instance, comments, quoted local parts, and domain literals are all allowed in email addresses but are often not accounted for in simple regex patterns.</p>
+
+<h3>Examples of Complexity:</h3>
 <ul>
-  <li><strong>Complexity:</strong> The official specification for email addresses (RFC 5322) allows for a wide range of characters and formats, making it difficult to create a regex pattern that matches all valid email addresses without also matching some invalid ones.</li>
-  <li><strong>Evolving Standards:</strong> Email address standards evolve, and new top-level domains (TLDs) are introduced regularly. A regex pattern that works today might not work tomorrow.</li>
-  <li><strong>Internationalization:</strong> The introduction of internationalized domain names (IDNs) and the use of non-ASCII characters in local parts add complexity that is hard to capture with regex alone.</li>
+    <li><strong>Comments:</strong> <code>example@gmail.com (This is an example)</code></li>
+    <li><strong>Quoted Local Part:</strong> <code>"John Doe"@example.com</code></li>
+    <li><strong>Domain Literals:</strong> <code>example@["192.168.1.1"]</code></li>
 </ul>
 
 <h2>Better Alternatives for Production Use</h2>
 
-<p>Given the limitations of regex, better alternatives for production use include:</p>
+<p>Given the complexity and the evolving nature of email address formats, using a dedicated library or service for email validation in production environments is often more reliable than relying solely on regex. These libraries are maintained to keep up with specifications and to handle edge cases.</p>
+
+<p>Some strategies for better email validation include:</p>
 <ul>
-  <li><strong>Server-side Validation:</strong> Always validate email addresses on the server-side, regardless of client-side validation. This ensures that the email address is valid regardless of the client's capabilities or attempts to bypass validation.</li>
-  <li><strong>Specific Libraries:</strong> Use libraries or frameworks that provide built-in email validation. These libraries are often maintained by communities and stay up-to-date with the latest standards.</li>
-  <li><strong>User Feedback:</strong> Provide immediate feedback to users when they enter an invalid email address, but do not block them from proceeding if the email address is not critical for the immediate functionality.</li>
-  <li><strong>DNS-based Validation:</strong> For critical applications, consider using DNS-based validation to verify if the domain of the email address actually exists and can receive emails.</li>
+    <li><strong>Using established libraries:</strong> Such as <a href="https://github.com/validator/validator">validator.js</a> for JavaScript applications.</li>
+    <li><strong>Sending a verification email:</strong> The most definitive way to validate an email address is to send a verification email to it and require the user to click a link or enter a verification code.</li>
 </ul>
 
-<p>While regex can provide a good initial check, it should be part of a layered approach to email validation, ensuring both a good user experience and data integrity.</p>
+<p>In conclusion, while regex can provide a basic level of email validation and is suitable for simple use cases or client-side validation for basic feedback, it is not fundamentally equipped to handle all the complexities of email addresses as per RFC specifications. For production environments, where accuracy and robustness are critical, using a combination of more sophisticated validation tools and verification processes is recommended.</p>
 
 </body>
 </html>

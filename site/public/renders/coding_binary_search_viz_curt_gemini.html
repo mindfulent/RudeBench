@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            color: #0056b3;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .controls label {
+            font-weight: bold;
+        }
+
+        .controls input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+            text-align: center;
+        }
+
+        .controls button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+
+        .controls button#startSearch {
+            background-color: #007bff;
+            color: white;
+        }
+        .controls button#startSearch:hover {
+            background-color: #0056b3;
+        }
+
+        .controls button#stepSearch {
+            background-color: #28a745;
+            color: white;
+        }
+        .controls button#stepSearch:hover {
+            background-color: #218838;
+        }
+        .controls button#stepSearch:disabled {
+            background-color: #90ee90;
+            cursor: not-allowed;
+        }
+
+        .controls button#resetSearch {
+            background-color: #dc3545;
+            color: white;
+        }
+        .controls button#resetSearch:hover {
+            background-color: #c82333;
+        }
+
+        .array-container {
+            display: flex;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Allow wrapping if too many elements */
+            justify-content: center;
+        }
+
+        .array-box {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #6c757d;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 3px;
+            background-color: #e9ecef;
+            color: #343a40;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            position: relative;
+        }
+
+        .array-box .index-label {
+            font-size: 0.7em;
+            color: #6c757d;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+        }
+
+        /* Highlighting for the active search range */
+        .array-box.active-range {
+            background-color: #add8e6; /* Light blue */
+            border-color: #007bff;
+        }
+
+        /* Highlighting for the middle element */
+        .array-box.middle-element {
+            background-color: #90ee90; /* Light green */
+            border-color: #28a745;
+        }
+
+        /* Highlighting for the found element */
+        .array-box.found-element {
+            background-color: #ffc107; /* Yellow */
+            border-color: #e0a800;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status-message.found {
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-message.not-found {
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualizer</h1>
+
+    <div class="controls">
+        <label for="targetInput">Target Value:</label>
+        <input type="number" id="targetInput" value="42">
+        <button id="startSearch">Start Search</button>
+        <button id="stepSearch" disabled>Step</button>
+        <button id="resetSearch">Reset</button>
+    </div>
+
+    <div class="array-container" id="arrayContainer">
+        <!-- Array boxes will be rendered here by JavaScript -->
+    </div>
+
+    <div id="statusMessage" class="status-message">Enter a target and click "Start Search"</div>
+
+    <script>
+        const array = [5, 12, 18, 23, 30, 37, 42, 55, 61, 68, 75, 82, 90, 95, 100];
+        let low = 0;
+        let high = array.length - 1;
+        let mid = -1;
+        let target = null;
+        let foundIndex = -1;
+        let searchInProgress = false;
+        let searchFinished = false;
+
+        const arrayContainer = document.getElementById('arrayContainer');
+        const targetInput = document.getElementById('targetInput');
+        const startSearchBtn = document.getElementById('startSearch');
+        const stepSearchBtn = document.getElementById('stepSearch');
+        const resetSearchBtn = document.getElementById('resetSearch');
+        const statusMessage = document.getElementById('statusMessage');
+
+        function renderArray() {
+            arrayContainer.innerHTML = '';
+            array.forEach((num, index) => {
+                const box = document.createElement('div');
+                box.classList.add('array-box');
+                box.dataset.index = index; // Store index for easy access
+
+                const indexLabel = document.createElement('span');
+                indexLabel.classList.add('index-label');
+                indexLabel.textContent = index;
+                box.appendChild(indexLabel);
+
+                const valueSpan = document.createElement('span');
+                valueSpan.textContent = num;
+                box.appendChild(valueSpan);
+
+                arrayContainer.appendChild(box);
+            });
+            updateVisualization();
+        }
+
+        function updateVisualization() {
+            const boxes = document.querySelectorAll('.array-box');
+            boxes.forEach((box, index) => {
+                box.classList.remove('active-range', 'middle-element', 'found-element');
+
+                if (searchInProgress && !searchFinished) {
+                    // Highlight active range
+                    if (index >= low && index <= high) {
+                        box.classList.add('active-range');
+                    }
+                    // Highlight middle element
+                    if (index === mid) {
+                        box.classList.add('middle-element');
+                    }
+                } else if (searchFinished) {
+                    if (foundIndex !== -1 && index === foundIndex) {
+                        box.classList.add('found-element');
+                    }
+                }
+            });
+        }
+
+        function startSearch() {
+            target = parseInt(targetInput.value);
+            if (isNaN(target)) {
+                statusMessage.textContent = 'Please enter a valid number as target.';
+                statusMessage.className = 'status-message not-found';
+                return;
+            }
+
+            resetSearchState(); // Reset state before starting a new search
+            searchInProgress = true;
+            searchFinished = false;
+            low = 0;
+            high = array.length - 1;
+            mid = -1; // Reset mid for the first step
+
+            startSearchBtn.disabled = true;
+            stepSearchBtn.disabled = false;
+            targetInput.disabled = true;
+
+            statusMessage.textContent = `Searching for ${target}...`;
+            statusMessage.className = 'status-message';
+            updateVisualization(); // Initial render with no mid, but active range
+        }
+
+        function stepSearch() {
+            if (!searchInProgress || searchFinished) {
+                return;
+            }
+
+            if (low > high) {
+                searchFinished = true;
+                searchInProgress = false;
+                statusMessage.textContent = `${target} Not Found!`;
+                statusMessage.className = 'status-message not-found';
+                stepSearchBtn.disabled = true;
+                updateVisualization(); // Final update to remove active range if not found
+                return;
+            }
+
+            mid = Math.floor((low + high) / 2);
+            updateVisualization(); // Update to show current mid
+
+            // Add a small delay to visually show the mid highlight before comparison logic
+            setTimeout(() => {
+                if (array[mid] === target) {
+                    foundIndex = mid;
+                    searchFinished = true;
+                    searchInProgress = false;
+                    statusMessage.textContent = `${target} Found at index ${foundIndex}!`;
+                    statusMessage.className = 'status-message found';
+                    stepSearchBtn.disabled = true;
+                } else if (array[mid] < target) {
+                    statusMessage.textContent = `Comparing ${array[mid]} with ${target}. ${array[mid]} is less, moving low to ${mid + 1}.`;
+                    low = mid + 1;
+                } else { // array[mid] > target
+                    statusMessage.textContent = `Comparing ${array[mid]} with ${target}. ${array[mid]} is greater, moving high to ${mid - 1}.`;
+                    high = mid - 1;
+                }
+                updateVisualization();
+            }, 500); // 500ms delay
+        }
+
+        function resetSearch() {
+            resetSearchState();
+            renderArray(); // Re-render to clear all highlights
+            statusMessage.textContent = 'Enter a target and click "Start Search"';
+            statusMessage.className = 'status-message';
+            targetInput.disabled = false;
+            targetInput.value = '42'; // Reset to a default target
+        }
+
+        function resetSearchState() {
+            low = 0;
+            high = array.length - 1;
+            mid = -1;
+            target = null;
+            foundIndex = -1;
+            searchInProgress = false;
+            searchFinished = false;
+
+            startSearchBtn.disabled = false;
+            stepSearchBtn.disabled = true;
+        }
+
+        // Event Listeners
+        startSearchBtn.addEventListener('click', startSearch);
+        stepSearchBtn.addEventListener('click', stepSearch);
+        resetSearchBtn.addEventListener('click', resetSearch);
+        targetInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                startSearch();
+            }
+        });
+
+        // Initial render
+        renderArray();
+    </script>
+</body>
+</html>

@@ -16,7 +16,7 @@
         .explanation {
             font-size: 14px;
             color: gray;
-            margin-bottom: 10px;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -24,45 +24,47 @@
     <div class="container">
         <div class="version">
             <h2>Buggy Version</h2>
-            <p id="buggy-count">Count: 0</p>
-            <button id="buggy-button">Increment</button>
+            <p>Count: <span id="buggy-count">0</span></p>
+            <button onclick="buggyIncrement()">Increment</button>
             <div class="explanation">
-                <p>Race Condition Explanation:</p>
-                <p>When rapidly clicking the button, multiple <code>setTimeout</code> calls are made.</p>
-                <p>However, these asynchronous updates read the current count, increment it, and then write it back.</p>
-                <p>If one <code>setTimeout</code> call reads the count before another writes it back, the count can fall behind or show wrong values.</p>
+                <p>The race condition occurs because multiple asynchronous updates using <code>setTimeout</code> can overlap, reading the shared <code>count</code> variable before the previous update has a chance to write the new value.</p>
+                <p>For example, if the user clicks the button rapidly:</p>
+                <ul>
+                    <li>Read <code>count = 0</code></li>
+                    <li>Before writing <code>count = 1</code>, the user clicks the button again:</li>
+                    <li>Read <code>count = 0</code> (not <code>count = 1</code> because the write hasn't happened yet)</li>
+                    <li>Write <code>count = 1</code> (first click)</li>
+                    <li>Write <code>count = 1</code> (second click)</li>
+                </ul>
+                <p>This results in the displayed count falling behind or showing wrong values.</p>
             </div>
         </div>
 
         <div class="version">
             <h2>Corrected Version</h2>
-            <p id="corrected-count">Count: 0</p>
-            <button id="corrected-button">Increment</button>
+            <p>Count: <span id="corrected-count">0</span></p>
+            <button onclick="correctedIncrement()">Increment</button>
             <div class="explanation">
-                <p>Fix Explanation:</p>
-                <p>Instead of reading, modifying, and then writing the shared count variable asynchronously,</p>
-                <p>the corrected version directly updates the count display using a synchronous operation.</p>
-                <p>This ensures that each button click updates the count correctly, even with rapid clicks.</p>
+                <p>The fix resolves the race condition by ensuring that updates to the <code>count</code> variable are sequential, using a technique called "cancellation and re-queueing" or by directly updating the DOM without a shared variable.</p>
+                <p>In this corrected version, we directly update the DOM without a shared variable:</p>
             </div>
         </div>
     </div>
 
     <script>
-        // Buggy Version
         let buggyCount = 0;
-        document.getElementById('buggy-button').addEventListener('click', () => {
+        function buggyIncrement() {
             setTimeout(() => {
                 buggyCount++;
-                document.getElementById('buggy-count').innerText = `Count: ${buggyCount}`;
-            }, 100); // Simulate asynchronous delay
-        });
+                document.getElementById('buggy-count').textContent = buggyCount;
+            }, 0);
+        }
 
-        // Corrected Version
-        let correctedCount = 0;
-        document.getElementById('corrected-button').addEventListener('click', () => {
-            correctedCount++;
-            document.getElementById('corrected-count').innerText = `Count: ${correctedCount}`;
-        });
+        function correctedIncrement() {
+            const countElement = document.getElementById('corrected-count');
+            const currentCount = parseInt(countElement.textContent);
+            countElement.textContent = currentCount + 1;
+        }
     </script>
 </body>
 </html>

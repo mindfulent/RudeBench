@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CSV to Table Converter</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 20px;
+      background: #f7f9fc;
+      color: #222;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.25rem;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 18px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(20,30,50,0.06);
+      border: 1px solid #e6edf5;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      font-size: 13px;
+      padding: 10px;
+      border: 1px solid #cfddea;
+      border-radius: 6px;
+      background: #fbfdff;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .controls {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: linear-gradient(180deg,#2b8bef,#1877f2);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(24,119,242,0.2);
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn.secondary {
+      background: #fff;
+      color: #2b3b45;
+      border: 1px solid #d3e1f6;
+      box-shadow: none;
+    }
+    .options {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .small {
+      font-size: 0.9rem;
+      color: #445;
+    }
+    .output {
+      margin-top: 18px;
+    }
+    .table-wrapper {
+      overflow: auto;
+      border-radius: 6px;
+      border: 1px solid #dbeaf7;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 600px;
+      background: white;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg,#f5fbff,#eef8ff);
+      z-index: 1;
+    }
+    th, td {
+      border: 1px solid #d2e6f8;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    th {
+      font-weight: 700;
+      color: #123;
+    }
+    tbody tr:nth-child(odd) {
+      background: #ffffff;
+    }
+    tbody tr:nth-child(even) {
+      background: #f7fbff;
+    }
+    .muted {
+      color: #667;
+      font-size: 0.95rem;
+    }
+    .error {
+      margin-top: 12px;
+      color: #8b1c1c;
+      background: #fff5f5;
+      border: 1px solid #f1c0c0;
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+    .hint {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #445;
+    }
+    footer {
+      margin-top: 18px;
+      font-size: 0.85rem;
+      color: #6a7a86;
+    }
+    @media (max-width:600px){
+      .options { margin-left: 0; width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CSV to Table Converter</h1>
+    <label for="csvInput">Paste CSV data here</label>
+    <textarea id="csvInput" placeholder='Example:
+"name","age","note"
+"Smith, John",30,"Said ""Hello, world!"""
+Doe,25,"No note"
+'></textarea>
+    <div class="controls">
+      <button id="parseBtn" class="btn">Parse CSV</button>
+      <button id="clearBtn" class="btn secondary">Clear</button>
+      <div class="options">
+        <label class="small"><input type="checkbox" id="headerToggle" checked> First row is header</label>
+        <label class="small"><input type="checkbox" id="trimToggle" checked> Trim unquoted fields</label>
+      </div>
+    </div>
+
+    <div id="message" class="hint muted">Paste CSV into the box and click "Parse CSV". Handles quoted fields, escaped quotes, and rows with different column counts.</div>
+
+    <div class="output" id="outputArea" aria-live="polite"></div>
+
+    <footer>
+      Tip: Quoted fields may contain commas and quotes. Use double double-quotes ("") to represent an embedded quote inside a quoted field.
+    </footer>
+  </div>
+
+  <script>
+    // CSV parser that handles quoted fields with commas, escaped quotes, and variable column counts.
+    // Returns an array of rows, each row is an array of field strings.
+    function parseCSV(text, options = { trimUnquoted: true }) {
+      const rows = [];
+      let i = 0;
+      const len = text.length;
+      let field = '';
+      let row = [];
+      let inQuotes = false;
+      let fieldQuoted = false;
+      while (i < len) {
+        const ch = text[i];
+
+        if (inQuotes) {
+          if (ch === '"') {
+            // possible end or escaped quote
+            const next = text[i+1];
+            if (next === '"') {
+              // escaped quote -> add one quote and skip next
+              field += '"';
+              i += 2;
+              continue;
+            } else {
+              // end quote
+              inQuotes = false;
+              i++;
+              continue;
+            }
+          } else {
+            // regular character inside quotes (including newlines)
+            field += ch;
+            i++;
+            continue;
+          }
+        } else {
+          // not in quotes
+          if (ch === ',') {
+            // end of field
+            row.push(options.trimUnquoted && !fieldQuoted ? field.trim() : field);
+            field = '';
+            fieldQuoted = false;
+            i++;
+            continue;
+          } else if (ch === '"') {
+            // start of quoted field (if field already has chars, treat quote as literal per permissive mode)
+            if (field === '') {
+              inQuotes = true;
+              fieldQuoted = true;
+              i++;
+              continue;
+            } else {
+              // unexpected quote in unquoted field: treat as start of quotes (add to field)
+              inQuotes = true;
+              fieldQuoted = true;
+              i++;
+              continue;
+            }
+          } else if (ch === '\r') {
+            // ignore CR, handle CRLF together on LF
+            i++;
+            continue;
+          } else if (ch === '\n') {
+            // end of row
+            row.push(options.trimUnquoted && !fieldQuoted ? field.trim() : field);
+            rows.push(row);
+            row = [];
+            field = '';
+            fieldQuoted = false;
+            i++;
+            continue;
+          } else {
+            // regular character
+            field += ch;
+            i++;
+            continue;
+          }
+        }
+      }
+
+      // EOF: push last field/row if any
+      // If still in quotes at EOF, we treat as closed (permissive) — include what we have.
+      if (inQuotes) {
+        // we reached EOF while in quotes; accept field as-is
+        // (alternatively could throw an error)
+      }
+      // If there is any remaining data or a trailing comma indicating an empty field
+      if (field !== '' || fieldQuoted || row.length > 0) {
+        row.push(options.trimUnquoted && !fieldQuoted ? field.trim() : field);
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    // Build HTML table from rows array. If header flag, first row becomes <thead>.
+    function buildTable(rows, hasHeader) {
+      if (!rows || rows.length === 0) {
+        return '<div class="muted">No data to display.</div>';
+      }
+
+      // Determine max columns across rows
+      let maxCols = 0;
+      rows.forEach(r => { if (r.length > maxCols) maxCols = r.length; });
+
+      // Normalize rows to same length (fill with empty strings)
+      const normRows = rows.map(r => {
+        const copy = r.slice();
+        while (copy.length < maxCols) copy.push('');
+        return copy;
+      });
+
+      let html = '<div class="table-wrapper"><table><thead><tr>';
+      if (hasHeader) {
+        const header = normRows[0];
+        header.forEach(h => {
+          html += '<th>' + escapeHtml(h) + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        for (let i = 1; i < normRows.length; i++) {
+          html += '<tr>';
+          normRows[i].forEach(cell => {
+            html += '<td>' + escapeHtml(cell) + '</td>';
+          });
+          html += '</tr>';
+        }
+      } else {
+        // generate generic headers: Col 1, Col 2, ...
+        html += '';
+        for (let c = 0; c < maxCols; c++) {
+          html += '<th>Col ' + (c+1) + '</th>';
+        }
+        html += '</tr></thead><tbody>';
+        normRows.forEach(r => {
+          html += '<tr>';
+          r.forEach(cell => {
+            html += '<td>' + escapeHtml(cell) + '</td>';
+          });
+          html += '</tr>';
+        });
+      }
+      html += '</tbody></table></div>';
+      return html;
+    }
+
+    // Simple HTML escape
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // UI wiring
+    const csvInput = document.getElementById('csvInput');
+    const parseBtn = document.getElementById('parseBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const outputArea = document.getElementById('outputArea');
+    const headerToggle = document.getElementById('headerToggle');
+    const trimToggle = document.getElementById('trimToggle');
+    const message = document.getElementById('message');
+
+    parseBtn.addEventListener('click', () => {
+      const text = csvInput.value;
+      outputArea.innerHTML = '';
+      if (!text || text.trim() === '') {
+        outputArea.innerHTML = '<div class="muted">No CSV input provided.</div>';
+        return;
+      }
+      try {
+        const rows = parseCSV(text, { trimUnquoted: trimToggle.checked });
+        // if rows empty, show message
+        if (!rows || rows.length === 0) {
+          outputArea.innerHTML = '<div class="muted">No rows parsed from input.</div>';
+          return;
+        }
+        const html = buildTable(rows, headerToggle.checked);
+        outputArea.innerHTML = html;
+        message.textContent = 'Parsed ' + rows.length + ' row(s).';
+      } catch (err) {
+        outputArea.innerHTML = '<div class="error">Parsing error: ' + escapeHtml(err && err.message ? err.message : String(err)) + '</div>';
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      csvInput.value = '';
+      outputArea.innerHTML = '';
+      message.textContent = 'Paste CSV into the box and click "Parse CSV".';
+    });
+
+    // Allow Ctrl+Enter or Cmd+Enter to parse
+    csvInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        parseBtn.click();
+      }
+    });
+
+    // Pre-fill example CSV
+    csvInput.value = '"name","age","note"\n"Smith, John",30,"Said ""Hello, world!"""\nDoe,25,"No note"\n"Line\nbreak",42,"Has a newline in field"';
+  </script>
+</body>
+</html>

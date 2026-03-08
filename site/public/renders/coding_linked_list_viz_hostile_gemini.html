@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Linked List Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            overflow-x: auto; /* Allow horizontal scrolling for very long lists */
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            justify-content: center;
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 80px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        button.delete { background-color: #dc3545; }
+        button.delete:hover { background-color: #c82333; }
+        button.search { background-color: #28a745; }
+        button.search:hover { background-color: #218838; }
+
+        .visualization-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 150px; /* Ensure space for nodes */
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1200px;
+            overflow-x: auto; /* Allow horizontal scrolling */
+            contain: layout size; /* Optimize rendering for dynamic changes */
+        }
+
+        .node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 70px;
+            background-color: #e9ecef;
+            border: 2px solid #adb5bd;
+            border-radius: 8px;
+            margin: 0 30px; /* Space between nodes */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            z-index: 10; /* Ensure nodes are above SVG arrows */
+            flex-shrink: 0; /* Prevent nodes from shrinking */
+        }
+
+        .node-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #343a40;
+            margin-bottom: 5px;
+        }
+
+        .node-pointer {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .node.highlight {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            transform: scale(1.05);
+        }
+
+        .node.found {
+            background-color: #d4edda;
+            border-color: #28a745;
+            transform: scale(1.08);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .node.deleted {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            opacity: 0.5;
+            transform: scale(0.9);
+        }
+
+        .empty-list-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #6c757d;
+            font-size: 1.2rem;
+            font-style: italic;
+            z-index: 5;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to pass through to elements underneath */
+            z-index: 5; /* Ensure SVG arrows are below nodes but above background */
+        }
+
+        .arrow {
+            fill: none;
+            stroke: #6c757d;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+            transition: stroke 0.3s ease, stroke-width 0.3s ease;
+        }
+
+        .arrow.highlight {
+            stroke: #ffc107;
+            stroke-width: 3;
+        }
+
+        .arrow.found {
+            stroke: #28a745;
+            stroke-width: 3;
+        }
+
+        #arrowhead {
+            fill: #6c757d;
+            transition: fill 0.3s ease;
+        }
+        .arrow.highlight #arrowhead { fill: #ffc107; }
+        .arrow.found #arrowhead { fill: #28a745; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            input[type="number"],
+            input[type="text"] {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            button {
+                width: 100%;
+            }
+            .node {
+                width: 80px;
+                height: 60px;
+                margin: 0 20px;
+            }
+            .node-value {
+                font-size: 1rem;
+            }
+            .node-pointer {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Linked List Visualizer</h1>
+
+    <div class="controls">
+        <div class="control-group">
+            <input type="number" id="insertValue" placeholder="Value" value="10">
+            <button onclick="insertAtHead()">Insert Head</button>
+            <button onclick="insertAtTail()">Insert Tail</button>
+        </div>
+        <div class="control-group">
+            <input type="number" id="deleteValue" placeholder="Value">
+            <button class="delete" onclick="deleteByValue()">Delete By Value</button>
+        </div>
+        <div class="control-group">
+            <input type="number" id="searchValue" placeholder="Value">
+            <button class="search" onclick="searchList()">Search</button>
+        </div>
+    </div>
+
+    <div class="visualization-container" id="visualizationContainer">
+        <p class="empty-list-message" id="emptyListMessage">List is empty. Add some nodes!</p>
+        <svg id="arrowSvg">
+            <defs>
+                <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" />
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <script>
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+                this.element = null; // Reference to the DOM element for this node
+            }
+        }
+
+        let head = null;
+        const visualizationContainer = document.getElementById('visualizationContainer');
+        const arrowSvg = document.getElementById('arrowSvg');
+        const emptyListMessage = document.getElementById('emptyListMessage');
+        let animationTimeout; // For managing search/highlighting timeouts
+
+        // --- Helper Functions ---
+
+        function updateEmptyListMessage() {
+            emptyListMessage.style.display = head === null ? 'block' : 'none';
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.node.highlight, .node.found, .node.deleted').forEach(node => {
+                node.classList.remove('highlight', 'found', 'deleted');
+            });
+            document.querySelectorAll('.arrow.highlight, .arrow.found').forEach(arrow => {
+                arrow.classList.remove('highlight', 'found');
+            });
+            if (animationTimeout) {
+                clearTimeout(animationTimeout);
+                animationTimeout = null;
+            }
+        }
+
+        function createNodeElement(node) {
+            const nodeElement = document.createElement('div');
+            nodeElement.classList.add('node');
+            nodeElement.id = `node-${node.value}-${Date.now()}`; // Unique ID
+            nodeElement.innerHTML = `
+                <div class="node-value">${node.value}</div>
+                <div class="node-pointer">NEXT</div>
+            `;
+            node.element = nodeElement; // Store reference to DOM element
+            return nodeElement;
+        }
+
+        function redrawArrows() {
+            // Clear existing arrows
+            arrowSvg.querySelectorAll('path.arrow').forEach(arrow => arrow.remove());
+
+            if (!head) return;
+
+            let current = head;
+            let prevNodeElement = null;
+
+            // Recalculate container's scroll width to ensure all nodes are visible
+            // This is important if nodes are added dynamically and the container needs to expand
+            // For this setup, flexbox handles the layout, but we need to ensure SVG covers it.
+            const containerRect = visualizationContainer.getBoundingClientRect();
+            arrowSvg.setAttribute('width', containerRect.width);
+            arrowSvg.setAttribute('height', containerRect.height);
+
+
+            while (current && current.next) {
+                const startRect = current.element.getBoundingClientRect();
+                const endRect = current.next.element.getBoundingClientRect();
+
+                // Calculate positions relative to the SVG container
+                const containerLeft = visualizationContainer.scrollLeft + visualizationContainer.getBoundingClientRect().left;
+                const containerTop = visualizationContainer.scrollTop + visualizationContainer.getBoundingClientRect().top;
+
+
+                // Start point: right edge of the current node, vertically centered
+                const startX = startRect.right - containerLeft;
+                const startY = startRect.top + startRect.height / 2 - containerTop;
+
+                // End point: left edge of the next node, vertically centered
+                // We subtract a bit from endX to make sure the arrowhead doesn't overlap the node
+                const endX = endRect.left - containerLeft - 10; // Adjust for arrowhead
+                const endY = endRect.top + endRect.height / 2 - containerTop;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.classList.add('arrow');
+                path.setAttribute('data-from', current.element.id);
+                path.setAttribute('data-to', current.next.element.id);
+
+                // For a straight arrow: M startX startY L endX endY
+                // For a slight curve, or to ensure it doesn't clip other nodes:
+                // We can use a simple horizontal line with a small segment to the node
+                const midX = startX + (endX - startX) * 0.5; // Midpoint for a gentle curve
+                path.setAttribute('d', `M ${startX} ${startY} H ${midX} L ${endX} ${endY}`);
+                // Simplified: M ${startX} ${startY} L ${endX} ${endY}
+                arrowSvg.appendChild(path);
+
+                current = current.next;
+            }
+        }
+
+        // Debounce redrawArrows to prevent excessive calls during rapid operations
+        let redrawTimeout;
+        function debouncedRedrawArrows() {
+            clearTimeout(redrawTimeout);
+            redrawTimeout = setTimeout(redrawArrows, 50); // Adjust delay as needed
+        }
+
+        // --- Linked List Operations ---
+
+        function insertAtHead() {
+            clearHighlights();
+            const value = parseInt(document.getElementById('insertValue').value);
+            if (isNaN(value)) {
+                alert('Please enter a valid number for insertion.');
+                return;
+            }
+
+            const newNode = new Node(value);
+            const newNodeElement = createNodeElement(newNode);
+
+            if (head) {
+                // Insert at the beginning of the container
+                visualizationContainer.insertBefore(newNodeElement, head.element);
+            } else {
+                visualizationContainer.appendChild(newNodeElement);
+            }
+
+            newNode.next = head;
+            head = newNode;
+
+            newNodeElement.classList.add('highlight');
+            setTimeout(() => newNodeElement.classList.remove('highlight'), 500);
+
+            updateEmptyListMessage();
+            debouncedRedrawArrows();
+        }
+
+        function insertAtTail() {
+            clearHighlights();
+            const value = parseInt(document.getElementById('insertValue').value);
+            if (isNaN(value)) {
+                alert('Please enter a valid number for insertion.');
+                return;
+            }
+
+            const newNode = new Node(value);
+            const newNodeElement = createNodeElement(newNode);
+
+            if (!head) {
+                head = newNode;
+                visualizationContainer.appendChild(newNodeElement);
+            } else {
+                let current = head;
+                while (current.next) {
+                    current = current.next;
+                }
+                current.next = newNode;
+                visualizationContainer.appendChild(newNodeElement);
+            }
+
+            newNodeElement.classList.add('highlight');
+            setTimeout(() => newNodeElement.classList.remove('highlight'), 500);
+
+            updateEmptyListMessage();
+            debouncedRedrawArrows();
+        }
+
+        async function deleteByValue() {
+            clearHighlights();
+            const valueToDelete = parseInt(document.getElementById('deleteValue').value);
+            if (isNaN(valueToDelete)) {
+                alert('Please enter a valid number for deletion.');
+                return;
+            }
+            if (!head) {
+                alert('List is empty. Nothing to delete!');
+                return;
+            }
+
+            let current = head;
+            let prev = null;
+            let found = false;
+
+            while (current) {
+                current.element.classList.add('highlight');
+                // Highlight the arrow pointing to current, if it's not the head
+                if (prev) {
+                    const prevArrow = arrowSvg.querySelector(`.arrow[data-from="${prev.element.id}"][data-to="${current.element.id}"]`);
+                    if (prevArrow) prevArrow.classList.add('highlight');
+                }
+                await new Promise(resolve => setTimeout(resolve, 300)); // Animation delay
+
+                if (current.value === valueToDelete) {
+                    current.element.classList.add('deleted'); // Mark for deletion visually
+                    found = true;
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Show deletion mark
+
+                    if (prev === null) { // Deleting head
+                        head = current.next;
+                    } else {
+                        prev.next = current.next;
+                    }
+
+                    // Remove from DOM
+                    current.element.remove();
+                    break; // Only delete first occurrence
+                } else {
+                    current.element.classList.remove('highlight');
+                    if (prev) {
+                        const prevArrow = arrowSvg.querySelector(`.arrow[data-from="${prev.element.id}"][data-to="${current.element.id}"]`);
+                        if (prevArrow) prevArrow.classList.remove('highlight');
+                    }
+                }
+                prev = current;
+                current = current.next;
+            }
+
+            if (!found) {
+                alert(`Value ${valueToDelete} not found in the list.`);
+            }
+
+            clearHighlights(); // Clear any remaining highlights
+            updateEmptyListMessage();
+            debouncedRedrawArrows();
+        }
+
+        async function searchList() {
+            clearHighlights();
+            const valueToSearch = parseInt(document.getElementById('searchValue').value);
+            if (isNaN(valueToSearch)) {
+                alert('Please enter a valid number for search.');
+                return;
+            }
+            if (!head) {
+                alert('List is empty. Nothing to search!');
+                return;
+            }
+
+            let current = head;
+            let found = false;
+            let delay = 300; // Milliseconds for each step
+
+            while (current) {
+                current.element.classList.add('highlight');
+
+                // Highlight the arrow pointing to current, if it's not the head
+                if (current !== head) {
+                    let prev = head;
+                    while (prev && prev.next !== current) {
+                        prev = prev.next;
+                    }
+                    if (prev) {
+                        const prevArrow = arrowSvg.querySelector(`.arrow[data-from="${prev.element.id}"][data-to="${current.element.id}"]`);
+                        if (prevArrow) prevArrow.classList.add('highlight');
+                    }
+                }
+
+                await new Promise(resolve => animationTimeout = setTimeout(resolve, delay));
+
+                if (current.value === valueToSearch) {
+                    current.element.classList.add('found');
+                    if (current !== head) {
+                         let prev = head;
+                        while (prev && prev.next !== current) {
+                            prev = prev.next;
+                        }
+                        if (prev) {
+                            const prevArrow = arrowSvg.querySelector(`.arrow[data-from="${prev.element.id}"][data-to="${current.element.id}"]`);
+                            if (prevArrow) prevArrow.classList.add('found');
+                        }
+                    }
+                    found = true;
+                    break; // Found the value, stop search
+                } else {
+                    current.element.classList.remove('highlight');
+                    if (current !== head) {
+                        let prev = head;
+                        while (prev && prev.next !== current) {
+                            prev = prev.next;
+                        }
+                        if (prev) {
+                            const prevArrow = arrowSvg.querySelector(`.arrow[data-from="${prev.element.id}"][data-to="${current.element.id}"]`);
+                            if (prevArrow) prevArrow.classList.remove('highlight');
+                        }
+                    }
+                }
+                current = current.next;
+            }
+
+            if (!found) {
+                alert(`Value ${valueToSearch} not found.`);
+            }
+
+            // Keep "found" highlight, clear others after a delay
+            animationTimeout = setTimeout(clearHighlights, found ? 2000 : 500);
+        }
+
+        // --- Event Listeners and Initial Setup ---
+
+        // Recalculate arrows on window resize
+        window.addEventListener('resize', debouncedRedrawArrows);
+        // Also recalculate if the container's scroll changes (though nodes are horizontally laid out)
+        visualizationContainer.addEventListener('scroll', debouncedRedrawArrows);
+
+        // Initial render
+        updateEmptyListMessage();
+        debouncedRedrawArrows(); // Initial call to set up SVG size
+
+        // Add some initial nodes for demonstration
+        setTimeout(() => {
+            document.getElementById('insertValue').value = 10; insertAtHead();
+            setTimeout(() => {
+                document.getElementById('insertValue').value = 20; insertAtTail();
+                setTimeout(() => {
+                    document.getElementById('insertValue').value = 5; insertAtHead();
+                    setTimeout(() => {
+                        document.getElementById('insertValue').value = 30; insertAtTail();
+                    }, 200);
+                }, 200);
+            }, 200);
+        }, 500); // Small delay for initial demo sequence
+    </script>
+</body>
+</html>

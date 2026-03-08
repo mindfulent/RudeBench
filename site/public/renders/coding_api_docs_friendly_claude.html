@@ -1,193 +1,1017 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>REST API Review & Documentation</title>
-  <style>
-    /* ── Reset & Base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Review & Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    :root {
-      --bg:          #0f1117;
-      --surface:     #1a1d27;
-      --surface2:    #22263a;
-      --border:      #2e3350;
-      --accent:      #6c63ff;
-      --accent2:     #a78bfa;
-      --text:        #e2e8f0;
-      --muted:       #8892a4;
-      --get:         #10b981;
-      --post:        #3b82f6;
-      --put:         #f59e0b;
-      --delete:      #ef4444;
-      --patch:       #8b5cf6;
-      --bad:         #ef4444;
-      --good:        #10b981;
-      --warn:        #f59e0b;
-      --radius:      12px;
-      --radius-sm:   6px;
-      --shadow:      0 4px 24px rgba(0,0,0,.4);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1117;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            background: linear-gradient(135deg, #1a1f2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid #2d3748;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        header h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #818cf8, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ── Layout ── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* ── Section titles ── */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        /* ── Summary bar ── */
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .summary-card {
+            background: #1e2433;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            border-color: #4f46e5;
+        }
+
+        .summary-card .number {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .summary-card .label {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .num-red    { color: #f87171; }
+        .num-green  { color: #34d399; }
+        .num-blue   { color: #60a5fa; }
+        .num-purple { color: #a78bfa; }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: #1e2433;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 6px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #4f46e5;
+            color: #fff;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── Problem cards ── */
+        .problem-card {
+            background: #1e2433;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .problem-card:hover {
+            border-color: #4f46e5;
+        }
+
+        .problem-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            cursor: pointer;
+            user-select: none;
+            gap: 12px;
+        }
+
+        .problem-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .endpoint-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f1117;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .problem-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chevron {
+            color: #6b7280;
+            font-size: 0.8rem;
+            transition: transform 0.25s;
+            flex-shrink: 0;
+        }
+
+        .problem-card.open .chevron {
+            transform: rotate(180deg);
+        }
+
+        .problem-body {
+            display: none;
+            padding: 0 20px 20px;
+            border-top: 1px solid #2d3748;
+        }
+
+        .problem-card.open .problem-body {
+            display: block;
+        }
+
+        /* ── Issue list ── */
+        .issues-list {
+            margin-top: 16px;
+        }
+
+        .issue-item {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a2035;
+        }
+
+        .issue-item:last-child {
+            border-bottom: none;
+        }
+
+        .issue-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tag-method   { background: #7c2d12; color: #fed7aa; }
+        .tag-naming   { background: #1e3a5f; color: #bfdbfe; }
+        .tag-resource { background: #3b1f6b; color: #ddd6fe; }
+        .tag-security { background: #1f3a2d; color: #bbf7d0; }
+        .tag-design   { background: #3b2f1f; color: #fde68a; }
+
+        .issue-text {
+            font-size: 0.88rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* ── Fix comparison ── */
+        .fix-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .fix-comparison { grid-template-columns: 1fr; }
+        }
+
+        .fix-box {
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+
+        .fix-box.before {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+
+        .fix-box.after {
+            background: rgba(52,211,153,0.08);
+            border: 1px solid rgba(52,211,153,0.25);
+        }
+
+        .fix-box-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+
+        .fix-box.before .fix-box-label { color: #f87171; }
+        .fix-box.after  .fix-box-label { color: #34d399; }
+
+        .fix-code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.88rem;
+            color: #e2e8f0;
+        }
+
+        /* ── Method badges ── */
+        .method {
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 3px 7px;
+            border-radius: 5px;
+            letter-spacing: 0.04em;
+        }
+
+        .method-GET    { background: #064e3b; color: #6ee7b7; }
+        .method-POST   { background: #1e3a5f; color: #93c5fd; }
+        .method-PUT    { background: #3b2f00; color: #fcd34d; }
+        .method-PATCH  { background: #3b1f00; color: #fdba74; }
+        .method-DELETE { background: #450a0a; color: #fca5a5; }
+
+        /* ── Corrected endpoints tab ── */
+        .endpoint-card {
+            background: #1e2433;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .endpoint-card:hover {
+            border-color: #4f46e5;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .endpoint-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+        }
+
+        .endpoint-desc {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-left: auto;
+            margin-right: 16px;
+        }
+
+        .endpoint-body {
+            display: none;
+            border-top: 1px solid #2d3748;
+        }
+
+        .endpoint-card.open .endpoint-body {
+            display: block;
+        }
+
+        .endpoint-card.open .chevron {
+            transform: rotate(180deg);
+        }
+
+        .endpoint-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid #1a2035;
+        }
+
+        .endpoint-section:last-child {
+            border-bottom: none;
+        }
+
+        .endpoint-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        /* ── Status codes ── */
+        .status-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #0f1117;
+            border: 1px solid #2d3748;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-2xx .status-dot { background: #34d399; }
+        .status-4xx .status-dot { background: #f87171; }
+        .status-5xx .status-dot { background: #fb923c; }
+
+        .status-2xx .status-code { color: #34d399; font-weight: 700; }
+        .status-4xx .status-code { color: #f87171; font-weight: 700; }
+        .status-5xx .status-code { color: #fb923c; font-weight: 700; }
+
+        /* ── Request / Response blocks ── */
+        .code-block {
+            background: #0f1117;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .code-block .key   { color: #818cf8; }
+        .code-block .str   { color: #34d399; }
+        .code-block .num   { color: #fb923c; }
+        .code-block .bool  { color: #f87171; }
+        .code-block .punct { color: #94a3b8; }
+
+        /* ── Best practices tab ── */
+        .practice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .practice-card {
+            background: #1e2433;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .practice-card:hover {
+            transform: translateY(-2px);
+            border-color: #4f46e5;
+        }
+
+        .practice-icon {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+        }
+
+        .practice-card h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+        }
+
+        .practice-card p {
+            font-size: 0.83rem;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .practice-example {
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #818cf8;
+            background: #0f1117;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid #2d3748;
+            color: #475569;
+            font-size: 0.82rem;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e2433; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🔍 REST API Design Review</h1>
+    <p>Identifying design problems in the original endpoints and presenting corrected versions following REST best practices.</p>
+</header>
+
+<div class="container">
+
+    <!-- Summary bar -->
+    <div class="summary-bar">
+        <div class="summary-card">
+            <div class="number num-red">4</div>
+            <div class="label">Endpoints Reviewed</div>
+        </div>
+        <div class="summary-card">
+            <div class="number num-red">12</div>
+            <div class="label">Issues Found</div>
+        </div>
+        <div class="summary-card">
+            <div class="number num-green">4</div>
+            <div class="label">Corrected Endpoints</div>
+        </div>
+        <div class="summary-card">
+            <div class="number num-blue">10</div>
+            <div class="label">Status Codes Defined</div>
+        </div>
+        <div class="summary-card">
+            <div class="number num-purple">6</div>
+            <div class="label">Best Practices</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('problems', this)">⚠️ Problems Found</button>
+        <button class="tab-btn" onclick="switchTab('corrected', this)">✅ Corrected Endpoints</button>
+        <button class="tab-btn" onclick="switchTab('practices', this)">📖 Best Practices</button>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 1 — Problems
+    ══════════════════════════════════════════ -->
+    <div id="tab-problems" class="tab-panel active">
+        <div class="section-title">
+            <div class="icon" style="background:#7c2d12;">⚠️</div>
+            Design Problems in Original Endpoints
+        </div>
+
+        <!-- Problem 1 -->
+        <div class="problem-card" id="pc1">
+            <div class="problem-header" onclick="toggleCard('pc1')">
+                <div class="problem-header-left">
+                    <span class="endpoint-badge">
+                        <span class="method method-GET">GET</span>
+                        <span>/getUsers</span>
+                    </span>
+                    <span class="problem-title">Verb in URL · Non-plural resource</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="problem-body">
+                <div class="issues-list">
+                    <div class="issue-item">
+                        <span class="issue-tag tag-naming">Naming</span>
+                        <span class="issue-text"><strong>Verb in URL:</strong> REST URLs should identify <em>resources</em>, not actions. The HTTP method (GET) already communicates the action — embedding "get" in the path is redundant and breaks the resource-oriented model.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-resource">Resource</span>
+                        <span class="issue-text"><strong>Missing plural noun:</strong> Collections should use plural nouns. <code>/getUsers</code> mixes a verb with a noun; the correct form is <code>/users</code> — clean, predictable, and consistent with REST conventions.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-design">Design</span>
+                        <span class="issue-text"><strong>No filtering / pagination support:</strong> A collection endpoint should accept query parameters such as <code>?page=1&limit=20&sort=name</code> to avoid returning unbounded result sets.</span>
+                    </div>
+                </div>
+                <div class="fix-comparison">
+                    <div class="fix-box before">
+                        <div class="fix-box-label">❌ Before</div>
+                        <div class="fix-code">GET /getUsers</div>
+                    </div>
+                    <div class="fix-box after">
+                        <div class="fix-box-label">✅ After</div>
+                        <div class="fix-code">GET /users?page=1&amp;limit=20</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem 2 -->
+        <div class="problem-card" id="pc2">
+            <div class="problem-header" onclick="toggleCard('pc2')">
+                <div class="problem-header-left">
+                    <span class="endpoint-badge">
+                        <span class="method method-POST">POST</span>
+                        <span>/user/delete/5</span>
+                    </span>
+                    <span class="problem-title">Wrong HTTP method · Verb in URL · Singular resource</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="problem-body">
+                <div class="issues-list">
+                    <div class="issue-item">
+                        <span class="issue-tag tag-method">Method</span>
+                        <span class="issue-text"><strong>POST used for deletion:</strong> POST is semantically for creating new resources. Deletions must use the <strong>DELETE</strong> method — this is a core HTTP specification rule, not a convention. Misusing POST breaks caching, idempotency guarantees, and API tooling.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-naming">Naming</span>
+                        <span class="issue-text"><strong>Verb "delete" embedded in path:</strong> The HTTP method already declares the intent. Adding "delete" to the URL duplicates semantics and makes the API harder to reason about programmatically.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-resource">Resource</span>
+                        <span class="issue-text"><strong>Singular resource name:</strong> Use <code>/users</code> (plural) consistently across all endpoints for the same resource. Mixing <code>/user</code> and <code>/users</code> creates confusion.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-design">Design</span>
+                        <span class="issue-text"><strong>Idempotency broken:</strong> DELETE should be idempotent — calling it multiple times should yield the same result (resource gone). POST is not idempotent, which misleads clients and intermediaries.</span>
+                    </div>
+                </div>
+                <div class="fix-comparison">
+                    <div class="fix-box before">
+                        <div class="fix-box-label">❌ Before</div>
+                        <div class="fix-code">POST /user/delete/5</div>
+                    </div>
+                    <div class="fix-box after">
+                        <div class="fix-box-label">✅ After</div>
+                        <div class="fix-code">DELETE /users/5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem 3 -->
+        <div class="problem-card" id="pc3">
+            <div class="problem-header" onclick="toggleCard('pc3')">
+                <div class="problem-header-left">
+                    <span class="endpoint-badge">
+                        <span class="method method-GET">GET</span>
+                        <span>/createUser?name=Jo</span>
+                    </span>
+                    <span class="problem-title">Wrong HTTP method · Verb in URL · Data in query string · Short value</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="problem-body">
+                <div class="issues-list">
+                    <div class="issue-item">
+                        <span class="issue-tag tag-method">Method</span>
+                        <span class="issue-text"><strong>GET used for resource creation:</strong> GET must be <em>safe</em> (no side effects) and <em>idempotent</em>. Creating a resource is a side effect. Use <strong>POST</strong> to create, which correctly signals a non-idempotent, state-changing operation.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-security">Security</span>
+                        <span class="issue-text"><strong>Sensitive data in query string:</strong> Query parameters appear in server logs, browser history, and HTTP Referer headers. User data (names, emails, passwords) must travel in the <strong>request body</strong>, not the URL.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-naming">Naming</span>
+                        <span class="issue-text"><strong>Verb "create" in URL:</strong> Same issue as above — POST to <code>/users</code> already implies creation. The verb is entirely redundant.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-design">Design</span>
+                        <span class="issue-text"><strong>Incomplete / unvalidated data:</strong> <code>name=Jo</code> suggests no server-side validation minimum length, no required fields like email, and no structured payload. The request body should carry a full, validated JSON object.</span>
+                    </div>
+                </div>
+                <div class="fix-comparison">
+                    <div class="fix-box before">
+                        <div class="fix-box-label">❌ Before</div>
+                        <div class="fix-code">GET /createUser?name=Jo</div>
+                    </div>
+                    <div class="fix-box after">
+                        <div class="fix-box-label">✅ After</div>
+                        <div class="fix-code">POST /users
+Body: {"name":"Jo","email":"..."}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem 4 -->
+        <div class="problem-card" id="pc4">
+            <div class="problem-header" onclick="toggleCard('pc4')">
+                <div class="problem-header-left">
+                    <span class="endpoint-badge">
+                        <span class="method method-PUT">PUT</span>
+                        <span>/updateAllUsers</span>
+                    </span>
+                    <span class="problem-title">Verb in URL · Dangerous bulk operation · Wrong method semantics</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="problem-body">
+                <div class="issues-list">
+                    <div class="issue-item">
+                        <span class="issue-tag tag-method">Method</span>
+                        <span class="issue-text"><strong>PUT semantics misapplied:</strong> PUT replaces a <em>single, identified resource</em> entirely. Applying it to a collection without an ID is semantically incorrect. Bulk partial updates should use <strong>PATCH</strong> on the collection, or be broken into individual PATCH requests.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-naming">Naming</span>
+                        <span class="issue-text"><strong>Verb "update" in URL:</strong> The HTTP method communicates the action. <code>/updateAllUsers</code> should simply be <code>/users</code> — the PATCH method signals a partial update.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-design">Design</span>
+                        <span class="issue-text"><strong>Dangerous bulk operation without safeguards:</strong> Updating all users in one shot is a destructive operation. Best practice is to require explicit IDs, use batch endpoints like <code>PATCH /users</code> with a body array, and enforce authorization checks per record.</span>
+                    </div>
+                    <div class="issue-item">
+                        <span class="issue-tag tag-design">Design</span>
+                        <span class="issue-text"><strong>No resource identifier:</strong> REST endpoints for mutations on a specific resource must include the resource ID in the path, e.g. <code>/users/{id}</code>. Omitting it makes the scope of the operation dangerously ambiguous.</span>
+                    </div>
+                </div>
+                <div class="fix-comparison">
+                    <div class="fix-box before">
+                        <div class="fix-box-label">❌ Before</div>
+                        <div class="fix-code">PUT /updateAllUsers</div>
+                    </div>
+                    <div class="fix-box after">
+                        <div class="fix-box-label">✅ After</div>
+                        <div class="fix-code">PATCH /users/{id}
+— or for bulk —
+PATCH /users  (body: array)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 2 — Corrected Endpoints
+    ══════════════════════════════════════════ -->
+    <div id="tab-corrected" class="tab-panel">
+        <div class="section-title">
+            <div class="icon" style="background:#064e3b;">✅</div>
+            Corrected Endpoints with Full Specification
+        </div>
+
+        <!-- GET /users -->
+        <div class="endpoint-card" id="ec1">
+            <div class="endpoint-header" onclick="toggleCard('ec1')">
+                <div class="endpoint-header-left">
+                    <span class="method method-GET">GET</span>
+                    <span class="endpoint-path">/users</span>
+                </div>
+                <span class="endpoint-desc">Retrieve a paginated list of users</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Query Parameters</div>
+                    <div class="code-block"><span class="key">page</span>   <span class="punct">(integer, default 1)  </span>  <span class="str">— Page number</span>
+<span class="key">limit</span>  <span class="punct">(integer, default 20) </span>  <span class="str">— Items per page (max 100)</span>
+<span class="key">sort</span>   <span class="punct">(string)              </span>  <span class="str">— Field to sort by, e.g. "name"</span>
+<span class="key">order</span>  <span class="punct">(asc | desc)          </span>  <span class="str">— Sort direction</span>
+<span class="key">search</span> <span class="punct">(string)              </span>  <span class="str">— Optional name/email filter</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Example Response — 200 OK</div>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"data"</span><span class="punct">:</span> <span class="punct">[</span>
+    <span class="punct">{</span> <span class="key">"id"</span><span class="punct">:</span> <span class="num">1</span><span class="punct">,</span> <span class="key">"name"</span><span class="punct">:</span> <span class="str">"Alice"</span><span class="punct">,</span> <span class="key">"email"</span><span class="punct">:</span> <span class="str">"alice@example.com"</span> <span class="punct">},</span>
+    <span class="punct">{</span> <span class="key">"id"</span><span class="punct">:</span> <span class="num">2</span><span class="punct">,</span> <span class="key">"name"</span><span class="punct">:</span> <span class="str">"Bob"</span><span class="punct">,</span>   <span class="key">"email"</span><span class="punct">:</span> <span class="str">"bob@example.com"</span>   <span class="punct">}</span>
+  <span class="punct">],</span>
+  <span class="key">"meta"</span><span class="punct">:</span> <span class="punct">{</span>
+    <span class="key">"page"</span><span class="punct">:</span>       <span class="num">1</span><span class="punct">,</span>
+    <span class="key">"limit"</span><span class="punct">:</span>      <span class="num">20</span><span class="punct">,</span>
+    <span class="key">"totalItems"</span><span class="punct">:</span> <span class="num">84</span><span class="punct">,</span>
+    <span class="key">"totalPages"</span><span class="punct">:</span> <span class="num">5</span>
+  <span class="punct">}</span>
+<span class="punct">}</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Status Codes</div>
+                    <div class="status-grid">
+                        <div class="status-pill status-2xx"><span class="status-dot"></span><span class="status-code">200</span> OK</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">400</span> Bad Request (invalid params)</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">401</span> Unauthorized</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">403</span> Forbidden</div>
+                        <div class="status-pill status-5xx"><span class="status-dot"></span><span class="status-code">500</span> Internal Server Error</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- POST /users -->
+        <div class="endpoint-card" id="ec2">
+            <div class="endpoint-header" onclick="toggleCard('ec2')">
+                <div class="endpoint-header-left">
+                    <span class="method method-POST">POST</span>
+                    <span class="endpoint-path">/users</span>
+                </div>
+                <span class="endpoint-desc">Create a new user</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Request Body (application/json)</div>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"name"</span><span class="punct">:</span>     <span class="str">"Jo Smith"</span><span class="punct">,</span>   <span class="str">// required, min 2 chars</span>
+  <span class="key">"email"</span><span class="punct">:</span>    <span class="str">"jo@example.com"</span><span class="punct">,</span> <span class="str">// required, valid email</span>
+  <span class="key">"password"</span><span class="punct">:</span> <span class="str">"••••••••"</span><span class="punct">,</span>    <span class="str">// required, min 8 chars</span>
+  <span class="key">"role"</span><span class="punct">:</span>     <span class="str">"user"</span>           <span class="str">// optional, default "user"</span>
+<span class="punct">}</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Example Response — 201 Created</div>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"id"</span><span class="punct">:</span>        <span class="num">42</span><span class="punct">,</span>
+  <span class="key">"name"</span><span class="punct">:</span>      <span class="str">"Jo Smith"</span><span class="punct">,</span>
+  <span class="key">"email"</span><span class="punct">:</span>     <span class="str">"jo@example.com"</span><span class="punct">,</span>
+  <span class="key">"role"</span><span class="punct">:</span>      <span class="str">"user"</span><span class="punct">,</span>
+  <span class="key">"createdAt"</span><span class="punct">:</span> <span class="str">"2024-01-15T10:30:00Z"</span>
+<span class="punct">}</span>
+<span class="str">// Location header: /users/42</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Status Codes</div>
+                    <div class="status-grid">
+                        <div class="status-pill status-2xx"><span class="status-dot"></span><span class="status-code">201</span> Created</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">400</span> Validation Error</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">401</span> Unauthorized</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">409</span> Conflict (email exists)</div>
+                        <div class="status-pill status-5xx"><span class="status-dot"></span><span class="status-code">500</span> Internal Server Error</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PATCH /users/{id} -->
+        <div class="endpoint-card" id="ec3">
+            <div class="endpoint-header" onclick="toggleCard('ec3')">
+                <div class="endpoint-header-left">
+                    <span class="method method-PATCH">PATCH</span>
+                    <span class="endpoint-path">/users/{id}</span>
+                </div>
+                <span class="endpoint-desc">Partially update a specific user</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Path Parameters</div>
+                    <div class="code-block"><span class="key">id</span>  <span class="punct">(integer, required)</span>  <span class="str">— Unique user identifier</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Request Body — send only fields to update</div>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"name"</span><span class="punct">:</span>  <span class="str">"Jo A. Smith"</span><span class="punct">,</span>  <span class="str">// optional</span>
+  <span class="key">"email"</span><span class="punct">:</span> <span class="str">"new@example.com"</span> <span class="str">// optional</span>
+<span class="punct">}</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Example Response — 200 OK</div>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"id"</span><span class="punct">:</span>        <span class="num">5</span><span class="punct">,</span>
+  <span class="key">"name"</span><span class="punct">:</span>      <span class="str">"Jo A. Smith"</span><span class="punct">,</span>
+  <span class="key">"email"</span><span class="punct">:</span>     <span class="str">"new@example.com"</span><span class="punct">,</span>
+  <span class="key">"updatedAt"</span><span class="punct">:</span> <span class="str">"2024-01-15T11:00:00Z"</span>
+<span class="punct">}</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Status Codes</div>
+                    <div class="status-grid">
+                        <div class="status-pill status-2xx"><span class="status-dot"></span><span class="status-code">200</span> OK</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">400</span> Validation Error</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">401</span> Unauthorized</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">403</span> Forbidden</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">404</span> User Not Found</div>
+                        <div class="status-pill status-5xx"><span class="status-dot"></span><span class="status-code">500</span> Internal Server Error</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DELETE /users/{id} -->
+        <div class="endpoint-card" id="ec4">
+            <div class="endpoint-header" onclick="toggleCard('ec4')">
+                <div class="endpoint-header-left">
+                    <span class="method method-DELETE">DELETE</span>
+                    <span class="endpoint-path">/users/{id}</span>
+                </div>
+                <span class="endpoint-desc">Delete a specific user</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="endpoint-body">
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Path Parameters</div>
+                    <div class="code-block"><span class="key">id</span>  <span class="punct">(integer, required)</span>  <span class="str">— Unique user identifier</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Behavior</div>
+                    <div class="code-block"><span class="str">• Idempotent — repeated calls return the same result</span>
+<span class="str">• Returns 204 No Content on success (no body)</span>
+<span class="str">• Returns 404 if the user does not exist</span>
+<span class="str">• Soft-delete recommended: set deletedAt timestamp</span>
+<span class="str">  rather than hard-removing the record</span></div>
+                </div>
+                <div class="endpoint-section">
+                    <div class="endpoint-section-title">Status Codes</div>
+                    <div class="status-grid">
+                        <div class="status-pill status-2xx"><span class="status-dot"></span><span class="status-code">204</span> No Content</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">401</span> Unauthorized</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">403</span> Forbidden</div>
+                        <div class="status-pill status-4xx"><span class="status-dot"></span><span class="status-code">404</span> User Not Found</div>
+                        <div class="status-pill status-5xx"><span class="status-dot"></span><span class="status-code">500</span> Internal Server Error</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 3 — Best Practices
+    ══════════════════════════════════════════ -->
+    <div id="tab-practices" class="tab-panel">
+        <div class="section-title">
+            <div class="icon" style="background:#1e3a5f;">📖</div>
+            REST API Best Practices
+        </div>
+        <div class="practice-grid">
+            <div class="practice-card">
+                <div class="practice-icon">🔤</div>
+                <h3>Use Nouns, Not Verbs</h3>
+                <p>URLs identify resources. HTTP methods (GET, POST, PUT, PATCH, DELETE) express the action. Never embed verbs like "get", "create", "delete", or "update" in your paths.</p>
+                <div class="practice-example">✅ GET /users/5
+❌ GET /getUser?id=5</div>
+            </div>
+            <div class="practice-card">
+                <div class="practice-icon">📦</div>
+                <h3>Plural Resource Names</h3>
+                <p>Use plural nouns consistently for collections. This keeps the API predictable — <code>/users</code> always refers to the user collection, and <code>/users/5</code> to a specific user.</p>
+                <div class="practice-example">✅ GET /users
+✅ GET /users/5
+❌ GET /user/5</div>
+            </div>
+            <div class="practice-card">
+                <div class="practice-icon">🔀</div>
+                <h3>Correct HTTP Methods</h3>
+                <p>Each method has a defined semantic. Respect them: GET (safe, idempotent read), POST (create), PUT (full replace), PATCH (partial update), DELETE (remove).</p>
+                <div class="practice-example">✅ DELETE /users/5
+❌ POST  /users/delete/5</div>
+            </div>
+            <div class="practice-card">
+                <div class="practice-icon">🔢</div>
+                <h3>Meaningful Status Codes</h3>
+                <p>Return the most specific status code: 201 for creation, 204 for successful deletion, 400 for validation errors, 404 for missing resources, 409 for conflicts.</p>
+                <div class="practice-example">✅ 201 Created  (POST /users)
+✅ 204 No Content (DELETE /users/5)
+❌ 200 OK for everything</div>
+            </div>
+            <div class="practice-card">
+                <div class="practice-icon">🔒</div>
+                <h3>Never Expose Data in URLs</h3>
+                <p>Query strings appear in logs, browser history, and Referer headers. Sensitive data (passwords, tokens, PII) must always travel in the request body over HTTPS.</p>
+                <div class="practice-example">✅ POST /users  { body: {...} }
+❌ GET /createUser?password=abc</div>
+            </div>
+            <div class="practice-card">
+                <div class="practice-icon">📄</div>
+                <h3>Versioning & Pagination</h3>
+                <p>Version your API from day one to avoid breaking changes. Always paginate collection endpoints — returning unbounded datasets is a reliability and performance risk.</p>
+                <div class="practice-example">✅ GET /v1/users?page=1&limit=20
+✅ Location: /v1/users/42</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    REST API Design Review &nbsp;·&nbsp; Built with vanilla HTML, CSS &amp; JS &nbsp;·&nbsp; No frameworks required
+</footer>
+
+<script>
+    // ── Tab switching ──────────────────────────────────────
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        btn.classList.add('active');
     }
 
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
+    // ── Accordion toggle ───────────────────────────────────
+    function toggleCard(id) {
+        const card = document.getElementById(id);
+        card.classList.toggle('open');
     }
 
-    /* ── Header ── */
-    header {
-      background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 2.5rem 2rem 2rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    header::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% -20%, rgba(108,99,255,.25) 0%, transparent 65%);
-      pointer-events: none;
-    }
-    header h1 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      font-weight: 700;
-      letter-spacing: -.5px;
-      background: linear-gradient(90deg, #a78bfa, #6c63ff, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    header p {
-      margin-top: .5rem;
-      color: var(--muted);
-      font-size: .95rem;
-    }
-    .badge-row {
-      display: flex;
-      gap: .5rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-    .badge {
-      padding: .25rem .75rem;
-      border-radius: 999px;
-      font-size: .75rem;
-      font-weight: 600;
-      letter-spacing: .5px;
-      text-transform: uppercase;
-    }
-    .badge-version { background: rgba(108,99,255,.2); color: var(--accent2); border: 1px solid rgba(108,99,255,.4); }
-    .badge-rest    { background: rgba(16,185,129,.15); color: var(--get);    border: 1px solid rgba(16,185,129,.35); }
-    .badge-review  { background: rgba(245,158,11,.15); color: var(--warn);   border: 1px solid rgba(245,158,11,.35); }
+    // ── Open first problem card by default ─────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        toggleCard('pc1');
+    });
+</script>
 
-    /* ── Layout ── */
-    .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-
-    /* ── Section Cards ── */
-    .section-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 1.5rem;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.1rem 1.4rem;
-      cursor: pointer;
-      user-select: none;
-      transition: background .2s;
-      gap: 1rem;
-    }
-    .section-header:hover { background: var(--surface2); }
-    .section-header-left {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-    }
-    .section-icon {
-      width: 36px; height: 36px;
-      border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-      flex-shrink: 0;
-    }
-    .icon-problems { background: rgba(239,68,68,.15); }
-    .icon-fixed    { background: rgba(16,185,129,.15); }
-    .icon-codes    { background: rgba(108,99,255,.15); }
-    .icon-summary  { background: rgba(96,165,250,.15); }
-
-    .section-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
-    .section-count {
-      font-size: .75rem;
-      color: var(--muted);
-      background: var(--surface2);
-      padding: .15rem .55rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-    }
-    .chevron {
-      color: var(--muted);
-      font-size: 1rem;
-      transition: transform .3s;
-      flex-shrink: 0;
-    }
-    .chevron.open { transform: rotate(180deg); }
-
-    .section-body {
-      display: none;
-      padding: 0 1.4rem 1.4rem;
-      border-top: 1px solid var(--border);
-    }
-    .section-body.open { display: block; }
-
-    /* ── Problems ── */
-    .problem-list { display: flex; flex-direction: column; gap: .85rem; margin-top: 1rem; }
-    .problem-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--bad);
-      border-radius: var(--radius-sm);
-      padding: 1rem 1.1rem;
-    }
-    .problem-item-header {
-      display: flex;
-      align-items: flex-start;
-      gap: .75rem;
-      margin-bottom: .4rem;
-    }
-    .problem-number {
-      background: rgba(239,68,68,.2);
-      color: var(--bad);
-      font-size: .7rem;
-      font-weight: 700;
-      padding: .15rem .45rem;
-      border-radius: 4px;
-      flex-shrink: 0;
-      margin-top: .15rem;
-    }
-    .problem-title { font-weight: 600; font-size: .95rem; }
-    .problem-endpoint {
-      font-family: 'Courier New', monospace;
-      font-size: .82rem;
-      background: rgba(0,0,0,.35);
-      padding: .3rem .7rem;
-      border-radius: 4px;
-      margin: .4rem 0;
-      color: #fca5a5;
-      display: inline-block;
-    }
-    .problem-desc { font-size: .875
+</body>
+</html>

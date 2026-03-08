@@ -16,62 +16,81 @@
     background: linear-gradient(to bottom, #f7f7f7, #eaeaea);
   }
   .container {
-    background-color: white;
-    padding: 20px;
+    background-color: #ffffff;
+    padding: 40px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    width: 400px;
     text-align: center;
   }
   #input-field {
     padding: 10px;
-    font-size: 16px;
-    border: 2px solid #007bff;
+    font-size: 18px;
+    border: 1px solid #ddd;
     border-radius: 4px;
     width: 100%;
-    margin-bottom: 20px;
+    max-width: 400px;
   }
   #output-field {
-    font-size: 16px;
-    letter-spacing: 2px;
+    font-size: 18px;
+    margin-top: 20px;
   }
   .char {
     display: inline-block;
     position: relative;
   }
-  .fadeIn {
-    animation: fadeIn 0.5s;
+  .char:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #007bff;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.5s;
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.1); }
-    to { opacity: 1; transform: scale(1); }
+  .animate .char:after {
+    opacity: 1;
   }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <input id="input-field" type="text" placeholder="Type something..." oninput="updateReversedText(this.value)">
+  <input id="input-field" type="text" placeholder="Type something here...">
   <div id="output-field"></div>
 </div>
 
 <script>
-  function updateReversedText(text) {
-    const outputField = document.getElementById('output-field');
-    outputField.innerHTML = ''; // Clear previous output
+  const inputField = document.getElementById('input-field');
+  const outputField = document.getElementById('output-field');
 
-    const reversedText = text.split('').reverse().join('');
+  inputField.addEventListener('input', updateReversedText);
+
+  function updateReversedText() {
+    const inputText = inputField.value;
+    const reversedText = inputText.split('').reverse().join('');
+    outputField.innerHTML = '';
+
+    // Character-by-character animation
+    const spanArray = [];
     for (let i = 0; i < reversedText.length; i++) {
       const span = document.createElement('span');
       span.classList.add('char');
       span.textContent = reversedText[i];
       outputField.appendChild(span);
-      
-      // Trigger animation by adding class after a tiny delay
-      setTimeout(() => {
-        span.classList.add('fadeIn');
-      }, i * 50); // Adjust speed here
+      spanArray.push(span);
     }
+
+    // Trigger animation
+    setTimeout(() => {
+      outputField.classList.add('animate');
+      // Remove animation class after it's done
+      setTimeout(() => {
+        outputField.classList.remove('animate');
+      }, 500); // Adjust based on CSS transition duration
+    }, 100); // Small delay for animation effect
   }
 </script>
 

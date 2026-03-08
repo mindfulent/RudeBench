@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Parser</title>
+    <style>
+        /* Table styling */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid black; /* Clear borders */
+            padding: 8px;
+            text-align: left;
+        }
+        
+        tr.even {
+            background-color: #f2f2f2; /* Alternating row color: light gray */
+        }
+        
+        tr.odd {
+            background-color: white; /* Alternating row color: white */
+        }
+        
+        /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSV Parser</h1>
+    <p>Enter your CSV data below (handles quoted fields and escaped quotes):</p>
+    <textarea id="csvInput" rows="10" cols="50" placeholder='Example:\n"Name","Address, City","Quote with \\"escaped\\" quotes"\nJohn,"123 Main St, New York","He said \\"Hello\\""'></textarea>
+    <button id="parseButton">Parse CSV</button>
+    <div id="output"></div>
+
+    <script>
+        // Function to escape HTML to prevent XSS
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Custom CSV parser
+        function parseCSV(csvString) {
+            const lines = csvString.trim().split('\n');  // Split into lines
+            const result = [];  // Array to hold parsed rows
+
+            for (const line of lines) {
+                const row = [];  // Array for current row
+                let field = '';  // Current field being built
+                let inQuotes = false;  // Flag for quoted field
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+
+                    if (!inQuotes) {
+                        if (char === '"') {
+                            inQuotes = true;  // Start of quoted field
+                        } else if (char === ',') {
+                            row.push(field);  // End of field
+                            field = '';  // Reset field
+                        } else {
+                            field += char;  // Add character to field
+                        }
+                    } else {  // Inside quotes
+                        if (char === '"') {
+                            if (i + 1 < line.length && line[i + 1] === '"') {
+                                field += '"';  // Escaped quote: add a single "
+                                i++;  // Skip the next "
+                            } else {
+                                inQuotes = false;  // End of quoted field
+                            }
+                        } else {
+                            field += char;  // Add character to field
+                        }
+                    }
+                }
+
+                row.push(field);  // Add the last field in the row
+                result.push(row);  // Add the row to the result
+            }
+
+            return result;  // Return the 2D array
+        }
+
+        // Function to render the table
+        function renderTable(data) {
+            if (data.length === 0) return '<p>No data to display.</p>';
+
+            let tableHTML = '<table>';
+            
+            for (let i = 0; i < data.length; i++) {
+                const rowClass = i % 2 === 0 ? 'even' : 'odd';  // Alternating classes
+                tableHTML += `<tr class="${rowClass}">`;
+                
+                for (const cell of data[i]) {
+                    tableHTML += `<td>${escapeHTML(cell)}</td>`;  // Escape and add cell
+                }
+                
+                tableHTML += '</tr>';
+            }
+            
+            tableHTML += '</table>';
+            return tableHTML;
+        }
+
+        // Event listener for the button
+        document.getElementById('parseButton').addEventListener('click', function() {
+            const csvString = document.getElementById('csvInput').value;  // Get input
+            const parsedData = parseCSV(csvString);  // Parse CSV
+            const tableHTML = renderTable(parsedData);  // Generate table HTML
+            document.getElementById('output').innerHTML = tableHTML;  // Render to page
+        });
+    </script>
+</body>
+</html>

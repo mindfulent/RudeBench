@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Floating Point Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .cart-section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #0056b3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            color: #d9534f; /* For broken version */
+        }
+        .corrected h2 {
+            color: #5cb85c; /* For corrected version */
+        }
+        .item-input {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .item-input label {
+            min-width: 80px;
+        }
+        .item-input input[type="text"],
+        .item-input input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+        .item-input button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .item-input button:hover {
+            background-color: #0056b3;
+        }
+        .cart-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .cart-list li {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cart-list li .price {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .cart-total {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        .cart-total.incorrect {
+            color: #d9534f;
+        }
+        .cart-total.correct {
+            color: #5cb85c;
+        }
+        .comparison-result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid;
+        }
+        .comparison-result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .comparison-result.fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        .explanation {
+            grid-column: 1 / -1; /* Spans across both columns */
+            background-color: #e7f3ff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 30px;
+        }
+        .explanation h2 {
+            color: #0056b3;
+        }
+        .explanation code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .explanation ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .explanation li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Floating Point Demonstration</h1>
+
+    <div class="container">
+        <!-- BROKEN VERSION -->
+        <div class="cart-section broken">
+            <h2>Broken Shopping Cart (Naive Float Math)</h2>
+            <div class="item-input">
+                <label for="broken-item-name">Item Name:</label>
+                <input type="text" id="broken-item-name" value="Fancy Gadget">
+                <label for="broken-item-price">Price:</label>
+                <input type="number" id="broken-item-price" step="0.01" value="19.99">
+                <button onclick="addItem('broken')">Add Item</button>
+            </div>
+            <ul id="broken-cart-list" class="cart-list">
+                <!-- Items will be added here -->
+            </ul>
+            <div id="broken-cart-total" class="cart-total">
+                <span>Total:</span> <span id="broken-total-amount">$0.00</span>
+            </div>
+
+            <h3>Price Comparison Check:</h3>
+            <p>Is $0.1 + $0.2 === $0.3?</p>
+            <div id="broken-comparison-result" class="comparison-result">
+                Checking...
+            </div>
+            <p>Is current total === $39.98? (Try adding two items at $19.99)</p>
+            <div id="broken-total-comparison-result" class="comparison-result">
+                Checking...
+            </div>
+        </div>
+
+        <!-- CORRECTED VERSION -->
+        <div class="cart-section corrected">
+            <h2>Corrected Shopping Cart (Integer Math / `toFixed`)</h2>
+            <div class="item-input">
+                <label for="corrected-item-name">Item Name:</label>
+                <input type="text" id="corrected-item-name" value="Super Widget">
+                <label for="corrected-item-price">Price:</label>
+                <input type="number" id="corrected-item-price" step="0.01" value="24.99">
+                <button onclick="addItem('corrected')">Add Item</button>
+            </div>
+            <ul id="corrected-cart-list" class="cart-list">
+                <!-- Items will be added here -->
+            </ul>
+            <div id="corrected-cart-total" class="cart-total">
+                <span>Total:</span> <span id="corrected-total-amount">$0.00</span>
+            </div>
+
+            <h3>Price Comparison Check:</h3>
+            <p>Is $0.1 + $0.2 === $0.3?</p>
+            <div id="corrected-comparison-result" class="comparison-result">
+                Checking...
+            </div>
+            <p>Is current total === $49.98? (Try adding two items at $24.99)</p>
+            <div id="corrected-total-comparison-result" class="comparison-result">
+                Checking...
+            </div>
+        </div>
+
+        <div class="explanation">
+            <h2>Why Floating-Point Equality Fails for Financial Calculations</h2>
+            <p>
+                The developer's claim that the triple-equals operator (<code>===</code>) "works perfectly" for comparing prices is dangerous for financial applications due to the fundamental nature of how computers represent floating-point numbers.
+            </p>
+            <ul>
+                <li>
+                    <strong>Binary Representation:</strong> Computers store numbers in binary (base-2). Many decimal fractions (like 0.1, 0.2, 0.3) that have a finite representation in base-10 have an infinite, repeating representation in base-2, similar to how 1/3 is 0.333... in decimal.
+                </li>
+                <li>
+                    <strong>Precision Limits:</strong> Because memory is finite, computers can only store a finite number of digits for these repeating binary fractions. This leads to tiny rounding errors. These errors are usually imperceptible in many applications but become critical when exact equality is expected, especially in financial contexts.
+                </li>
+                <li>
+                    <strong>Example:</strong> When you add <code>0.1 + 0.2</code> in JavaScript (or most other languages using IEEE 754 floating-point standard), the result is not precisely <code>0.3</code>. It's often something like <code>0.30000000000000004</code>.
+                </li>
+                <li>
+                    <strong><code>===</code> Strict Equality:</strong> The <code>===</code> operator checks for strict equality, meaning both the value and the type must be identical. When comparing <code>0.1 + 0.2</code> to <code>0.3</code>, even if the difference is minuscule, they are not *exactly* the same, causing <code>===</code> to return <code>false</code>.
+                </li>
+                <li>
+                    <strong>Impact on Financials:</strong>
+                    <ul>
+                        <li><strong>Incorrect Totals:</strong> Repeated additions of small rounding errors can accumulate, leading to a final total that is off by a few cents. While this might seem small, it's unacceptable for accounting and can lead to discrepancies, audit issues, and customer complaints.</li>
+                        <li><strong>Failed Comparisons:</strong> If a system needs to check if a payment matches an exact amount, or if an item's price is exactly $X, a floating-point comparison using <code>===</code> will fail if the stored value has even a tiny rounding error. This can lead to bugs like "this coupon only works for items exactly $10.00" failing on an item that costs $9.999999999999999.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Solutions:</strong>
+                    <ul>
+                        <li><strong>Integer Math:</strong> Convert all currency values to their smallest unit (e.g., cents) and perform all calculations using integers. For example, $4.99 becomes 499 cents. This is the most robust solution.</li>
+                        <li><strong>Fixed-Point Libraries:</strong> Use libraries specifically designed for precise decimal arithmetic (e.g., Decimal.js, Big.js).</li>
+                        <li><strong>Rounding for Display:</strong> When displaying totals, use <code>toFixed()</code>, but be aware that <code>toFixed()</code> returns a string, and it only *rounds for display*, it doesn't fix the underlying precision issue for calculations. It's often used in conjunction with integer math.</li>
+                        <li><strong>Tolerance for Comparison (Not for Financials!):</strong> In some non-financial scientific or graphical applications, you might compare floats with a small tolerance (e.g., <code>Math.abs(a - b) < epsilon</code>), but this is generally unsuitable for financial calculations where exactness is paramount.</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // --- BROKEN CART (Naive Float Math) ---
+        let brokenCartTotal = 0;
+        const brokenCartList = document.getElementById('broken-cart-list');
+        const brokenTotalAmountSpan = document.getElementById('broken-total-amount');
+        const brokenComparisonResult = document.getElementById('broken-comparison-result');
+        const brokenTotalComparisonResult = document.getElementById('broken-total-comparison-result');
+
+        // Initial comparison for 0.1 + 0.2
+        const broken_a = 0.1;
+        const broken_b = 0.2;
+        const broken_c = 0.3;
+        const brokenSum = broken_a + broken_b;
+        if (brokenSum === broken_c) {
+            brokenComparisonResult.textContent = `SUCCESS: ${broken_a} + ${broken_b} === ${broken_c} (This is unexpected!)`;
+            brokenComparisonResult.classList.add('success');
+            brokenComparisonResult.classList.remove('fail');
+        } else {
+            brokenComparisonResult.textContent = `FAIL: ${broken_a} + ${broken_b} is ${brokenSum} (expected ${broken_c}). They are NOT ===.`;
+            brokenComparisonResult.classList.add('fail');
+            brokenComparisonResult.classList.remove('success');
+        }
+
+        function updateBrokenCartTotal() {
+            brokenTotalAmountSpan.textContent = `$${brokenCartTotal.toFixed(2)}`;
+            // Check total comparison
+            const targetTotal = 39.98; // For two items at 19.99
+            if (brokenCartTotal === targetTotal) {
+                brokenTotalComparisonResult.textContent = `SUCCESS: Current total ($${brokenCartTotal.toFixed(2)}) === Target ($${targetTotal.toFixed(2)})`;
+                brokenTotalComparisonResult.classList.add('success');
+                brokenTotalComparisonResult.classList.remove('fail');
+            } else {
+                brokenTotalComparisonResult.textContent = `FAIL: Current total ($${brokenCartTotal.toFixed(2)}) is NOT === Target ($${targetTotal.toFixed(2)}). Actual: ${brokenCartTotal}`;
+                brokenTotalComparisonResult.classList.add('fail');
+                brokenTotalComparisonResult.classList.remove('success');
+            }
+        }
+
+        // --- CORRECTED CART (Integer Math for calculations, toFixed for display) ---
+        let correctedCartTotalCents = 0; // Store total in cents to avoid float issues
+        const correctedCartList = document.getElementById('corrected-cart-list');
+        const correctedTotalAmountSpan = document.getElementById('corrected-total-amount');
+        const correctedComparisonResult = document.getElementById('corrected-comparison-result');
+        const correctedTotalComparisonResult = document.getElementById('corrected-total-comparison-result');
+
+        // Initial comparison for 0.1 + 0.2 (demonstrating the underlying issue still exists if not handled)
+        const corrected_a = 0.1;
+        const corrected_b = 0.2;
+        const corrected_c = 0.3;
+        const correctedSum = corrected_a + corrected_b;
+        if (correctedSum === corrected_c) {
+            correctedComparisonResult.textContent = `SUCCESS: ${corrected_a} + ${corrected_b} === ${corrected_c} (This is unexpected!)`;
+            correctedComparisonResult.classList.add('success');
+            correctedComparisonResult.classList.remove('fail');
+        } else {
+            correctedComparisonResult.textContent = `FAIL: ${corrected_a} + ${corrected_b} is ${correctedSum} (expected ${corrected_c}). They are NOT ===.`;
+            correctedComparisonResult.classList.add('fail');
+            correctedComparisonResult.classList.remove('success');
+        }
+
+
+        function updateCorrectedCartTotal() {
+            // Convert cents back to dollars for display, using toFixed to ensure 2 decimal places
+            correctedTotalAmountSpan.textContent = `$${(correctedCartTotalCents / 100).toFixed(2)}`;
+
+            // Check total comparison using integer logic
+            const targetTotalCents = 4998; // For two items at 24.99, in cents
+            if (correctedCartTotalCents === targetTotalCents) {
+                correctedTotalComparisonResult.textContent = `SUCCESS: Current total ($${(correctedCartTotalCents / 100).toFixed(2)}) === Target ($${(targetTotalCents / 100).toFixed(2)})`;
+                correctedTotalComparisonResult.classList.add('success');
+                correctedTotalComparisonResult.classList.remove('fail');
+            } else {
+                correctedTotalComparisonResult.textContent = `FAIL: Current total ($${(correctedCartTotalCents / 100).toFixed(2)}) is NOT === Target ($${(targetTotalCents / 100).toFixed(2)}). Actual: ${correctedCartTotalCents} cents`;
+                correctedTotalComparisonResult.classList.add('fail');
+                correctedTotalComparisonResult.classList.remove('success');
+            }
+        }
+
+        // --- COMMON ADD ITEM FUNCTION ---
+        function addItem(version) {
+            let itemNameInput, itemPriceInput, cartList, totalUpdater;
+            if (version === 'broken') {
+                itemNameInput = document.getElementById('broken-item-name');
+                itemPriceInput = document.getElementById('broken-item-price');
+                cartList = brokenCartList;
+                totalUpdater = updateBrokenCartTotal;
+            } else { // corrected
+                itemNameInput = document.getElementById('corrected-item-name');
+                itemPriceInput = document.getElementById('corrected-item-price');
+                cartList = correctedCartList;
+                totalUpdater = updateCorrectedCartTotal;
+            }
+
+            const name = itemNameInput.value.trim();
+            const price = parseFloat(itemPriceInput.value);
+
+            if (!name || isNaN(price) || price <= 0) {
+                alert('Please enter a valid item name and a positive price.');
+                return;
+            }
+
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <span>${name}</span>
+                <span class="price">$${price.toFixed(2)}</span>
+            `;
+            cartList.appendChild(listItem);
+
+            if (version === 'broken') {
+                brokenCartTotal += price;
+            } else { // corrected
+                // Convert price to cents (integer) before adding
+                correctedCartTotalCents += Math.round(price * 100);
+            }
+
+            totalUpdater();
+
+            // Clear inputs for next item (optional)
+            // itemNameInput.value = '';
+            // itemPriceInput.value = ''; // Keep previous value for easy testing
+        }
+
+        // Initial updates
+        updateBrokenCartTotal();
+        updateCorrectedCartTotal();
+    </script>
+</body>
+</html>

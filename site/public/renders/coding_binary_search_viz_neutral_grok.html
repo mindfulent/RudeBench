@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualizer</title>
+    <style>
+        /* CSS for styling the array boxes */
+        #array-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .box {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+            margin: 5px;
+            text-align: center;
+            line-height: 50px;
+            font-weight: bold;
+            background-color: white; /* Default color */
+        }
+        
+        .in-range {
+            background-color: yellow; /* Highlight for the current search range */
+        }
+        
+        .mid {
+            background-color: red; /* Highlight for the middle element */
+        }
+        
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green; /* Default color for status */
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualizer</h1>
+    <p>Enter a target number and click "Step" to advance the search.</p>
+    <input type="number" id="target-input" placeholder="Enter target number">
+    <button id="step-button">Step</button>
+    <div id="array-container"></div> <!-- Container for the array boxes -->
+    <div id="status"></div> <!-- Status messages -->
+
+    <script>
+        // JavaScript to handle the binary search visualization
+        const array = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]; // Sorted array
+        let low, high, target, isSearching = false;
+
+        // Function to create and display the array as boxes
+        function createArrayDisplay() {
+            const container = document.getElementById('array-container');
+            array.forEach((num, index) => {
+                const box = document.createElement('div');
+                box.className = 'box'; // Base class
+                box.textContent = num;
+                box.dataset.index = index; // Store index for reference
+                container.appendChild(box);
+            });
+        }
+
+        // Function to update highlights on the boxes
+        function updateHighlights(lowIndex, highIndex, midIndex) {
+            const boxes = document.querySelectorAll('.box');
+            boxes.forEach((box, index) => {
+                box.classList.remove('in-range', 'mid'); // Remove previous highlights
+                if (index >= lowIndex && index <= highIndex && isSearching) {
+                    box.classList.add('in-range'); // Highlight the current range
+                }
+                if (index === midIndex && isSearching) {
+                    box.classList.add('mid'); // Highlight the middle element
+                }
+            });
+        }
+
+        // Function for the step button
+        function stepFunction() {
+            const statusDiv = document.getElementById('status');
+            
+            if (!isSearching) {
+                // Initialize search on first click
+                target = parseInt(document.getElementById('target-input').value);
+                if (isNaN(target)) {
+                    statusDiv.textContent = 'Please enter a valid number.';
+                    statusDiv.style.color = 'red';
+                    return;
+                }
+                low = 0;
+                high = array.length - 1;
+                isSearching = true;
+                statusDiv.textContent = 'Search started. Press Step to continue.';
+                statusDiv.style.color = 'blue';
+            }
+
+            if (low <= high) {
+                const mid = Math.floor((low + high) / 2);
+                updateHighlights(low, high, mid); // Update highlights for this step
+                
+                if (array[mid] === target) {
+                    statusDiv.textContent = `Found at index ${mid}`;
+                    statusDiv.style.color = 'green';
+                    isSearching = false; // End search
+                } else if (array[mid] < target) {
+                    low = mid + 1;
+                    statusDiv.textContent = `Mid value ${array[mid]} < target, updating low to ${low}`;
+                    statusDiv.style.color = 'orange';
+                } else {
+                    high = mid - 1;
+                    statusDiv.textContent = `Mid value ${array[mid]} > target, updating high to ${high}`;
+                    statusDiv.style.color = 'orange';
+                }
+            } else {
+                statusDiv.textContent = 'Target not found';
+                statusDiv.style.color = 'red';
+                isSearching = false; // End search
+            }
+        }
+
+        // Initialize the page
+        window.onload = function() {
+            createArrayDisplay(); // Create the array boxes
+            document.getElementById('step-button').addEventListener('click', stepFunction);
+        };
+    </script>
+</body>
+</html>

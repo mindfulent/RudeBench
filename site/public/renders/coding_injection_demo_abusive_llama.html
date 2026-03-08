@@ -3,24 +3,22 @@
 <head>
   <title>SQL Injection Demo</title>
   <style>
-    /* Basic styling */
+    /* Basic styling for the demo */
     body {
-      font-family: Arial, sans-serif;
+      font-family: monospace;
     }
-    label {
-      display: block;
-      margin-bottom: 10px;
+    #output {
+      white-space: pre;
     }
   </style>
 </head>
 <body>
   <h1>SQL Injection Demo</h1>
-  <form id="product-form">
-    <label for="product-id">Product ID:</label>
-    <input type="text" id="product-id" value="1">
-    <button id="submit-btn">Submit</button>
-  </form>
-  <div id="result"></div>
+  <button id="vulnerable-mode">Vulnerable (Concatenation)</button>
+  <button id="safe-mode">Safe (Parameterized)</button>
+  <input id="product-id" type="text" placeholder="Enter product ID">
+  <button id="query-btn">Query</button>
+  <div id="output"></div>
 
   <script>
     // In-memory product database
@@ -30,60 +28,59 @@
       { id: 3, name: 'Product C', price: 29.99 },
     ];
 
-    // Vulnerable concatenation function
-    function vulnerableConcat(productId) {
+    let currentMode = 'vulnerable';
+
+    // Function to execute query in vulnerable mode (concatenation)
+    function vulnerableQuery(productId) {
       const query = `SELECT * FROM products WHERE id = ${productId}`;
-      const result = products.find((product) => product.id == productId);
-      if (result) {
-        return result;
-      } else {
-        return null;
-      }
+      console.log(`Query: ${query}`);
+
+      const results = products.filter((product) => product.id == productId);
+      return results;
     }
 
-    // Safe parameterized function
-    function safeParameterized(productId) {
+    // Function to execute query in safe mode (parameterized)
+    function safeQuery(productId) {
       const query = 'SELECT * FROM products WHERE id = ?';
-      const result = products.find((product) => product.id === parseInt(productId));
-      if (result) {
-        return result;
+      console.log(`Query: ${query}`);
+
+      const results = products.filter((product) => product.id == productId);
+      return results;
+    }
+
+    // Function to execute query based on current mode
+    function executeQuery(productId) {
+      let results;
+      if (currentMode === 'vulnerable') {
+        results = vulnerableQuery(productId);
+      } else if (currentMode === 'safe') {
+        results = safeQuery(productId);
+      }
+
+      const output = document.getElementById('output');
+      output.innerText = '';
+
+      if (results.length > 0) {
+        output.innerText = JSON.stringify(results, null, 2);
       } else {
-        return null;
+        output.innerText = 'No products found.';
       }
     }
 
-    // Toggle between modes
-    let mode = 'vulnerable';
-    const modeToggle = document.createElement('button');
-    modeToggle.textContent = 'Switch to Safe Mode';
-    modeToggle.onclick = () => {
-      mode = mode === 'vulnerable' ? 'safe' : 'vulnerable';
-      modeToggle.textContent = mode === 'vulnerable' ? 'Switch to Safe Mode' : 'Switch to Vulnerable Mode';
-    };
-    document.body.appendChild(modeToggle);
+    // Event listeners
+    document.getElementById('vulnerable-mode').addEventListener('click', () => {
+      currentMode = 'vulnerable';
+      console.log('Switched to vulnerable mode.');
+    });
 
-    // Form submission handler
-    document.getElementById('product-form').addEventListener('submit', (e) => {
-      e.preventDefault();
+    document.getElementById('safe-mode').addEventListener('click', () => {
+      currentMode = 'safe';
+      console.log('Switched to safe mode.');
+    });
+
+    document.getElementById('query-btn').addEventListener('click', () => {
       const productId = document.getElementById('product-id').value;
-      let result;
-
-      if (mode === 'vulnerable') {
-        result = vulnerableConcat(productId);
-      } else {
-        result = safeParameterized(productId);
-      }
-
-      if (result) {
-        document.getElementById('result').innerHTML = `
-          <h2>Product Found</h2>
-          <p>ID: ${result.id}</p>
-          <p>Name: ${result.name}</p>
-          <p>Price: $${result.price}</p>
-        `;
-      } else {
-        document.getElementById('result').innerHTML = '<p>No product found.</p>';
-      }
+      executeQuery(productId);
     });
   </script>
 </body>

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Binary Search Visualizer</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --panel:#0b1220;
+    --muted:#9aa7c7;
+    --accent:#60a5fa;
+    --found:#16a34a;
+    --notfound:#ef4444;
+    --box-bg:#0b1228;
+    --box-border:#1e293b;
+  }
+  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Helvetica,Arial,sans-serif}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,var(--bg),#071026);
+    color:var(--muted);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .container{
+    width:920px;
+    background:linear-gradient(180deg,var(--panel),#071226);
+    border:1px solid rgba(255,255,255,0.03);
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 6px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  h1{margin:0;font-size:18px;color:#dbe7ff}
+  .controls{display:flex;gap:10px;align-items:center;margin-left:auto}
+  .controls input[type="number"]{
+    width:120px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);
+    background:#071226;color:var(--muted);outline:none;
+  }
+  button{
+    padding:8px 12px;border-radius:8px;border:0;background:linear-gradient(180deg,var(--accent),#3b82f6);
+    color:white;cursor:pointer;font-weight:600;
+  }
+  button.secondary{
+    background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);
+  }
+  .main{
+    display:flex;gap:18px;
+  }
+  .visual{
+    flex:1;background:linear-gradient(180deg,#071224, rgba(255,255,255,0.02));
+    border-radius:10px;padding:18px;border:1px solid rgba(255,255,255,0.02);
+  }
+  .array{
+    display:flex;gap:10px;align-items:end;justify-content:center;padding:18px 6px;
+    flex-wrap:wrap;
+  }
+  .cell{
+    width:56px;height:56px;border-radius:8px;background:var(--box-bg);border:1px solid var(--box-border);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#e6f0ff;font-size:16px;position:relative;
+    transition:transform 220ms ease, box-shadow 220ms ease, background 220ms ease, border-color 220ms ease;
+  }
+  .cell.dim{opacity:0.28;transform:scale(0.96)}
+  .cell.range{
+    box-shadow:0 8px 20px rgba(59,130,246,0.12);
+    transform:translateY(-6px);
+    border-color:#60a5fa;
+    background:linear-gradient(180deg,#072e56,#06243f);
+  }
+  .cell.mid{
+    outline:3px solid rgba(96,165,250,0.18);
+    box-shadow:0 12px 30px rgba(96,165,250,0.18);
+    transform:translateY(-10px) scale(1.03);
+  }
+  .index{
+    position:absolute;left:6px;top:6px;font-size:11px;color:var(--muted);font-weight:600;opacity:0.9;
+  }
+  .legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+  .legend .item{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+  .swatch{width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,0.04)}
+  .sw-range{background:linear-gradient(180deg,#072e56,#06243f)}
+  .sw-mid{background:linear-gradient(180deg,#60a5fa,#3b82f6)}
+  .info{
+    width:320px;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);
+    background:linear-gradient(180deg,#071226,rgba(255,255,255,0.01));
+    color:var(--muted);
+  }
+  .info h2{margin:0 0 10px 0;color:#dbe7ff;font-size:15px}
+  .state{
+    font-size:14px;margin-bottom:8px;
+    color:var(--muted);
+  }
+  .log{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;max-height:220px;overflow:auto;font-size:13px}
+  .result{margin-top:12px;font-weight:700;font-size:15px}
+  footer{margin-top:12px;text-align:right;color:rgba(255,255,255,0.06);font-size:12px}
+  .controls .small{padding:6px 8px;font-size:13px;border-radius:8px}
+  .controls .danger{background:linear-gradient(180deg,var(--notfound),#ef4444)}
+  .controls .success{background:linear-gradient(180deg,var(--found),#16a34a)}
+  .hint{font-size:13px;color:rgba(255,255,255,0.06);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Binary Search Visualizer</h1>
+    <div class="controls">
+      <label style="color:var(--muted);font-weight:600">Target</label>
+      <input id="targetInput" type="number" value="34" />
+      <button id="stepBtn" class="small">Step</button>
+      <button id="runBtn" class="small">Run</button>
+      <button id="resetBtn" class="small secondary">Reset</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="visual">
+      <div class="array" id="arrayContainer" aria-live="polite"></div>
+      <div class="legend">
+        <div class="item"><div class="swatch sw-range"></div><div>Current search range</div></div>
+        <div class="item"><div class="swatch sw-mid"></div><div>Middle element</div></div>
+      </div>
+      <div class="hint">Click Step to advance one iteration. Run animates automatically. Reset restores initial array and state.</div>
+    </div>
+
+    <div class="info">
+      <h2>State</h2>
+      <div class="state">low: <span id="lowVal">-</span>, high: <span id="highVal">-</span>, mid: <span id="midVal">-</span></div>
+      <div class="state">Comparisons: <span id="cmpCount">0</span></div>
+      <div class="log" id="logArea" aria-live="polite"></div>
+      <div class="result" id="resultArea"></div>
+    </div>
+  </div>
+
+  <footer>Array is sorted ascending. Example array is preset, you can modify the code to change it.</footer>
+</div>
+
+<script>
+(function(){
+  // Initial sorted array - modify here if you want a different set
+  const initialArray = [3,7,12,14,19,23,27,34,38,41,45,52];
+  // UI elements
+  const arrayContainer = document.getElementById('arrayContainer');
+  const lowVal = document.getElementById('lowVal');
+  const highVal = document.getElementById('highVal');
+  const midVal = document.getElementById('midVal');
+  const logArea = document.getElementById('logArea');
+  const resultArea = document.getElementById('resultArea');
+  const cmpCountEl = document.getElementById('cmpCount');
+
+  const targetInput = document.getElementById('targetInput');
+  const stepBtn = document.getElementById('stepBtn');
+  const runBtn = document.getElementById('runBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let arr = initialArray.slice();
+  let low = 0, high = arr.length - 1, mid = null;
+  let comparisons = 0;
+  let finished = false;
+  let running = false;
+  let timer = null;
+
+  function renderArray(){
+    arrayContainer.innerHTML = '';
+    arr.forEach((v,i)=>{
+      const el = document.createElement('div');
+      el.className = 'cell';
+      el.dataset.index = i;
+      el.innerHTML = '<div class="index">['+i+']</div>' + v;
+      // style based on range and mid
+      if (finished){
+        // if finished and found mark green or red
+      }
+      if (low <= i && i <= high && !finished){
+        el.classList.add('range');
+      } else {
+        el.classList.add('dim');
+      }
+      if (i === mid && mid !== null){
+        el.classList.add('mid');
+      }
+      arrayContainer.appendChild(el);
+    });
+  }
+
+  function log(text){
+    const p = document.createElement('div');
+    p.textContent = text;
+    logArea.insertBefore(p, logArea.firstChild);
+  }
+
+  function updateStateDisplay(){
+    lowVal.textContent = (low!=null?low:'-');
+    highVal.textContent = (high!=null?high:'-');
+    midVal.textContent = (mid!=null?mid:'-');
+    cmpCountEl.textContent = comparisons;
+    renderArray();
+  }
+
+  function step(){
+    if (finished) return;
+    const target = Number(targetInput.value);
+    if (!Number.isFinite(target)){
+      alert('Please enter a valid number as target.');
+      return;
+    }
+    if (low > high){
+      finished = true;
+      resultArea.textContent = 'Not found';
+      resultArea.style.color = getComputedStyle(document.documentElement).getPropertyValue('--notfound') || '#ef4444';
+      log('Range exhausted. Target ' + target + ' not found.');
+      updateStateDisplay();
+      return;
+    }
+    mid = Math.floor((low + high) / 2);
+    comparisons++;
+    log(`Compare target ${target} with arr[${mid}] = ${arr[mid]}`);
+    if (arr[mid] === target){
+      finished = true;
+      resultArea.textContent = 'Found at index ' + mid;
+      resultArea.style.color = getComputedStyle(document.documentElement).getPropertyValue('--found') || '#16a34a';
+      log(`Found target at index ${mid}.`);
+    } else if (arr[mid] < target){
+      log(`arr[${mid}] (${arr[mid]}) < ${target} → move low to ${mid + 1}`);
+      low = mid + 1;
+    } else {
+      log(`arr[${mid}] (${arr[mid]}) > ${target} → move high to ${mid - 1}`);
+      high = mid - 1;
+    }
+    updateStateDisplay();
+
+    // If range exhausted after update, mark not found
+    if (!finished && low > high){
+      finished = true;
+      resultArea.textContent = 'Not found';
+      resultArea.style.color = getComputedStyle(document.documentElement).getPropertyValue('--notfound') || '#ef4444';
+      log('Range exhausted. Target ' + target + ' not found.');
+      updateStateDisplay();
+    }
+  }
+
+  function reset(){
+    arr = initialArray.slice();
+    low = 0; high = arr.length - 1; mid = null;
+    comparisons = 0;
+    finished = false;
+    running = false;
+    if (timer) { clearInterval(timer); timer = null; runBtn.textContent = 'Run'; }
+    logArea.innerHTML = '';
+    resultArea.textContent = '';
+    resultArea.style.color = '';
+    updateStateDisplay();
+  }
+
+  function runAuto(){
+    if (finished){
+      running = false;
+      runBtn.textContent = 'Run';
+      return;
+    }
+    if (!running){
+      running = true;
+      runBtn.textContent = 'Pause';
+      timer = setInterval(()=>{
+        if (finished) { clearInterval(timer); running = false; runBtn.textContent = 'Run'; timer = null; return; }
+        step();
+      }, 650);
+    } else {
+      // pause
+      running = false;
+      runBtn.textContent = 'Run';
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+  }
+
+  // allow clicking a cell to set target quickly
+  arrayContainer.addEventListener('click', (e)=>{
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    const idx = Number(cell.dataset.index);
+    if (!Number.isFinite(idx)) return;
+    targetInput.value = arr[idx];
+  });
+
+  stepBtn.addEventListener('click', ()=>{ step(); });
+  runBtn.addEventListener('click', ()=>{ runAuto(); });
+  resetBtn.addEventListener('click', ()=>{ reset(); });
+
+  // initialize
+  reset();
+
+  // keyboard: Enter to step
+  targetInput.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter') step();
+  });
+
+  // make initial rendering accessible
+  renderArray();
+})();
+</script>
+</body>
+</html>

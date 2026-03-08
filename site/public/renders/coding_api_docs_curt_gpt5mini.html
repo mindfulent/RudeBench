@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>API Review & Corrected Design — User Management</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa7bf; --accent:#60a5fa;
+      --bad:#ff6b6b; --good:#38d39f; --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    }
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; margin:20px; background:linear-gradient(180deg,#071024 0%, #071833 100%); color:#e6eef8;}
+    .container{max-width:980px;margin:0 auto;}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); padding:16px;border-radius:10px;margin-bottom:14px}
+    .section-title{display:flex;justify-content:space-between;align-items:center}
+    .small{font-size:13px;color:var(--muted)}
+    details{background:transparent;border-radius:8px;padding:10px;margin-top:8px}
+    summary{cursor:pointer;outline:none;font-weight:600}
+    .problem{display:flex;gap:8px;align-items:flex-start;margin:8px 0;padding:8px;border-radius:8px}
+    .prob-bad{background:linear-gradient(90deg, rgba(255,107,107,0.06), transparent); border:1px solid rgba(255,107,107,0.08)}
+    .prob-good{background:linear-gradient(90deg, rgba(56,211,159,0.06), transparent); border:1px solid rgba(56,211,159,0.06)}
+    .tag{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.03);color:var(--muted)}
+    code{background:rgba(255,255,255,0.02);padding:6px;border-radius:6px;font-family:var(--mono);font-size:13px}
+    .endpoint{display:flex;gap:12px;align-items:center;margin:8px 0}
+    .method{font-weight:700;padding:6px 10px;border-radius:6px;color:#071124}
+    .GET{background:#60a5fa;color:#02203b}
+    .POST{background:#7c3aed;color:#f6efff}
+    .PUT{background:#f59e0b;color:#1b0c00}
+    .DELETE{background:var(--bad);color:#2b0202}
+    .path{font-family:var(--mono);font-size:14px;color:#e6f3ff}
+    .curl{margin-top:10px;background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;font-family:var(--mono);white-space:pre-wrap}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .full{grid-column:1/-1}
+    .ok{color:var(--good);font-weight:700}
+    .bad{color:var(--bad);font-weight:700}
+    .muted{color:var(--muted)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button.copy{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:6px 10px;border-radius:8px;cursor:pointer}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    .status-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+    .status-pill{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);font-family:var(--mono);font-size:13px}
+    .example{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-family:var(--mono);white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>API Review & Corrected Design — User Management</h1>
+        <p class="lead">Interactive, self-contained documentation that (1) lists every design problem in the original endpoints and (2) shows corrected RESTful endpoints, methods, responses and examples.</p>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div class="tag">REST best practices</div>
+        <div class="small muted">consistent resource names • proper HTTP verbs • status codes • clear URIs</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Original Endpoints (bad designs)</strong>
+        <span class="small muted">Provided for review</span>
+      </div>
+
+      <details open>
+        <summary>List</summary>
+        <div style="margin-top:8px">
+          <div class="endpoint">
+            <div class="method GET">GET</div>
+            <div class="path">/getUsers</div>
+            <div class="small muted">Notes: non-standard noun, redundant "get"</div>
+          </div>
+
+          <div class="endpoint">
+            <div class="method POST">POST</div>
+            <div class="path">/user/delete/5</div>
+            <div class="small muted">Notes: action in path, using POST instead of DELETE, id in path but also verb present</div>
+          </div>
+
+          <div class="endpoint">
+            <div class="method GET">GET</div>
+            <div class="path">/createUser?name=Jo</div>
+            <div class="small muted">Notes: action in path, creation via GET, query param for body data</div>
+          </div>
+
+          <div class="endpoint">
+            <div class="method PUT">PUT</div>
+            <div class="path">/updateAllUsers</div>
+            <div class="small muted">Notes: action in path, unclear what "all" means, idempotency concerns</div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Every single design problem (annotated)</strong>
+        <span class="small muted">Click each problem to expand examples and recommended fix</span>
+      </div>
+
+      <details open>
+        <summary>Problems common to several endpoints</summary>
+        <div style="margin-top:10px">
+          <div class="problem prob-bad">
+            <div style="min-width:10px"></div>
+            <div>
+              <strong>1) Action verbs in URI paths</strong>
+              <div class="muted">Examples: /getUsers, /createUser, /updateAllUsers, /user/delete/5</div>
+              <div style="margin-top:6px" class="small">Why it's bad: REST resources should be nouns (representing collections/resources). Actions belong to HTTP methods. Including verbs causes inconsistent design, confuses caching and tooling, and hides intent.</div>
+            </div>
+          </div>
+
+          <div class="problem prob-bad">
+            <div></div>
+            <div>
+              <strong>2) Wrong HTTP methods</strong>
+              <div class="muted">Examples: creation via GET (/createUser), deletion via POST (/user/delete/5)</div>
+              <div class="small">Why it's bad: GET should be safe and idempotent (no side effects). Use POST to create, DELETE to remove, PUT/PATCH to update. Wrong verbs break proxies, caching, and client expectations.</div>
+            </div>
+          </div>
+
+          <div class="problem prob-bad">
+            <div></div>
+            <div>
+              <strong>3) Inconsistent resource naming and casing</strong>
+              <div class="muted">Examples: /getUsers (camelCase), /user/delete/5 (singular 'user'), /createUser (camelCase)</div>
+              <div class="small">Why it's bad: APIs should use consistent, predictable URI casing and pluralization (commonly lowercase, hyphenated or simple plural nouns: /users).</div>
+            </div>
+          </div>
+
+          <div class="problem prob-bad">
+            <div></div>
+            <div>
+              <strong>4) Using query parameters for resource creation/identifying entities</strong>
+              <div class="muted">Example: /createUser?name=Jo</div>
+              <div class="small">Why it's bad: GET with query parameters may be cached and should not cause resource creation. Creation payloads belong in request bodies (usually JSON) with POST.</div>
+            </div>
+          </div>
+
+          <div class="problem prob-bad">
+            <div></div>
+            <div>
+              <strong>5) Unclear, overloaded endpoints</strong>
+              <div class="muted">Example: /updateAllUsers — does it update every user? Which fields? Partial vs full update?</div>
+              <div class="small">Why it's bad: Endpoints should be specific. If updating a collection, document the behavior and use appropriate HTTP semantics (PUT for replacing a resource, PATCH for partial updates).</div>
+            </div>
+          </div>
+
+          <div class="problem prob-bad">
+            <div></div>
+            <div>
+              <strong>6) Status codes and responses not specified</strong>
+              <div class="muted">Original endpoints didn't state success/failure codes, error payloads, or validation rules.</div>
+              <div class="small">Why it's bad: Clients need deterministic HTTP status codes (200/201/204/400/404/409/500 etc.) and consistent response shapes (usually JSON with error metadata).</div>
+            </div>
+          </div>
+
+          <div class="problem prob-bad">
+            <div></div>
+            <div>
+              <strong>7) Lack of resource identifiers and resource hierarchy</strong>
+              <div class="muted">Example: mixing singular and plural, embedding verbs with ids (/user/delete/5)</div>
+              <div class="small">Why it's bad: Use hierarchical resources like /users/{id}/... and avoid embedding verbs between resource and id.</div>
+            </div>
+          </div>
+
+          <div class="problem prob-bad">
+            <div></div>
+            <div>
+              <strong>8) Idempotency not considered</strong>
+              <div class="muted">E.g., using POST to delete may be non-idempotent when it should be idempotent (DELETE is idempotent).</div>
+              <div class="small">Why it's bad: Idempotency affects retry logic. Choose semantics accordingly.</div>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Endpoint-specific problems (expand each)</summary>
+        <div style="margin-top:8px">
+          <details>
+            <summary><strong>/getUsers</strong> — problems</summary>
+            <div style="margin-top:8px">
+              <ul class="small muted">
+                <li>"get" is a verb; path should be a noun like <code>/users</code>.</li>
+                <li>Not clear whether it returns all users or supports pagination/filtering.</li>
+                <li>No mention of status codes (200, 204 if empty) or pagination headers.</li>
+              </ul>
+              <div style="margin-top:8px" class="prob-good">
+                <strong>Fix</strong>
+                <div class="small">Use GET /users, support query parameters for filtering/pagination, return 200 with JSON list and pagination metadata or 204 when nothing to return (or 200 with empty array).</div>
+              </div>
+            </div>
+          </details>
+
+          <details>
+            <summary><strong>/user/delete/5</strong> — problems</summary>
+            <div style="margin-top:8px">
+              <ul class="small muted">
+                <li>Action "delete" in path; wrong HTTP verb (POST).</li>
+                <li>Singular "user" mixed with numeric id and action.</li>
+                <li>Ambiguous response: should return 204 if deleted, 404 if not found.</li>
+              </ul>
+              <div style="margin-top:8px" class="prob-good">
+                <strong>Fix</strong>
+                <div class="small">Use DELETE /users/5, return 204 No Content on success, 404 Not Found if user doesn't exist. For soft deletes, return 200 with representation.</div>
+              </div>
+            </div>
+          </details>
+
+          <details>
+            <summary><strong>/createUser?name=Jo</strong> — problems</summary>
+            <div style="margin-top:8px">
+              <ul class="small muted">
+                <li>GET used for creation (side effects) — violates safe semantics.</li>
+                <li>Query parameter for body data — limited and insecure; no validation shown.</li>
+                <li>No content-type/accept headers specified.</li>
+              </ul>
+              <div style="margin-top:8px" class="prob-good">
+                <strong>Fix</strong>
+                <div class="small">Use POST /users with JSON body, e.g. { "name": "Jo" }, return 201 Created with Location header /users/{id} and the created user in body (or 201 with minimal body).</div>
+              </div>
+            </div>
+          </details>
+
+          <details>
+            <summary><strong>/updateAllUsers</strong> — problems</summary>
+            <div style="margin-top:8px">
+              <ul class="small muted">
+                <li>Unclear intent: replace all users? apply patch to all? which fields?</li>
+                <li>PUT vs PATCH confusion: PUT should replace resource, PATCH for partial updates.</li>
+                <li>Potentially dangerous bulk operation without authentication/authorization checks or idempotency guarantees.</li>
+              </ul>
+              <div style="margin-top:8px" class="prob-good">
+                <strong>Fix</strong>
+                <div class="small">If you mean update multiple users partially, use PATCH /users with a well-defined bulk update request format. If replacing entire collection, use PUT /users with full collection representation (rare and risky). Provide clear responses and run jobs asynchronously for large operations.</div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Corrected API design (RESTful)</strong>
+        <span class="small muted">Consistent resource naming, methods, and status codes</span>
+      </div>
+
+      <details open>
+        <summary>Overview — conventions used in corrected design</summary>
+        <div style="margin-top:8px" class="small muted">
+          - Resource base: /users (plural, lowercase).<br>
+          - Use HTTP methods: GET (read), POST (create), PUT (replace), PATCH (partial update), DELETE (delete).<br>
+          - Use JSON for request/response bodies (Content-Type: application/json).<br>
+          - Return appropriate status codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 404 Not Found, 409 Conflict, 422 Unprocessable Entity, 500 Server Error.<br>
+          - Support pagination via query params: <code>?page=1&limit=25</code> or Cursor-based. Include Link headers or pagination object.<br>
+          - Document error response shape: { "error": { "code": "string", "message":"string", "details": {...} } }.
+        </div>
+      </details>
+
+      <details>
+        <summary>Corrected endpoints</summary>
+        <div style="margin-top:10px" class="grid">
+          <div>
+            <div class="endpoint">
+              <div class="method GET">GET</div>
+              <div class="path">/users</div>
+            </div>
+            <div class="small muted">List users. Supports filtering, searching, pagination.</div>
+
+            <div class="example" style="margin-top:8px">
+GET /users?page=1&limit=20&search=jo HTTP/1.1
+Accept: application/json
+
+Response 200 OK
+{
+  "meta": { "page": 1, "limit": 20, "total": 124 },
+  "data": [
+    { "id": 5, "name": "Jo", "email": "jo@example.com" },
+    ...
+  ]
+}
+            </div>
+          </div>
+
+          <div>
+            <div class="endpoint">
+              <div class="method POST">POST</div>
+              <div class="path">/users</div>
+            </div>
+            <div class="small muted">Create a new user. Body contains attributes. Returns 201 Created, Location header set.</div>
+
+            <div class="example" style="margin-top:8px">
+POST /users HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Jo",
+  "email": "jo@example.com"
+}
+
+Response 201 Created
+Location: /users/42
+{
+  "id": 42,
+  "name": "Jo",
+  "email": "jo@example.com",
+  "createdAt": "2026-01-20T12:34:56Z"
+}
+            </div>
+          </div>
+
+          <div>
+            <div class="endpoint">
+              <div class="method GET">GET</div>
+              <div class="path">/users/{id}</div>
+            </div>
+            <div class="small muted">Retrieve a single user by ID.</div>
+
+            <div class="example" style="margin-top:8px">
+GET /users/42 HTTP/1.1
+Accept: application/json
+
+Response 200 OK
+{
+  "id": 42,
+  "name": "Jo",
+  "email": "jo@example.com"
+}
+
+Response 404 Not Found
+{
+  "error": { "code": "user_not_found", "message": "User 42 not found" }
+}
+            </div>
+          </div>
+
+          <div>
+            <div class="endpoint">
+              <div class="method PUT">PUT</div>
+              <div class="path">/users/{id}</div>
+            </div>
+            <div class="small muted">Replace a user completely. Provide all fields. Idempotent. Returns 200 or 204.</div>
+
+            <div class="example" style="margin-top:8px">
+PUT /users/42 HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Joanne",
+  "email": "joanne@example.com"
+}
+
+Response 200 OK
+{
+  "id": 42,
+  "name": "Joanne",
+  "email": "joanne@example.com"
+}
+            </div>
+          </div>
+
+          <div>
+            <div class="endpoint">
+              <div class="method PATCH">PATCH</div>
+              <div class="path">/users/{id}</div>
+            </div>
+            <div class="small muted">Partial update (preferred for most updates). Returns 200 with updated resource.</div>
+
+            <div class="example" style="margin-top:8px">
+PATCH /users/42 HTTP/1.1
+Content-Type: application/json
+
+{ "name": "Jo" }
+
+Response 200 OK
+{
+  "id": 42,
+  "name": "Jo",
+  "email": "jo@example.com"
+}
+            </div>
+          </div>
+
+          <div>
+            <div class="endpoint">
+              <div class="method DELETE">DELETE</div>
+              <div class="path">/users/{id}</div>
+            </div>
+            <div class="small muted">Delete a user. Return 204 No Content for hard delete, or 200 with the updated (soft-deleted) representation.</div>
+
+            <div class="example" style="margin-top:8px">
+DELETE /users/42 HTTP/1.1
+Response 204 No Content
+
+If not found:
+Response 404 Not Found
+{
+  "error": { "code": "user_not_found", "message": "User 42 not found" }
+}
+            </div>
+          </div>
+
+          <div class="full">
+            <div style="margin-top:6px" class="prob-good">
+              <strong>Bulk updates / collection operations</strong>
+              <div class="small muted" style="margin-top:6px">
+                If you need to update many users in one request:
+                - Use PATCH /users with a defined bulk operation payload, or
+                - Use a job endpoint: POST /users/bulk-updates -> 202 Accepted with Location to job status.
+              </div>
+              <div class="example" style="margin-top:8px">
+PATCH /users HTTP/1.1
+Content-Type: application/json
+
+{
+  "filter": { "status": "inactive" },
+  "patch": { "emailOptIn": false }
+}
+
+Response 202 Accepted
+Location: /jobs/12345
+{
+  "jobId": "12345",
+  "status": "processing"
+}
+              </div>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Status codes reference (recommended)</strong>
+        <span class="small muted">Use these consistently</span>
+      </div>
+      <div style="margin-top:8px" class="status-list">
+        <div class="status-pill"><strong>200</strong> OK — successful read/modify returning body</div>
+        <div class="status-pill"><strong>201</strong> Created — resource created, Location header points to it</div>
+        <div class="status-pill"><strong>202</strong> Accepted — request accepted for async processing</div>
+        <div class="status-pill"><strong>204</strong> No Content — successful action with no body (e.g., DELETE)</div>
+        <div class="status-pill"><strong>400</strong> Bad Request — validation/client error</div>
+        <div class="status-pill"><strong>401</strong> Unauthorized — missing/invalid auth</div>
+        <div class="status-pill"><strong>403</strong> Forbidden — authenticated but not allowed</div>
+        <div class="status-pill"><strong>404</strong> Not Found — resource missing</div>
+        <div class="status-pill"><strong>409</strong> Conflict — e.g., duplicate unique field</div>
+        <div class="status-pill"><strong>422</strong> Unprocessable Entity — semantic validation failed</div>
+        <div class="status-pill"><strong>500</strong> Server Error — unexpected error</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Example error response format</strong>
+        <span class="small muted">Consistent error payload</span>
+      </div>
+
+      <div class="example" style="margin-top:8px">
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "invalid_input",
+    "message": "Email is missing or invalid",
+    "details": {
+      "field": "email",
+      "reason": "required"
+    }
+  }
+}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Migration notes: mapping old -> new</strong>
+        <span class="small muted">How to transition safely</span>
+      </div>
+
+      <details>
+        <summary>Recommended mapping and compatibility</summary>
+        <div style="margin-top:8px" class="small muted">
+          - GET /getUsers -> GET /users. Add redirects (301/308) or support both paths temporarily returning 200 with identical payload. Prefer redirect or deprecation header: <code>Deprecated: true</code> and Link to new URI.<br>
+          - POST /user/delete/5 -> DELETE /users/5. Support POST for a short window but emit deprecation warnings and logs.<br>
+          - GET /createUser?name=Jo -> POST /users with JSON. Reject GET-create with 405 Method Not Allowed if you can.<br>
+          - PUT /updateAllUsers -> either PATCH /users or POST /users/bulk-updates depending on desired behavior. Introduce async job pattern for long-running bulk ops.<br>
+          - Add OpenAPI contract and version your API (e.g., /v1/users) to allow safe evolution.
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Interactive examples (try copy)</strong>
+        <span class="small muted">Copy curl snippets to clipboard</span>
+      </div>
+
+      <div style="margin-top:8px">
+        <div class="example" id="curl-list">
+curl -i -H "Accept: application/json" "GET https://api.example.com/users?page=1&limit=10"
+        </div>
+        <div class="controls">
+          <button class="copy" data-target="curl-list">Copy</button>
+        </div>
+
+        <div class="example" id="curl-create" style="margin-top:10px">
+curl -i -X POST "https://api.example.com/users" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Jo","email":"jo@example.com"}'
+        </div>
+        <div class="controls">
+          <button class="copy" data-target="curl-create">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Last updated: 2026-03-08 — Summary: Replace verbful paths with resource-based URIs (use plural nouns), map actions to HTTP verbs, return proper status codes, and document error formats and pagination. For bulk ops prefer PATCH /users or job endpoints (POST /users/bulk-updates) and clearly document semantics.
+    </footer>
+  </div>
+
+  <script>
+    // copy buttons
+    document.querySelectorAll('button.copy').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.getAttribute('data-target');
+        const el = document.getElementById(id);
+        if (!el) return;
+        const text = el.textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = 'Copied';
+          setTimeout(()=> btn.textContent = 'Copy',1200);
+        } catch(e){
+          btn.textContent = 'Copy (failed)';
+          setTimeout(()=> btn.textContent = 'Copy',1200);
+        }
+      });
+    });
+
+    // accessible details open/close icons (optional)
+    document.querySelectorAll('details summary').forEach(s=>{
+      s.setAttribute('role','button');
+      s.addEventListener('keydown', e=>{
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          s.parentElement.open = !s.parentElement.open;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-around;
+            margin: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 45%;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        h2 {
+            color: #333;
+        }
+        .counter {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Buggy Counter (Exhibits Race Condition)</h2>
+        <p>This counter has a race condition. Rapidly click the button to see the counter miss some increments.</p>
+        <div id="buggyCounterDisplay">0</div>
+        <button id="buggyButton">Increment Buggy Counter</button>
+    </div>
+
+    <div class="container">
+        <h2>Fixed Counter (Race Condition Resolved)</h2>
+        <p>This counter fixes the issue by ensuring updates are serialized. Rapidly click the button; it should count accurately.</p>
+        <div id="fixedCounterDisplay">0</div>
+        <button id="fixedButton">Increment Fixed Counter</button>
+    </div>
+
+    <script>
+        // Buggy Counter Implementation
+        let buggyCounter = 0;
+        const buggyCounterDisplay = document.getElementById('buggyCounterDisplay');
+        const buggyButton = document.getElementById('buggyButton');
+
+        function updateBuggyDisplay() {
+            buggyCounterDisplay.textContent = buggyCounter;
+        }
+
+        buggyButton.addEventListener('click', () => {
+            setTimeout(() => {
+                let temp = buggyCounter;  // Read shared state
+                temp++;                   // Modify
+                buggyCounter = temp;      // Write shared state
+                updateBuggyDisplay();     // Update the display
+            }, 0);  // Asynchronous delay
+        });
+
+        // Fixed Counter Implementation
+        let fixedCounter = 0;
+        let currentPromise = Promise.resolve();  // Start with a resolved promise
+        const fixedCounterDisplay = document.getElementById('fixedCounterDisplay');
+        const fixedButton = document.getElementById('fixedButton');
+
+        function performFixedIncrement() {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    let temp = fixedCounter;  // Read shared state
+                    temp++;                   // Modify
+                    fixedCounter = temp;      // Write shared state
+                    fixedCounterDisplay.textContent = fixedCounter;  // Update the display
+                    resolve();  // Resolve the promise after completion
+                }, 0);  // Asynchronous delay
+            });
+        }
+
+        fixedButton.addEventListener('click', () => {
+            currentPromise = currentPromise.then(() => performFixedIncrement());
+            // This chains the promises, ensuring each increment waits for the previous one
+        });
+    </script>
+
+    <div style="width: 90%; margin: 40px auto; border-top: 1px solid #ccc; padding-top: 20px;">
+        <h2>Explanation</h2>
+        <p><strong>Why the Buggy Version Breaks:</strong></p>
+        <p>
+            In the buggy counter, each button click schedules an asynchronous operation using <code>setTimeout</code>. This operation reads the current value of <code>buggyCounter</code>, increments it, and writes it back. If you click the button rapidly (e.g., multiple times in under 100ms), the <code>setTimeout</code> callbacks may overlap. For example:
+        </p>
+        <ul>
+            <li>Click 1: Reads <code>buggyCounter</code> as 0, increments to 1, but hasn't written yet.</li>
+            <li>Click 2: Reads <code>buggyCounter</code> as still 0 (before Click 1 writes), increments to 1.</li>
+            <li>Both writes happen: The second write overwrites the first, resulting in <code>buggyCounter</code> being 1 instead of 2.</li>
+        </ul>
+        <p>
+            This is a classic race condition because the final state depends on the unpredictable timing of the asynchronous operations. You may see the counter display values like 3 instead of 5 after 5 rapid clicks, as some increments are lost.
+        </p>
+
+        <p><strong>How the Fixed Version Works:</strong></p>
+        <p>
+            In the fixed counter, we use a promise chain to serialize the updates. Each click adds a new promise to the chain via <code>currentPromise.then()</code>. This ensures that:
+        </p>
+        <ul>
+            <li>Each increment operation waits for the previous one to complete before starting.</li>
+            <li>Even if clicks are rapid, the operations are queued and executed sequentially.</li>
+        </ul>
+        <p>
+            As a result, the counter accurately reflects all increments, regardless of how quickly you click. This approach mimics a simple locking mechanism in a single-threaded environment like JavaScript.
+        </p>
+
+        <p><strong>Testing Tips:</strong></p>
+        <ul>
+            <li>Click the buggy button rapidly (e.g., 10 times quickly) and observe the final count—it will often be less than 10.</li>
+            <li>Do the same for the fixed button; it should always reach 10.</li>
+        </ul>
+        <p>
+            This example is simplified for demonstration. In real-world scenarios, you might use more robust solutions like Web Workers, mutexes (if available), or state management libraries (e.g., Redux) for handling concurrency.
+        </p>
+    </div>
+</body>
+</html>

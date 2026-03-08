@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Linked List Visualizer</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 20px; }
+  h1 { margin: 0 0 12px 0; font-size: 20px; }
+  .controls { display:flex; gap: 8px; flex-wrap:wrap; margin-bottom: 12px; align-items:center; }
+  .controls input[type="text"] { padding:6px 8px; font-size:14px; width:140px; }
+  .controls button { padding:8px 10px; font-size:14px; cursor:pointer; }
+  .controls .info { margin-left: 6px; color:#555; font-size:13px; }
+  #canvasWrap { border:1px solid #ddd; background:#fafafa; padding:12px; border-radius:6px; overflow:auto; }
+  svg { width:100%; height:220px; display:block; }
+  .node { cursor: default; }
+  .node rect { fill:#fff; stroke:#333; stroke-width:1.4; rx:6; ry:6; }
+  .node text { font-size:14px; pointer-events:none; fill:#111; }
+  .node .value { font-weight:600; }
+  .node .pointerBox { fill:#f3f7ff; stroke:#3b6df0; stroke-width:1; rx:5; ry:5; }
+  .arrow { stroke:#3b6df0; stroke-width:2; fill:none; marker-end: url(#arrowhead); }
+  .ghostArrow { stroke:#aaa; stroke-dasharray:4 6; opacity:0.6; }
+  .highlight { filter: drop-shadow(0 0 6px rgba(59,109,240,0.6)); }
+  .found rect { stroke: #27ae60; stroke-width:2.2; }
+  .deleted rect { opacity:0.35; transition: opacity 0.4s; }
+  .emptyMsg { fill:#777; font-size:14px; }
+  .legend { margin-top:8px; color:#555; font-size:13px; }
+  .status { margin-top:10px; color:#333; font-size:14px; min-height:18px; }
+</style>
+</head>
+<body>
+  <h1>Singly Linked List Visualizer</h1>
+
+  <div class="controls">
+    <input id="valueInput" type="text" placeholder="Value (string or number)"/>
+    <button id="insertHeadBtn">Insert at head</button>
+    <button id="insertTailBtn">Insert at tail</button>
+    <input id="delInput" type="text" placeholder="Delete value"/>
+    <button id="deleteBtn">Delete by value</button>
+    <input id="searchInput" type="text" placeholder="Search value"/>
+    <button id="searchBtn">Search</button>
+    <button id="clearBtn">Clear list</button>
+    <div class="info">Nodes are boxes with a pointer field on the right. Arrows show next pointers.</div>
+  </div>
+
+  <div id="canvasWrap">
+    <svg id="svgCanvas" viewBox="0 0 1200 220" preserveAspectRatio="xMinYMin meet">
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <path d="M0,0 L10,4 L0,8 z" fill="#3b6df0"></path>
+        </marker>
+      </defs>
+      <!-- nodes and arrows will be inserted here -->
+      <g id="content"></g>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <strong>Legend:</strong>
+    <span style="margin-left:8px;">Green border = found by search</span>
+    <span style="margin-left:12px;">Dimmed = recently deleted</span>
+  </div>
+
+  <div class="status" id="status"></div>
+
+<script>
+(function(){
+  const svg = document.getElementById('svgCanvas');
+  const content = document.getElementById('content');
+  const valueInput = document.getElementById('valueInput');
+  const insertHeadBtn = document.getElementById('insertHeadBtn');
+  const insertTailBtn = document.getElementById('insertTailBtn');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const delInput = document.getElementById('delInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const searchInput = document.getElementById('searchInput');
+  const clearBtn = document.getElementById('clearBtn');
+  const status = document.getElementById('status');
+
+  // Simple linked list backend
+  class Node {
+    constructor(value){
+      this.value = value;
+      this.next = null;
+      this.id = Node._nextId++;
+    }
+  }
+  Node._nextId = 1;
+
+  class LinkedList {
+    constructor(){ this.head = null; this.size = 0; }
+    insertHead(value){
+      const n = new Node(value);
+      n.next = this.head;
+      this.head = n;
+      this.size++;
+      return n;
+    }
+    insertTail(value){
+      const n = new Node(value);
+      if(!this.head){ this.head = n; this.size++; return n; }
+      let cur = this.head;
+      while(cur.next) cur = cur.next;
+      cur.next = n;
+      this.size++;
+      return n;
+    }
+    deleteByValue(value){
+      if(!this.head) return null;
+      if(same(this.head.value, value)){
+        const removed = this.head;
+        this.head = this.head.next;
+        removed.next = null;
+        this.size--;
+        return removed;
+      }
+      let prev = this.head;
+      let cur = this.head.next;
+      while(cur){
+        if(same(cur.value, value)){
+          prev.next = cur.next;
+          cur.next = null;
+          this.size--;
+          return cur;
+        }
+        prev = cur; cur = cur.next;
+      }
+      return null;
+    }
+    find(value){
+      let idx=0;
+      let cur=this.head;
+      while(cur){
+        if(same(cur.value, value)) return {node:cur, index: idx};
+        cur=cur.next; idx++;
+      }
+      return null;
+    }
+    clear(){ this.head = null; this.size = 0; Node._nextId = 1; }
+    toArray(){ const out=[]; let cur=this.head; while(cur){ out.push(cur); cur=cur.next; } return out; }
+  }
+
+  function same(a,b){
+    // treat numbers and numeric strings equivalently if both numeric
+    if(a === b) return true;
+    const an = (typeof a === 'string' && a.trim()!=='' && !isNaN(a)) ? Number(a) : a;
+    const bn = (typeof b === 'string' && b.trim()!=='' && !isNaN(b)) ? Number(b) : b;
+    return an === bn;
+  }
+
+  const list = new LinkedList();
+
+  // Rendering constants
+  const NODE_W = 120;
+  const NODE_H = 48;
+  const PTR_W = 36;
+  const GAP = 28;
+  const START_X = 12;
+  const START_Y = 20;
+
+  function clearContent(){
+    while(content.firstChild) content.removeChild(content.firstChild);
+  }
+
+  function render(){
+    clearContent();
+    const nodes = list.toArray();
+    if(nodes.length === 0){
+      // show "empty" message and a ghost head pointer that points to null
+      const g = createSvg('g', {class:'node empty'});
+      const x = START_X, y = START_Y;
+      // box representing head pointer only
+      const rect = createSvg('rect', {x:x, y:y, width:NODE_W, height:NODE_H, rx:6, ry:6, fill:'#fff', stroke:'#333', 'stroke-width':1.2});
+      const txt = createSvg('text', {x:x + 12, y: y + NODE_H/2 + 5, 'class':'value', 'font-size':14});
+      txt.textContent = 'Head: null';
+      g.appendChild(rect); g.appendChild(txt);
+      content.appendChild(g);
+      // ghost arrow to indicate empty pointer (dashed)
+      const gx = x + NODE_W - PTR_W/2;
+      const arrow = createSvg('line', {x1: gx, y1: y + NODE_H/2, x2: gx + 120, y2: y + NODE_H/2, class:'arrow ghostArrow'});
+      content.appendChild(arrow);
+      const nullTxt = createSvg('text', {x: gx + 126, y: y + NODE_H/2 + 5, class:'emptyMsg'});
+      nullTxt.textContent = 'null';
+      content.appendChild(nullTxt);
+      status.textContent = 'List is empty.';
+      return;
+    }
+
+    // Render each node with pointer box
+    const nodePositions = [];
+    let x = START_X;
+    let y = START_Y;
+    nodes.forEach((n,i) => {
+      nodePositions.push({node:n,x:x,y:y});
+      const g = createSvg('g', {class:'node', id:'node-' + n.id});
+      // whole box: value region and pointer region on the right
+      const rect = createSvg('rect', {x:x, y:y, width:NODE_W, height:NODE_H, rx:6, ry:6});
+      g.appendChild(rect);
+      // pointer sub-box overlay at right
+      const ptrX = x + NODE_W - PTR_W;
+      const pbox = createSvg('rect', {x:ptrX + 6, y:y + 8, width:PTR_W - 12, height:NODE_H - 16, class:'pointerBox'});
+      g.appendChild(pbox);
+      // value text
+      const txt = createSvg('text', {x:x + 12, y: y + NODE_H/2 + 5, 'class':'value'});
+      txt.textContent = String(n.value);
+      g.appendChild(txt);
+
+      // label for index (optional small)
+      const idxTxt = createSvg('text', {x:x + NODE_W/2 - 8, y: y + NODE_H + 16, 'font-size':12, 'fill':'#666'});
+      idxTxt.textContent = 'Node';
+      g.appendChild(idxTxt);
+
+      content.appendChild(g);
+      x += NODE_W + GAP;
+    });
+
+    // Now draw arrows from each node's pointer to next node (or to null)
+    nodePositions.forEach((p,i) => {
+      const fromX = p.x + NODE_W - PTR_W/2;
+      const fromY = p.y + NODE_H/2;
+      if(p.node.next){
+        // find target position
+        const target = nodePositions.find(q => q.node === p.node.next);
+        if(target){
+          const toX = target.x + PTR_W/2; // point to left side of target
+          const toY = target.y + NODE_H/2;
+          // draw a smooth curve (cubic)
+          const dx = Math.max(40, (toX - fromX) / 2);
+          const pathD = `M ${fromX} ${fromY} C ${fromX + dx} ${fromY} ${toX - dx} ${toY} ${toX} ${toY}`;
+          const path = createSvg('path', {d: pathD, class:'arrow'});
+          content.appendChild(path);
+        } else {
+          // safety: point to some null position
+          const toX = fromX + 80;
+          const toY = fromY;
+          const pathD = `M ${fromX} ${fromY} L ${toX} ${toY}`;
+          const path = createSvg('path', {d: pathD, class:'arrow ghostArrow'});
+          content.appendChild(path);
+          const nullTxt = createSvg('text', {x: toX + 8, y: toY + 4, class:'emptyMsg'});
+          nullTxt.textContent = 'null';
+          content.appendChild(nullTxt);
+        }
+      } else {
+        // points to null: draw a dashed line and "null"
+        const toX = fromX + 80;
+        const toY = fromY;
+        const pathD = `M ${fromX} ${fromY} L ${toX} ${toY}`;
+        const path = createSvg('path', {d: pathD, class:'arrow ghostArrow'});
+        content.appendChild(path);
+        const nullTxt = createSvg('text', {x: toX + 8, y: toY + 4, class:'emptyMsg'});
+        nullTxt.textContent = 'null';
+        content.appendChild(nullTxt);
+      }
+    });
+
+    status.textContent = `List size: ${list.size}`;
+  }
+
+  function createSvg(tag, attrs){
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for(const k in attrs){
+      el.setAttribute(k, attrs[k]);
+    }
+    return el;
+  }
+
+  // Visual effects: highlight search path, flash deletion, etc.
+  async function animateSearch(value){
+    clearHighlights();
+    if(list.size === 0){
+      status.textContent = 'List is empty.';
+      return;
+    }
+    let cur = list.head;
+    let idx = 0;
+    let found = null;
+    while(cur){
+      const nodeEl = document.getElementById('node-' + cur.id);
+      if(nodeEl){
+        nodeEl.classList.add('highlight');
+        await sleep(350);
+      }
+      if(same(cur.value, value)){
+        found = {node:cur, index: idx};
+        if(nodeEl) nodeEl.classList.add('found');
+        status.textContent = `Found value at index ${idx}.`;
+        break;
+      } else {
+        if(nodeEl) nodeEl.classList.remove('highlight');
+        idx++;
+        cur = cur.next;
+      }
+    }
+    if(!found){
+      status.textContent = 'Value not found.';
+    }
+    // leave found highlighted for a short while
+    await sleep(900);
+    // clear only the transient highlight, keep 'found' green border for a bit shorter, then reset
+    document.querySelectorAll('.node.highlight').forEach(n => n.classList.remove('highlight'));
+    document.querySelectorAll('.node.found').forEach((el, i) => {
+      // fade out the found highlight after a moment
+      setTimeout(()=> el.classList.remove('found'), 600 + i*80);
+    });
+  }
+
+  async function animateInsert(node, atHead){
+    render(); // ensure node exists in DOM
+    const nodeEl = document.getElementById('node-' + node.id);
+    if(nodeEl){
+      nodeEl.classList.add('highlight');
+      await sleep(700);
+      nodeEl.classList.remove('highlight');
+    }
+    status.textContent = `Inserted "${node.value}" ${atHead ? 'at head' : 'at tail'}. List size: ${list.size}`;
+    render();
+  }
+
+  async function animateDelete(removed){
+    if(!removed) return;
+    // render then find the element
+    render();
+    const el = document.getElementById('node-' + removed.id);
+    if(el){
+      el.classList.add('deleted');
+      status.textContent = `Deleted "${removed.value}".`;
+      await sleep(400);
+      // physically re-render to remove it
+      render();
+    } else {
+      status.textContent = `Deleted "${removed.value}".`;
+      render();
+    }
+  }
+
+  function clearHighlights(){
+    document.querySelectorAll('.node.highlight').forEach(n => n.classList.remove('highlight'));
+    document.querySelectorAll('.node.found').forEach(n => n.classList.remove('found'));
+  }
+
+  function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+
+  // Button handlers
+  insertHeadBtn.addEventListener('click', async () => {
+    const v = valueInput.value.trim();
+    if(v === ''){
+      status.textContent = 'Please enter a value to insert.';
+      return;
+    }
+    const node = list.insertHead(parseValue(v));
+    await animateInsert(node, true);
+  });
+
+  insertTailBtn.addEventListener('click', async () => {
+    const v = valueInput.value.trim();
+    if(v === ''){
+      status.textContent = 'Please enter a value to insert.';
+      return;
+    }
+    const node = list.insertTail(parseValue(v));
+    await animateInsert(node, false);
+  });
+
+  deleteBtn.addEventListener('click', async () => {
+    const v = delInput.value.trim();
+    if(v === ''){
+      status.textContent = 'Please enter a value to delete.';
+      return;
+    }
+    const removed = list.deleteByValue(parseValue(v));
+    if(!removed){
+      status.textContent = 'Value not found; nothing deleted.';
+      render();
+      return;
+    }
+    await animateDelete(removed);
+  });
+
+  searchBtn.addEventListener('click', async () => {
+    const v = searchInput.value.trim();
+    if(v === ''){
+      status.textContent = 'Please enter a value to search.';
+      return;
+    }
+    await animateSearch(parseValue(v));
+  });
+
+  clearBtn.addEventListener('click', () => {
+    list.clear();
+    render();
+    status.textContent = 'Cleared list.';
+  });
+
+  // helper parse input to number if numeric
+  function parseValue(s){
+    if(s.trim() === '') return s;
+    if(!isNaN(s) && s.trim() !== '') {
+      // keep numeric format but allow leading zeros to remain string? We'll convert to number
+      return Number(s);
+    }
+    return s;
+  }
+
+  // initial demo content
+  (function seed(){
+    list.insertTail(10);
+    list.insertTail(20);
+    list.insertTail(30);
+    render();
+    status.textContent = 'Demo list created. Try operations.';
+  })();
+
+  // make the svg viewBox width adjust based on nodes to avoid cramped layout
+  const observer = new MutationObserver(() => {
+    // compute width needed
+    const nodes = list.toArray();
+    const w = Math.max(400, START_X + (nodes.length) * (NODE_W + GAP) + 160);
+    svg.setAttribute('viewBox', `0 0 ${w} 220`);
+  });
+  observer.observe(content, {childList:true, subtree:true});
+
+  // keyboard Enter handling
+  valueInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') insertTailBtn.click(); });
+  delInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') deleteBtn.click(); });
+  searchInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') searchBtn.click(); });
+
+})();
+</script>
+
+</body>
+</html>

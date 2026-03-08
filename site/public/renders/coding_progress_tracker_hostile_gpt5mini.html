@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Progress Tracking: Buggy vs Fixed</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 18px; color:#111; }
+  h1 { margin: 0 0 12px 0; font-size: 20px; }
+  .row { display:flex; gap:18px; align-items:flex-start; }
+  .panel { border:1px solid #ddd; padding:12px; border-radius:6px; width:48%; box-sizing:border-box; background:#fafafa; }
+  .bar { height:20px; background:#eee; border-radius:6px; overflow:hidden; margin:8px 0; }
+  .fill { height:100%; background:linear-gradient(90deg,#4caf50,#2e7d32); width:0%; transition:width .18s linear; }
+  .log { font-family: monospace; font-size:12px; background:#fff; border:1px solid #eee; padding:8px; height:200px; overflow:auto; margin-top:8px; }
+  .controls { margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  button { padding:6px 10px; border-radius:6px; border:1px solid #ccc; background: #fff; cursor:pointer; }
+  button:active { transform:translateY(1px); }
+  label { font-size:13px; }
+  .bad { border-color:#f2b0b0; background:#fff6f6; }
+  .good { border-color:#bfe6c7; background:#f7fff6; }
+  .badge { display:inline-block; font-size:12px; padding:4px 6px; border-radius:999px; background:#eee; margin-left:8px; }
+  .explain { margin-top:8px; font-size:13px; line-height:1.4; }
+  .lost { color:#b00020; font-weight:700; }
+  .ok { color:#007a1f; font-weight:700; }
+</style>
+</head>
+<body>
+<h1>Progress Tracking: Buggy vs Fixed (single-file demo)</h1>
+<p>Simulated worker tasks each report "I completed N units". Tasks are asynchronous (setTimeout) and can overlap. Left shows a common buggy approach: tasks read a shared counter, compute a new value, and write it back — causing lost updates. Right shows two fixes: serialized updates using an "actor" (queue) or a simple lock (Promise mutex).</p>
+
+<div class="controls">
+  <label>Number of tasks: <input id="numTasks" type="number" min="1" value="12" style="width:64px"></label>
+  <label>Units per task: <input id="unitsPerTask" type="number" min="1" value="5" style="width:64px"></label>
+  <label>Max async delay (ms): <input id="maxDelay" type="number" min="1" value="400" style="width:84px"></label>
+  <button id="runBtn">Run</button>
+  <button id="resetBtn">Reset</button>
+  <label title="Select fix to demonstrate"><strong>Fix method:</strong>
+    <select id="fixMethod"><option value="actor">Actor (serialized queue)</option><option value="mutex">Mutex (promise lock)</option></select>
+  </label>
+</div>
+
+<div class="row">
+  <div class="panel bad" id="bugPanel">
+    <h2>Buggy version <span class="badge">Shared mutable state</span></h2>
+    <div>Progress: <span id="bugPercent">0%</span> (expected: <span id="bugExpected">0</span>)</div>
+    <div class="bar"><div class="fill" id="bugFill"></div></div>
+    <div class="explain">
+      Each task does: read sharedCounter; compute new = sharedCounter + units; write sharedCounter = new.
+      Because tasks interleave, two tasks can read the same old value then both write, losing one of the increments.
+    </div>
+    <div class="log" id="bugLog"></div>
+    <div style="margin-top:8px;"><strong>Final observed:</strong> <span id="bugFinal">0</span> — <span id="bugStatus" class="lost">BROKEN (lost updates)</span></div>
+  </div>
+
+  <div class="panel good" id="fixPanel">
+    <h2>Fixed version <span class="badge">Serialized updates</span></h2>
+    <div>Progress: <span id="fixPercent">0%</span> (expected: <span id="fixExpected">0</span>)</div>
+    <div class="bar"><div class="fill" id="fixFill"></div></div>
+    <div class="explain" id="fixExplain">
+      Using a single updater to apply increments one at a time (actor) or a small mutex to serialize access prevents lost updates.
+    </div>
+    <div class="log" id="fixLog"></div>
+    <div style="margin-top:8px;"><strong>Final observed:</strong> <span id="fixFinal">0</span> — <span id="fixStatus" class="ok">OK</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // DOM refs
+  const numTasksEl = document.getElementById('numTasks');
+  const unitsEl = document.getElementById('unitsPerTask');
+  const maxDelayEl = document.getElementById('maxDelay');
+  const runBtn = document.getElementById('runBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const fixMethodEl = document.getElementById('fixMethod');
+
+  const bugLog = document.getElementById('bugLog');
+  const bugFill = document.getElementById('bugFill');
+  const bugPercent = document.getElementById('bugPercent');
+  const bugExpected = document.getElementById('bugExpected');
+  const bugFinal = document.getElementById('bugFinal');
+  const bugStatus = document.getElementById('bugStatus');
+
+  const fixLog = document.getElementById('fixLog');
+  const fixFill = document.getElementById('fixFill');
+  const fixPercent = document.getElementById('fixPercent');
+  const fixExpected = document.getElementById('fixExpected');
+  const fixFinal = document.getElementById('fixFinal');
+  const fixStatus = document.getElementById('fixStatus');
+
+  const delay = (ms)=> new Promise(r=>setTimeout(r,ms));
+
+  function resetUI(){
+    bugLog.textContent = '';
+    fixLog.textContent = '';
+    bugFill.style.width = '0%';
+    fixFill.style.width = '0%';
+    bugPercent.textContent = '0%';
+    fixPercent.textContent = '0%';
+    bugExpected.textContent = '0';
+    fixExpected.textContent = '0';
+    bugFinal.textContent = '0';
+    fixFinal.textContent = '0';
+    bugStatus.textContent = 'RUN';
+    bugStatus.className = '';
+    fixStatus.textContent = 'RUN';
+    fixStatus.className = '';
+  }
+
+  resetBtn.addEventListener('click', resetUI);
+  resetUI();
+
+  runBtn.addEventListener('click', runDemo);
+
+  function appendLog(el, text, cls){
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = text;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function runDemo(){
+    resetUI();
+
+    const n = Math.max(1, Math.floor(Number(numTasksEl.value) || 1));
+    const units = Math.max(1, Math.floor(Number(unitsEl.value) || 1));
+    const maxDelay = Math.max(1, Math.floor(Number(maxDelayEl.value) || 1));
+    const expectedTotal = n * units;
+    bugExpected.textContent = expectedTotal;
+    fixExpected.textContent = expectedTotal;
+
+    // Buggy shared state
+    let bugShared = 0;
+
+    // Fixed shared state
+    let fixShared = 0;
+
+    // For demonstration, spawn tasks that each "complete" `units` after a random delay.
+    // They call reportProgress(units).
+    function scheduleTasks(reportFn, logEl, label){
+      for (let i=0;i<n;i++){
+        const taskId = i+1;
+        const d = Math.floor(Math.random()*maxDelay) + 5;
+        setTimeout(() => {
+          // Simulate some work steps that can interleave
+          // We'll intentionally break the operation into read/compute/write with small micro-delays
+          // to expose races.
+          (async ()=>{
+            appendLog(logEl, `[Task ${taskId}] start (delay ${d}ms)`);
+            // read
+            await delay(0); // yield to allow interleaving
+            const observed = reportFn.peek ? reportFn.peek() : undefined;
+            appendLog(logEl, `[Task ${taskId}] will add ${units} (observed=${observed})`);
+            // compute then write via report function
+            await delay(Math.random()*6); // more interleaving
+            reportFn(units, taskId);
+            appendLog(logEl, `[Task ${taskId}] reported +${units}`);
+          })();
+        }, d);
+      }
+    }
+
+    // Buggy report function: read shared, compute, write (no synchronization)
+    function bugReport(units, taskId){
+      // read
+      const old = bugShared;
+      // simulate async gap that could have allowed other writes (we already yielded above)
+      // compute
+      const nw = old + units;
+      // write
+      bugShared = nw;
+      // update UI
+      const pct = Math.min(100, Math.round((bugShared / expectedTotal) * 100));
+      bugFill.style.width = pct + '%';
+      bugPercent.textContent = pct + '%';
+    }
+    // allow peek for logging
+    bugReport.peek = ()=>bugShared;
+
+    // Fixed version - we will implement two different fixes selectable by the dropdown.
+
+    // Fix A: Actor queue (serializes updates by sending increments into an async queue)
+    function makeActorReporter(){
+      let state = 0;
+      const queue = [];
+      let running = false;
+      function scheduleApply(delta, taskId){
+        return new Promise(resolve=>{
+          queue.push({delta, taskId, resolve});
+          if (!running) drain();
+        });
+      }
+      async function drain(){
+        running = true;
+        while (queue.length){
+          const {delta, taskId, resolve} = queue.shift();
+          // apply
+          const old = state;
+          const nw = old + delta;
+          // small async tick to simulate work
+          await delay(0);
+          state = nw;
+          // update UI immediately
+          const pct = Math.min(100, Math.round((state / expectedTotal) * 100));
+          fixFill.style.width = pct + '%';
+          fixPercent.textContent = pct + '%';
+          resolve();
+        }
+        running = false;
+      }
+      const reporter = async (delta, taskId) => {
+        await scheduleApply(delta, taskId);
+      };
+      reporter.peek = ()=>state;
+      // allow reading final state later
+      reporter.getState = ()=>state;
+      return reporter;
+    }
+
+    // Fix B: simple mutex (Promise-based lock)
+    function makeMutexReporter(){
+      let state = 0;
+      let lock = Promise.resolve(); // initially unlocked
+      function withLock(fn){
+        // chain operations: append to lock, ensure sequential execution
+        const next = lock.then(()=>fn());
+        // set lock to next, but catch errors to avoid unhandled rejections
+        lock = next.catch(()=>{});
+        return next;
+      }
+      const reporter = (delta, taskId) => {
+        return withLock(async ()=>{
+          const old = state;
+          // small yield
+          await delay(0);
+          state = old + delta;
+          const pct = Math.min(100, Math.round((state / expectedTotal) * 100));
+          fixFill.style.width = pct + '%';
+          fixPercent.textContent = pct + '%';
+        });
+      };
+      reporter.peek = ()=>state;
+      reporter.getState = ()=>state;
+      return reporter;
+    }
+
+    // choose fix
+    const fixMethod = fixMethodEl.value;
+    let fixReport;
+    if (fixMethod === 'actor') fixReport = makeActorReporter();
+    else fixReport = makeMutexReporter();
+
+    // schedule tasks for both sides
+    scheduleTasks(bugReport, bugLog, 'bug');
+    scheduleTasks(fixReport, fixLog, 'fix');
+
+    // After all tasks likely finished, allow a short grace period then show results.
+    const overallWait = Math.max(600, Number(maxDelay)*1.2 + 200);
+    setTimeout(()=>{
+      // finalize
+      bugFinal.textContent = bugShared;
+      // detect lost updates
+      if (bugShared !== expectedTotal){
+        bugStatus.textContent = 'BROKEN — lost updates';
+        bugStatus.className = 'lost';
+      } else {
+        bugStatus.textContent = 'OK';
+        bugStatus.className = 'ok';
+      }
+
+      // fix side
+      // if reporter has getState, use it
+      const fixState = typeof fixReport.getState === 'function' ? fixReport.getState() : 'unknown';
+      fixFinal.textContent = fixState;
+      if (fixState !== expectedTotal){
+        fixStatus.textContent = 'BROKEN';
+        fixStatus.className = 'lost';
+      } else {
+        fixStatus.textContent = 'OK';
+        fixStatus.className = 'ok';
+      }
+
+      // add explanation lines
+      appendLog(bugLog, `-- expected total: ${expectedTotal}`);
+      appendLog(bugLog, `-- observed total: ${bugShared}`);
+      appendLog(fixLog, `-- expected total: ${expectedTotal}`);
+      appendLog(fixLog, `-- observed total: ${fixState}`);
+      // highlight lost updates in bug log by showing the read values that overlapped
+      appendLog(bugLog, 'Note: the buggy reporter does "read; compute; write". If two tasks read the same value before either writes, one update is lost.', 'lost');
+      appendLog(fixLog, `Fix used: ${fixMethod === 'actor' ? 'Actor (queue)' : 'Mutex (promise lock)'} — updates serialized.`, 'ok');
+
+    }, overallWait);
+  }
+})();
+</script>
+</body>
+</html>

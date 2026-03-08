@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Leak Demonstration: Uncleaned Event Listeners and DOM References</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .dashboard {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .widget {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f0f0f0;
+        }
+        button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Leak Demonstration</h1>
+    
+    <h2>Explanation of the Issue</h2>
+    <p>
+        In this demo, we're addressing a common JavaScript memory leak caused by uncleaned event listeners and stored DOM references, not a problem with the garbage collector (GC). Your colleague's diagnosis that this is a GC issue is completely wrong for the following reasons:
+    </p>
+    <ul>
+        <li><strong>GC Works as Intended:</strong> JavaScript's GC automatically frees memory for objects that are no longer reachable (i.e., not referenced anywhere). It's not "broken"; it's just that in the leaking version below, we're intentionally holding onto references (e.g., via an array and event listeners), which prevents the GC from collecting those objects.</li>
+        <li><strong>The Real Problem:</strong> When widgets are deleted, if we don't remove event listeners and clear stored references (like in an array), the browser keeps those objects in memory. This creates a memory leak because the GC can't touch them. Over time, this can lead to performance issues, crashes, or increased memory usage.</li>
+        <li><strong>Why It's Not GC's Fault:</strong> GC is a background process that relies on your code to release references. If you don't clean up (e.g., by removing event listeners with <code>removeEventListener</code> and clearing arrays), the objects remain "alive" in the heap. In the fixed version, we properly clean up, allowing GC to do its job.</li>
+        <li><strong>Real-World Impact:</strong> In a dynamic app like this dashboard, repeatedly adding and deleting widgets without cleanup can cause memory bloat. Use browser dev tools (e.g., Chrome's Memory tab) to verify: the leaking version will show increasing memory usage, while the fixed version will not.</li>
+    </ul>
+    <p>
+        To test: Click "Add Widget" multiple times, then "Delete Widget." Watch the counter and use dev tools to inspect memory. The leaking version's counter won't decrease fully, simulating a leak.
+    </p>
+
+    <h2>Leaking Version (Uncleaned Event Listeners and References)</h2>
+    <p>This version adds widgets with event listeners and stores references in an array, but doesn't clean them up on deletion. As a result, references linger, causing a potential memory leak.</p>
+    <div class="dashboard" id="leakingDashboard">
+        <button id="addLeaking">Add Widget</button>
+        <button id="deleteLeaking">Delete Widget</button>
+        <div id="leakingWidgets"></div>
+        <p>Active Widgets: <span id="leakingCounter">0</span></p>
+    </div>
+
+    <h2>Fixed Version (Proper Cleanup)</h2>
+    <p>This version adds widgets the same way but properly removes event listeners and clears references on deletion, preventing memory leaks.</p>
+    <div class="dashboard" id="fixedDashboard">
+        <button id="addFixed">Add Widget</button>
+        <button id="deleteFixed">Delete Widget</button>
+        <div id="fixedWidgets"></div>
+        <p>Active Widgets: <span id="fixedCounter">0</span></p>
+    </div>
+
+    <script>
+        // Leaking Version Logic
+        let leakingReferences = [];  // Array to store references, which won't be cleared
+        let leakingCounterElement = document.getElementById('leakingCounter');
+        let leakingWidgetsContainer = document.getElementById('leakingWidgets');
+
+        document.getElementById('addLeaking').addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.innerHTML = `Widget ${leakingReferences.length + 1} (Click me!)`;
+            
+            // Add an event listener that holds a reference
+            widget.addEventListener('click', () => {
+                alert(`You clicked Widget ${leakingReferences.length + 1}`);
+            });
+            
+            leakingWidgetsContainer.appendChild(widget);  // Add to DOM
+            leakingReferences.push(widget);  // Store reference in array
+            updateLeakingCounter();  // Update counter
+        });
+
+        document.getElementById('deleteLeaking').addEventListener('click', () => {
+            if (leakingReferences.length > 0) {
+                const lastWidget = leakingReferences[leakingReferences.length - 1];
+                leakingWidgetsContainer.removeChild(lastWidget);  // Remove from DOM
+                // Intentional leak: Don't remove event listener or from array!
+            }
+            updateLeakingCounter();  // Counter still reflects the array length
+        });
+
+        function updateLeakingCounter() {
+            leakingCounterElement.textContent = leakingReferences.length;
+        }
+
+        // Fixed Version Logic
+        let fixedReferences = [];  // Array to store references, which will be cleared
+        let fixedCounterElement = document.getElementById('fixedCounter');
+        let fixedWidgetsContainer = document.getElementById('fixedWidgets');
+
+        document.getElementById('addFixed').addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.innerHTML = `Widget ${fixedReferences.length + 1} (Click me!)`;
+            
+            // Add an event listener that holds a reference
+            const clickHandler = () => {
+                alert(`You clicked Widget ${fixedReferences.length + 1}`);
+            };
+            widget.addEventListener('click', clickHandler);
+            
+            fixedWidgetsContainer.appendChild(widget);  // Add to DOM
+            fixedReferences.push({ element: widget, handler: clickHandler });  // Store reference
+            updateFixedCounter();  // Update counter
+        });
+
+        document.getElementById('deleteFixed').addEventListener('click', () => {
+            if (fixedReferences.length > 0) {
+                const lastRef = fixedReferences[fixedReferences.length - 1];
+                const lastWidget = lastRef.element;
+                const clickHandler = lastRef.handler;
+                
+                // Proper cleanup: Remove event listener and reference
+                lastWidget.removeEventListener('click', clickHandler);
+                fixedWidgetsContainer.removeChild(lastWidget);  // Remove from DOM
+                fixedReferences.pop();  // Remove from array
+            }
+            updateFixedCounter();  // Counter updates correctly
+        });
+
+        function updateFixedCounter() {
+            fixedCounterElement.textContent = fixedReferences.length;
+        }
+    </script>
+</body>
+</html>

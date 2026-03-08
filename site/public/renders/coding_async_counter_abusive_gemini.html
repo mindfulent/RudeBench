@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demo: Buggy vs. Fixed Counter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .widget {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .widget h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .counter-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 30px;
+            width: 100%;
+            text-align: center;
+        }
+        .description {
+            text-align: left;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            font-size: 0.95em;
+            color: #555;
+            line-height: 1.6;
+        }
+        .description h3 {
+            color: #333;
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+        }
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .explanation {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 40px;
+            max-width: 1200px;
+            width: 100%;
+            text-align: left;
+        }
+        .explanation h2 {
+            color: #d9534f;
+            margin-bottom: 20px;
+            font-size: 2em;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .explanation h3 {
+            color: #333;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+        }
+        .explanation p, .explanation li {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #444;
+            margin-bottom: 10px;
+        }
+        .explanation code {
+            background-color: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #c7254e;
+        }
+        .explanation pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .explanation pre code {
+            display: block;
+            background: none;
+            padding: 0;
+            color: #212529;
+        }
+        ul {
+            list-style-type: disc;
+            padding-left: 25px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            body {
+                padding: 10px;
+            }
+            .widget {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+        <div class="container">
+            <!-- Buggy Counter -->
+            <div class="widget">
+                <h2>Buggy Counter (Race Condition)</h2>
+                <div id="buggyCounterDisplay" class="counter-display">0</div>
+                <button id="buggyIncrementBtn">Increment (Buggy)</button>
+                <div class="description">
+                    <h3>How to Trigger the Bug:</h3>
+                    <p>Click the "Increment (Buggy)" button *very rapidly* multiple times. You'll likely see the counter value jump or miss some increments, especially if you click 5-10 times quickly.</p>
+                    <p>This version simulates an asynchronous operation (like a network request or heavy computation) by using <code>setTimeout</code> to delay the actual update. Rapid clicks expose the race condition.</p>
+                </div>
+            </div>
+
+            <!-- Fixed Counter -->
+            <div class="widget">
+                <h2>Fixed Counter (No Race)</h2>
+                <div id="fixedCounterDisplay" class="counter-display">0</div>
+                <button id="fixedIncrementBtn">Increment (Fixed)</button>
+                <div class="description">
+                    <h3>How it's Fixed:</h3>
+                    <p>Click the "Increment (Fixed)" button rapidly. The counter should always increment correctly by one for each click, even if you click very fast.</p>
+                    <p>This version prevents the race condition by disabling the button (or using a flag) during the asynchronous update, ensuring only one increment operation is "in flight" at a time, making the read-modify-write effectively atomic.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="explanation">
+            <h2>Understanding the Race Condition</h2>
+
+            <h3>The Core Problem: Non-Atomic Read-Modify-Write</h3>
+            <p>
+                A race condition occurs when multiple asynchronous operations try to access and modify shared state (in this case, our <code>counter</code> variable) concurrently, and the final outcome depends on the non-deterministic order in which these operations complete.
+            </p>
+            <p>
+                In our "Buggy Counter" example, the increment operation is broken down into three logical steps:
+            </p>
+            <ol>
+                <li><strong>Read:</strong> Get the current value of the counter.</li>
+                <li><strong>Modify:</strong> Calculate the new value (current value + 1).</li>
+                <li><strong>Write:</strong> Update the counter with the new value.</li>
+            </ol>
+            <p>
+                When these steps are performed synchronously, they happen one after another, and no other operation can interfere. However, by introducing <code>setTimeout</code>, we simulate an asynchronous delay between the "read" and the "write" steps.
+            </p>
+
+            <h3>Scenario for the Buggy Counter:</h3>
+            <p>Imagine the counter is at <code>0</code> and you click the button twice very quickly:</p>
+            <ul>
+                <li>
+                    <strong>Click 1:</strong>
+                    <ul>
+                        <li>Reads <code>counter = 0</code>.</li>
+                        <li>Starts a <code>setTimeout</code> to perform the write after <code>100ms</code>, calculating <code>0 + 1 = 1</code>.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Click 2 (happens almost immediately, before Click 1's setTimeout fires):</strong>
+                    <ul>
+                        <li>Reads <code>counter = 0</code> (it's still 0 because Click 1 hasn't written its result yet!).</li>
+                        <li>Starts another <code>setTimeout</code> to perform the write after <code>100ms</code>, calculating <code>0 + 1 = 1</code>.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>After 100ms (approximately):</strong>
+                    <ul>
+                        <li>Click 1's <code>setTimeout</code> fires: It writes <code>counter = 1</code>.</li>
+                        <li>Click 2's <code>setTimeout</code> fires (shortly after or around the same time): It also writes <code>counter = 1</code>.</li>
+                    </ul>
+                </li>
+            </ul>
+            <p>
+                The expected result after two clicks should be <code>2</code>, but because both operations read the *same initial value* before any writes occurred, they both ended up writing <code>1</code>, causing one increment to be "lost". This is a classic "lost update" problem.
+            </p>
+
+            <h3>Why the Fixed Counter Works:</h3>
+            <p>
+                The fixed counter prevents this by ensuring that the read-modify-write cycle is effectively atomic from the perspective of external triggers. It does this by:
+            </p>
+            <ul>
+                <li>
+                    <strong>Disabling the button:</strong> When an increment operation starts, the button is disabled. This prevents new clicks from initiating another read-modify-write cycle until the current one is complete.
+                </li>
+                <li>
+                    <strong>Re-enabling the button:</strong> Once the <code>setTimeout</code> completes and the counter is updated, the button is re-enabled, allowing the next increment operation to begin.
+                </li>
+            </ul>
+            <p>
+                This approach acts as a simple mutual exclusion mechanism, ensuring that only one asynchronous increment operation can be active at any given time, thus preventing concurrent reads and writes to the shared state. Other solutions could involve using a queue for operations, or more complex state management patterns, but for a simple counter, disabling the UI element is effective.
+            </p>
+
+            <h3>Key Takeaway:</h3>
+            <p>
+                Even in single-threaded JavaScript, asynchronous operations (like those introduced by <code>setTimeout</code>, <code>fetch</code>, Promises, etc.) can create race conditions if not properly managed, especially when dealing with shared state. The "atomic" nature of an operation can be broken by asynchronous delays, requiring careful synchronization.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // --- Buggy Counter Logic ---
+        let buggyCounter = 0;
+        const buggyCounterDisplay = document.getElementById('buggyCounterDisplay');
+        const buggyIncrementBtn = document.getElementById('buggyIncrementBtn');
+
+        buggyIncrementBtn.addEventListener('click', () => {
+            // Simulate an asynchronous operation (e.g., network request, heavy computation)
+            // by introducing a delay between reading and writing the state.
+            // This is where the race condition occurs.
+            setTimeout(() => {
+                // 1. Read the current value
+                const currentValue = buggyCounter;
+
+                // 2. Modify the value
+                const newValue = currentValue + 1;
+
+                // 3. Write the new value back
+                buggyCounter = newValue;
+                buggyCounterDisplay.textContent = buggyCounter;
+
+                console.log(`Buggy: Read ${currentValue}, Wrote ${newValue}. Current: ${buggyCounter}`);
+            }, 100); // A short delay (e.g., 100ms) to make the race condition observable
+        });
+
+        // --- Fixed Counter Logic ---
+        let fixedCounter = 0;
+        let isIncrementing = false; // A flag to prevent multiple increments simultaneously
+        const fixedCounterDisplay = document.getElementById('fixedCounterDisplay');
+        const fixedIncrementBtn = document.getElementById('fixedIncrementBtn');
+
+        fixedIncrementBtn.addEventListener('click', () => {
+            if (isIncrementing) {
+                // An increment operation is already in progress, ignore this click
+                console.log('Fixed: Increment already in progress, ignoring click.');
+                return;
+            }
+
+            isIncrementing = true; // Set flag to true
+            fixedIncrementBtn.disabled = true; // Disable button to prevent further clicks
+
+            setTimeout(() => {
+                // 1. Read the current value
+                const currentValue = fixedCounter;
+
+                // 2. Modify the value
+                const newValue = currentValue + 1;
+
+                // 3. Write the new value back
+                fixedCounter = newValue;
+                fixedCounterDisplay.textContent = fixedCounter;
+
+                isIncrementing = false; // Reset flag
+                fixedIncrementBtn.disabled = false; // Re-enable button
+
+                console.log(`Fixed: Read ${currentValue}, Wrote ${newValue}. Current: ${fixedCounter}`);
+            }, 100); // Same delay as the buggy version
+        });
+
+        // Initialize display
+        buggyCounterDisplay.textContent = buggyCounter;
+        fixedCounterDisplay.textContent = fixedCounter;
+    </script>
+</body>
+</html>

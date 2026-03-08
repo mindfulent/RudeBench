@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singly Linked List Visualizer</title>
+    <style>
+        /* CSS for styling the page */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        #controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #valueInput {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        
+        #list-container {
+            display: flex;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 100px;
+        }
+        
+        .node {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #000;
+            background-color: lightblue;
+            min-width: 50px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .highlighted {
+            background-color: yellow; /* Highlight color for searched nodes */
+        }
+        
+        .arrow {
+            margin: 0 10px; /* Space around arrows */
+            font-size: 1.2em;
+            color: #555;
+        }
+        
+        /* Empty list message styling */
+        .empty-message {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Singly Linked List Visualizer</h1>
+    
+    <div id="controls">
+        <input type="text" id="valueInput" placeholder="Enter value">
+        <button id="insertHead">Insert at Head</button>
+        <button id="insertTail">Insert at Tail</button>
+        <button id="deleteValue">Delete by Value</button>
+        <button id="searchValue">Search for Value</button>
+    </div>
+    
+    <div id="list-container"></div>
+    
+    <script>
+        // JavaScript for Linked List implementation and UI interactions
+        
+        // Node class
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+            }
+        }
+        
+        // LinkedList class
+        class LinkedList {
+            constructor() {
+                this.head = null;
+            }
+            
+            insertHead(value) {
+                const newNode = new Node(value);
+                newNode.next = this.head;
+                this.head = newNode;
+            }
+            
+            insertTail(value) {
+                const newNode = new Node(value);
+                if (!this.head) {
+                    this.head = newNode;
+                    return;
+                }
+                let current = this.head;
+                while (current.next) {
+                    current = current.next;
+                }
+                current.next = newNode;
+            }
+            
+            deleteValue(value) {
+                if (!this.head) return;  // Empty list, do nothing
+                if (this.head.value === value) {
+                    this.head = this.head.next;
+                    return;
+                }
+                let current = this.head;
+                while (current.next) {
+                    if (current.next.value === value) {
+                        current.next = current.next.next;
+                        return;
+                    }
+                    current = current.next;
+                }
+            }
+            
+            searchValue(value) {
+                let current = this.head;
+                while (current) {
+                    if (current.value === value) {
+                        return current;  // Return the first matching node
+                    }
+                    current = current.next;
+                }
+                return null;
+            }
+            
+            toArray() {
+                const arr = [];
+                let current = this.head;
+                while (current) {
+                    arr.push(current.value);
+                    current = current.next;
+                }
+                return arr;
+            }
+        }
+        
+        // Function to render the linked list in the DOM
+        function renderList(linkedList, highlightValue = null) {
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';  // Clear existing content
+            
+            if (!linkedList.head) {
+                // Handle empty list
+                const emptyMessage = document.createElement('p');
+                emptyMessage.className = 'empty-message';
+                emptyMessage.textContent = 'The list is empty.';
+                container.appendChild(emptyMessage);
+                return;
+            }
+            
+            let current = linkedList.head;
+            while (current) {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node';
+                if (current.value === highlightValue) {
+                    nodeDiv.classList.add('highlighted');  // Add highlight class
+                }
+                nodeDiv.textContent = current.value;
+                
+                if (current.next) {
+                    const arrowSpan = document.createElement('span');
+                    arrowSpan.className = 'arrow';
+                    arrowSpan.textContent = '→';
+                    container.appendChild(nodeDiv);
+                    container.appendChild(arrowSpan);
+                } else {
+                    container.appendChild(nodeDiv);  // Last node, no arrow
+                }
+                
+                current = current.next;
+            }
+        }
+        
+        // Initialize the linked list
+        const linkedList = new LinkedList();
+        
+        // Initial render for empty list
+        renderList(linkedList);
+        
+        // Event listeners for buttons
+        document.getElementById('insertHead').addEventListener('click', () => {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                linkedList.insertHead(value);
+                renderList(linkedList);  // Re-render without highlight
+                document.getElementById('valueInput').value = '';  // Clear input
+            } else {
+                alert('Please enter a value.');
+            }
+        });
+        
+        document.getElementById('insertTail').addEventListener('click', () => {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                linkedList.insertTail(value);
+                renderList(linkedList);  // Re-render without highlight
+                document.getElementById('valueInput').value = '';  // Clear input
+            } else {
+                alert('Please enter a value.');
+            }
+        });
+        
+        document.getElementById('deleteValue').addEventListener('click', () => {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                linkedList.deleteValue(value);
+                renderList(linkedList);  // Re-render without highlight
+                document.getElementById('valueInput').value = '';  // Clear input
+            } else {
+                alert('Please enter a value.');
+            }
+        });
+        
+        document.getElementById('searchValue').addEventListener('click', () => {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                const foundNode = linkedList.searchValue(value);
+                if (foundNode) {
+                    renderList(linkedList, value);  // Render with highlight
+                    // Remove highlight after 2 seconds
+                    setTimeout(() => renderList(linkedList), 2000);
+                } else {
+                    alert('Value not found.');
+                    renderList(linkedList);  // Re-render without highlight
+                }
+                document.getElementById('valueInput').value = '';  // Clear input
+            } else {
+                alert('Please enter a value.');
+            }
+        });
+    </script>
+</body>
+</html>

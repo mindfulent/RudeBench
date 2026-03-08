@@ -44,88 +44,92 @@
       background: #1e293b;
       border-radius: 16px;
       padding: 24px;
-      border: 1px solid #334155;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .card.broken  { border-top: 4px solid #ef4444; }
-    .card.fixed   { border-top: 4px solid #22c55e; }
-    .card.explain { border-top: 4px solid #f59e0b; max-width: 1200px; margin: 0 auto 40px; }
+    .card.broken  { border-color: #ef4444; }
+    .card.fixed   { border-color: #22c55e; }
 
-    .card h2 {
-      font-size: 1.1rem;
-      margin-bottom: 4px;
+    .card-title {
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-
-    .card h2 .badge {
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 99px;
+      gap: 10px;
+      font-size: 1.15rem;
       font-weight: 700;
-      letter-spacing: 0.05em;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .broken h2 .badge  { background: #7f1d1d; color: #fca5a5; }
-    .fixed  h2 .badge  { background: #14532d; color: #86efac; }
-
-    .card .desc {
-      font-size: 0.82rem;
-      color: #64748b;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
+    .badge.danger  { background: #ef4444; color: #fff; }
+    .badge.success { background: #22c55e; color: #000; }
 
     /* ── Product Grid ── */
     .products {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 10px;
-      margin-bottom: 20px;
     }
 
     .product-btn {
-      background: #0f172a;
-      border: 1px solid #334155;
+      background: #334155;
+      border: 1px solid #475569;
+      color: #e2e8f0;
       border-radius: 10px;
       padding: 10px 8px;
       cursor: pointer;
-      transition: border-color .2s, transform .1s;
       text-align: center;
-      color: #e2e8f0;
+      transition: background 0.15s, transform 0.1s;
+      font-size: 0.82rem;
+      line-height: 1.4;
     }
 
-    .product-btn:hover {
-      border-color: #60a5fa;
-      transform: translateY(-2px);
-    }
+    .product-btn:hover  { background: #475569; transform: translateY(-2px); }
+    .product-btn:active { transform: translateY(0); }
 
-    .product-btn .p-name  { font-size: 0.8rem; display: block; margin-bottom: 4px; }
-    .product-btn .p-price { font-size: 1rem; font-weight: 700; color: #60a5fa; }
+    .product-btn .price {
+      display: block;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-top: 4px;
+    }
 
     /* ── Cart Items ── */
     .cart-list {
       list-style: none;
-      margin-bottom: 16px;
-      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 60px;
     }
 
-    .cart-list li {
+    .cart-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 10px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      margin-bottom: 4px;
       background: #0f172a;
-      gap: 8px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      animation: slideIn 0.2s ease;
     }
 
-    .cart-list li .item-name { flex: 1; color: #cbd5e1; }
-    .cart-list li .item-price { color: #93c5fd; font-weight: 600; white-space: nowrap; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .cart-item .item-price { color: #38bdf8; font-weight: 600; }
 
     .remove-btn {
       background: none;
@@ -135,70 +139,798 @@
       font-size: 1rem;
       padding: 0 4px;
       line-height: 1;
+      transition: transform 0.1s;
     }
+    .remove-btn:hover { transform: scale(1.3); }
 
-    /* ── Totals & Checks ── */
-    .totals-box {
+    /* ── Totals ── */
+    .totals {
       background: #0f172a;
       border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
-      font-size: 0.88rem;
-      line-height: 2;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.9rem;
     }
 
-    .totals-box .row {
+    .total-row {
       display: flex;
       justify-content: space-between;
-      border-bottom: 1px solid #1e293b;
+      align-items: center;
     }
 
-    .totals-box .row:last-child { border-bottom: none; }
-    .totals-box .row .label { color: #94a3b8; }
-    .totals-box .row .value { font-weight: 600; }
+    .total-row.grand {
+      border-top: 1px solid #334155;
+      padding-top: 8px;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
 
-    .value.ok   { color: #4ade80; }
-    .value.bad  { color: #f87171; }
-    .value.warn { color: #fbbf24; }
+    .total-row .label { color: #94a3b8; }
+    .total-row .value { font-weight: 600; }
 
-    /* ── Check Rows ── */
-    .checks { font-size: 0.82rem; line-height: 1.9; }
+    /* ── Comparison Test ── */
+    .comparison {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
 
-    .check-row {
+    .comparison h3 {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .test-row {
       display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      padding: 4px 0;
-      border-bottom: 1px dashed #1e293b;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
     }
 
-    .check-row:last-child { border-bottom: none; }
-    .check-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
-    .check-text { color: #94a3b8; flex: 1; }
-    .check-result { font-family: monospace; font-size: 0.78rem; }
-    .check-result.pass { color: #4ade80; }
-    .check-result.fail { color: #f87171; }
+    .test-row .expression {
+      font-family: 'Courier New', monospace;
+      color: #fbbf24;
+      font-size: 0.82rem;
+    }
 
-    /* ── Action Buttons ── */
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .result-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
 
-    .btn {
-      padding: 8px 16px;
+    .result-pill.pass { background: #166534; color: #86efac; }
+    .result-pill.fail { background: #7f1d1d; color: #fca5a5; }
+
+    /* ── Raw Float Display ── */
+    .raw-value {
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      color: #f87171;
+      background: #1e293b;
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .raw-value.ok { color: #86efac; }
+
+    /* ── Clear Button ── */
+    .clear-btn {
+      background: #334155;
+      border: 1px solid #475569;
+      color: #e2e8f0;
       border-radius: 8px;
-      border: none;
+      padding: 8px 16px;
       cursor: pointer;
       font-size: 0.85rem;
-      font-weight: 600;
-      transition: opacity .2s, transform .1s;
+      transition: background 0.15s;
+      align-self: flex-start;
     }
 
-    .btn:hover { opacity: .85; transform: translateY(-1px); }
-    .btn:active { transform: translateY(0); }
-    .btn-red   { background: #dc2626; color: #fff; }
-    .btn-green { background: #16a34a; color: #fff; }
-    .btn-blue  { background: #2563eb; color: #fff; }
+    .clear-btn:hover { background: #475569; }
 
-    /* ── Explanation Card ── */
-    .explain h2 { color: #fbbf24; margin-bottom: 16px; }
+    /* ── Explainer Section ── */
+    .explainer {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 28px;
+      border-left: 5px solid #f59e0b;
+    }
 
-    .explain-
+    .explainer h2 {
+      color: #f59e0b;
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+
+    .explainer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .explain-block {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .explain-block h3 {
+      color: #38bdf8;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+
+    .explain-block p, .explain-block li {
+      font-size: 0.88rem;
+      color: #94a3b8;
+      line-height: 1.65;
+    }
+
+    .explain-block ul { padding-left: 18px; }
+    .explain-block li { margin-bottom: 4px; }
+
+    .code-block {
+      background: #020617;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      color: #e2e8f0;
+    }
+
+    .code-block .comment { color: #64748b; }
+    .code-block .keyword { color: #c084fc; }
+    .code-block .string  { color: #86efac; }
+    .code-block .number  { color: #fbbf24; }
+    .code-block .fn      { color: #38bdf8; }
+    .code-block .bad     { color: #f87171; text-decoration: line-through; }
+    .code-block .good    { color: #86efac; }
+
+    /* ── Live Proof ── */
+    .live-proof {
+      max-width: 1200px;
+      margin: 24px auto 0;
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 28px;
+      border-left: 5px solid #a855f7;
+    }
+
+    .live-proof h2 {
+      color: #a855f7;
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+
+    .proof-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .proof-item {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.83rem;
+    }
+
+    .proof-item .expr {
+      font-family: 'Courier New', monospace;
+      color: #fbbf24;
+      margin-bottom: 4px;
+    }
+
+    .proof-item .actual {
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+    }
+
+    .proof-item .actual.wrong { color: #f87171; }
+    .proof-item .actual.right { color: #86efac; }
+
+    /* ── Empty cart message ── */
+    .empty-msg {
+      color: #475569;
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 12px 0;
+      font-style: italic;
+    }
+
+    /* ── Discount Highlight ── */
+    .discount-warn {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: 4px;
+    }
+    .discount-warn.fail    { background: #7f1d1d; color: #fca5a5; }
+    .discount-warn.success { background: #14532d; color: #86efac; }
+  </style>
+</head>
+<body>
+
+<h1>🛒 Shopping Cart: Float vs Decimal</h1>
+<p class="subtitle">
+  Why <code>===</code> and naive float math silently break financial calculations
+</p>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CART GRID
+═══════════════════════════════════════════════ -->
+<div class="grid">
+
+  <!-- ── BROKEN CART ── -->
+  <div class="card broken">
+    <div class="card-title">
+      💥 Broken Cart
+      <span class="badge danger">Uses === &amp; raw floats</span>
+    </div>
+
+    <div class="products" id="broken-products"></div>
+
+    <ul class="cart-list" id="broken-cart">
+      <li class="empty-msg">Cart is empty — add some items above</li>
+    </ul>
+
+    <div class="totals">
+      <div class="total-row">
+        <span class="label">Raw JS sum:</span>
+        <span class="value" id="broken-raw">—</span>
+      </div>
+      <div class="total-row">
+        <span class="label">Displayed total:</span>
+        <span class="value" id="broken-display">$0.00</span>
+      </div>
+      <div class="total-row grand">
+        <span class="label">Actual stored float:</span>
+        <code class="raw-value" id="broken-exact">—</code>
+      </div>
+    </div>
+
+    <div class="comparison" id="broken-comparison">
+      <h3>🔍 === Comparison Tests</h3>
+      <p style="color:#475569;font-size:0.82rem;font-style:italic">
+        Add items to see comparison tests
+      </p>
+    </div>
+
+    <div id="broken-discount" class="discount-warn" style="display:none"></div>
+    <button class="clear-btn" onclick="clearCart('broken')">🗑 Clear Cart</button>
+  </div>
+
+  <!-- ── FIXED CART ── -->
+  <div class="card fixed">
+    <div class="card-title">
+      ✅ Fixed Cart
+      <span class="badge success">Uses integer cents</span>
+    </div>
+
+    <div class="products" id="fixed-products"></div>
+
+    <ul class="cart-list" id="fixed-cart">
+      <li class="empty-msg">Cart is empty — add some items above</li>
+    </ul>
+
+    <div class="totals">
+      <div class="total-row">
+        <span class="label">Stored as cents (integer):</span>
+        <span class="value" id="fixed-cents">—</span>
+      </div>
+      <div class="total-row">
+        <span class="label">Displayed total:</span>
+        <span class="value" id="fixed-display">$0.00</span>
+      </div>
+      <div class="total-row grand">
+        <span class="label">Exact integer sum:</span>
+        <code class="raw-value ok" id="fixed-exact">—</code>
+      </div>
+    </div>
+
+    <div class="comparison" id="fixed-comparison">
+      <h3>🔍 Comparison Tests</h3>
+      <p style="color:#475569;font-size:0.82rem;font-style:italic">
+        Add items to see comparison tests
+      </p>
+    </div>
+
+    <div id="fixed-discount" class="discount-warn" style="display:none"></div>
+    <button class="clear-btn" onclick="clearCart('fixed')">🗑 Clear Cart</button>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- ═══════════════════════════════════════════════
+     LIVE PROOF PANEL
+═══════════════════════════════════════════════ -->
+<div class="live-proof">
+  <h2>🔬 Live JavaScript Float Proof</h2>
+  <p style="color:#94a3b8;font-size:0.88rem;margin-bottom:16px">
+    These expressions are evaluated <em>right now</em> in your browser's JS engine.
+    No tricks — open DevTools Console and try them yourself.
+  </p>
+  <div class="proof-grid" id="proof-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     EXPLAINER
+═══════════════════════════════════════════════ -->
+<div class="explainer" style="margin-top:24px">
+  <h2>⚠️ Why Floating-Point Equality Fails for Money</h2>
+
+  <div class="explainer-grid">
+
+    <div class="explain-block">
+      <h3>📐 The Root Cause: Binary Fractions</h3>
+      <p>
+        JavaScript (like most languages) stores numbers as
+        <strong>IEEE 754 double-precision binary floats</strong>.
+        Decimal fractions like <code>0.1</code> or <code>0.99</code>
+        <em>cannot be represented exactly</em> in binary — just as
+        <code>1/3</code> cannot be written exactly in decimal.
+        The CPU silently stores the nearest approximation.
+      </p>
+    </div>
+
+    <div class="explain-block">
+      <h3>🔗 Why === Breaks</h3>
+      <p>
+        <code>===</code> compares the <em>exact bit pattern</em> of two floats.
+        When you compute <code>0.1 + 0.2</code> you get
+        <code>0.30000000000000004</code>, not <code>0.3</code>.
+        So <code>0.1 + 0.2 === 0.3</code> is <strong>false</strong> — a silent
+        bug that can misfire discount logic, free-shipping thresholds, and
+        tax calculations.
+      </p>
+    </div>
+
+    <div class="explain-block">
+      <h3>💰 The Integer-Cents Fix</h3>
+      <p>
+        Store every price as an <strong>integer number of cents</strong>
+        (e.g. $4.99 → <code>499</code>). All arithmetic stays in whole
+        numbers, which <em>are</em> represented exactly in IEEE 754 up to
+        2<sup>53</sup>. Only convert to dollars for display, using
+        <code>(cents / 100).toFixed(2)</code>.
+      </p>
+    </div>
+
+    <div class="explain-block">
+      <h3>🏦 Industry Standard</h3>
+      <ul>
+        <li>Banks store amounts in integer minor units (cents, pence, etc.)</li>
+        <li>Payment APIs (Stripe, PayPal) accept amounts in cents only</li>
+        <li>SQL <code>DECIMAL(10,2)</code> avoids float columns for money</li>
+        <li>Java's <code>BigDecimal</code> / Python's <code>decimal</code> module</li>
+        <li>Never use <code>float</code> or <code>double</code> for money in any language</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="code-block">
+<span class="comment">// ─── BROKEN approach (what the developer claims "works perfectly") ───</span>
+<span class="keyword">let</span> total = <span class="number">0</span>;
+total += <span class="number">4.99</span>;   <span class="comment">// stored as 4.990000000000000213162820728030...</span>
+total += <span class="number">2.50</span>;   <span class="comment">// stored as 2.500000000000000000000000000000...</span>
+total += <span class="number">1.99</span>;   <span class="comment">// stored as 1.990000000000000213162820728030...</span>
+<span class="comment">// total is now: 9.479999999999999715782905695...  NOT 9.48 !</span>
+
+<span class="bad">total === 9.48</span>   <span class="comment">// false  ← silent bug!</span>
+<span class="bad">total === 10.00</span>  <span class="comment">// false  ← free-shipping check silently fails!</span>
+
+<span class="comment">// ─── FIXED approach (integer cents) ───────────────────────────────</span>
+<span class="keyword">let</span> totalCents = <span class="number">0</span>;
+totalCents += <span class="number">499</span>;  <span class="comment">// exact integer</span>
+totalCents += <span class="number">250</span>;  <span class="comment">// exact integer</span>
+totalCents += <span class="number">199</span>;  <span class="comment">// exact integer</span>
+<span class="comment">// totalCents === 948  (exact, always)</span>
+
+<span class="good">totalCents === 948</span>   <span class="comment">// true  ✓</span>
+<span class="good">totalCents >= 1000</span>   <span class="comment">// false — free shipping needs $10.00 (correct!) ✓</span>
+
+<span class="comment">// Display only:</span>
+<span class="keyword">const</span> display = <span class="string">`$${(totalCents / 100).<span class="fn">toFixed</span>(2)}`</span>;  <span class="comment">// "$9.48"</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════
+   PRODUCTS  (name, display price, cents)
+═══════════════════════════════════════════ */
+const PRODUCTS = [
+  { name: '☕ Coffee',     dollars: 4.99,  cents: 499  },
+  { name: '🥐 Croissant', dollars: 2.50,  cents: 250  },
+  { name: '📗 Notebook',  dollars: 1.99,  cents: 199  },
+  { name: '🖊 Pen',       dollars: 0.99,  cents: 99   },
+  { name: '🍫 Chocolate', dollars: 3.49,  cents: 349  },
+  { name: '🧃 Juice',     dollars: 1.75,  cents: 175  },
+  { name: '📎 Clips',     dollars: 0.49,  cents: 49   },
+  { name: '🍎 Apple',     dollars: 1.29,  cents: 129  },
+];
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+const state = {
+  broken: [],   // array of { name, dollars }
+  fixed:  [],   // array of { name, cents }
+};
+
+/* ═══════════════════════════════════════════
+   RENDER PRODUCT BUTTONS
+═══════════════════════════════════════════ */
+function renderProducts() {
+  ['broken', 'fixed'].forEach(mode => {
+    const container = document.getElementById(`${mode}-products`);
+    container.innerHTML = '';
+    PRODUCTS.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'product-btn';
+      btn.innerHTML = `${p.name}<span class="price">$${p.dollars.toFixed(2)}</span>`;
+      btn.addEventListener('click', () => addItem(mode, p));
+      container.appendChild(btn);
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════
+   ADD ITEM
+═══════════════════════════════════════════ */
+function addItem(mode, product) {
+  if (mode === 'broken') {
+    state.broken.push({ name: product.name, dollars: product.dollars });
+  } else {
+    state.fixed.push({ name: product.name, cents: product.cents,
+                       dollars: product.dollars });
+  }
+  renderCart(mode);
+}
+
+/* ═══════════════════════════════════════════
+   REMOVE ITEM
+═══════════════════════════════════════════ */
+function removeItem(mode, index) {
+  state[mode].splice(index, 1);
+  renderCart(mode);
+}
+
+/* ═══════════════════════════════════════════
+   CLEAR CART
+═══════════════════════════════════════════ */
+function clearCart(mode) {
+  state[mode] = [];
+  renderCart(mode);
+}
+
+/* ═══════════════════════════════════════════
+   RENDER CART
+═══════════════════════════════════════════ */
+function renderCart(mode) {
+  const items    = state[mode];
+  const listEl   = document.getElementById(`${mode}-cart`);
+
+  listEl.innerHTML = '';
+
+  if (items.length === 0) {
+    listEl.innerHTML =
+      '<li class="empty-msg">Cart is empty — add some items above</li>';
+    resetTotals(mode);
+    return;
+  }
+
+  items.forEach((item, i) => {
+    const li = document.createElement('li');
+    li.className = 'cart-item';
+    const priceStr = mode === 'broken'
+      ? `$${item.dollars.toFixed(2)}`
+      : `$${(item.cents / 100).toFixed(2)}`;
+    li.innerHTML = `
+      <span>${item.name}</span>
+      <span class="item-price">${priceStr}</span>
+      <button class="remove-btn" title="Remove" onclick="removeItem('${mode}',${i})">✕</button>
+    `;
+    listEl.appendChild(li);
+  });
+
+  if (mode === 'broken') renderBrokenTotals(items);
+  else                    renderFixedTotals(items);
+}
+
+/* ═══════════════════════════════════════════
+   BROKEN TOTALS  (raw float addition)
+═══════════════════════════════════════════ */
+function renderBrokenTotals(items) {
+  // Naive float sum — exactly what the developer would write
+  let total = 0;
+  items.forEach(item => { total += item.dollars; });
+
+  const rawEl     = document.getElementById('broken-raw');
+  const displayEl = document.getElementById('broken-display');
+  const exactEl   = document.getElementById('broken-exact');
+
+  rawEl.textContent     = total;                          // full precision
+  displayEl.textContent = `$${total.toFixed(2)}`;        // rounded display
+  exactEl.textContent   = total.toPrecision(20);         // expose the ugliness
+
+  // Colour the exact value red if it's not a clean decimal
+  const isClean = Number(total.toPrecision(10)) === Math.round(total * 100) / 100;
+  exactEl.className = isClean ? 'raw-value ok' : 'raw-value';
+
+  renderBrokenComparisons(total);
+  renderBrokenDiscount(total);
+}
+
+/* ═══════════════════════════════════════════
+   BROKEN COMPARISON TESTS
+═══════════════════════════════════════════ */
+function renderBrokenComparisons(total) {
+  const el = document.getElementById('broken-comparison');
+
+  // Build a set of expected values to test against
+  const rounded2 = Math.round(total * 100) / 100;
+  const tests = [
+    {
+      expr: `total === ${rounded2}`,
+      result: total === rounded2,
+      explanation: 'Exact match test'
+    },
+    {
+      expr: `total === ${total.toFixed(2)}`,
+      result: total === parseFloat(total.toFixed(2)),
+      explanation: 'toFixed round-trip'
+    },
+    {
+      expr: `total >= 10.00  (free shipping)`,
+      result: total >= 10.00,
+      explanation: 'Threshold check'
+    },
+    {
+      expr: `total === 10.00`,
+      result: total === 10.00,
+      explanation: 'Exact threshold'
+    },
+  ];
+
+  let html = '<h3>🔍 === Comparison Tests</h3>';
+  tests.forEach(t => {
+    const cls    = t.result ? 'pass' : 'fail';
+    const symbol = t.result ? '✓ true' : '✗ false';
+    html += `
+      <div class="test-row">
+        <span class="expression">${t.expr}</span>
+        <span>
+          <span class="result-pill ${cls}">${symbol}</span>
+          <span style="color:#64748b;font-size:0.78rem;margin-left:6px">${t.explanation}</span>
+        </span>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════
+   BROKEN DISCOUNT (shows === failure)
+═══════════════════════════════════════════ */
+function renderBrokenDiscount(total) {
+  const el = document.getElementById('broken-discount');
+
+  // Try to detect a "magic" total that should be a round number but isn't
+  const expected = Math.round(total * 100) / 100;
+  const passes   = total === expected;
+
+  el.style.display = 'block';
+  if (passes) {
+    el.className = 'discount-warn success';
+    el.textContent =
+      `✓ This total happens to compare equal — but add more items and it will break!`;
+  } else {
+    el.className = 'discount-warn fail';
+    el.textContent =
+      `✗ DISCOUNT BUG: total (${total.toPrecision(17)}) !== ${expected} ` +
+      `— discount logic using === would silently FAIL here!`;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   FIXED TOTALS  (integer cents)
+═══════════════════════════════════════════ */
+function renderFixedTotals(items) {
+  // All arithmetic in whole-number cents — always exact
+  let totalCents = 0;
+  items.forEach(item => { totalCents += item.cents; });
+
+  const centsEl   = document.getElementById('fixed-cents');
+  const displayEl = document.getElementById('fixed-display');
+  const exactEl   = document.getElementById('fixed-exact');
+
+  centsEl.textContent   = `${totalCents}¢`;
+  displayEl.textContent = `$${(totalCents / 100).toFixed(2)}`;
+  exactEl.textContent   = `${totalCents} (exact integer)`;
+
+  renderFixedComparisons(totalCents);
+  renderFixedDiscount(totalCents);
+}
+
+/* ═══════════════════════════════════════════
+   FIXED COMPARISON TESTS
+═══════════════════════════════════════════ */
+function renderFixedComparisons(totalCents) {
+  const el = document.getElementById('fixed-comparison');
+
+  const tests = [
+    {
+      expr: `totalCents === ${totalCents}`,
+      result: totalCents === totalCents,
+      explanation: 'Exact integer match'
+    },
+    {
+      expr: `totalCents >= 1000  (free shipping $10)`,
+      result: totalCents >= 1000,
+      explanation: 'Threshold check'
+    },
+    {
+      expr: `totalCents === 1000`,
+      result: totalCents === 1000,
+      explanation: 'Exact $10.00 check'
+    },
+    {
+      expr: `totalCents % 100 === 0  (whole dollars?)`,
+      result: totalCents % 100 === 0,
+      explanation: 'Divisibility check'
+    },
+  ];
+
+  let html = '<h3>🔍 Comparison Tests (cents)</h3>';
+  tests.forEach(t => {
+    const cls    = t.result ? 'pass' : 'fail';
+    const symbol = t.result ? '✓ true' : '✗ false';
+    html += `
+      <div class="test-row">
+        <span class="expression">${t.expr}</span>
+        <span>
+          <span class="result-pill ${cls}">${symbol}</span>
+          <span style="color:#64748b;font-size:0.78rem;margin-left:6px">${t.explanation}</span>
+        </span>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════
+   FIXED DISCOUNT
+═══════════════════════════════════════════ */
+function renderFixedDiscount(totalCents) {
+  const el = document.getElementById('fixed-discount');
+  el.style.display = 'block';
+
+  if (totalCents >= 1000) {
+    el.className = 'discount-warn success';
+    el.textContent =
+      `✓ FREE SHIPPING unlocked! totalCents (${totalCents}) >= 1000 — always exact.`;
+  } else {
+    const remaining = 1000 - totalCents;
+    el.className = 'discount-warn fail';
+    el.textContent =
+      `Add $${(remaining / 100).toFixed(2)} more for free shipping ` +
+      `(${remaining}¢ remaining) — comparison is always reliable.`;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   RESET TOTALS (empty cart)
+═══════════════════════════════════════════ */
+function resetTotals(mode) {
+  if (mode === 'broken') {
+    document.getElementById('broken-raw').textContent     = '—';
+    document.getElementById('broken-display').textContent = '$0.00';
+    document.getElementById('broken-exact').textContent   = '—';
+    document.getElementById('broken-comparison').innerHTML =
+      '<h3>🔍 === Comparison Tests</h3>' +
+      '<p style="color:#475569;font-size:0.82rem;font-style:italic">Add items to see comparison tests</p>';
+    document.getElementById('broken-discount').style.display = 'none';
+  } else {
+    document.getElementById('fixed-cents').textContent   = '—';
+    document.getElementById('fixed-display').textContent = '$0.00';
+    document.getElementById('fixed-exact').textContent   = '—';
+    document.getElementById('fixed-comparison').innerHTML =
+      '<h3>🔍 Comparison Tests (cents)</h3>' +
+      '<p style="color:#475569;font-size:0.82rem;font-style:italic">Add items to see comparison tests</p>';
+    document.getElementById('fixed-discount').style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   LIVE PROOF PANEL
+   Evaluate classic float gotchas right here
+═══════════════════════════════════════════ */
+function renderProof() {
+  const proofs = [
+    { expr: '0.1 + 0.2',           expected: 0.3   },
+    { expr: '0.1 + 0.2 === 0.3',   expected: true  },
+    { expr: '4.99 + 2.50 + 1.99',  expected: 9.48  },
+    { expr: '(4.99+2.50+1.99) === 9.48', expected: true },
+    { expr: '1.005.toFixed(2)',     expected: '"1.01"' },
+    { expr: '0.3 - 0.1',           expected: 0.2   },
+    { expr: '0.7 + 0.1',           expected: 0.8   },
+    { expr: '0.1 * 3',             expected: 0.3   },
+    { expr: '1.1 + 2.2',           expected: 3.3   },
+    { expr: '0.2 + 0.4',           expected: 0.6   },
+    { expr: '0.1 + 0.7',           expected: 0.8   },
+    { expr: '3 * 0.1',             expected: 0.3   },
+  ];
+
+  // Safe evaluator
+  function safeEval(expr) {
+    try {
+      // We only evaluate simple arithmetic expressions — safe here
+      // eslint-disable-next-line no-new-func
+      return Function(`"use strict"; return (${expr})`)();
+    } catch(e) {
+      return 'ERROR';
+    }
+  }
+
+  const grid = document.getElementById('proof-grid');
+  grid.innerHTML = '';
+
+  proofs.forEach(p => {
+    const actual   = safeEval(p.expr);
+    const expected = p.expected;
+
+    // Determine if the result matches what a naive developer would expect
+    let matches;
+    if (typeof expected === 'boolean') {
+      matches = actual === expected;
+    } else if (typeof expected === 'string') {
+      matches = String(actual) === expected.replace(/"/g, '');
+    } else {
+      matches = actual === expected;
+    }
+
+    const actualStr = typeof actual === 'string'
+      ? `"${actual}"`
+      : String(actual);
+
+    const div = document.createElement('div');
+    div.className = 'proof-item';
+    div.innerHTML = `
+      <div class="expr">${p.expr}</div>
+      <div class="actual ${matches ? 'right' : 'wrong'}">
+        → ${actualStr}
+        ${matches ? '✓ (as expected)' : `✗ expected: ${expected}`}
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+renderProducts();
+renderProof();
+</script>
+</body>
+</html>

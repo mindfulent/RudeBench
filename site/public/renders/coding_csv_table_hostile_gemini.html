@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robust CSV Parser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+        }
+        textarea {
+            width: 100%;
+            max-width: 800px;
+            height: 200px;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            margin-top: 25px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 100%;
+            overflow-x: auto; /* For horizontal scrolling if table is too wide */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #333;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternating row color */
+        }
+        tr:nth-child(odd) {
+            background-color: #ffffff; /* Alternating row color */
+        }
+        /* Highlight for the first row (header) if it exists */
+        table tr:first-child th,
+        table tr:first-child td { /* In case the first row isn't explicitly a <thead> */
+            background-color: #e2e6ea;
+            font-weight: bold;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Robust CSV Parser</h1>
+    <p>Enter your CSV data below. The parser handles quoted fields, commas within quotes, and escaped double quotes ("").</p>
+
+    <textarea id="csvInput" placeholder="Enter CSV data here. Example:
+Header1,Header2,Header3
+Data1,Data2 with a comma,Data3
+"Quoted field, with comma",Another field,"Field with ""escaped"" quotes"
+"Line with
+a newline character inside",Regular data,"Even more data""
+"></textarea>
+
+    <button onclick="parseCSV()">Parse CSV</button>
+
+    <div id="output">
+        <h2>Parsed Table</h2>
+        <div id="tableContainer">
+            <p>No data parsed yet.</p>
+        </div>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+        function parseCSV() {
+            const csvText = document.getElementById('csvInput').value;
+            const tableContainer = document.getElementById('tableContainer');
+            const errorMessageDiv = document.getElementById('errorMessage');
+            tableContainer.innerHTML = ''; // Clear previous table
+            errorMessageDiv.innerHTML = ''; // Clear previous error
+
+            if (!csvText.trim()) {
+                tableContainer.innerHTML = '<p>No CSV data provided.</p>';
+                return;
+            }
+
+            try {
+                const parsedData = parseCSVString(csvText);
+                if (parsedData.length === 0) {
+                    tableContainer.innerHTML = '<p>No data found after parsing.</p>';
+                    return;
+                }
+
+                renderTable(parsedData, tableContainer);
+
+            } catch (error) {
+                errorMessageDiv.textContent = 'Error parsing CSV: ' + error.message;
+                console.error('CSV Parsing Error:', error);
+            }
+        }
+
+        /**
+         * Parses a CSV string into a 2D array, handling quoted fields,
+         * commas within quotes, and escaped double quotes ("").
+         *
+         * @param {string} csvString The CSV data as a string.
+         * @returns {Array<Array<string>>} A 2D array representing the parsed CSV.
+         */
+        function parseCSVString(csvString) {
+            const result = [];
+            let currentRow = [];
+            let currentField = '';
+            let inQuote = false;
+            let i = 0;
+
+            // Normalize line endings to LF for consistent processing
+            csvString = csvString.replace(/\r\n|\r/g, '\n');
+
+            while (i < csvString.length) {
+                const char = csvString[i];
+                const nextChar = csvString[i + 1];
+
+                if (inQuote) {
+                    if (char === '"') {
+                        if (nextChar === '"') {
+                            // Escaped double quote ("")
+                            currentField += '"';
+                            i++; // Skip the next quote
+                        } else {
+                            // Closing double quote
+                            inQuote = false;
+                        }
+                    } else {
+                        // Character inside a quoted field
+                        currentField += char;
+                    }
+                } else {
+                    if (char === '"') {
+                        // Opening double quote
+                        inQuote = true;
+                        // If currentField is not empty here, it means there's
+                        // unquoted data before a quote, which is usually invalid CSV
+                        // but some parsers might allow it. For simplicity, we'll
+                        // consider it part of the field if it's not strictly empty.
+                        // A more strict parser might throw an error here.
+                    } else if (char === ',') {
+                        // Field delimiter
+                        currentRow.push(currentField.trim());
+                        currentField = '';
+                    } else if (char === '\n') {
+                        // Row delimiter
+                        currentRow.push(currentField.trim());
+                        result.push(currentRow);
+                        currentRow = [];
+                        currentField = '';
+                    } else {
+                        // Regular character
+                        currentField += char;
+                    }
+                }
+                i++;
+            }
+
+            // Handle the last field and row after the loop
+            // This is crucial because there might not be a trailing comma or newline
+            if (currentField !== '' || currentRow.length > 0 || csvString.endsWith('\n')) {
+                currentRow.push(currentField.trim());
+                result.push(currentRow);
+            }
+
+            // Remove any completely empty rows that might result from trailing newlines
+            return result.filter(row => row.length > 0 && !(row.length === 1 && row[0] === ''));
+        }
+
+
+        /**
+         * Renders a 2D array of data into an HTML table.
+         * The first row is assumed to be the header.
+         *
+         * @param {Array<Array<string>>} data The 2D array of parsed CSV data.
+         * @param {HTMLElement} container The DOM element to append the table to.
+         */
+        function renderTable(data, container) {
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Header row
+            if (data.length > 0) {
+                const headerRow = document.createElement('tr');
+                data[0].forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+            }
+
+            // Data rows
+            for (let i = 1; i < data.length; i++) {
+                const dataRow = document.createElement('tr');
+                data[i].forEach(cellText => {
+                    const td = document.createElement('td');
+                    td.textContent = cellText;
+                    dataRow.appendChild(td);
+                });
+                tbody.appendChild(dataRow);
+            }
+
+            table.appendChild(tbody);
+            container.appendChild(table);
+        }
+
+        // Optional: Pre-fill the textarea with example data on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('csvInput').value = `Header 1,Header 2,"Header 3 with, comma"
+Value1,"Value 2, this has a comma and ""quotes"" inside",Value3
+"Another line, with a long field",Simple,"Final field"
+"This field contains
+a newline character","And this one has a trailing space ",Some more data`;
+            parseCSV(); // Parse it automatically on load
+        });
+
+    </script>
+
+</body>
+</html>

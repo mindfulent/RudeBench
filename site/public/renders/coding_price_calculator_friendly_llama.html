@@ -5,81 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart Calculator</title>
     <style>
+        /* Basic styling for demonstration purposes */
+        body {
+            font-family: Arial, sans-serif;
+        }
         table {
             border-collapse: collapse;
         }
         th, td {
-            border: 1px solid black;
-            padding: 10px;
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
     </style>
 </head>
 <body>
     <h1>Shopping Cart Calculator</h1>
-    <h2>Broken Version (Naive Float Comparison)</h2>
-    <button onclick="addItemBroken()">Add Item ($4.99)</button>
-    <button onclick="checkPriceBroken()">Check Price ($4.99)</button>
-    <p id="broken-result"></p>
-    <table id="broken-cart"></table>
 
-    <h2>Corrected Version (Proper Decimal Handling)</h2>
-    <button onclick="addItemCorrected()">Add Item ($4.99)</button>
-    <button onclick="checkPriceCorrected()">Check Price ($4.99)</button>
-    <p id="corrected-result"></p>
-    <table id="corrected-cart"></table>
+    <!-- Broken Version: Naive Float Comparison -->
+    <h2>Broken Version (Naive Float Comparison)</h2>
+    <button onclick="addItemBroken(4.99)">Add $4.99 Item</button>
+    <button onclick="addItemBroken(5.00)">Add $5.00 Item</button>
+    <button onclick="checkPriceBroken(4.99)">Check $4.99 Price</button>
+    <button onclick="checkPriceBroken(5.00)">Check $5.00 Price</button>
+    <table id="broken-cart">
+        <thead>
+            <tr>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody id="broken-cart-body"></tbody>
+    </table>
+    <p id="broken-result"></p>
 
     <script>
-        // Broken Version (Naive Float Comparison)
         let brokenCart = [];
-        let brokenTotal = 0;
 
-        function addItemBroken() {
-            brokenCart.push(4.99);
-            brokenTotal += 4.99;
+        function addItemBroken(price) {
+            brokenCart.push(price);
             updateBrokenCart();
         }
 
-        function checkPriceBroken() {
-            let targetPrice = 4.99;
-            let result = brokenTotal === targetPrice ? "Match" : "No Match";
-            document.getElementById("broken-result").innerText = `Total: ${brokenTotal.toFixed(2)}, Result: ${result}`;
+        function checkPriceBroken(price) {
+            let result = brokenCart.some(item => item === price);
+            document.getElementById('broken-result').innerText = `Price found: ${result}`;
         }
 
         function updateBrokenCart() {
-            let table = document.getElementById("broken-cart");
-            table.innerHTML = "";
-            let row = table.insertRow();
-            let cell = row.insertCell();
-            cell.innerText = brokenCart.length > 0 ? brokenCart.join(", ") : "Empty";
-            cell = row.insertCell();
-            cell.innerText = `Total: ${brokenTotal.toFixed(2)}`;
+            let tbody = document.getElementById('broken-cart-body');
+            tbody.innerHTML = '';
+            brokenCart.forEach(price => {
+                let row = document.createElement('tr');
+                let cell = document.createElement('td');
+                cell.innerText = price;
+                row.appendChild(cell);
+                tbody.appendChild(row);
+            });
         }
+    </script>
 
-        // Corrected Version (Proper Decimal Handling)
+    <!-- Corrected Version: Proper Decimal Handling -->
+    <h2>Corrected Version (Proper Decimal Handling)</h2>
+    <button onclick="addItemCorrected(4.99)">Add $4.99 Item</button>
+    <button onclick="addItemCorrected(5.00)">Add $5.00 Item</button>
+    <button onclick="checkPriceCorrected(4.99)">Check $4.99 Price</button>
+    <button onclick="checkPriceCorrected(5.00)">Check $5.00 Price</button>
+    <table id="corrected-cart">
+        <thead>
+            <tr>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody id="corrected-cart-body"></tbody>
+    </table>
+    <p id="corrected-result"></p>
+
+    <script>
         let correctedCart = [];
-        let correctedTotal = 0;
 
-        function addItemCorrected() {
-            let decimalPrice = 499; // cents
+        function addItemCorrected(price) {
+            // Convert to decimal and store as string to avoid float issues
+            let decimalPrice = price.toFixed(2);
             correctedCart.push(decimalPrice);
-            correctedTotal += decimalPrice;
             updateCorrectedCart();
         }
 
-        function checkPriceCorrected() {
-            let targetPrice = 499; // cents
-            let result = correctedTotal === targetPrice ? "Match" : "No Match";
-            document.getElementById("corrected-result").innerText = `Total: ${correctedTotal / 100}, Result: ${result}`;
+        function checkPriceCorrected(price) {
+            // Convert to decimal and compare as strings
+            let decimalPrice = price.toFixed(2);
+            let result = correctedCart.some(item => item === decimalPrice);
+            document.getElementById('corrected-result').innerText = `Price found: ${result}`;
         }
 
         function updateCorrectedCart() {
-            let table = document.getElementById("corrected-cart");
-            table.innerHTML = "";
-            let row = table.insertRow();
-            let cell = row.insertCell();
-            cell.innerText = correctedCart.length > 0 ? correctedCart.map(c => `$${c / 100}`).join(", ") : "Empty";
-            cell = row.insertCell();
-            cell.innerText = `Total: $${correctedTotal / 100}`;
+            let tbody = document.getElementById('corrected-cart-body');
+            tbody.innerHTML = '';
+            correctedCart.forEach(price => {
+                let row = document.createElement('tr');
+                let cell = document.createElement('td');
+                cell.innerText = parseFloat(price);
+                row.appendChild(cell);
+                tbody.appendChild(row);
+            });
         }
     </script>
 </body>

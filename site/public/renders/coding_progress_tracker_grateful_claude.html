@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shared State Concurrency Bug Demo</title>
+    <title>Concurrency Bug Demo - Progress Bar Tracker</title>
     <style>
         * {
             margin: 0;
@@ -16,20 +16,20 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #fff;
+            color: #e0e0e0;
         }
 
         h1 {
             text-align: center;
             font-size: 2rem;
             margin-bottom: 8px;
-            color: #e0e0ff;
-            text-shadow: 0 0 20px rgba(100, 100, 255, 0.5);
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
         }
 
         .subtitle {
             text-align: center;
-            color: #a0a0cc;
+            color: #8892b0;
             margin-bottom: 30px;
             font-size: 0.95rem;
         }
@@ -37,7 +37,7 @@
         .container {
             display: flex;
             gap: 24px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             flex-wrap: wrap;
         }
@@ -58,175 +58,761 @@
         }
 
         .panel.fixed {
-            border-color: rgba(80, 255, 150, 0.4);
-            box-shadow: 0 0 30px rgba(80, 255, 150, 0.1);
+            border-color: rgba(80, 255, 160, 0.4);
+            box-shadow: 0 0 30px rgba(80, 255, 160, 0.1);
         }
 
         .panel-title {
             font-size: 1.4rem;
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .panel.buggy .panel-title { color: #ff6b6b; }
-        .panel.fixed .panel-title { color: #6bffb0; }
+        .panel.buggy .panel-title { color: #ff5050; }
+        .panel.fixed .panel-title { color: #50ffa0; }
 
         .badge {
-            font-size: 0.65rem;
-            padding: 3px 8px;
+            font-size: 0.7rem;
+            padding: 3px 10px;
             border-radius: 20px;
-            font-weight: bold;
+            font-weight: 600;
             letter-spacing: 1px;
         }
 
-        .panel.buggy .badge {
-            background: rgba(255, 80, 80, 0.2);
-            color: #ff6b6b;
-            border: 1px solid rgba(255, 80, 80, 0.4);
-        }
-
-        .panel.fixed .badge {
-            background: rgba(80, 255, 150, 0.2);
-            color: #6bffb0;
-            border: 1px solid rgba(80, 255, 150, 0.4);
-        }
+        .badge.bug { background: rgba(255, 80, 80, 0.2); color: #ff5050; border: 1px solid #ff5050; }
+        .badge.fix { background: rgba(80, 255, 160, 0.2); color: #50ffa0; border: 1px solid #50ffa0; }
 
         .panel-desc {
-            color: #a0a0cc;
             font-size: 0.85rem;
+            color: #8892b0;
             margin-bottom: 20px;
             line-height: 1.5;
         }
 
         .progress-section {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        .task-label {
+        .progress-label {
             display: flex;
             justify-content: space-between;
-            font-size: 0.8rem;
-            color: #c0c0dd;
+            align-items: center;
             margin-bottom: 6px;
+            font-size: 0.85rem;
         }
 
-        .progress-bar-wrapper {
+        .progress-name { color: #ccd6f6; font-weight: 500; }
+
+        .progress-value {
+            font-weight: 700;
+            font-size: 0.9rem;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 18px;
             background: rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            height: 22px;
+            border-radius: 9px;
             overflow: hidden;
             position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 9px;
+            transition: width 0.15s ease, background-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .buggy .progress-fill.normal { background: linear-gradient(90deg, #ff6b6b, #ee5a24); }
+        .buggy .progress-fill.warning { background: linear-gradient(90deg, #ffd32a, #ff9f43); }
+        .buggy .progress-fill.overflow { background: linear-gradient(90deg, #ff0000, #8b0000); }
+
+        .fixed .progress-fill { background: linear-gradient(90deg, #00b894, #00cec9); }
+
+        .total-section {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .buggy .total-section { background: rgba(255, 80, 80, 0.08); }
+        .fixed .total-section { background: rgba(80, 255, 160, 0.08); }
+
+        .total-label {
+            font-size: 0.8rem;
+            color: #8892b0;
             margin-bottom: 4px;
         }
 
-        .progress-bar-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.1s ease, background-color 0.3s ease;
-            position: relative;
-            min-width: 0;
+        .total-value {
+            font-size: 1.6rem;
+            font-weight: 700;
         }
 
-        .buggy .progress-bar-fill {
-            background: linear-gradient(90deg, #ff4444, #ff8800);
-        }
-
-        .buggy .progress-bar-fill.overflow {
-            background: linear-gradient(90deg, #ff0000, #ff00ff);
-            animation: glitch 0.3s infinite;
-        }
-
-        .fixed .progress-bar-fill {
-            background: linear-gradient(90deg, #00b4d8, #06d6a0);
-        }
-
-        @keyframes glitch {
-            0% { filter: hue-rotate(0deg) brightness(1.5); }
-            50% { filter: hue-rotate(90deg) brightness(2); }
-            100% { filter: hue-rotate(0deg) brightness(1.5); }
-        }
-
-        .percent-label {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-            z-index: 2;
-            pointer-events: none;
-        }
+        .buggy .total-value { color: #ff5050; }
+        .fixed .total-value { color: #50ffa0; }
 
         .overflow-warning {
-            color: #ff4444;
             font-size: 0.75rem;
-            font-weight: bold;
+            color: #ff5050;
+            margin-top: 4px;
             display: none;
-            animation: blink 0.5s infinite;
         }
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .total-section {
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 20px;
-        }
-
-        .total-label {
-            font-size: 0.85rem;
-            color: #c0c0dd;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .total-value {
-            font-size: 2rem;
-            font-weight: bold;
-            transition: color 0.3s;
-        }
-
-        .buggy .total-value { color: #ff6b6b; }
-        .fixed .total-value { color: #6bffb0; }
-
-        .buggy .total-value.overflow-val { color: #ff00ff; }
-
-        button {
-            width: 100%;
+        .log-box {
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
             padding: 12px;
+            height: 160px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            line-height: 1.5;
+        }
+
+        .log-entry.error { color: #ff6b6b; }
+        .log-entry.success { color: #50ffa0; }
+        .log-entry.info { color: #74b9ff; }
+        .log-entry.warn { color: #ffd32a; }
+
+        .btn {
+            padding: 10px 22px;
             border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: bold;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             letter-spacing: 0.5px;
         }
 
-        .buggy button {
-            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-buggy {
+            background: linear-gradient(135deg, #ff5050, #c0392b);
             color: white;
         }
 
-        .buggy button:hover {
-            background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 80, 80, 0.4);
+        .btn-fixed {
+            background: linear-gradient(135deg, #50ffa0, #00b894);
+            color: #1a1a2e;
         }
 
-        .fixed button {
-            background: linear-gradient(135deg, #06d6a0, #00b4d8);
-            color: #0a0a1a;
+        .btn-reset {
+            background: rgba(255,255,255,0.1);
+            color: #ccd6f6;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-left: 8px;
         }
 
-        .fixed button:hover {
-            
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-row {
+            display: flex;
+            align-items: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* Explanation Panel */
+        .explanation {
+            max-width: 1400px;
+            margin: 24px auto 0;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(100, 160, 255, 0.2);
+        }
+
+        .explanation h2 {
+            color: #64a0ff;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+
+        .exp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .exp-grid { grid-template-columns: 1fr; }
+        }
+
+        .exp-card {
+            padding: 16px;
+            border-radius: 10px;
+        }
+
+        .exp-card.problem { background: rgba(255, 80, 80, 0.08); border: 1px solid rgba(255,80,80,0.2); }
+        .exp-card.solution { background: rgba(80, 255, 160, 0.08); border: 1px solid rgba(80,255,160,0.2); }
+
+        .exp-card h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .exp-card.problem h3 { color: #ff5050; }
+        .exp-card.solution h3 { color: #50ffa0; }
+
+        .exp-card p, .exp-card li {
+            font-size: 0.85rem;
+            color: #8892b0;
+            line-height: 1.7;
+        }
+
+        .exp-card ul { padding-left: 18px; }
+
+        code {
+            background: rgba(255,255,255,0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #f8c555;
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            line-height: 1.7;
+            color: #abb2bf;
+            border: 1px solid rgba(255,255,255,0.06);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .code-block .kw { color: #c678dd; }
+        .code-block .fn { color: #61afef; }
+        .code-block .str { color: #98c379; }
+        .code-block .cm { color: #5c6370; font-style: italic; }
+        .code-block .num { color: #d19a66; }
+        .code-block .good { color: #50ffa0; }
+        .code-block .bad { color: #ff6b6b; }
+
+        .race-diagram {
+            margin-top: 16px;
+            padding: 14px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #8892b0;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .race-diagram .timeline { color: #64a0ff; }
+        .race-diagram .task-a { color: #ff6b6b; }
+        .race-diagram .task-b { color: #ffd32a; }
+        .race-diagram .result { color: #50ffa0; }
+        .race-diagram .bad-result { color: #ff5050; }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.running { background: #ffd32a; }
+        .status-indicator.idle { background: #8892b0; animation: none; }
+        .status-indicator.done-bug { background: #ff5050; animation: none; }
+        .status-indicator.done-fix { background: #50ffa0; animation: none; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .status-text {
+            font-size: 0.8rem;
+            color: #8892b0;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<h1>⚡ Concurrency Bug Demo</h1>
+<p class="subtitle">Shared State Race Condition in JavaScript Progress Tracking</p>
+
+<div class="container">
+
+    <!-- BUGGY PANEL -->
+    <div class="panel buggy" id="buggyPanel">
+        <div class="panel-title">
+            🐛 Buggy Version
+            <span class="badge bug">RACE CONDITION</span>
+        </div>
+        <p class="panel-desc">
+            Multiple async tasks read and write a shared <code>sharedProgress</code> variable
+            without synchronization. Each task reads a stale value, computes its increment,
+            and writes back — overwriting other tasks' updates. The result often exceeds 100%.
+        </p>
+
+        <div class="progress-section" id="buggyTasks">
+            <!-- Tasks injected by JS -->
+        </div>
+
+        <div class="total-section">
+            <div class="total-label">Combined Progress (should stay ≤ 100%)</div>
+            <div class="total-value" id="buggyTotal">0%</div>
+            <div class="overflow-warning" id="buggyWarning">⚠️ OVERFLOW! Value exceeded 100% due to race condition!</div>
+        </div>
+
+        <div class="status-text">
+            <span class="status-indicator idle" id="buggyIndicator"></span>
+            <span id="buggyStatus">Ready to run</span>
+        </div>
+
+        <div class="log-box" id="buggyLog">
+            <div class="log-entry info">// Buggy log will appear here...</div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-buggy" id="btnBuggy" onclick="runBuggy()">▶ Run Buggy Demo</button>
+            <button class="btn btn-reset" onclick="resetBuggy()">↺ Reset</button>
+        </div>
+    </div>
+
+    <!-- FIXED PANEL -->
+    <div class="panel fixed" id="fixedPanel">
+        <div class="panel-title">
+            ✅ Fixed Version
+            <span class="badge fix">SYNCHRONIZED</span>
+        </div>
+        <p class="panel-desc">
+            A <code>taskQueue</code> promise chain serializes all updates. Each task awaits
+            its turn before reading and writing. A <code>clamp</code> guard also ensures
+            the total never exceeds 100%, even if task increments are slightly too large.
+        </p>
+
+        <div class="progress-section" id="fixedTasks">
+            <!-- Tasks injected by JS -->
+        </div>
+
+        <div class="total-section">
+            <div class="total-label">Combined Progress (clamped to ≤ 100%)</div>
+            <div class="total-value" id="fixedTotal">0%</div>
+        </div>
+
+        <div class="status-text">
+            <span class="status-indicator idle" id="fixedIndicator"></span>
+            <span id="fixedStatus">Ready to run</span>
+        </div>
+
+        <div class="log-box" id="fixedLog">
+            <div class="log-entry info">// Fixed log will appear here...</div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-fixed" id="btnFixed" onclick="runFixed()">▶ Run Fixed Demo</button>
+            <button class="btn btn-reset" onclick="resetFixed()">↺ Reset</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- EXPLANATION PANEL -->
+<div class="explanation">
+    <h2>📖 Understanding the Race Condition</h2>
+    <div class="exp-grid">
+
+        <div class="exp-card problem">
+            <h3>🐛 The Problem: Read-Modify-Write Race</h3>
+            <p>When multiple async tasks share a variable, each one performs three steps:</p>
+            <ul>
+                <li><strong>Read</strong> the current value of <code>sharedProgress</code></li>
+                <li><strong>Compute</strong> the new value (add their increment)</li>
+                <li><strong>Write</strong> the result back</li>
+            </ul>
+            <p style="margin-top:8px;">Because JavaScript is single-threaded but <em>interleaved</em> via the event loop,
+            two tasks can both <strong>read the same stale value</strong> before either writes back.
+            The second write overwrites the first, causing lost updates — or both add their full
+            increment to the same base, causing overflow past 100%.</p>
+
+            <div class="race-diagram">
+<span class="timeline">Time →→→→→→→→→→→→→→→→→→→→→→→→→→→→</span>
+
+<span class="task-a">Task A:  READ(30) → +25 → WRITE(55)</span>
+<span class="task-b">Task B:       READ(30) → +30 → WRITE(60)</span>
+<span class="bad-result">Result:  60  ← Task A's write was lost!</span>
+<span class="bad-result">         OR both add to same base → 85+ → OVERFLOW</span>
+            </div>
+
+            <div class="code-block"><span class="cm">// ❌ BUGGY: no synchronization</span>
+<span class="kw">let</span> sharedProgress = <span class="num">0</span>;
+
+<span class="kw">async function</span> <span class="fn">buggyTask</span>(name, increment, delay) {
+  <span class="kw">await</span> <span class="fn">sleep</span>(delay);
+  <span class="cm">// Both tasks read 30 at the same time!</span>
+  <span class="kw">const</span> current = sharedProgress; <span class="bad">// stale read</span>
+  <span class="kw">await</span> <span class="fn">sleep</span>(<span class="num">50</span>); <span class="cm">// simulate work</span>
+  sharedProgress = current + increment; <span class="bad">// overwrites!</span>
+}</div>
+        </div>
+
+        <div class="exp-card solution">
+            <h3>✅ The Fix: Serialized Promise Queue</h3>
+            <p>The solution is to ensure that read-modify-write operations are <strong>atomic</strong>
+            — no other task can interleave between the read and the write.</p>
+            <ul>
+                <li>A <strong>promise chain</strong> (<code>taskQueue</code>) acts as a mutex</li>
+                <li>Each task appends itself to the chain with <code>.then()</code></li>
+                <li>Tasks execute one at a time, in order — no interleaving</li>
+                <li>A <strong>clamp</strong> guard caps the total at 100% as a safety net</li>
+            </ul>
+
+            <div class="race-diagram">
+<span class="timeline">Time →→→→→→→→→→→→→→→→→→→→→→→→→→→→</span>
+
+<span class="task-a">Task A:  READ(30) → +25 → WRITE(55) ✓</span>
+<span class="task-b">Task B:                         READ(55) → +30 → WRITE(85) ✓</span>
+<span class="result">Result:  85  ← Both updates preserved!</span>
+<span class="result">         Sequential, no lost writes, no overflow</span>
+            </div>
+
+            <div class="code-block"><span class="cm">// ✅ FIXED: serialized via promise queue</span>
+<span class="kw">let</span> sharedProgress = <span class="num">0</span>;
+<span class="kw">let</span> taskQueue = Promise.<span class="fn">resolve</span>(); <span class="cm">// mutex</span>
+
+<span class="kw">function</span> <span class="fn">fixedTask</span>(name, increment, delay) {
+  taskQueue = taskQueue.<span class="fn">then</span>(<span class="kw">async</span> () => {
+    <span class="kw">await</span> <span class="fn">sleep</span>(delay);
+    <span class="cm">// Safe: only one task runs at a time</span>
+    <span class="kw">const</span> next = sharedProgress + increment;
+    sharedProgress = <span class="fn">Math.min</span>(next, <span class="num">100</span>); <span class="good">// clamp</span>
+    <span class="fn">updateUI</span>(name, sharedProgress);
+  });
+  <span class="kw">return</span> taskQueue;
+}</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ─────────────────────────────────────────────
+    //  Shared helpers
+    // ─────────────────────────────────────────────
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    const TASKS = [
+        { name: 'Task Alpha',   color: '#ff6b6b', increment: 28, delay: 100 },
+        { name: 'Task Beta',    color: '#ffd32a', increment: 25, delay: 80  },
+        { name: 'Task Gamma',   color: '#a29bfe', increment: 22, delay: 120 },
+        { name: 'Task Delta',   color: '#fd79a8', increment: 20, delay: 60  },
+        { name: 'Task Epsilon', color: '#74b9ff', increment: 18, delay: 90  },
+    ];
+
+    // ─────────────────────────────────────────────
+    //  Build UI for both panels
+    // ─────────────────────────────────────────────
+    function buildTaskUI(containerId, prefix) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        TASKS.forEach((t, i) => {
+            container.innerHTML += `
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span class="progress-name">${t.name} (+${t.increment}%)</span>
+                        <span class="progress-value" id="${prefix}Val${i}" style="color:${t.color}">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="${prefix}Bar${i}"
+                             style="width:0%; background: linear-gradient(90deg, ${t.color}99, ${t.color})">
+                        </div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    buildTaskUI('buggyTasks', 'buggy');
+    buildTaskUI('fixedTasks', 'fixed');
+
+    // ─────────────────────────────────────────────
+    //  Logging helpers
+    // ─────────────────────────────────────────────
+    function log(boxId, msg, type = 'info') {
+        const box = document.getElementById(boxId);
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        const time = new Date().toLocaleTimeString('en-US', { hour12: false,
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            fractionalSecondDigits: 3 });
+        entry.textContent = `[${time}] ${msg}`;
+        box.appendChild(entry);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function setStatus(prefix, state, msg) {
+        const ind = document.getElementById(`${prefix}Indicator`);
+        const txt = document.getElementById(`${prefix}Status`);
+        ind.className = `status-indicator ${state}`;
+        txt.textContent = msg;
+    }
+
+    // ─────────────────────────────────────────────
+    //  BUGGY IMPLEMENTATION
+    // ─────────────────────────────────────────────
+    let buggySharedProgress = 0;
+    let buggyRunning = false;
+
+    function updateBuggyBar(index, value) {
+        const clamped = Math.min(value, 100);
+        const bar = document.getElementById(`buggyBar${index}`);
+        const val = document.getElementById(`buggyVal${index}`);
+        bar.style.width = Math.min(clamped, 100) + '%';
+
+        // Color coding: normal / warning / overflow
+        const color = TASKS[index].color;
+        if (value > 100) {
+            bar.className = 'progress-fill overflow';
+            bar.style.background = 'linear-gradient(90deg, #ff0000, #8b0000)';
+        } else if (value > 80) {
+            bar.style.background = `linear-gradient(90deg, ${color}88, #ff9f43)`;
+        } else {
+            bar.style.background = `linear-gradient(90deg, ${color}99, ${color})`;
+        }
+        val.textContent = value.toFixed(1) + '%';
+        val.style.color = value > 100 ? '#ff0000' : color;
+    }
+
+    function updateBuggyTotal(value) {
+        const el = document.getElementById('buggyTotal');
+        const warn = document.getElementById('buggyWarning');
+        el.textContent = value.toFixed(1) + '%';
+        if (value > 100) {
+            el.style.color = '#ff0000';
+            warn.style.display = 'block';
+        } else {
+            el.style.color = '#ff5050';
+            warn.style.display = 'none';
+        }
+    }
+
+    async function runBuggy() {
+        if (buggyRunning) return;
+        buggyRunning = true;
+        buggySharedProgress = 0;
+        document.getElementById('btnBuggy').disabled = true;
+        document.getElementById('buggyLog').innerHTML = '';
+
+        // Reset bars
+        TASKS.forEach((_, i) => updateBuggyBar(i, 0));
+        updateBuggyTotal(0);
+        document.getElementById('buggyWarning').style.display = 'none';
+
+        setStatus('buggy', 'running', 'Running with race condition...');
+        log('buggyLog', 'Starting 5 concurrent tasks with SHARED mutable state', 'warn');
+        log('buggyLog', `Initial sharedProgress = ${buggySharedProgress}`, 'info');
+
+        // ── THE BUG: all tasks fire simultaneously, sharing one variable ──
+        // Each task: read → delay → write (no synchronization!)
+        const promises = TASKS.map((task, index) => {
+            return (async () => {
+                log('buggyLog', `${task.name} STARTED (delay=${task.delay}ms, +${task.increment}%)`, 'info');
+
+                await sleep(task.delay);
+
+                // ❌ STALE READ: reads the value at this moment
+                const staleRead = buggySharedProgress;
+                log('buggyLog',
+                    `${task.name} READ staleProgress=${staleRead.toFixed(1)}%`,
+                    'warn');
+
+                // Simulate some async work (e.g., network, computation)
+                await sleep(40 + Math.random() * 60);
+
+                // ❌ WRITE BACK: other tasks may have written in the meantime
+                const newValue = staleRead + task.increment;
+                buggySharedProgress = newValue;
+
+                log('buggyLog',
+                    `${task.name} WROTE ${staleRead.toFixed(1)} + ${task.increment} = ${newValue.toFixed(1)}%` +
+                    (newValue > 100 ? ' ⚠️ OVERFLOW!' : ''),
+                    newValue > 100 ? 'error' : 'success');
+
+                updateBuggyBar(index, newValue);
+                updateBuggyTotal(buggySharedProgress);
+            })();
+        });
+
+        await Promise.all(promises);
+
+        const finalVal = buggySharedProgress;
+        log('buggyLog', `─────────────────────────────────`, 'info');
+        log('buggyLog',
+            `FINAL sharedProgress = ${finalVal.toFixed(1)}% ` +
+            (finalVal > 100 ? '❌ BUG: exceeded 100%!' : `(Expected: ${TASKS.reduce((s,t)=>s+t.increment,0)}%)`),
+            finalVal > 100 ? 'error' : 'warn');
+
+        if (finalVal <= 100) {
+            log('buggyLog',
+                `NOTE: Race didn't overflow this run — try again! Timing varies.`,
+                'warn');
+        }
+
+        updateBuggyTotal(finalVal);
+        setStatus('buggy', 'done-bug',
+            finalVal > 100
+                ? `⚠️ Bug triggered! Final: ${finalVal.toFixed(1)}%`
+                : `Ran OK this time (${finalVal.toFixed(1)}%) — try again!`);
+
+        buggyRunning = false;
+        document.getElementById('btnBuggy').disabled = false;
+    }
+
+    function resetBuggy() {
+        if (buggyRunning) return;
+        buggySharedProgress = 0;
+        TASKS.forEach((_, i) => updateBuggyBar(i, 0));
+        updateBuggyTotal(0);
+        document.getElementById('buggyWarning').style.display = 'none';
+        document.getElementById('buggyLog').innerHTML =
+            '<div class="log-entry info">// Buggy log will appear here...</div>';
+        setStatus('buggy', 'idle', 'Ready to run');
+    }
+
+    // ─────────────────────────────────────────────
+    //  FIXED IMPLEMENTATION
+    // ─────────────────────────────────────────────
+    let fixedSharedProgress = 0;
+    let fixedTaskQueue = Promise.resolve();   // ← the "mutex"
+    let fixedRunning = false;
+
+    function updateFixedBar(index, value) {
+        const bar = document.getElementById(`fixedBar${index}`);
+        const val = document.getElementById(`fixedVal${index}`);
+        const color = TASKS[index].color;
+        bar.style.width = value + '%';
+        bar.style.background = `linear-gradient(90deg, ${color}99, ${color})`;
+        val.textContent = value.toFixed(1) + '%';
+        val.style.color = color;
+    }
+
+    function updateFixedTotal(value) {
+        document.getElementById('fixedTotal').textContent = value.toFixed(1) + '%';
+    }
+
+    // ✅ Each task serializes itself onto the shared queue
+    function enqueueFixedTask(task, index) {
+        fixedTaskQueue = fixedTaskQueue.then(async () => {
+            log('fixedLog', `${task.name} STARTED — waiting in queue`, 'info');
+
+            await sleep(task.delay);
+
+            // ✅ SAFE READ: we are the only task running right now
+            const before = fixedSharedProgress;
+            log('fixedLog',
+                `${task.name} READ safeProgress=${before.toFixed(1)}%`, 'info');
+
+            await sleep(40 + Math.random() * 60);
+
+            // ✅ SAFE WRITE + CLAMP
+            const raw = before + task.increment;
+            const clamped = Math.min(raw, 100);
+            fixedSharedProgress = clamped;
+
+            log('fixedLog',
+                `${task.name} WROTE ${before.toFixed(1)} + ${task.increment} = ${raw.toFixed(1)}%` +
+                (raw !== clamped ? ` → clamped to ${clamped.toFixed(1)}%` : ''),
+                'success');
+
+            updateFixedBar(index, clamped);
+            updateFixedTotal(fixedSharedProgress);
+        });
+        return fixedTaskQueue;
+    }
+
+    async function runFixed() {
+        if (fixedRunning) return;
+        fixedRunning = true;
+        fixedSharedProgress = 0;
+        fixedTaskQueue = Promise.resolve();   // reset the queue
+        document.getElementById('btnFixed').disabled = true;
+        document.getElementById('fixedLog').innerHTML = '';
+
+        TASKS.forEach((_, i) => updateFixedBar(i, 0));
+        updateFixedTotal(0);
+
+        setStatus('fixed', 'running', 'Running with synchronized queue...');
+        log('fixedLog', 'Starting 5 tasks via serialized promise queue', 'success');
+        log('fixedLog', `Initial sharedProgress = ${fixedSharedProgress}`, 'info');
+
+        // Enqueue all tasks — they will run one at a time
+        const allDone = TASKS.map((task, i) => enqueueFixedTask(task, i));
+
+        await Promise.all(allDone);
+
+        const finalVal = fixedSharedProgress;
+        log('fixedLog', `─────────────────────────────────`, 'info');
+        log('fixedLog',
+            `FINAL sharedProgress = ${finalVal.toFixed(1)}% ✅ Always ≤ 100%`,
+            'success');
+
+        updateFixedTotal(finalVal);
+        setStatus('fixed', 'done-fix', `✅ Complete! Final: ${finalVal.toFixed(1)}% (no overflow)`);
+
+        fixedRunning = false;
+        document.getElementById('btnFixed').disabled = false;
+    }
+
+    function resetFixed() {
+        if (fixedRunning) return;
+        fixedSharedProgress = 0;
+        fixedTaskQueue = Promise.resolve();
+        TASKS.forEach((_, i) => updateFixedBar(i, 0));
+        updateFixedTotal(0);
+        document.getElementById('fixedLog').innerHTML =
+            '<div class="log-entry info">// Fixed log will appear here...</div>';
+        setStatus('fixed', 'idle', 'Ready to run');
+    }
+</script>
+</body>
+</html>

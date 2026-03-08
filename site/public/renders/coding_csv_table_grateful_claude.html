@@ -1,263 +1,499 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CSV Parser</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f4f8;
-      color: #2d3748;
-      padding: 2rem;
+      background: #f0f2f5;
+      color: #2c3e50;
       min-height: 100vh;
+      padding: 2rem;
     }
 
+    /* ── Page Header ── */
     h1 {
       text-align: center;
-      margin-bottom: 1.5rem;
-      font-size: 2rem;
-      color: #2b6cb0;
+      font-size: 1.8rem;
+      margin-bottom: 0.3rem;
+      color: #1a252f;
       letter-spacing: 0.5px;
     }
 
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Card Container ── */
     .card {
       background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      padding: 2rem;
-      max-width: 1100px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      padding: 1.8rem 2rem;
+      max-width: 960px;
       margin: 0 auto 2rem auto;
     }
 
-    label {
+    /* ── Textarea ── */
+    label[for="csvInput"] {
       display: block;
       font-weight: 600;
       margin-bottom: 0.5rem;
-      color: #4a5568;
+      font-size: 0.95rem;
     }
 
-    textarea {
+    #csvInput {
       width: 100%;
-      height: 200px;
-      padding: 0.85rem 1rem;
-      border: 2px solid #cbd5e0;
-      border-radius: 8px;
+      height: 180px;
+      padding: 0.75rem 1rem;
+      border: 2px solid #dce1e7;
+      border-radius: 7px;
       font-family: 'Courier New', Courier, monospace;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      color: #2c3e50;
+      background: #f9fafb;
       resize: vertical;
       transition: border-color 0.2s;
-      color: #2d3748;
-      background: #f7fafc;
+      outline: none;
     }
 
-    textarea:focus {
-      outline: none;
-      border-color: #4299e1;
+    #csvInput:focus {
+      border-color: #3498db;
       background: #fff;
     }
 
-    .button-row {
+    /* ── Controls Row ── */
+    .controls {
       display: flex;
-      gap: 0.75rem;
+      align-items: center;
+      gap: 1rem;
       margin-top: 1rem;
       flex-wrap: wrap;
     }
 
-    button {
-      padding: 0.65rem 1.5rem;
+    /* ── Parse Button ── */
+    #parseBtn {
+      padding: 0.6rem 1.8rem;
+      background: #3498db;
+      color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 7px;
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
     }
 
-    button:active {
-      transform: scale(0.97);
-    }
+    #parseBtn:hover  { background: #2980b9; }
+    #parseBtn:active { transform: scale(0.97); }
 
-    #parseBtn {
-      background: #4299e1;
-      color: #fff;
-    }
-
-    #parseBtn:hover {
-      background: #2b6cb0;
-    }
-
+    /* ── Clear Button ── */
     #clearBtn {
-      background: #e2e8f0;
-      color: #4a5568;
+      padding: 0.6rem 1.4rem;
+      background: transparent;
+      color: #e74c3c;
+      border: 2px solid #e74c3c;
+      border-radius: 7px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
     }
 
     #clearBtn:hover {
-      background: #cbd5e0;
+      background: #e74c3c;
+      color: #fff;
     }
 
-    #sampleBtn {
-      background: #68d391;
-      color: #1a202c;
-    }
-
-    #sampleBtn:hover {
-      background: #48bb78;
-    }
-
-    .error-box {
-      margin-top: 1rem;
-      padding: 0.85rem 1rem;
-      background: #fff5f5;
-      border: 1px solid #fc8181;
-      border-radius: 8px;
-      color: #c53030;
-      font-size: 0.9rem;
-      display: none;
-    }
-
-    .info-bar {
-      display: none;
-      margin-top: 1rem;
+    /* ── Header-row toggle ── */
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
       font-size: 0.88rem;
-      color: #718096;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .info-bar span {
-      font-weight: 600;
-      color: #4299e1;
+    .toggle-label input { cursor: pointer; accent-color: #3498db; }
+
+    /* ── Status / Error Message ── */
+    #statusMsg {
+      margin-top: 0.8rem;
+      font-size: 0.88rem;
+      min-height: 1.2em;
     }
 
-    /* Table section */
-    .table-card {
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      padding: 2rem;
-      max-width: 1100px;
+    #statusMsg.error   { color: #e74c3c; }
+    #statusMsg.success { color: #27ae60; }
+
+    /* ── Table Wrapper ── */
+    #tableWrapper {
+      max-width: 960px;
       margin: 0 auto;
-      display: none;
       overflow-x: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+      display: none;          /* hidden until data is parsed */
     }
 
-    .table-card h2 {
-      font-size: 1.2rem;
-      color: #2b6cb0;
-      margin-bottom: 1rem;
-    }
-
+    /* ── Table ── */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      background: #fff;
     }
 
-    thead tr {
-      background: #2b6cb0;
-      color: #ffffff;
-    }
-
-    thead th {
+    /* Header row */
+    thead tr th {
+      background: #2c3e50;
+      color: #ecf0f1;
       padding: 0.75rem 1rem;
       text-align: left;
-      font-weight: 700;
-      border: 1px solid #2c5282;
+      font-weight: 600;
+      border: 1px solid #1a252f;
       white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
-    tbody tr:nth-child(odd) {
-      background: #ebf8ff;
-    }
-
-    tbody tr:nth-child(even) {
-      background: #ffffff;
-    }
-
-    tbody tr:hover {
-      background: #bee3f8;
-      transition: background 0.15s;
-    }
-
-    tbody td {
-      padding: 0.65rem 1rem;
-      border: 1px solid #bee3f8;
+    /* Body rows */
+    tbody tr td {
+      padding: 0.6rem 1rem;
+      border: 1px solid #dce1e7;
       vertical-align: top;
       word-break: break-word;
-      max-width: 300px;
     }
 
-    .cell-empty {
-      color: #a0aec0;
+    /* Alternating row colours */
+    tbody tr:nth-child(odd)  td { background: #ffffff; }
+    tbody tr:nth-child(even) td { background: #eaf3fb; }
+
+    /* Hover highlight */
+    tbody tr:hover td { background: #d6eaf8; }
+
+    /* Empty-cell indicator */
+    td.empty-cell {
+      color: #bdc3c7;
       font-style: italic;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
     }
 
-    .row-num {
-      color: #a0aec0;
+    /* Row-number column */
+    td.row-num, th.row-num {
+      color: #95a5a6;
       font-size: 0.78rem;
-      text-align: center !important;
-      user-select: none;
+      text-align: right;
       white-space: nowrap;
+      width: 1%;
+      padding-right: 0.8rem;
     }
 
-    thead th.row-num-header {
-      background: #1a4a7a;
-      color: #90cdf4;
-      font-size: 0.78rem;
-      text-align: center;
+    th.row-num { background: #1a252f; }
+
+    /* ── Footer stats ── */
+    #tableStats {
+      text-align: right;
+      font-size: 0.8rem;
+      color: #95a5a6;
+      padding: 0.5rem 1rem;
+      background: #f9fafb;
+      border-top: 1px solid #dce1e7;
     }
 
-    /* Responsive */
+    /* ── Responsive tweak ── */
     @media (max-width: 600px) {
       body { padding: 1rem; }
-      .card, .table-card { padding: 1.25rem; }
-      h1 { font-size: 1.4rem; }
+      .card { padding: 1.2rem; }
     }
   </style>
 </head>
 <body>
 
   <h1>📊 CSV Parser</h1>
+  <p class="subtitle">Paste your CSV data below and click <strong>Parse CSV</strong></p>
 
+  <!-- Input card -->
   <div class="card">
-    <label for="csvInput">Paste your CSV data below:</label>
-    <textarea id="csvInput" placeholder='e.g.
+    <label for="csvInput">CSV Data</label>
+    <textarea
+      id="csvInput"
+      spellcheck="false"
+      placeholder='Paste CSV here, e.g.:
 Name,Age,City
 "Smith, John",30,"New York"
-"Jane ""JJ"" Doe",25,London
-Alice,,Paris'></textarea>
+"O&apos;Brien ""Tim""",25,London'
+    ></textarea>
 
-    <div class="button-row">
+    <div class="controls">
       <button id="parseBtn">▶ Parse CSV</button>
-      <button id="sampleBtn">📋 Load Sample</button>
       <button id="clearBtn">✕ Clear</button>
+      <label class="toggle-label">
+        <input type="checkbox" id="headerToggle" checked />
+        First row is header
+      </label>
     </div>
 
-    <div class="error-box" id="errorBox"></div>
-    <div class="info-bar" id="infoBar"></div>
+    <div id="statusMsg"></div>
   </div>
 
-  <div class="table-card" id="tableCard">
-    <h2 id="tableTitle">Parsed Table</h2>
-    <div id="tableWrapper"></div>
+  <!-- Output table -->
+  <div id="tableWrapper">
+    <table id="outputTable">
+      <thead id="outputHead"></thead>
+      <tbody id="outputBody"></tbody>
+    </table>
+    <div id="tableStats"></div>
   </div>
 
   <script>
-    // ─── CSV Parser ───────────────────────────────────────────────────────────
-    // Handles: quoted fields, commas inside quotes, escaped quotes (""),
-    //          varying column counts, CRLF and LF line endings.
+    /* ─────────────────────────────────────────────
+       RFC 4180-compliant CSV parser
+       Handles:
+         • Quoted fields (may contain commas)
+         • Escaped quotes inside quoted fields ("")
+         • Bare (unquoted) fields
+         • \r\n, \n, \r line endings
+         • Varying column counts per row
+    ───────────────────────────────────────────── */
     function parseCSV(text) {
-      const rows = [];
-      let col = 0;
-      let row = [];
-      let i = 0;
-      const n = text.length;
+      const rows   = [];
+      let   row    = [];
+      let   field  = '';
+      let   inQuote = false;
+      let   i      = 0;
+      const len    = text.length;
 
-      while (i < n) {
-        // ── Quoted field ──────────────────────────────────────
+      while (i < len) {
+        const ch   = text[i];
+        const next = text[i + 1];
+
+        if (inQuote) {
+          if (ch === '"') {
+            if (next === '"') {
+              // Escaped quote: "" → "
+              field += '"';
+              i += 2;
+            } else {
+              // Closing quote
+              inQuote = false;
+              i++;
+            }
+          } else {
+            field += ch;
+            i++;
+          }
+        } else {
+          if (ch === '"') {
+            // Opening quote
+            inQuote = true;
+            i++;
+          } else if (ch === ',') {
+            // Field separator
+            row.push(field);
+            field = '';
+            i++;
+          } else if (ch === '\r' && next === '\n') {
+            // Windows line ending
+            row.push(field);
+            rows.push(row);
+            row   = [];
+            field = '';
+            i += 2;
+          } else if (ch === '\n' || ch === '\r') {
+            // Unix / old-Mac line ending
+            row.push(field);
+            rows.push(row);
+            row   = [];
+            field = '';
+            i++;
+          } else {
+            field += ch;
+            i++;
+          }
+        }
+      }
+
+      // Push the last field / row (no trailing newline)
+      if (field !== '' || row.length > 0) {
+        row.push(field);
+        rows.push(row);
+      }
+
+      // Drop a single completely-empty trailing row
+      if (rows.length > 0) {
+        const last = rows[rows.length - 1];
+        if (last.length === 1 && last[0] === '') rows.pop();
+      }
+
+      return rows;
+    }
+
+    /* ─────────────────────────────────────────────
+       Build the HTML table from parsed rows
+    ───────────────────────────────────────────── */
+    function buildTable(rows, firstRowIsHeader) {
+      const thead      = document.getElementById('outputHead');
+      const tbody      = document.getElementById('outputBody');
+      const tableStats = document.getElementById('tableStats');
+
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      if (rows.length === 0) return;
+
+      // Find the maximum column count across all rows
+      const maxCols = rows.reduce((m, r) => Math.max(m, r.length), 0);
+
+      /* Helper: create a cell with optional empty-cell styling */
+      function makeCell(tag, text, extraClass) {
+        const el = document.createElement(tag);
+        if (text === '') {
+          el.textContent = '(empty)';
+          el.classList.add('empty-cell');
+        } else {
+          el.textContent = text;
+        }
+        if (extraClass) el.classList.add(extraClass);
+        return el;
+      }
+
+      /* ── Header row ── */
+      const headerTr = document.createElement('tr');
+
+      // Row-number stub
+      const rnTh = document.createElement('th');
+      rnTh.classList.add('row-num');
+      rnTh.textContent = '#';
+      headerTr.appendChild(rnTh);
+
+      const headerData = firstRowIsHeader ? rows[0] : null;
+
+      for (let c = 0; c < maxCols; c++) {
+        const label = headerData
+          ? (headerData[c] !== undefined ? headerData[c] : '')
+          : `Column ${c + 1}`;
+        const th = document.createElement('th');
+        th.textContent = label || `Column ${c + 1}`;
+        headerTr.appendChild(th);
+      }
+      thead.appendChild(headerTr);
+
+      /* ── Body rows ── */
+      const dataRows = firstRowIsHeader ? rows.slice(1) : rows;
+
+      dataRows.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+
+        // Row number
+        const rnTd = document.createElement('td');
+        rnTd.classList.add('row-num');
+        rnTd.textContent = idx + 1;
+        tr.appendChild(rnTd);
+
+        for (let c = 0; c < maxCols; c++) {
+          const val = row[c] !== undefined ? row[c] : '';
+          tr.appendChild(makeCell('td', val));
+        }
+        tbody.appendChild(tr);
+      });
+
+      /* ── Stats footer ── */
+      const dataCount = dataRows.length;
+      const colWord   = maxCols === 1 ? 'column' : 'columns';
+      const rowWord   = dataCount === 1 ? 'row' : 'rows';
+      tableStats.textContent =
+        `${dataCount} data ${rowWord} · ${maxCols} ${colWord}` +
+        (firstRowIsHeader ? ' · first row used as header' : '');
+    }
+
+    /* ─────────────────────────────────────────────
+       UI wiring
+    ───────────────────────────────────────────── */
+    const csvInput     = document.getElementById('csvInput');
+    const parseBtn     = document.getElementById('parseBtn');
+    const clearBtn     = document.getElementById('clearBtn');
+    const headerToggle = document.getElementById('headerToggle');
+    const statusMsg    = document.getElementById('statusMsg');
+    const tableWrapper = document.getElementById('tableWrapper');
+
+    function setStatus(msg, type) {
+      statusMsg.textContent = msg;
+      statusMsg.className   = type; // 'error' | 'success' | ''
+    }
+
+    function runParse() {
+      const raw = csvInput.value;
+
+      if (!raw.trim()) {
+        setStatus('⚠ Please paste some CSV data first.', 'error');
+        tableWrapper.style.display = 'none';
+        return;
+      }
+
+      try {
+        const rows = parseCSV(raw);
+
+        if (rows.length === 0) {
+          setStatus('⚠ No data found after parsing.', 'error');
+          tableWrapper.style.display = 'none';
+          return;
+        }
+
+        const useHeader = headerToggle.checked;
+
+        // Warn if header-mode is on but there's only one row
+        if (useHeader && rows.length === 1) {
+          setStatus(
+            '⚠ Only one row found — it will be used as the header with no data rows.',
+            'error'
+          );
+        } else {
+          const dataRows = useHeader ? rows.length - 1 : rows.length;
+          setStatus(
+            `✔ Parsed successfully — ${dataRows} data row${dataRows !== 1 ? 's' : ''} found.`,
+            'success'
+          );
+        }
+
+        buildTable(rows, useHeader);
+        tableWrapper.style.display = 'block';
+
+      } catch (err) {
+        setStatus(`✖ Parse error: ${err.message}`, 'error');
+        tableWrapper.style.display = 'none';
+      }
+    }
+
+    parseBtn.addEventListener('click', runParse);
+
+    clearBtn.addEventListener('click', () => {
+      csvInput.value             = '';
+      statusMsg.textContent      = '';
+      statusMsg.className        = '';
+      tableWrapper.style.display = 'none';
+      csvInput.focus();
+    });
+
+    // Allow Ctrl+Enter to trigger parse
+    csvInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runParse();
+    });
+
+    // Re-parse automatically when the header toggle changes
+    headerToggle.addEventListener('change', () => {
+      if (tableWrapper.style.display === 'block') runParse();
+    });
+  </script>
+</body>
+</html>

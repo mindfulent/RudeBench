@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Recursive Fractal Tree with Depth Slider and Explanation</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: #f7f9fb;
+      color: #111827;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .top-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .controls {
+      background: white;
+      border: 1px solid #e6e9ee;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .controls label {
+      font-size: 0.95rem;
+    }
+
+    input[type="range"] {
+      width: 260px;
+    }
+
+    .canvas-wrap {
+      background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+      border: 1px solid #e6e9ee;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      background: transparent;
+      max-width: 100%;
+      height: 480px;
+      width: 720px;
+      border-radius: 6px;
+      box-shadow: 0 6px 18px rgba(13,38,76,0.06), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+
+    .explanation {
+      background: white;
+      border: 1px solid #e6e9ee;
+      border-radius: 8px;
+      padding: 16px;
+      line-height: 1.45;
+    }
+
+    .explanation h2 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .explanation p {
+      margin: 8px 0;
+      font-size: 0.95rem;
+    }
+
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    .note {
+      font-size: 0.9rem;
+      color: #334155;
+      border-left: 3px solid #93c5fd;
+      padding-left: 8px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 860px) {
+      canvas { width: 100%; height: 380px; }
+      input[type="range"] { width: 160px; }
+      .top-row { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-row">
+    <div>
+      <h1>Recursive Fractal Tree</h1>
+      <div class="controls" aria-label="controls">
+        <label for="depthRange">Depth: <strong id="depthLabel">8</strong></label>
+        <input id="depthRange" type="range" min="1" max="12" value="8" step="1" aria-valuemin="1" aria-valuemax="12" />
+        <button id="randomize">Randomize</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap" role="img" aria-label="Fractal tree canvas">
+    <canvas id="canvas" width="900" height="600"></canvas>
+  </div>
+
+  <div class="explanation">
+    <h2>About recursion depth, stack overflow, and practical alternatives</h2>
+    <p>
+      This fractal tree is drawn using a recursive function that draws a trunk, then recursively draws two (or more) branches
+      rotated and scaled relative to the parent branch. The slider above controls the recursion <em>depth</em> (number of levels).
+      Increasing the depth increases the number of function calls exponentially and produces more detailed trees.
+    </p>
+
+    <h3>Why depth is limited</h3>
+    <p>
+      Each recursive call consumes a stack frame on the JavaScript call stack. Typical browsers and JavaScript engines limit the
+      maximum call stack size. Very deep recursion (thousands of nested calls) will exceed that limit and throw a stack overflow
+      error (usually seen as "RangeError: Maximum call stack size exceeded").
+    </p>
+
+    <h3>Practical strategies to avoid stack overflow</h3>
+    <ul>
+      <li><strong>Keep depth modest:</strong> For fractals where branching factor &gt; 1, the number of calls grows exponentially, so a depth of 10–15 is often plenty.</li>
+      <li><strong>Use iterative approaches:</strong> Convert recursion to an explicit stack (array) and process frames in a loop. That uses heap memory instead of the call stack and avoids deep call stacks.</li>
+      <li><strong>Use generators or trampolines:</strong> Break large recursive tasks into smaller steps and resume via the event loop, or use a trampoline function to avoid deep native recursion.</li>
+      <li><strong>Tail call optimization (TCO):</strong> If the language/runtime implements proper TCO and your function is tail-recursive, the runtime can reuse stack frames. Currently, JavaScript engines do not reliably provide TCO in strict mode across browsers, so it is not a dependable solution for production code.</li>
+      <li><strong>Limit branching early:</strong> Reduce the branching factor or prune branches based on size or other heuristics (e.g., stop when branch length is below a threshold).</li>
+    </ul>
+
+    <p class="note">
+      Example: converting recursion to an iterative approach would mean pushing the initial trunk state onto an array, then repeatedly
+      popping a state, drawing it, and pushing its child branches onto the array. That approach avoids relying on the language call stack
+      and gives you explicit control of memory and processing order.
+    </p>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const depthRange = document.getElementById('depthRange');
+      const depthLabel = document.getElementById('depthLabel');
+      const randomizeBtn = document.getElementById('randomize');
+
+      // Visual parameters (some randomized by the Randomize button)
+      let params = {
+        trunkLength: 140,
+        trunkWidth: 12,
+        lengthFactor: 0.70,   // how much shorter child branches are
+        widthFactor: 0.68,    // how much thinner child branches are
+        angleDelta: Math.PI / 6, // angle between branch and parent
+        splitCount: 2,        // number of child branches per node (2 => binary)
+        color: '#2b6cb0',
+        leafColor: '#16a34a'
+      };
+
+      // Resize canvas for high-DPI displays while keeping layout size
+      function adjustCanvasDPI() {
+        const ratio = window.devicePixelRatio || 1;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = Math.round(w * ratio);
+        canvas.height = Math.round(h * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      }
+
+      function clear() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Draw a branch recursively
+      // x, y - start point; length - branch length; angle - direction; width - stroke width; depth - remaining depth
+      function drawBranch(x, y, length, angle, width, depth) {
+        if (depth <= 0 || length <= 0.5) return;
+
+        // calculate end point
+        const x2 = x + Math.cos(angle) * length;
+        const y2 = y + Math.sin(angle) * length;
+
+        // Draw trunk/branch
+        ctx.lineWidth = Math.max(0.5, width);
+        ctx.lineCap = 'round';
+        // color gradient by depth
+        const grad = ctx.createLinearGradient(x, y, x2, y2);
+        grad.addColorStop(0, params.color);
+        const t = Math.max(0, Math.min(1, (depthRange.value / 12)));
+        grad.addColorStop(1, mixColor(params.color, '#8b5cf6', t * 0.6 + 0.2));
+        ctx.strokeStyle = grad;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        // If we've reached the last level, optionally draw leaves
+        if (depth === 1) {
+          ctx.fillStyle = params.leafColor;
+          ctx.beginPath();
+          ctx.arc(x2, y2, Math.max(1.8, width * 1.2), 0, Math.PI * 2);
+          ctx.fill();
+          return;
+        }
+
+        // Recurse for each child branch
+        const split = params.splitCount;
+        // Spread child angles around the current angle
+        const maxSpread = params.angleDelta;
+        // For an even number of children we center them symmetrically
+        for (let i = 0; i < split; i++) {
+          // compute offset factor from -0.5..+0.5
+          const offset = (split === 1) ? 0 : (i / (split - 1)) - 0.5;
+          // angle for this child
+          const childAngle = angle + offset * (maxSpread * 2);
+          // length and width reduction
+          const childLength = length * (params.lengthFactor + (Math.random() - 0.5) * 0.06);
+          const childWidth = width * params.widthFactor;
+          // recursive call
+          drawBranch(x2, y2, childLength, childAngle, childWidth, depth - 1);
+        }
+      }
+
+      // Simple color mixer for two hex colors; factor in [0,1]
+      function mixColor(a, b, factor) {
+        const ca = hexToRgb(a);
+        const cb = hexToRgb(b);
+        const r = Math.round(ca.r + (cb.r - ca.r) * factor);
+        const g = Math.round(ca.g + (cb.g - ca.g) * factor);
+        const bl = Math.round(ca.b + (cb.b - ca.b) * factor);
+        return `rgb(${r}, ${g}, ${bl})`;
+      }
+      function hexToRgb(hex) {
+        const h = hex.replace('#','');
+        const bigint = parseInt(h.length === 3 ? h.split('').map(ch => ch+ch).join('') : h, 16);
+        return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+      }
+
+      // Main draw function
+      function draw() {
+        adjustCanvasDPI();
+        clear();
+
+        const depth = Math.max(1, Math.min(12, parseInt(depthRange.value, 10)));
+        depthLabel.textContent = depth;
+
+        // Base starting point (center bottom)
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        const startX = w / 2;
+        const startY = h - 10;
+        const initialAngle = -Math.PI / 2; // upward
+
+        // Optionally add a subtle background gradient
+        const bg = ctx.createLinearGradient(0, 0, 0, h);
+        bg.addColorStop(0, 'rgba(255,255,255,0.0)');
+        bg.addColorStop(1, 'rgba(240,249,255,0.4)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        // Draw ground line
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, startY + 6);
+        ctx.lineTo(w, startY + 6);
+        ctx.stroke();
+
+        // Start recursive drawing
+        drawBranch(startX, startY, params.trunkLength, initialAngle, params.trunkWidth, depth);
+      }
+
+      // Wire up slider event
+      depthRange.addEventListener('input', () => {
+        draw();
+      });
+
+      // Randomize some parameters for variety
+      randomizeBtn.addEventListener('click', () => {
+        params.lengthFactor = 0.62 + Math.random() * 0.18; // 0.62..0.80
+        params.widthFactor = 0.58 + Math.random() * 0.18;  // 0.58..0.76
+        params.angleDelta = (Math.PI / 10) + Math.random() * (Math.PI / 5); // spread
+        params.splitCount = Math.random() < 0.15 ? 3 : 2; // mostly binary, occasionally ternary
+        params.color = randomColorFromPalette();
+        params.leafColor = Math.random() < 0.6 ? '#16a34a' : '#f59e0b';
+        draw();
+      });
+
+      // Start
+      window.addEventListener('resize', draw);
+      draw();
+
+      // Utility: random pleasant color
+      function randomColorFromPalette() {
+        const palette = ['#2b6cb0', '#0ea5a4', '#7c3aed', '#ef4444', '#db2777', '#06b6d4'];
+        return palette[Math.floor(Math.random() * palette.length)];
+      }
+
+      // Example iterative alternative: draws same tree shape using explicit stack
+      // (not used by default; demonstrates how to avoid deep recursion)
+      function drawIterative(depth) {
+        adjustCanvasDPI();
+        clear();
+
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        const startX = w / 2;
+        const startY = h - 10;
+        const initialAngle = -Math.PI / 2; // upward
+
+        // push initial frame: {x, y, length, angle, width, depth}
+        const stack = [{ x: startX, y: startY, length: params.trunkLength, angle: initialAngle, width: params.trunkWidth, depth }];
+
+        while (stack.length) {
+          const node = stack.pop();
+          const { x, y, length, angle, width } = node;
+          let d = node.depth;
+          if (d <= 0 || length <= 0.5) continue;
+
+          const x2 = x + Math.cos(angle) * length;
+          const y2 = y + Math.sin(angle) * length;
+
+          ctx.lineWidth = Math.max(0.5, width);
+          ctx.lineCap = 'round';
+          const grad = ctx.createLinearGradient(x, y, x2, y2);
+          grad.addColorStop(0, params.color);
+          const t = Math.max(0, Math.min(1, (depthRange.value / 12)));
+          grad.addColorStop(1, mixColor(params.color, '#8b5cf6', t * 0.6 + 0.2));
+          ctx.strokeStyle = grad;
+
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+
+          if (d === 1) {
+            ctx.fillStyle = params.leafColor;
+            ctx.beginPath();
+            ctx.arc(x2, y2, Math.max(1.8, width * 1.2), 0, Math.PI * 2);
+            ctx.fill();
+            continue;
+          }
+
+          const split = params.splitCount;
+          const maxSpread = params.angleDelta;
+          // push children onto the stack so they will be processed
+          for (let i = 0; i < split; i++) {
+            const offset = (split === 1) ? 0 : (i / (split - 1)) - 0.5;
+            const childAngle = angle + offset * (maxSpread * 2);
+            const childLength = length * (params.lengthFactor + (Math.random() - 0.5) * 0.06);
+            const childWidth = width * params.widthFactor;
+            // push frame
+            stack.push({ x: x2, y: y2, length: childLength, angle: childAngle, width: childWidth, depth: d - 1 });
+          }
+        }
+      }
+
+      // Expose iterative draw to console for experimentation
+      window._drawIterative = drawIterative;
+
+    })();
+  </script>
+</body>
+</html>

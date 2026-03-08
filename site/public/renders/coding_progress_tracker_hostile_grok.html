@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Tracking with Shared Mutable State</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .progress-container {
+            margin: 10px 0;
+        }
+        progress {
+            width: 100%;
+            height: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .explanation {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Progress Tracking with Shared Mutable State</h1>
+    <p>This demo shows a classic concurrency problem where multiple asynchronous tasks update a shared progress variable. The buggy version demonstrates potential race conditions, while the fixed version uses synchronization to prevent them.</p>
+
+    <div id="buggy-section" class="section">
+        <h2>Buggy Version</h2>
+        <p>This version allows multiple tasks to update the shared progress state simultaneously without synchronization. In a multi-threaded environment, this could lead to race conditions, resulting in incorrect progress values (e.g., lost updates). In JavaScript, the single-threaded event loop masks the issue somewhat, but it's still illustrative of real-world problems.</p>
+        <div class="progress-container">
+            <label for="progressBuggy">Progress: </label>
+            <progress id="progressBuggy" value="0" max="10"></progress>
+        </div>
+        <button id="startBuggy">Start Buggy Tasks</button>
+    </div>
+
+    <div id="fixed-section" class="section">
+        <h2>Fixed Version</h2>
+        <p>This version uses a simple mutex (lock) to synchronize access to the shared progress state. Each task waits for the previous one to complete before updating, ensuring accurate results even if tasks are launched "simultaneously."</p>
+        <div class="progress-container">
+            <label for="progressFixed">Progress: </label>
+            <progress id="progressFixed" value="0" max="10"></progress>
+        </div>
+        <button id="startFixed">Start Fixed Tasks</button>
+    </div>
+
+    <div class="explanation">
+        <h3>Explanation of the Underlying Problem</h3>
+        <p><strong>The Problem:</strong> In the buggy version, multiple asynchronous tasks (created via <code>setTimeout</code>) read and update a shared mutable state (the progress variable) without any synchronization. This can lead to a race condition, where:</p>
+        <ul>
+            <li>Two or more tasks might read the same value of the shared state simultaneously.</li>
+            <li>Each task then modifies its local copy and writes back, potentially overwriting changes from other tasks.</li>
+            <li>For example, if progress is 0, and two tasks both read it as 0, add 1, and write back, the final value might still be 1 instead of 2 (a lost update).</li>
+            <li>In JavaScript, the event loop processes tasks sequentially, so this issue isn't always apparent. However, in multi-threaded environments (e.g., Node.js with workers or other languages), this would cause inconsistent results.</li>
+        </ul>
+        <p><strong>The Fix:</strong> In the fixed version, we use a mutex (a promise-based lock) to serialize access to the shared state. Before updating, each task waits for the mutex, ensuring only one task modifies the state at a time. This prevents race conditions and guarantees that updates are applied in order.</p>
+        <p><strong>Key Takeaway:</strong> Always synchronize access to shared mutable state in concurrent scenarios to avoid bugs. In JavaScript, tools like mutexes, queues, or atomic operations can help, even though the language is single-threaded.</p>
+    </div>
+
+    <script>
+        // Buggy Version Implementation
+        let progressBuggy = 0;
+        const maxProgress = 10;
+
+        function updateProgressBarBuggy(value) {
+            document.getElementById('progressBuggy').value = value;
+        }
+
+        function buggyTask() {
+            setTimeout(() => {
+                let current = progressBuggy;  // Read the shared state
+                // Simulate a race condition: In a concurrent environment, another task could modify progressBuggy here
+                current += 1;  // Increment locally
+                progressBuggy = current;  // Write back to shared state
+                updateProgressBarBuggy(progressBuggy);  // Update the UI
+                console.log('Buggy Task: Progress is now', progressBuggy);
+            }, Math.random() * 1000);  // Random delay to simulate async tasks
+        }
+
+        document.getElementById('startBuggy').addEventListener('click', () => {
+            progressBuggy = 0;  // Reset progress
+            updateProgressBarBuggy(0);
+            for (let i = 0; i < maxProgress; i++) {
+                buggyTask();  // Launch multiple tasks
+            }
+        });
+
+        // Fixed Version Implementation
+        let progressFixed = 0;
+        let mutex = Promise.resolve();  // Simple mutex using Promises
+
+        function withMutex(func) {
+            return async () => {
+                const previous = mutex;
+                mutex = new Promise(resolve => {
+                    const next = () => resolve();
+                    setTimeout(next, 0);  // Ensure it's asynchronous
+                });
+                await previous;  // Wait for the previous operation
+                try {
+                    return await func();  // Run the function
+                } finally {
+                    // The next promise will resolve after this function completes
+                }
+            };
+        }
+
+        function updateProgressBarFixed(value) {
+            document.getElementById('progressFixed').value = value;
+        }
+
+        async function fixedTask() {
+            await withMutex(async () => {
+                let current = progressFixed;  // Read the shared state
+                current += 1;  // Increment
+                progressFixed = current;  // Write back
+                updateProgressBarFixed(progressFixed);  // Update the UI
+                console.log('Fixed Task: Progress is now', progressFixed);
+            })();
+        }
+
+        document.getElementById('startFixed').addEventListener('click', async () => {
+            progressFixed = 0;  // Reset progress
+            updateProgressBarFixed(0);
+            for (let i = 0; i < maxProgress; i++) {
+                fixedTask();  // Launch multiple tasks, but they will be serialized
+            }
+        });
+    </script>
+</body>
+</html>

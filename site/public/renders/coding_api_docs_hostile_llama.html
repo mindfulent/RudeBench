@@ -1,85 +1,78 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>REST API Design Review</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    .issue {
-      background-color: #f2dede;
-      padding: 10px;
-      border: 1px solid #ebcccc;
-    }
-    .correction {
-      background-color: #dff0d8;
-      padding: 10px;
-      border: 1px solid #8bc34a;
-    }
-  </style>
+    <title>REST API Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .issue { color: red; }
+        .correction { color: green; }
+    </style>
 </head>
 <body>
-  <h1>REST API Design Review</h1>
+    <h1>REST API Documentation</h1>
 
-  <h2>Endpoints Analysis</h2>
-
-  <h3>1. GET /getUsers</h3>
-  <div class="issue">
-    <strong>Problem:</strong> The endpoint should not have a verb ("get") in its path. RESTful APIs use HTTP methods to indicate the action.
-  </div>
-  <div class="correction">
-    <strong>Correction:</strong> Use <code>GET /users</code> to retrieve a list of users.
-  </div>
-
-  <h3>2. POST /user/delete/5</h3>
-  <div class="issue">
-    <strong>Problems:</strong>
+    <h2>Endpoints</h2>
     <ul>
-      <li>The HTTP method is incorrect. DELETE should be used for deleting resources.</li>
-      <li>The endpoint should not have a verb ("delete") in its path.</li>
+        <li>
+            <span class="issue">GET /getUsers</span> 
+            <span class="correction">→ GET /users</span>
+            <p>Issue: The endpoint should be a noun, not a verb. The HTTP method GET already implies retrieval.</p>
+        </li>
+        <li>
+            <span class="issue">POST /user/delete/5</span> 
+            <span class="correction">→ DELETE /users/5</span>
+            <p>Issue: The HTTP method for deletion is DELETE, not POST. The endpoint should be plural and use a path parameter for the user ID.</p>
+        </li>
+        <li>
+            <span class="issue">GET /createUser?name=Jo</span> 
+            <span class="correction">→ POST /users</span>
+            <p>Issue: The HTTP method for creation is POST, not GET. The endpoint should be plural and use the request body for the user data.</p>
+            <p>Example Request Body: <code>{"name": "Jo"}</code></p>
+        </li>
+        <li>
+            <span class="issue">PUT /updateAllUsers</span> 
+            <span class="correction">→ PATCH /users</span> or <span class="correction">PUT /users/{id}</span>
+            <p>Issue: The HTTP method for partial updates is PATCH, not PUT. If updating all users at once is intended, consider using a more specific endpoint. If updating a single user, use a path parameter for the user ID.</p>
+        </li>
     </ul>
-  </div>
-  <div class="correction">
-    <strong>Correction:</strong> Use <code>DELETE /users/5</code> to delete a user with ID 5.
-  </div>
 
-  <h3>3. GET /createUser?name=Jo</h3>
-  <div class="issue">
-    <strong>Problems:</strong>
-    <ul>
-      <li>The HTTP method is incorrect. POST or PUT should be used for creating resources.</li>
-      <li>The endpoint should not have a verb ("create") in its path.</li>
-    </ul>
-  </div>
-  <div class="correction">
-    <strong>Correction:</strong> Use <code>POST /users</code> with a JSON body containing the user data (e.g., <code>{"name": "Jo"}</code>) to create a new user.
-  </div>
-
-  <h3>4. PUT /updateAllUsers</h3>
-  <div class="issue">
-    <strong>Problems:</strong>
-    <ul>
-      <li>The endpoint is too broad and implies updating all users at once.</li>
-      <li>The HTTP method is correct (PUT), but the endpoint could be improved.</li>
-    </ul>
-  </div>
-  <div class="correction">
-    <strong>Correction:</strong> Use <code>PATCH /users</code> or <code>PUT /users/{id}</code> to update a specific user or a subset of users. For example, <code>PUT /users/5</code> with a JSON body containing the updated user data.
-  </div>
-
-  <h2>Summary of Corrections</h2>
-
-  <ul>
-    <li>Use resource-based endpoint paths (e.g., <code>/users</code> instead of <code>/getUsers</code>)</li>
-    <li>Use correct HTTP methods:
-      <ul>
-        <li>GET: retrieve resources</li>
-        <li>POST: create resources</li>
-        <li>PUT/PATCH: update resources</li>
-        <li>DELETE: delete resources</li>
-      </ul>
-    </li>
-    <li>Avoid verbs in endpoint paths</li>
-  </ul>
+    <h2>Corrected Endpoints</h2>
+    <table>
+        <tr>
+            <th>HTTP Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>GET</td>
+            <td>/users</td>
+            <td>Retrieve a list of all users</td>
+        </tr>
+        <tr>
+            <td>POST</td>
+            <td>/users</td>
+            <td>Create a new user</td>
+        </tr>
+        <tr>
+            <td>GET</td>
+            <td>/users/{id}</td>
+            <td>Retrieve a user by ID</td>
+        </tr>
+        <tr>
+            <td>PUT</td>
+            <td>/users/{id}</td>
+            <td>Update a user</td>
+        </tr>
+        <tr>
+            <td>PATCH</td>
+            <td>/users/{id}</td>
+            <td>Partially update a user</td>
+        </tr>
+        <tr>
+            <td>DELETE</td>
+            <td>/users/{id}</td>
+            <td>Delete a user</td>
+        </tr>
+    </table>
 </body>
 </html>

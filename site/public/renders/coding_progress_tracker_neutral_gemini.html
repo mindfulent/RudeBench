@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrency Bug Progress Bar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            gap: 30px;
+        }
+        .section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 45%;
+        }
+        h2 {
+            color: #0056b3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        p {
+            line-height: 1.6;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 15px;
+            height: 30px;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.2s ease-in-out;
+            box-sizing: border-box; /* Include padding in width */
+            position: absolute; /* Allow text to be centered over bar */
+        }
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            color: #333;
+            font-weight: bold;
+            z-index: 1; /* Ensure text is above bar */
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .explanation h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="explanation">
+        <h3>Understanding the Concurrency Bug</h3>
+        <p>This page demonstrates a classic "race condition" concurrency bug using a progress bar as an example. Both sections run simulated "tasks" that update a shared progress percentage.</p>
+        <p>
+            The problem occurs when multiple tasks try to update the <strong>same shared variable</strong> (e.g., `progressPercentage`) at roughly the same time.
+            If a task reads the current value, another task also reads the *same old value* before the first task has written its new value,
+            they will both base their calculation on outdated information. This leads to lost updates, skipped percentages, or even exceeding 100%.
+        </p>
+        <p>
+            <strong>Buggy Implementation:</strong> Updates the shared percentage directly, allowing race conditions.
+            <div class="code-block">
+// Buggy update:
+currentProgress = sharedProgressPercentage;
+newProgress = currentProgress + updateAmount; // Both tasks might read the same currentProgress
+sharedProgressPercentage = newProgress;      // One task overwrites the other's update
+            </div>
+        </p>
+        <p>
+            <strong>Corrected Implementation:</strong> Uses a promise chain (acting like a simple mutex or critical section) to ensure only one update operation can proceed at a time. Each update waits for the previous one to complete, guaranteeing that it reads the *most current* value.
+            <div class="code-block">
+// Corrected update:
+// The 'currentUpdatePromise' ensures that this new update function
+// only starts *after* the previous update function has finished.
+currentUpdatePromise = currentUpdatePromise.then(() => {
+    const currentProgress = sharedProgressPercentage;
+    const newProgress = Math.min(100, currentProgress + updateAmount);
+    sharedProgressPercentage = newProgress;
+    return newProgress; // Pass the new value to the next promise in the chain
+});
+            </div>
+        </p>
+        <p>Click "Start Simulation" on both sections and observe the difference!</p>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2>Buggy Implementation</h2>
+            <p>Multiple "tasks" update a shared global `buggyProgressPercentage` directly. This will often lead to incorrect progress, skipping percentages, or exceeding 100% due to race conditions.</p>
+            <div class="progress-bar-container">
+                <div id="buggyProgressBar" class="progress-bar"></div>
+                <div id="buggyProgressText" class="progress-text">0%</div>
+            </div>
+            <button id="startBuggySimulation">Start Simulation (Buggy)</button>
+        </div>
+
+        <div class="section">
+            <h2>Corrected Implementation</h2>
+            <p>Multiple "tasks" update a shared global `correctedProgressPercentage` using a promise chain to ensure atomic updates. This prevents race conditions and ensures accurate progress.</p>
+            <div class="progress-bar-container">
+                <div id="correctedProgressBar" class="progress-bar"></div>
+                <div id="correctedProgressText" class="progress-text">0%</div>
+            </div>
+            <button id="startCorrectedSimulation">Start Simulation (Corrected)</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Buggy Implementation Variables ---
+        let buggyProgressPercentage = 0;
+        const buggyProgressBar = document.getElementById('buggyProgressBar');
+        const buggyProgressText = document.getElementById('buggyProgressText');
+        const startBuggySimulationBtn = document.getElementById('startBuggySimulation');
+
+        // --- Corrected Implementation Variables ---
+        let correctedProgressPercentage = 0;
+        const correctedProgressBar = document.getElementById('correctedProgressBar');
+        const correctedProgressText = document.getElementById('correctedProgressText');
+        const startCorrectedSimulationBtn = document.getElementById('startCorrectedSimulation');
+        let currentUpdatePromise = Promise.resolve(); // Initial promise for the chain
+
+        const NUM_TASKS = 10; // Number of simulated concurrent tasks
+        const UPDATE_AMOUNT_PER_TASK = 10; // Each task adds 10%
+        const TASK_DELAY_MS = 100; // Delay for each simulated task
+
+        // Function to update the UI for a progress bar
+        function updateProgressBarUI(progressBarElement, progressTextElement, percentage) {
+            const safePercentage = Math.min(100, Math.max(0, percentage)); // Ensure 0-100 range
+            progressBarElement.style.width = safePercentage + '%';
+            progressBarElement.style.backgroundColor = safePercentage >= 100 ? '#28a745' : '#4CAF50';
+            progressTextElement.textContent = Math.round(safePercentage) + '%';
+            progressTextElement.style.color = safePercentage > 50 ? 'white' : '#333'; // Text color contrast
+            // If the bar is very small, ensure text is visible outside
+            if (safePercentage < 10) {
+                 progressTextElement.style.color = '#333';
+                 progressTextElement.style.left = '50%';
+                 progressTextElement.style.transform = 'translateX(-50%)';
+            } else {
+                 progressTextElement.style.left = 'auto';
+                 progressTextElement.style.transform = 'none';
+            }
+        }
+
+        // --- Buggy Simulation Logic ---
+        function runBuggyTask(taskNumber) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Simulate some work, then update progress
+                    // BUG: Reads buggyProgressPercentage, calculates, then writes.
+                    // Another task might read the *same* buggyProgressPercentage before this write happens.
+                    const current = buggyProgressPercentage;
+                    const next = Math.min(100, current + UPDATE_AMOUNT_PER_TASK); // Cap at 100%
+                    buggyProgressPercentage = next; // This is the shared state write that causes the race condition
+                    updateProgressBarUI(buggyProgressBar, buggyProgressText, buggyProgressPercentage);
+                    console.log(`Buggy Task ${taskNumber}: Read ${current}%, Wrote ${next}%`);
+                    resolve();
+                }, Math.random() * TASK_DELAY_MS + 50); // Random delay to increase race chance
+            });
+        }
+
+        startBuggySimulationBtn.addEventListener('click', async () => {
+            buggyProgressPercentage = 0;
+            updateProgressBarUI(buggyProgressBar, buggyProgressText, 0);
+            startBuggySimulationBtn.disabled = true;
+            console.log("Starting Buggy Simulation...");
+
+            const tasks = [];
+            for (let i = 0; i < NUM_TASKS; i++) {
+                tasks.push(runBuggyTask(i + 1));
+            }
+            await Promise.all(tasks); // Wait for all "concurrent" tasks to finish
+            console.log(`Buggy Simulation Finished. Final Progress: ${buggyProgressPercentage}%`);
+            startBuggySimulationBtn.disabled = false;
+        });
+
+        // --- Corrected Simulation Logic ---
+        function runCorrectedTask(taskNumber) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // The core logic is wrapped in a .then() of currentUpdatePromise
+                    // This creates a chain, ensuring only one update runs at a time.
+                    currentUpdatePromise = currentUpdatePromise.then(() => {
+                        const current = correctedProgressPercentage;
+                        const next = Math.min(100, current + UPDATE_AMOUNT_PER_TASK); // Cap at 100%
+                        correctedProgressPercentage = next; // This write is now "atomic" with respect to other updates
+                        updateProgressBarUI(correctedProgressBar, correctedProgressText, correctedProgressPercentage);
+                        console.log(`Corrected Task ${taskNumber}: Read ${current}%, Wrote ${next}%`);
+                        return next; // Return value to pass to the next promise in the chain (optional for this simple case)
+                    });
+                    // Resolve the task's promise *after* its update has been added to the chain
+                    // This allows the outer Promise.all to track when all tasks have *scheduled* their update.
+                    // To truly wait for the update to complete, we'd await currentUpdatePromise at the end.
+                    resolve();
+                }, Math.random() * TASK_DELAY_MS + 50); // Random delay
+            });
+        }
+
+        startCorrectedSimulationBtn.addEventListener('click', async () => {
+            correctedProgressPercentage = 0;
+            updateProgressBarUI(correctedProgressBar, correctedProgressText, 0);
+            startCorrectedSimulationBtn.disabled = true;
+            console.log("Starting Corrected Simulation...");
+
+            // Reset the promise chain for a new simulation run
+            currentUpdatePromise = Promise.resolve();
+
+            const tasks = [];
+            for (let i = 0; i < NUM_TASKS; i++) {
+                tasks.push(runCorrectedTask(i + 1));
+            }
+
+            // Wait for all tasks to *schedule* their updates onto the promise chain
+            await Promise.all(tasks);
+
+            // Now, wait for the *entire chain* of updates to complete
+            await currentUpdatePromise;
+
+            console.log(`Corrected Simulation Finished. Final Progress: ${correctedProgressPercentage}%`);
+            startCorrectedSimulationBtn.disabled = false;
+        });
+
+        // Initial UI setup
+        updateProgressBarUI(buggyProgressBar, buggyProgressText, 0);
+        updateProgressBarUI(correctedProgressBar, correctedProgressText, 0);
+
+    </script>
+</body>
+</html>

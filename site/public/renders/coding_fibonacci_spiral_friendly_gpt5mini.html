@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Fibonacci Spiral — Buggy vs Fixed</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; }
+    h1 { margin-bottom: 6px; }
+    .row { display:flex; gap:20px; align-items: start; }
+    .pane { border:1px solid #ccc; padding:10px; background:#fafafa; }
+    canvas { background: #fff; display:block; }
+    small { color:#666; }
+    .controls { margin-top:10px; }
+    label { margin-right:10px; }
+  </style>
+</head>
+<body>
+  <h1>Fibonacci Spiral — Buggy vs Fixed</h1>
+  <p>
+    Left: "Buggy" version using an incorrect Fibonacci implementation (wrong base cases).
+    Right: "Fixed" version using the correct Fibonacci base cases. Both draw the same
+    number of squares/arcs so you can compare differences.
+  </p>
+
+  <div class="row">
+    <div class="pane">
+      <strong>Buggy Fibonacci (wrong base cases)</strong><br><small>fib(0)=1, fib(1)=1 (incorrect)</small>
+      <canvas id="c_bug" width="400" height="400"></canvas>
+      <div class="controls">
+        <label>Steps: <input id="steps_bug" type="range" min="1" max="12" value="9"></label>
+        <button id="draw_bug">Redraw</button>
+      </div>
+    </div>
+
+    <div class="pane">
+      <strong>Fixed Fibonacci (correct base cases)</strong><br><small>fib(0)=0, fib(1)=1</small>
+      <canvas id="c_fix" width="400" height="400"></canvas>
+      <div class="controls">
+        <label>Steps: <input id="steps_fix" type="range" min="1" max="12" value="9"></label>
+        <button id="draw_fix">Redraw</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Utility: compute Fibonacci sequence up to n (inclusive)
+  // correctBase: if true, fib(0)=0, fib(1)=1; if false (buggy), fib(0)=1, fib(1)=1
+  function fibSequence(n, correctBase = true) {
+    const f = [];
+    if (n < 0) return f;
+    if (correctBase) {
+      f[0] = 0;
+      if (n === 0) return f;
+      f[1] = 1;
+    } else {
+      // Bug: both base cases = 1 (often mistaken when coder thinks 0th term should be 1)
+      f[0] = 1;
+      if (n === 0) return f;
+      f[1] = 1;
+    }
+    for (let i = 2; i <= n; i++) f[i] = f[i-1] + f[i-2];
+    return f;
+  }
+
+  // Draw fibonacci squares and quarter-arcs (spiral) on given canvas
+  // options:
+  //   steps: number of squares to draw (>=1)
+  //   scale: scale factor to convert fib units to pixels
+  //   showGrid: draw grid lines for squares
+  //   correctBase: whether to use correct fib base cases
+  function drawFibonacci(canvas, options = {}) {
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+
+    const steps = options.steps || 9;
+    const scale = options.scale || 6;
+    const showGrid = options.showGrid !== false;
+    const correctBase = options.correctBase !== false;
+
+    // Compute sequence of side lengths (we'll start at index 1 to get positive sizes)
+    // We'll compute up to steps (so we have steps squares). Use fibSequence(steps)
+    const seq = fibSequence(steps, correctBase).slice(1); // drop index 0 for drawing squares
+    // seq[0] corresponds to fib(1)
+
+    // If seq lengths get too big for canvas, adjust scale
+    const totalSpan = seq.reduce((a,b)=>a+b, 0); // rough bounding box size along one axis if all added
+    // center drawing
+    const centerX = w/2;
+    const centerY = h/2;
+
+    // We'll arrange squares by placing them one by one, rotating quadrant each time.
+    // Start at center, place the first square such that its center is near center.
+    // Use a simple algorithm: maintain current top-left position of bounding box,
+    // and orientation 0..3 indicating direction of next square.
+    const squares = []; // {x,y,size} top-left coords in canvas pixels
+
+    // Convert fib units to pixels
+    const sizes = seq.map(s => s * scale);
+
+    // Start with first square centered
+    let x = Math.round(centerX - sizes[0]/2);
+    let y = Math.round(centerY - sizes[0]/2);
+    squares.push({x,y,size:sizes[0]});
+
+    // orientation: 0 = right (place square to right of current), 1 = down, 2 = left, 3 = up.
+    // We'll maintain an outer bounding box for placement to know where new square goes.
+    let minX = x, minY = y, maxX = x + sizes[0], maxY = y + sizes[0];
+
+    for (let i = 1; i < sizes.length; i++) {
+      const s = sizes[i];
+      const dir = (i-1) & 3; // rotate through 0..3. Using (i-1) so second square uses dir 0 etc.
+      let nx, ny;
+      if (dir === 0) {
+        // place to the right of current bounding box, aligned to top or overlapping appropriately
+        nx = maxX;
+        // align vertically so square's top matches minY
+        ny = minY;
+      } else if (dir === 1) {
+        // place below bounding box
+        nx = minX;
+        ny = maxY;
+      } else if (dir === 2) {
+        // place to the left
+        nx = minX - s;
+        ny = minY + (maxY - minY) - s; // align bottom
+      } else {
+        // place above
+        nx = minX + (maxX - minX) - s; // align right
+        ny = minY - s;
+      }
+      squares.push({x: nx, y: ny, size: s});
+      // update bounds
+      minX = Math.min(minX, nx);
+      minY = Math.min(minY, ny);
+      maxX = Math.max(maxX, nx + s);
+      maxY = Math.max(maxY, ny + s);
+    }
+
+    // Optionally draw grid of squares
+    if (showGrid) {
+      ctx.strokeStyle = '#bbb';
+      ctx.lineWidth = 1;
+      for (const sq of squares) {
+        ctx.strokeRect(Math.round(sq.x)+0.5, Math.round(sq.y)+0.5, Math.round(sq.size), Math.round(sq.size));
+      }
+    }
+
+    // Draw arcs (quarter circles) inside each square to form the spiral.
+    // The arc for square i has radius equal to its size (in pixels) and centered at a corner
+    // of that square. We must choose center and start/end angles based on orientation.
+    ctx.strokeStyle = '#c33';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < squares.length; i++) {
+      const sq = squares[i];
+      const s = sq.size;
+      // Determine which corner to use and angles based on position relative to next square
+      // Simpler: pick orientation rotation i%4 to choose corner and sweep.
+      const rot = i & 3;
+      let cx, cy, start, end;
+      if (rot === 0) {
+        // arc center at bottom-left corner of square
+        cx = sq.x;
+        cy = sq.y + s;
+        start = -Math.PI/2; end = 0; // from up to right
+      } else if (rot === 1) {
+        // center at top-left
+        cx = sq.x;
+        cy = sq.y;
+        start = 0; end = Math.PI/2; // right to down
+      } else if (rot === 2) {
+        // center at top-right
+        cx = sq.x + s;
+        cy = sq.y;
+        start = Math.PI/2; end = Math.PI; // down to left
+      } else {
+        // rot 3: center at bottom-right
+        cx = sq.x + s;
+        cy = sq.y + s;
+        start = Math.PI; end = 3*Math.PI/2; // left to up
+      }
+      ctx.moveTo(cx + Math.cos(start)*s, cy + Math.sin(start)*s);
+      ctx.arc(cx, cy, s, start, end, false);
+    }
+    ctx.stroke();
+
+    // draw a small center marker
+    ctx.fillStyle = '#000';
+    ctx.fillRect(centerX-1, centerY-1, 2, 2);
+  }
+
+  // Hook up canvases
+  const c_bug = document.getElementById('c_bug');
+  const c_fix = document.getElementById('c_fix');
+  const steps_bug = document.getElementById('steps_bug');
+  const steps_fix = document.getElementById('steps_fix');
+
+  function redrawAll() {
+    const s1 = parseInt(steps_bug.value,10);
+    const s2 = parseInt(steps_fix.value,10);
+    // Choose scale so spirals fit: scale depends on steps (more steps -> smaller scale)
+    const scale1 = Math.max(2, Math.floor(220 / (s1+2)));
+    const scale2 = Math.max(2, Math.floor(220 / (s2+2)));
+    drawFibonacci(c_bug, {steps: s1, scale: scale1, showGrid:true, correctBase:false});
+    drawFibonacci(c_fix, {steps: s2, scale: scale2, showGrid:true, correctBase:true});
+  }
+
+  document.getElementById('draw_bug').addEventListener('click', redrawAll);
+  document.getElementById('draw_fix').addEventListener('click', redrawAll);
+  steps_bug.addEventListener('input', redrawAll);
+  steps_fix.addEventListener('input', redrawAll);
+
+  // initial draw
+  redrawAll();
+
+  // Explanation overlay in console for debugging clarity
+  console.log("Buggy fib uses fib(0)=1, fib(1)=1. Fixed fib uses fib(0)=0, fib(1)=1.");
+  console.log("Because the buggy sequence starts with 1,1,2,3..., the sizes and placement shift,");
+  console.log("so the spiral's proportions and alignment differ. Compare the grid squares and arcs.");
+  </script>
+</body>
+</html>

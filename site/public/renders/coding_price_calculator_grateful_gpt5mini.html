@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Shopping cart: floating point vs correct money handling</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 20px; max-width: 900px; }
+  h1 { margin-top: 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; background: #fafafa; }
+  label { display: block; margin-top: 8px; }
+  input[type="text"], input[type="number"] { width: 100%; padding: 6px; box-sizing: border-box; }
+  button { margin-top: 8px; padding: 8px 12px; }
+  pre { background: #111; color: #dcdcdc; padding: 12px; border-radius: 6px; overflow: auto; }
+  .ft { font-family: monospace; }
+  .ok { color: green; }
+  .bad { color: red; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align: left; padding: 6px; border-bottom: 1px solid #eee; }
+</style>
+</head>
+<body>
+<h1>Shopping cart: Float (broken) vs Correct money handling</h1>
+
+<p>This demo shows why using JavaScript's Number with === and naive addition can give surprising results for prices like $4.99. Use the controls to add items and run the built-in tests.</p>
+
+<div class="grid">
+  <div class="card">
+    <h2>Add item</h2>
+    <label>Item name:<input id="itemName" type="text" value="Soda"></label>
+    <label>Price (decimal, e.g. 4.99):<input id="itemPrice" type="text" value="4.99"></label>
+    <label>Quantity:<input id="itemQty" type="number" value="1" min="1"></label>
+    <button id="addBtn">Add to cart</button>
+
+    <h3>Cart (displayed raw values)</h3>
+    <div id="cartArea"></div>
+    <button id="clearBtn">Clear cart</button>
+  </div>
+
+  <div class="card">
+    <h2>Totals & comparisons</h2>
+    <p>Broken (uses Number and ===):</p>
+    <div id="brokenResult"></div>
+
+    <p>Fixed (uses integer cents):</p>
+    <div id="fixedResult"></div>
+
+    <p>Alternative fixed (BigInt cents):</p>
+    <div id="bigintResult"></div>
+
+    <h3>Quick tests</h3>
+    <button id="testFloatBtn">Run float test (shows 0.1+0.2)</button>
+    <button id="testComparisonBtn">Test float === comparison for 4.99</button>
+    <button id="showExplanationBtn">Why does this happen? (explain)</button>
+    <div id="explainArea"></div>
+  </div>
+</div>
+
+<h2>Detailed live examples</h2>
+<div class="card">
+  <p>This area shows a few scripted examples that commonly surprise developers.</p>
+  <button id="exampleAddBtn">Add 3 items: $4.99, $9.99, $0.01</button>
+  <div id="exampleArea"></div>
+</div>
+
+<script>
+/*
+  Simple shopping cart demo showing differences:
+
+  - The "broken" cart stores prices as Numbers (floating point) and compares using ===.
+  - The "fixed" cart stores prices as integer cents (Number integers) and uses integer arithmetic.
+  - bigInt version uses BigInt for cents to emphasize whole-integer arithmetic without rounding.
+*/
+
+// Cart data structures
+const cart = []; // items as {name, priceStr, priceFloat, qty}
+const cartCents = []; // items as {name, cents, qty}
+const cartCentsBigInt = []; // items as {name, centsBigInt, qty}
+
+function parsePriceToFloat(priceStr) {
+  // Naive parse using Number (or parseFloat)
+  return Number(priceStr);
+}
+
+function parsePriceToCents(priceStr) {
+  // Convert via string to avoid floating point rounding when converting.
+  // Steps:
+  //  - Normalize decimal point (no thousands separators).
+  //  - Ensure at most two decimal places by padding/truncating (rounding not performed here except truncation).
+  //  - Multiply integer-part and fractional part accordingly.
+  // This returns a Number that is an integer (safe for typical money up to large amounts).
+  const s = String(priceStr).trim();
+  if (!s) return 0;
+  // Allow leading +, -, handle negative
+  let sign = 1;
+  let t = s;
+  if (t[0] === '+') t = t.slice(1);
+  if (t[0] === '-') { sign = -1; t = t.slice(1); }
+  // Reject non-numeric quickly (very basic)
+  if (!/^\d+(\.\d+)?$/.test(t)) {
+    // fallback: try Number then round
+    const n = Number(s);
+    if (Number.isFinite(n)) return Math.round(n * 100) * sign;
+    return 0;
+  }
+  let [whole, frac] = t.split('.');
+  frac = frac || '';
+  if (frac.length > 2) {
+    // round to 2 decimals (standard rounding)
+    const third = Number(frac[2]);
+    frac = frac.slice(0,2);
+    if (third >= 5) {
+      let asNum = Number(whole) * 100 + Number(frac) + 1;
+      return sign * asNum;
+    }
+  }
+  while (frac.length < 2) frac += '0';
+  return sign * (Number(whole) * 100 + Number(frac));
+}
+
+function parsePriceToCentsBigInt(priceStr) {
+  const s = String(priceStr).trim();
+  if (!s) return 0n;
+  let sign = 1n;
+  let t = s;
+  if (t[0] === '+') t = t.slice(1);
+  if (t[0] === '-') { sign = -1n; t = t.slice(1); }
+  if (!/^\d+(\.\d+)?$/.test(t)) {
+    const n = Number(s);
+    if (Number.isFinite(n)) return BigInt(Math.round(n * 100)) * sign;
+    return 0n;
+  }
+  let [whole, frac] = t.split('.');
+  frac = frac || '';
+  if (frac.length > 2) {
+    const third = Number(frac[2]);
+    frac = frac.slice(0,2);
+    if (third >= 5) {
+      let asNum = BigInt(whole) * 100n + BigInt(frac) + 1n;
+      return sign * asNum;
+    }
+  }
+  while (frac.length < 2) frac += '0';
+  return sign * (BigInt(whole) * 100n + BigInt(frac));
+}
+
+function formatCents(cents) {
+  const sign = cents < 0 ? '-' : '';
+  cents = Math.abs(cents);
+  const dollars = Math.floor(cents / 100);
+  const rem = String(cents % 100).padStart(2, '0');
+  return sign + '$' + dollars + '.' + rem;
+}
+
+function formatCentsBigInt(centsBigInt) {
+  const sign = centsBigInt < 0n ? '-' : '';
+  const a = centsBigInt < 0n ? -centsBigInt : centsBigInt;
+  const dollars = a / 100n;
+  const rem = a % 100n;
+  return sign + '$' + dollars.toString() + '.' + rem.toString().padStart(2, '0');
+}
+
+// UI helpers
+const itemNameEl = document.getElementById('itemName');
+const itemPriceEl = document.getElementById('itemPrice');
+const itemQtyEl = document.getElementById('itemQty');
+const addBtn = document.getElementById('addBtn');
+const cartArea = document.getElementById('cartArea');
+const clearBtn = document.getElementById('clearBtn');
+
+const brokenResult = document.getElementById('brokenResult');
+const fixedResult = document.getElementById('fixedResult');
+const bigintResult = document.getElementById('bigintResult');
+
+addBtn.addEventListener('click', () => {
+  const name = itemNameEl.value || 'Item';
+  const priceStr = itemPriceEl.value;
+  const qty = Math.max(1, Math.floor(Number(itemQtyEl.value) || 1));
+  // broken
+  const floatVal = parsePriceToFloat(priceStr);
+  cart.push({name, priceStr, priceFloat: floatVal, qty});
+  // fixed cents (Number)
+  const cents = parsePriceToCents(priceStr);
+  cartCents.push({name, cents, qty});
+  // BigInt version
+  const centsBI = parsePriceToCentsBigInt(priceStr);
+  cartCentsBigInt.push({name, centsBI, qty});
+  renderCart();
+  renderTotals();
+});
+
+clearBtn.addEventListener('click', () => {
+  cart.length = 0;
+  cartCents.length = 0;
+  cartCentsBigInt.length = 0;
+  renderCart();
+  renderTotals();
+});
+
+function renderCart() {
+  if (cart.length === 0) {
+    cartArea.innerHTML = '<em>Cart is empty</em>';
+    return;
+  }
+  let html = '<table><thead><tr><th>name</th><th>price (string)</th><th>price (float)</th><th>qty</th></tr></thead><tbody>';
+  for (let i = 0; i < cart.length; i++) {
+    const it = cart[i];
+    html += `<tr><td>${escapeHtml(it.name)}</td><td class="ft">${escapeHtml(it.priceStr)}</td><td class="ft">${it.priceFloat} (${typeof it.priceFloat})</td><td>${it.qty}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  cartArea.innerHTML = html;
+}
+
+function renderTotals() {
+  // Broken total: simple float addition
+  let totalFloat = 0;
+  for (const it of cart) {
+    totalFloat += it.priceFloat * it.qty;
+  }
+  // Broken equality checks: look for an item equal to 4.99 using ===
+  const searchPrice = 4.99;
+  const foundBroken = cart.some(it => it.priceFloat === searchPrice);
+
+  brokenResult.innerHTML = '';
+  const br = document.createElement('div');
+  br.innerHTML = `<div>Sum using Number (float) and + : <span class="ft">${totalFloat}</span></div>
+                  <div>Formatted (toFixed(2)) : <span class="ft">${totalFloat.toFixed(2)}</span></div>
+                  <div>Does any item === ${searchPrice}? : <span class="${foundBroken ? 'ok' : 'bad'}">${foundBroken}</span></div>`;
+  brokenResult.appendChild(br);
+
+  // Fixed (cents) total
+  let totalCents = 0;
+  for (const it of cartCents) {
+    totalCents += it.cents * it.qty;
+  }
+  fixedResult.innerHTML = `<div>Sum in integer cents: <span class="ft">${totalCents}</span></div>
+                           <div>Formatted: <span class="ft">${formatCents(totalCents)}</span></div>`;
+
+  // BigInt
+  let totalCentsBI = 0n;
+  for (const it of cartCentsBigInt) {
+    totalCentsBI += it.centsBI !== undefined ? it.centsBI * BigInt(it.qty) : it.centsBigInt * BigInt(it.qty);
+    // ensure either property name works; our items used centsBI sometimes
+  }
+  // compatible loop without relying on property names:
+  totalCentsBI = 0n;
+  for (const it of cartCentsBigInt) {
+    const v = it.centsBigInt !== undefined ? it.centsBigInt : (it.centsBI !== undefined ? it.centsBI : 0n);
+    totalCentsBI += v * BigInt(it.qty);
+  }
+  bigintResult.innerHTML = `<div>Sum in cents (BigInt): <span class="ft">${totalCentsBI}n</span></div>
+                            <div>Formatted: <span class="ft">${formatCentsBigInt(totalCentsBI)}</span></div>`;
+}
+
+// Tests and examples
+document.getElementById('testFloatBtn').addEventListener('click', () => {
+  // classic floating point test
+  const a = 0.1;
+  const b = 0.2;
+  const s = a + b;
+  const out = [];
+  out.push('0.1 + 0.2 = ' + s + ' (toFixed(17): ' + s.toFixed(17) + ')');
+  out.push('0.1 + 0.2 === 0.3 ? ' + (s === 0.3));
+  document.getElementById('explainArea').innerHTML = '<pre class="ft">' + out.join('\\n') + '</pre>';
+});
+
+document.getElementById('testComparisonBtn').addEventListener('click', () => {
+  const p1 = Number('4.99'); // float
+  const p2 = 4.99; // literal
+  const s = [];
+  s.push('Number("4.99") -> ' + p1 + ' (toFixed(17): ' + p1.toFixed(17) + ')');
+  s.push('Literal 4.99 -> ' + p2 + ' (toFixed(17): ' + p2.toFixed(17) + ')');
+  s.push('p1 === p2 -> ' + (p1 === p2));
+  // But sometimes operations lead to values that are not strictly equal:
+  // Example: parsePriceToFloat('4.99') + parsePriceToFloat('0.01') might not equal 5.00 exactly.
+  const sum = parsePriceToFloat('4.99') + parsePriceToFloat('0.01');
+  s.push('4.99 + 0.01 (as floats) = ' + sum + ' (toFixed(17): ' + sum.toFixed(17) + ')');
+  s.push('Is that === 5.00 ? ' + (sum === 5.00));
+  document.getElementById('explainArea').innerHTML = '<pre class="ft">' + s.join('\\n') + '</pre>';
+});
+
+document.getElementById('showExplanationBtn').addEventListener('click', () => {
+  document.getElementById('explainArea').innerHTML = [
+    'Why floating point fails for money (short explanation):',
+    '',
+    '- JavaScript Number is a binary floating-point (IEEE-754 double). Many decimal fractions',
+    '  like 0.1 or 4.99 have no exact representation in binary, so they are stored as',
+    '  nearby binary fractions.',
+    '- Arithmetic on these approximations produces small rounding errors. For example,',
+    '  0.1 + 0.2 is stored as 0.30000000000000004, not exactly 0.3.',
+    '- Using === compares the raw binary values. Two results that look the same when',
+    '  printed with two decimals can still differ internally (so === can be false).',
+    '- For money you typically need exact decimal arithmetic. Common practical options:',
+    '  * Store amounts as integer cents (e.g., 4.99 -> 499) and do integer arithmetic.',
+    '  * Use a decimal arithmetic library (decimal.js, Big.js, Dinero.js) that models',
+    '    decimal fractions exactly.',
+    '  * Use BigInt to store cents if you prefer arbitrary large integers.',
+    '',
+    'In short: Do not use raw floating point for financial equality/tests or totals; use',
+    'an integer cents representation or a decimal library.',
+  ].join('\\n');
+});
+
+document.getElementById('exampleAddBtn').addEventListener('click', () => {
+  // Add items that show rounding surprises
+  const examples = [
+    {name: 'Item A', price: '4.99', qty: 1},
+    {name: 'Item B', price: '9.99', qty: 1},
+    {name: 'Item C', price: '0.01', qty: 1},
+  ];
+  for (const e of examples) {
+    itemNameEl.value = e.name;
+    itemPriceEl.value = e.price;
+    itemQtyEl.value = e.qty;
+    addBtn.click();
+  }
+  // Show broken display details
+  const b = [];
+  const totalFloat = cart.reduce((acc, it) => acc + it.priceFloat * it.qty, 0);
+  b.push('Broken float sum: ' + totalFloat + '  (toFixed(17): ' + totalFloat.toFixed(17) + ')');
+  b.push('Formatted (toFixed(2)): ' + totalFloat.toFixed(2));
+  const totalCents = cartCents.reduce((acc, it) => acc + it.cents * it.qty, 0);
+  b.push('');
+  b.push('Fixed cents sum: ' + totalCents + ' cents -> ' + formatCents(totalCents));
+  document.getElementById('exampleArea').innerHTML = '<pre class="ft">' + b.join('\\n') + '</pre>';
+});
+
+// helper: escape html
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+// initial render
+renderCart();
+renderTotals();
+
+</script>
+</body>
+</html>

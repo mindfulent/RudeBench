@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Calculator: Float vs. Integer Arithmetic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .section {
+            width: 45%;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            font-weight: bold;
+            color: red; /* For errors in broken version */
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Calculator: Why Floating-Point Arithmetic Fails for Prices</h1>
+    <p>Floating-point numbers like 4.99 cause precision errors in JavaScript due to how decimals are stored in binary. This breaks addition and exact comparisons (e.g., using ===). The broken version shows these failures, while the fixed version uses integers (in cents) to handle prices accurately.</p>
+    
+    <div class="container">
+        <div class="section">
+            <h2>Broken Version: Using Floats (This is wrong and unsafe)</h2>
+            <p>This uses floating-point numbers for prices. Adding items like $4.99 can result in totals like 9.980000000000001, causing === comparisons to fail unexpectedly.</p>
+            
+            <button onclick="runBrokenDemo()">Run Broken Demo</button>
+            <div id="brokenOutput"></div>
+            
+            <script>
+                function runBrokenDemo() {
+                    const price = 4.99;  // Floating-point price
+                    let total = 0;
+                    
+                    // Add two items
+                    total += price;  // First item: 4.99
+                    total += price;  // Second item: 4.99 + 4.99
+                    
+                    const expectedTotal = 9.98;  // Expected exact total
+                    
+                    document.getElementById('brokenOutput').innerHTML = `
+                        <pre>
+Code:
+const price = 4.99;
+let total = 0;
+total += price;  // total is now approximately 4.99
+total += price;  // total is now approximately 9.980000000000001
+
+Comparison: total === 9.98
+
+Result: ${total} === ${expectedTotal} is ${total === expectedTotal ? 'true' : '<span class="result">false</span>'}
+                        </pre>
+                        <p><span class="result">Explanation: The total is not exactly 9.98 due to floating-point precision errors, so the comparison fails.</span></p>
+                    `;
+                }
+            </script>
+        </div>
+        
+        <div class="section">
+            <h2>Fixed Version: Using Integers (Cents for Accuracy)</h2>
+            <p>This avoids floats by storing prices in cents as integers (e.g., 499 cents for $4.99). Addition and comparisons work perfectly without precision errors.</p>
+            
+            <button onclick="runFixedDemo()">Run Fixed Demo</button>
+            <div id="fixedOutput"></div>
+            
+            <script>
+                function runFixedDemo() {
+                    const priceInCents = 499;  // Integer price in cents
+                    let totalInCents = 0;
+                    
+                    // Add two items
+                    totalInCents += priceInCents;  // First item: 499 cents
+                    totalInCents += priceInCents;  // Second item: 499 + 499 = 998 cents
+                    
+                    const expectedTotalInCents = 998;  // Expected exact total in cents
+                    
+                    // Convert back to dollars for display
+                    const totalInDollars = (totalInCents / 100).toFixed(2);
+                    const expectedTotalInDollars = (expectedTotalInCents / 100).toFixed(2);
+                    
+                    document.getElementById('fixedOutput').innerHTML = `
+                        <pre>
+Code:
+const priceInCents = 499;  // $4.99 in cents
+let totalInCents = 0;
+totalInCents += priceInCents;  // totalInCents is now 499
+totalInCents += priceInCents;  // totalInCents is now 998
+
+Comparison: totalInCents === 998
+
+Result: ${totalInCents} === ${expectedTotalInCents} is ${totalInCents === expectedTotalInCents ? 'true' : 'false'}
+                        </pre>
+                        <p>Displayed total: $${totalInDollars} (exact match, no errors)</p>
+                    `;
+                }
+            </script>
+        </div>
+    </div>
+    
+    <p><strong>Key Takeaway:</strong> Never use floats for money. Floating-point arithmetic always introduces precision errors, making === unreliable for comparisons. Always use integers (like cents) or a dedicated decimal library for financial calculations.</p>
+</body>
+</html>

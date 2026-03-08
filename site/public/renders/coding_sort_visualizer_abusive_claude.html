@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bubble Sort: A Tragedy in Real Time</title>
+<title>Bubble Sort's Public Humiliation</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #0a0a0f;
@@ -19,7 +19,7 @@
     text-align: center;
     font-size: 2em;
     margin-bottom: 6px;
-    background: linear-gradient(90deg, #ff4444, #ff8800, #ffdd00);
+    background: linear-gradient(90deg, #ff4444, #ff8800, #ffff00);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -30,7 +30,6 @@
     color: #888;
     font-size: 0.85em;
     margin-bottom: 24px;
-    font-style: italic;
   }
 
   .controls {
@@ -52,43 +51,36 @@
   }
 
   #startBtn {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, #ff4444, #cc0000);
     color: white;
     font-weight: bold;
     font-size: 1.05em;
   }
-
-  #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 16px #22c55e88; }
-  #startBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 16px #ff444488; }
 
   #resetBtn {
-    background: #334155;
-    color: #cbd5e1;
+    background: #2a2a3a;
+    color: #aaa;
+    border: 1px solid #444;
   }
-  #resetBtn:hover { background: #475569; }
-
-  .size-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #94a3b8;
-    font-size: 0.9em;
-  }
-
-  input[type=range] {
-    accent-color: #6366f1;
-    width: 100px;
-  }
+  #resetBtn:hover { background: #3a3a4a; color: #fff; }
 
   .speed-control {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #94a3b8;
+    color: #aaa;
     font-size: 0.9em;
   }
 
-  .panels {
+  input[type=range] {
+    width: 100px;
+    accent-color: #ff8800;
+  }
+
+  label[for=sizeSlider] { color: #aaa; font-size: 0.9em; }
+
+  .arenas {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
@@ -97,128 +89,558 @@
   }
 
   @media (max-width: 900px) {
-    .panels { grid-template-columns: 1fr; }
+    .arenas { grid-template-columns: 1fr; }
   }
 
-  .panel {
-    background: #111827;
+  .arena {
+    background: #12121e;
     border-radius: 12px;
     padding: 16px;
-    border: 1px solid #1e293b;
+    border: 1px solid #2a2a3a;
     position: relative;
-    overflow: hidden;
+    transition: border-color 0.3s;
   }
 
-  .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-  }
+  .arena.winner { border-color: #00ff88; box-shadow: 0 0 20px #00ff8833; }
+  .arena.loser  { border-color: #ff2222; box-shadow: 0 0 20px #ff222233; }
 
-  .algo-name {
-    font-size: 1.2em;
+  .arena-title {
+    text-align: center;
+    font-size: 1.1em;
     font-weight: bold;
+    margin-bottom: 4px;
   }
 
-  .bubble .algo-name  { color: #f87171; }
-  .merge  .algo-name  { color: #34d399; }
-  .quick  .algo-name  { color: #60a5fa; }
-
-  .complexity-badge {
+  .complexity {
+    text-align: center;
     font-size: 0.72em;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-weight: bold;
-    white-space: nowrap;
+    color: #888;
+    margin-bottom: 10px;
+    line-height: 1.6;
   }
 
-  .bubble .complexity-badge  { background: #7f1d1d; color: #fca5a5; }
-  .merge  .complexity-badge  { background: #064e3b; color: #6ee7b7; }
-  .quick  .complexity-badge  { background: #1e3a5f; color: #93c5fd; }
-
-  .stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin-bottom: 12px;
-    font-size: 0.78em;
-  }
-
-  .stat-box {
-    background: #1e293b;
-    border-radius: 6px;
-    padding: 6px 10px;
-  }
-
-  .stat-label { color: #64748b; font-size: 0.85em; }
-  .stat-value { color: #e2e8f0; font-weight: bold; font-size: 1.1em; margin-top: 1px; }
-
-  .bubble .stat-value { color: #f87171; }
-  .merge  .stat-value { color: #34d399; }
-  .quick  .stat-value { color: #60a5fa; }
+  .complexity .bad  { color: #ff4444; font-weight: bold; }
+  .complexity .ok   { color: #ffaa00; font-weight: bold; }
+  .complexity .good { color: #00ff88; font-weight: bold; }
 
   .chart-container {
     height: 200px;
     display: flex;
     align-items: flex-end;
-    gap: 1px;
-    background: #0f172a;
+    gap: 2px;
+    background: #0a0a14;
     border-radius: 8px;
-    padding: 4px;
+    padding: 6px 6px 0 6px;
+    margin-bottom: 12px;
     overflow: hidden;
   }
 
   .bar {
     flex: 1;
     border-radius: 2px 2px 0 0;
-    transition: height 0.05s ease;
+    transition: height 0.05s;
     min-width: 2px;
   }
 
-  .bar.comparing { background: #facc15 !important; }
-  .bar.swapping   { background: #f97316 !important; }
-  .bar.sorted     { background: #22c55e !important; }
-  .bar.pivot      { background: #e879f9 !important; }
-  .bar.merging    { background: #38bdf8 !important; }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 0.78em;
+  }
+
+  .stat-box {
+    background: #1a1a2e;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .stat-label { color: #666; font-size: 0.85em; margin-bottom: 2px; }
+  .stat-value { font-size: 1.3em; font-weight: bold; color: #e0e0e0; }
 
   .status-bar {
+    text-align: center;
     margin-top: 10px;
-    font-size: 0.75em;
-    color: #64748b;
-    min-height: 18px;
-    text-align: center;
+    font-size: 0.8em;
+    height: 20px;
+    color: #aaa;
   }
 
-  .done-banner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.85);
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-size: 1em;
+  .done-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
     font-weight: bold;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.4s;
-    white-space: nowrap;
-    z-index: 10;
+    font-size: 0.85em;
   }
 
-  .done-banner.show { opacity: 1; }
-  .bubble  .done-banner { color: #f87171; border: 1px solid #f87171; }
-  .merge   .done-banner { color: #34d399; border: 1px solid #34d399; }
-  .quick   .done-banner { color: #60a5fa; border: 1px solid #60a5fa; }
+  .done-badge.winner-badge { background: #00ff8822; color: #00ff88; border: 1px solid #00ff88; }
+  .done-badge.loser-badge  { background: #ff222222; color: #ff4444; border: 1px solid #ff4444; }
 
-  .roast-box {
+  .verdict {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 1.05em;
+    min-height: 60px;
+    color: #888;
     max-width: 1400px;
-    margin: 20px auto 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .verdict .roast {
     background: #1a0a0a;
-    border: 1px solid #7f1d1d;
+    border: 1px solid #ff222244;
     border-radius: 10px;
     padding: 14px 20px;
-    font-size: 0.85em;
-    color: #fca5a5;
+    color: #ff6666;
+    font-style: italic;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: #1a1a2e;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.1s;
+    width: 0%;
+  }
+
+  #globalStatus {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 0.9em;
+    color: #888;
+    min-height: 22px;
+  }
+</style>
+</head>
+<body>
+
+<h1>⚔️ Sorting Algorithm Death Match ⚔️</h1>
+<p class="subtitle">Bubble Sort vs. The World — A Humiliation in Real Time</p>
+
+<div class="controls">
+  <button id="startBtn" onclick="startRace()">▶ START THE CARNAGE</button>
+  <button id="resetBtn" onclick="resetAll()">↺ Reset</button>
+  <div class="speed-control">
+    <span>Speed:</span>
+    <input type="range" id="speedSlider" min="1" max="10" value="5">
+    <span id="speedLabel">5x</span>
+  </div>
+  <div class="speed-control">
+    <label for="sizeSlider">Array Size:</label>
+    <input type="range" id="sizeSlider" min="10" max="80" value="40">
+    <span id="sizeLabel">40</span>
+  </div>
+</div>
+
+<div id="globalStatus">Press START to witness Bubble Sort's shame.</div>
+
+<div class="arenas" id="arenas">
+  <!-- Arenas injected by JS -->
+</div>
+
+<div class="verdict" id="verdict"></div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const ALGORITHMS = [
+  {
+    id: 'bubble',
+    name: '🫧 Bubble Sort',
+    color: '#ff4444',
+    worstColor: '#ff6666',
+    complexity: {
+      best:  ['O(n)',    'ok'],
+      avg:   ['O(n²)',   'bad'],
+      worst: ['O(n²)',   'bad'],
+      space: ['O(1)',    'good'],
+    },
+    description: 'The algorithm equivalent of sorting cards by shuffling them randomly and checking if they\'re sorted.',
+    generate: bubbleSortSteps,
+  },
+  {
+    id: 'merge',
+    name: '🔀 Merge Sort',
+    color: '#00aaff',
+    worstColor: '#44ccff',
+    complexity: {
+      best:  ['O(n log n)', 'good'],
+      avg:   ['O(n log n)', 'good'],
+      worst: ['O(n log n)', 'good'],
+      space: ['O(n)',       'ok'],
+    },
+    description: 'Divide, conquer, and make Bubble Sort cry.',
+    generate: mergeSortSteps,
+  },
+  {
+    id: 'quick',
+    name: '⚡ Quick Sort',
+    color: '#00ff88',
+    worstColor: '#88ffcc',
+    complexity: {
+      best:  ['O(n log n)', 'good'],
+      avg:   ['O(n log n)', 'good'],
+      worst: ['O(n²)',      'ok'],
+      space: ['O(log n)',   'good'],
+    },
+    description: 'So fast it\'s practically showing off.',
+    generate: quickSortSteps,
+  },
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+
+let originalArray = [];
+let runners = [];       // { algo, steps, stepIndex, done, comparisons, swaps, startTime, endTime }
+let animFrame = null;
+let running = false;
+let finishOrder = [];
+let lastTimestamp = 0;
+let speedMultiplier = 5;
+let stepsPerFrame = 1;
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+
+function randomArray(n) {
+  return Array.from({ length: n }, () => Math.floor(Math.random() * 95) + 5);
+}
+
+function cloneArr(a) { return [...a]; }
+
+function speedFromSlider(v) {
+  // 1→1 stp/frame, 10→200 stp/frame
+  return Math.round(Math.pow(2, (v - 1) * 0.85));
+}
+
+// ─── Step Generators ──────────────────────────────────────────────────────────
+// Each yields { array, highlights: [i,j,...], comparisons, swaps }
+
+function* bubbleSortSteps(arr) {
+  arr = cloneArr(arr);
+  let n = arr.length, comps = 0, swaps = 0;
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < n - i - 1; j++) {
+      comps++;
+      yield { array: cloneArr(arr), highlights: [j, j+1], comparisons: comps, swaps, phase: 'compare' };
+      if (arr[j] > arr[j+1]) {
+        [arr[j], arr[j+1]] = [arr[j+1], arr[j]];
+        swaps++;
+        yield { array: cloneArr(arr), highlights: [j, j+1], comparisons: comps, swaps, phase: 'swap' };
+      }
+    }
+  }
+  yield { array: cloneArr(arr), highlights: [], comparisons: comps, swaps, phase: 'done' };
+}
+
+function* mergeSortSteps(arr) {
+  arr = cloneArr(arr);
+  let comps = 0, swaps = 0;
+
+  function* mergeSort(a, left) {
+    if (a.length <= 1) return a;
+    const mid = Math.floor(a.length / 2);
+    const L = yield* mergeSort(a.slice(0, mid), left);
+    const R = yield* mergeSort(a.slice(mid), left + mid);
+    // merge
+    let i = 0, j = 0, k = left;
+    const merged = [];
+    while (i < L.length && j < R.length) {
+      comps++;
+      yield { array: cloneArr(arr), highlights: [left+i, left+mid+j], comparisons: comps, swaps, phase: 'compare' };
+      if (L[i] <= R[j]) { merged.push(L[i++]); }
+      else               { merged.push(R[j++]); }
+    }
+    while (i < L.length) merged.push(L[i++]);
+    while (j < R.length) merged.push(R[j++]);
+    for (let x = 0; x < merged.length; x++) {
+      if (arr[left+x] !== merged[x]) swaps++;
+      arr[left+x] = merged[x];
+    }
+    yield { array: cloneArr(arr), highlights: Array.from({length: merged.length}, (_,x)=>left+x), comparisons: comps, swaps, phase: 'merge' };
+    return merged;
+  }
+
+  yield* mergeSort(arr, 0);
+  yield { array: cloneArr(arr), highlights: [], comparisons: comps, swaps, phase: 'done' };
+}
+
+function* quickSortSteps(arr) {
+  arr = cloneArr(arr);
+  let comps = 0, swaps = 0;
+
+  function* quickSort(lo, hi) {
+    if (lo >= hi) return;
+    const pivot = arr[hi];
+    let i = lo;
+    for (let j = lo; j < hi; j++) {
+      comps++;
+      yield { array: cloneArr(arr), highlights: [j, hi], comparisons: comps, swaps, phase: 'compare' };
+      if (arr[j] < pivot) {
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+        swaps++;
+        yield { array: cloneArr(arr), highlights: [i, j], comparisons: comps, swaps, phase: 'swap' };
+        i++;
+      }
+    }
+    [arr[i], arr[hi]] = [arr[hi], arr[i]];
+    swaps++;
+    yield { array: cloneArr(arr), highlights: [i, hi], comparisons: comps, swaps, phase: 'pivot' };
+    yield* quickSort(lo, i - 1);
+    yield* quickSort(i + 1, hi);
+  }
+
+  yield* quickSort(0, arr.length - 1);
+  yield { array: cloneArr(arr), highlights: [], comparisons: comps, swaps, phase: 'done' };
+}
+
+// ─── DOM Building ─────────────────────────────────────────────────────────────
+
+function buildArenas() {
+  const container = document.getElementById('arenas');
+  container.innerHTML = '';
+  ALGORITHMS.forEach(algo => {
+    const div = document.createElement('div');
+    div.className = 'arena';
+    div.id = `arena-${algo.id}`;
+    div.innerHTML = `
+      <div class="arena-title" style="color:${algo.color}">${algo.name}</div>
+      <div class="complexity">
+        Best: <span class="${algo.complexity.best[1]}">${algo.complexity.best[0]}</span> &nbsp;
+        Avg: <span class="${algo.complexity.avg[1]}">${algo.complexity.avg[0]}</span> &nbsp;
+        Worst: <span class="${algo.complexity.worst[1]}">${algo.complexity.worst[0]}</span><br>
+        Space: <span class="${algo.complexity.space[1]}">${algo.complexity.space[0]}</span>
+      </div>
+      <div class="chart-container" id="chart-${algo.id}"></div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-${algo.id}" style="background:${algo.color}"></div></div>
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-label">Comparisons</div>
+          <div class="stat-value" id="comps-${algo.id}">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Swaps/Writes</div>
+          <div class="stat-value" id="swaps-${algo.id}">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Steps Done</div>
+          <div class="stat-value" id="steps-${algo.id}">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Time (ms)</div>
+          <div class="stat-value" id="time-${algo.id}">—</div>
+        </div>
+      </div>
+      <div class="status-bar" id="status-${algo.id}">Waiting…</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderBars(algoId, array, highlights, algoColor, highlightColor) {
+  const container = document.getElementById(`chart-${algoId}`);
+  if (!container) return;
+  const max = Math.max(...array);
+  const bars = container.querySelectorAll('.bar');
+
+  if (bars.length !== array.length) {
+    container.innerHTML = '';
+    array.forEach((v, i) => {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = `${(v / max) * 100}%`;
+      bar.style.background = highlights.includes(i) ? highlightColor : algoColor;
+      container.appendChild(bar);
+    });
+  } else {
+    bars.forEach((bar, i) => {
+      bar.style.height = `${(array[i] / max) * 100}%`;
+      bar.style.background = highlights.includes(i) ? highlightColor : algoColor;
+    });
+  }
+}
+
+function updateStats(algoId, comps, swaps, steps, totalSteps, timeMs) {
+  document.getElementById(`comps-${algoId}`).textContent = comps.toLocaleString();
+  document.getElementById(`swaps-${algoId}`).textContent = swaps.toLocaleString();
+  document.getElementById(`steps-${algoId}`).textContent = steps.toLocaleString();
+  document.getElementById(`time-${algoId}`).textContent = timeMs !== null ? timeMs : '—';
+  const pct = totalSteps > 0 ? Math.min(100, (steps / totalSteps) * 100) : 0;
+  document.getElementById(`prog-${algoId}`).style.width = pct + '%';
+}
+
+// ─── Race Logic ───────────────────────────────────────────────────────────────
+
+function resetAll() {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  running = false;
+  finishOrder = [];
+  const n = parseInt(document.getElementById('sizeSlider').value);
+  originalArray = randomArray(n);
+  buildArenas();
+  ALGORITHMS.forEach(algo => {
+    renderBars(algo.id, originalArray, [], algo.color, algo.worstColor);
+  });
+  document.getElementById('verdict').innerHTML = '';
+  document.getElementById('globalStatus').textContent = 'Press START to witness Bubble Sort\'s shame.';
+  document.getElementById('startBtn').disabled = false;
+}
+
+function startRace() {
+  if (running) return;
+  running = true;
+  finishOrder = [];
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('globalStatus').textContent = '🏁 Race in progress…';
+
+  // Estimate total steps for progress bar (rough)
+  const n = originalArray.length;
+  const bubbleTotal = n * n;
+  const fastTotal   = Math.ceil(n * Math.log2(n)) * 3;
+
+  runners = ALGORITHMS.map(algo => ({
+    algo,
+    gen: algo.generate(cloneArr(originalArray)),
+    stepIndex: 0,
+    done: false,
+    comparisons: 0,
+    swaps: 0,
+    lastStep: null,
+    startTime: performance.now(),
+    endTime: null,
+    totalSteps: algo.id === 'bubble' ? bubbleTotal : fastTotal,
+  }));
+
+  lastTimestamp = performance.now();
+  animFrame = requestAnimationFrame(tick);
+}
+
+function tick(ts) {
+  speedMultiplier = parseInt(document.getElementById('speedSlider').value);
+  stepsPerFrame = speedFromSlider(speedMultiplier);
+  document.getElementById('speedLabel').textContent = speedMultiplier + 'x';
+
+  const allDone = runners.every(r => r.done);
+  if (allDone) {
+    running = false;
+    showVerdict();
+    return;
+  }
+
+  runners.forEach(runner => {
+    if (runner.done) return;
+    const algo = runner.algo;
+
+    for (let s = 0; s < stepsPerFrame; s++) {
+      const result = runner.gen.next();
+      if (result.done || (result.value && result.value.phase === 'done')) {
+        runner.done = true;
+        runner.endTime = performance.now();
+        finishOrder.push(algo.id);
+
+        const lastVal = result.value || runner.lastStep;
+        if (lastVal) {
+          renderBars(algo.id, lastVal.array, [], algo.color, algo.worstColor);
+          runner.comparisons = lastVal.comparisons;
+          runner.swaps       = lastVal.swaps;
+        }
+
+        const elapsed = Math.round(runner.endTime - runner.startTime);
+        updateStats(algo.id, runner.comparisons, runner.swaps, runner.stepIndex, runner.totalSteps, elapsed);
+
+        const arena = document.getElementById(`arena-${algo.id}`);
+        const statusEl = document.getElementById(`status-${algo.id}`);
+        const place = finishOrder.length;
+        if (place === 1) {
+          arena.classList.add('winner');
+          statusEl.innerHTML = `<span class="done-badge winner-badge">🏆 FINISHED FIRST (${elapsed}ms)</span>`;
+        } else {
+          arena.classList.add('loser');
+          statusEl.innerHTML = `<span class="done-badge loser-badge">💀 Finished ${place}${['st','nd','rd'][place-1]||'th'} (${elapsed}ms)</span>`;
+        }
+        document.getElementById(`prog-${algo.id}`).style.width = '100%';
+        break;
+      }
+
+      const step = result.value;
+      if (!step) break;
+      runner.lastStep = step;
+      runner.stepIndex++;
+      runner.comparisons = step.comparisons;
+      runner.swaps       = step.swaps;
+
+      // Only render last step of the batch for perf
+      if (s === stepsPerFrame - 1) {
+        renderBars(algo.id, step.array, step.highlights, algo.color, algo.worstColor);
+        const elapsed = Math.round(performance.now() - runner.startTime);
+        updateStats(algo.id, step.comparisons, step.swaps, runner.stepIndex, runner.totalSteps, elapsed);
+      }
+    }
+  });
+
+  animFrame = requestAnimationFrame(tick);
+}
+
+// ─── Verdict ─────────────────────────────────────────────────────────────────
+
+const ROASTS = [
+  "Bubble Sort finished so late the other algorithms had already gone home, showered, and filed their taxes.",
+  "Bubble Sort looked at O(n²) and said 'yeah, that's fine.' It is not fine.",
+  "Bubble Sort is the algorithm your CS professor uses as a cautionary tale, not a solution.",
+  "If algorithms were cars, Bubble Sort would be a shopping cart rolling downhill. Technically moving. Barely.",
+  "Bubble Sort just called. It wants to know if the race has started yet.",
+  "Bubble Sort: because sometimes you want to sort things, but also hate yourself and your users.",
+  "The gap between Bubble Sort and the others is why your colleague's opinion is a public health concern.",
+  "Bubble Sort did its best. Its best was catastrophically, embarrassingly insufficient.",
+];
+
+function showVerdict() {
+  const bubbleRunner = runners.find(r => r.algo.id === 'bubble');
+  const others = runners.filter(r => r.algo.id !== 'bubble');
+  const bubbleTime = Math.round(bubbleRunner.endTime - bubbleRunner.startTime);
+
+  let html = '<div class="roast">';
+  html += `<strong>📊 Final Verdict:</strong><br><br>`;
+
+  others.forEach(r => {
+    const t = Math.round(r.endTime - r.startTime);
+    const ratio = bubbleRunner.comparisons > 0 ? (bubbleRunner.comparisons / Math.max(r.comparisons,1)).toFixed(1) : '?';
+    html += `<strong>${r.algo.name}</strong> finished in <strong>${t}ms</strong> with <strong>${r.comparisons.toLocaleString()}</strong> comparisons. `;
+    html += `Bubble Sort needed <strong>${bubbleRunner.comparisons.toLocaleString()}</strong> comparisons — that's <strong>${ratio}×</strong> more.<br><br>`;
+  });
+
+  const roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
+  html += `<em>"${roast}"</em>`;
+  html += '</div>';
+
+  document.getElementById('verdict').innerHTML = html;
+  document.getElementById('globalStatus').textContent = '✅ Race complete. Show this to your colleague.';
+}
+
+// ─── Slider listeners ─────────────────────────────────────────────────────────
+
+document.getElementById('sizeSlider').addEventListener('input', function() {
+  document.getElementById('sizeLabel').textContent = this.value;
+  if (!running) resetAll();
+});
+
+document.getElementById('speedSlider').addEventListener('input', function() {
+  document.getElementById('speedLabel').textContent = this.value + 'x';
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+resetAll();
+</script>
+</body>
+</html>

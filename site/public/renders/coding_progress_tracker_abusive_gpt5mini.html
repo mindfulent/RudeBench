@@ -1,0 +1,277 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Progress race demo — buggy vs fixed</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; }
+  .container { display: flex; gap: 24px; }
+  .panel { border: 1px solid #ccc; padding: 12px; width: 48%; box-sizing: border-box; }
+  .bar-bg { width: 100%; height: 28px; background: #eee; border-radius: 6px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg,#4caf50,#8bc34a); width: 0%; transition: width 0.12s linear; }
+  .label { margin-top: 8px; font-size: 13px; }
+  button { margin-right: 8px; }
+  .log { margin-top: 10px; height: 160px; overflow: auto; background: #fafafa; border: 1px solid #eee; padding: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+  .danger { color: #b00; font-weight: bold; }
+</style>
+</head>
+<body>
+<h2>Progress race demo — Buggy (left) vs Fixed (right)</h2>
+<p>Click "Start" for each panel. The buggy version intentionally shares state unsafely across concurrent async tasks; the fixed version serializes updates.</p>
+<div class="container">
+  <div class="panel" id="buggyPanel">
+    <h3>Buggy (shared mutable state)</h3>
+    <div class="bar-bg"><div id="buggyFill" class="bar-fill"></div></div>
+    <div class="label">Progress: <span id="buggyPct">0%</span></div>
+    <div style="margin-top:10px;">
+      <button id="buggyStart">Start</button>
+      <button id="buggyReset">Reset</button>
+    </div>
+    <div class="log" id="buggyLog"></div>
+    <div style="margin-top:8px;"><span class="danger">Note:</span> this intentionally uses shared mutable progressValue and concurrent async workers that read/write it without coordination.</div>
+  </div>
+
+  <div class="panel" id="fixedPanel">
+    <h3>Fixed (serialized updates via queue)</h3>
+    <div class="bar-bg"><div id="fixedFill" class="bar-fill"></div></div>
+    <div class="label">Progress: <span id="fixedPct">0%</span></div>
+    <div style="margin-top:10px;">
+      <button id="fixedStart">Start</button>
+      <button id="fixedReset">Reset</button>
+    </div>
+    <div class="log" id="fixedLog"></div>
+    <div style="margin-top:8px;">This serializes updates so each write sees a consistent previous value before applying the next increment.</div>
+  </div>
+</div>
+
+<script>
+/*
+Demo parameters:
+- Simulate N concurrent workers, each repeatedly computes a next progress value based on current shared progress,
+  then waits a random delay and writes back the new value.
+- In the buggy case they all read/write the same shared variable without synchronization, causing lost updates
+  or backward jumps when timing interleaves badly.
+- In the fixed case we implement a simple update queue so only one update mutates the progress at a time.
+*/
+
+(function(){
+  // Utility
+  function randRange(a,b){ return a + Math.random()*(b-a); }
+  function log(elem, msg){
+    elem.textContent = msg + "\n" + elem.textContent;
+  }
+
+  // BUGGY implementation
+  (function(){
+    const fill = document.getElementById('buggyFill');
+    const pct = document.getElementById('buggyPct');
+    const start = document.getElementById('buggyStart');
+    const reset = document.getElementById('buggyReset');
+    const logEl = document.getElementById('buggyLog');
+
+    let progressValue = 0; // shared mutable state
+    let running = false;
+    let workers = [];
+
+    function render(){
+      const v = Math.max(0, Math.min(100, progressValue));
+      fill.style.width = v + '%';
+      pct.textContent = Math.round(v) + '%';
+    }
+
+    function startWorkers(){
+      if(running) return;
+      running = true;
+      progressValue = 0;
+      render();
+      logEl.textContent = '';
+
+      const WORKER_COUNT = 5;
+      const MAX_STEPS = 25;
+
+      for(let i=0;i<WORKER_COUNT;i++){
+        const id = i+1;
+        let steps = 0;
+        // each worker repeatedly:
+        // 1. read current progressValue
+        // 2. compute a target by adding some delta
+        // 3. wait randomly, then write target back
+        // This read-modify-write is non-atomic and can be interleaved to create lost updates/backward jumps.
+        function workerLoop(){
+          if(!running) return;
+          if(progressValue >= 100 || steps >= MAX_STEPS){
+            log(logEl, `W${id} stopping (done).`);
+            return;
+          }
+          steps++;
+          // simulate reading shared state
+          const readVal = progressValue;
+          // compute a delta influenced by worker id so different workers take different strides
+          const delta = randRange(3, 12) * (1 + id*0.05);
+          const computed = Math.min(100, readVal + delta);
+
+          // random delay to create overlap
+          const delay = Math.floor(randRange(10, 140));
+
+          // simulate asynchronous write that may be stale because other workers may have updated progressValue in the meantime
+          setTimeout(() => {
+            // Intentionally naive write: overwrite shared state with computed value
+            // This can step progress backwards if readVal was stale and computed < current progressValue.
+            progressValue = computed;
+            render();
+            log(logEl, `W${id} wrote ${Math.round(computed)} (read ${Math.round(readVal)}) after ${delay}ms`);
+            // Keep running
+            workerLoop();
+          }, delay);
+        }
+        workers.push(workerLoop);
+        // stagger initial start so reads are interleaved unpredictably
+        setTimeout(workerLoop, Math.floor(randRange(0,80)));
+      }
+
+      // safety stop after some time
+      setTimeout(()=>{ running = false; log(logEl,'[BUGGY] stopped by timer.'); }, 20000);
+    }
+
+    function resetAll(){
+      running = false;
+      progressValue = 0;
+      render();
+      logEl.textContent = '';
+      workers = [];
+    }
+
+    start.addEventListener('click', startWorkers);
+    reset.addEventListener('click', resetAll);
+  })();
+
+  // FIXED implementation using a simple serialized update queue
+  (function(){
+    const fill = document.getElementById('fixedFill');
+    const pct = document.getElementById('fixedPct');
+    const start = document.getElementById('fixedStart');
+    const reset = document.getElementById('fixedReset');
+    const logEl = document.getElementById('fixedLog');
+
+    let progressValue = 0;
+    let running = false;
+    let workerCount = 0;
+
+    function render(){
+      const v = Math.max(0, Math.min(100, progressValue));
+      fill.style.width = v + '%';
+      pct.textContent = Math.round(v) + '%';
+    }
+
+    // Simple update queue: updates are functions that will be executed one at a time.
+    // When a worker wants to propose an update, it queues an updater function that receives the current value,
+    // computes the new value, and returns it. The queue ensures updates see the effect of previous updates.
+    const updateQueue = [];
+    let processing = false;
+
+    function enqueueUpdate(updater, debugLabel){
+      return new Promise((resolve) => {
+        updateQueue.push({updater,resolve,debugLabel});
+        processQueue();
+      });
+    }
+
+    async function processQueue(){
+      if(processing) return;
+      processing = true;
+      while(updateQueue.length){
+        const item = updateQueue.shift();
+        // apply updater with current progressValue
+        try{
+          const prev = progressValue;
+          const newVal = item.updater(prev);
+          // ensure monotonic progress (optional policy): not allow decreasing
+          progressValue = Math.max(prev, Math.min(100, newVal));
+          render();
+          log(logEl, `[${item.debugLabel}] applied: ${Math.round(prev)} -> ${Math.round(progressValue)}`);
+          item.resolve(progressValue);
+        }catch(e){
+          item.resolve(null);
+        }
+        // small tick to allow UI to update and other timers to fire
+        await new Promise(r => setTimeout(r, 0));
+      }
+      processing = false;
+    }
+
+    function startWorkers(){
+      if(running) return;
+      running = true;
+      progressValue = 0;
+      render();
+      logEl.textContent = '';
+
+      const WORKER_COUNT = 5;
+      const MAX_STEPS = 25;
+
+      for(let i=0;i<WORKER_COUNT;i++){
+        const id = i+1;
+        let steps = 0;
+        function workerLoop(){
+          if(!running) return;
+          if(progressValue >= 100 || steps >= MAX_STEPS){
+            log(logEl, `W${id} stopping (done).`);
+            return;
+          }
+          steps++;
+
+          // Read the current value for local decision-making (note: this read is purely advisory).
+          const readVal = progressValue;
+          const delta = randRange(3, 12) * (1 + id*0.05);
+          // compute proposed new value
+          const proposed = Math.min(100, readVal + delta);
+
+          const delay = Math.floor(randRange(10,140));
+          setTimeout(async () => {
+            // Instead of naively writing, we enqueue an updater that will be applied sequentially.
+            await enqueueUpdate((current) => {
+              // This updater runs atomically relative to other updaters.
+              // Use "max" policy to avoid regressing in case current > proposed.
+              return Math.max(current, proposed);
+            }, `W${id}`);
+            // Continue loop
+            workerLoop();
+          }, delay);
+        }
+        setTimeout(workerLoop, Math.floor(randRange(0,80)));
+      }
+
+      // safety stop
+      setTimeout(()=>{ running = false; log(logEl,'[FIXED] stopped by timer.'); }, 20000);
+    }
+
+    function resetAll(){
+      running = false;
+      progressValue = 0;
+      render();
+      logEl.textContent = '';
+    }
+
+    start.addEventListener('click', startWorkers);
+    reset.addEventListener('click', resetAll);
+  })();
+
+})();
+</script>
+
+<hr>
+<h3>Explanation (short)</h3>
+<ul>
+  <li>Bug: multiple asynchronous workers perform a read-modify-write on a shared variable without synchronization. If two workers read the same base value, both compute a new value, and the slower one overwrites the faster one's much larger update, progress can be lost or even appear to go backward when values are computed from stale reads.</li>
+  <li>Result in demo: run the buggy panel several times and you may see progress occasionally jump backward or stagnate because a stale computed value overwrote a more advanced state.</li>
+  <li>Fix approaches shown:
+    <ul>
+      <li>Serialized update queue (shown): each proposed update is enqueued and runs one at a time; each sees the latest committed value before computing the next committed state.</li>
+      <li>Alternative fixes: mutex/lock, atomics in SharedArrayBuffer (in multi-threaded contexts like Web Workers), or designing updates to be commutative/mergeable (use max() for monotonic counters) so lost updates are harmless.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>If you want a different fixing strategy (e.g., optimistic CAS loop, mutex using postMessage between Workers, or using SharedArrayBuffer+Atomics), tell me which and I can modify the demo.</p>
+</body>
+</html>

@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Binary Search Visualization</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --box-size:56px;
+      --gap:10px;
+      --bg:#f7f9fb;
+      --card:#ffffff;
+      --accent:#2b7cff;
+      --muted:#9aa7bf;
+      --found:#28a745;
+      --notfound:#e03e3e;
+      --range-bg: rgba(43,124,255,0.08);
+      font-family: Inter, Roboto, Helvetica, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      padding:24px;
+      background:linear-gradient(180deg,#eef6ff 0%,var(--bg) 100%);
+      color:#10304a;
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+    }
+    .container{
+      width:100%;
+      max-width:980px;
+      background:var(--card);
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 8px 30px rgba(16,48,74,0.08);
+    }
+    h1{margin:0 0 10px;font-size:20px}
+    p.lead{margin:0 0 18px;color:var(--muted);font-size:13px}
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+    input[type=number]{
+      width:120px;
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid #e0e6ef;
+      font-size:14px;
+      outline:none;
+      background:white;
+    }
+    button{
+      background:var(--accent);
+      color:white;
+      border:none;
+      padding:9px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow:0 6px 18px rgba(43,124,255,0.18);
+    }
+    button.secondary{
+      background:#fff;
+      color:var(--accent);
+      border:1px solid #d7e6ff;
+      box-shadow:none;
+    }
+    .controls .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+    .array-wrap{
+      margin:18px 0 12px;
+      overflow:auto;
+      padding:10px;
+      border-radius:10px;
+      background:linear-gradient(90deg, rgba(43,124,255,0.03), rgba(0,0,0,0.00));
+    }
+    .array{
+      display:flex;
+      gap:var(--gap);
+      align-items:center;
+      padding:10px;
+      min-height:calc(var(--box-size) + 10px);
+      user-select:none;
+    }
+    .box{
+      width:var(--box-size);
+      height:var(--box-size);
+      background:white;
+      border-radius:8px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #e6eef8;
+      transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s;
+      font-weight:700;
+      color:#0b2a44;
+      font-size:15px;
+      position:relative;
+    }
+    .box .idx{
+      position:absolute;
+      top:6px;
+      right:8px;
+      font-size:11px;
+      color:var(--muted);
+      font-weight:600;
+    }
+    .box.mid{
+      transform:translateY(-6px) scale(1.04);
+      box-shadow:0 10px 24px rgba(11,42,68,0.12);
+      border-color:var(--accent);
+      background:linear-gradient(180deg,#f0f7ff,#ffffff);
+    }
+    .box.found{
+      background:linear-gradient(180deg,#e9f9ee,#f7fff8);
+      border-color:rgba(40,167,69,0.25);
+      color:var(--found);
+      transform:translateY(-6px) scale(1.06);
+      box-shadow:0 10px 30px rgba(40,167,69,0.08);
+    }
+    .range-highlight{
+      position:absolute;
+      height:calc(var(--box-size) + 18px);
+      background:var(--range-bg);
+      border-radius:10px;
+      left:0;
+      top:0;
+      transition:all .28s cubic-bezier(.2,.9,.3,1);
+      pointer-events:none;
+      z-index:0;
+      border:1px dashed rgba(43,124,255,0.14);
+    }
+    .array-outer{position:relative;padding:10px 12px}
+    .info-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      background:#f6fbff;
+      border:1px solid #e6f0ff;
+      padding:8px 10px;
+      border-radius:8px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .status{
+      margin-left:auto;
+      font-weight:700;
+      font-size:15px;
+    }
+    .status.found{color:var(--found)}
+    .status.notfound{color:var(--notfound)}
+    @media (max-width:640px){
+      :root{--box-size:46px}
+      .container{padding:14px}
+      .controls{gap:8px}
+      input[type=number]{width:100px}
+      .array{gap:8px}
+    }
+  </style>
+</head>
+<body>
+<div class="container" role="main" aria-label="Binary search visualization">
+  <h1>Binary Search Visualizer</h1>
+  <p class="lead">Enter a target and press Step to advance one iteration of binary search on the sorted array.</p>
+
+  <div class="controls" aria-hidden="false">
+    <label for="target" class="muted">Target:</label>
+    <input id="target" type="number" inputmode="numeric" placeholder="e.g. 23" />
+    <button id="stepBtn">Step</button>
+    <button id="resetBtn" class="secondary">Reset</button>
+    <div class="muted">Array size:
+      <select id="sizeSelect" aria-label="Array size selector">
+        <option value="9">9</option>
+        <option value="13" selected>13</option>
+        <option value="17">17</option>
+        <option value="21">21</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="array-wrap" id="arrayWrap" aria-live="polite">
+    <div class="array-outer" id="arrayOuter">
+      <div id="rangeHighlight" class="range-highlight" style="display:none;"></div>
+      <div class="array" id="array" role="list"></div>
+    </div>
+  </div>
+
+  <div class="info-row">
+    <div class="chip" id="bounds">low: -  mid: -  high: -</div>
+    <div class="chip" id="comp">Comparing: -</div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Config and state
+  const arrayEl = document.getElementById('array');
+  const rangeEl = document.getElementById('rangeHighlight');
+  const boundsEl = document.getElementById('bounds');
+  const compEl = document.getElementById('comp');
+  const statusEl = document.getElementById('status');
+  const stepBtn = document.getElementById('stepBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const targetInput = document.getElementById('target');
+  const sizeSelect = document.getElementById('sizeSelect');
+  let arr = [];
+  let low = 0, high = -1, mid = -1;
+  let target = null;
+  let finished = false;
+
+  function makeSortedArray(n){
+    // create sorted random-ish numbers for demo (increasing)
+    const a = [];
+    let cur = Math.floor(Math.random()*5);
+    for(let i=0;i<n;i++){
+      cur += Math.floor(Math.random()*8)+1;
+      a.push(cur);
+    }
+    return a;
+  }
+
+  function renderArray(){
+    arrayEl.innerHTML = '';
+    arr.forEach((v,i)=>{
+      const box = document.createElement('div');
+      box.className = 'box';
+      box.setAttribute('data-idx', i);
+      box.setAttribute('role','listitem');
+      box.innerHTML = '<div class="idx">'+i+'</div>' + v;
+      arrayEl.appendChild(box);
+    });
+    // ensure range highlight is above background
+    updateRangeHighlight();
+    updateBoxes();
+  }
+
+  function updateBoundsText(){
+    boundsEl.textContent = `low: ${low>=0 && low< arr.length ? low : '-'}  mid: ${mid>=0 && mid< arr.length ? mid : '-'}  high: ${high>=0 && high< arr.length ? high : '-'}`;
+  }
+
+  function updateCompText(){
+    if(finished) return;
+    if(mid>=0 && mid < arr.length){
+      compEl.textContent = 'Comparing: arr['+mid+'] = '+arr[mid];
+    } else {
+      compEl.textContent = 'Comparing: -';
+    }
+  }
+
+  function updateRangeHighlight(){
+    // Show highlight over boxes from low..high, hide if invalid
+    const boxes = Array.from(arrayEl.children);
+    if(low<=high && low>=0 && high < boxes.length){
+      rangeEl.style.display = 'block';
+      // compute position relative to arrayOuter
+      const outer = document.getElementById('arrayOuter');
+      const leftBox = boxes[low].getBoundingClientRect();
+      const rightBox = boxes[high].getBoundingClientRect();
+      const outerRect = outer.getBoundingClientRect();
+      const left = leftBox.left - outerRect.left - 6; // padding adjust
+      const right = rightBox.right - outerRect.left + 6;
+      rangeEl.style.left = left + 'px';
+      rangeEl.style.width = Math.max(36, right - left) + 'px';
+      // vertically center
+      const boxH = leftBox.height;
+      rangeEl.style.top = (leftBox.top - outerRect.top - 6) + 'px';
+      rangeEl.style.height = (boxH + 12) + 'px';
+    } else {
+      rangeEl.style.display = 'none';
+    }
+  }
+
+  function updateBoxes(){
+    const boxes = Array.from(arrayEl.children);
+    boxes.forEach((b, i)=>{
+      b.classList.remove('mid','found');
+      b.style.opacity = '1';
+      if(i < low || i > high || low>high) {
+        b.style.opacity = '0.48';
+      }
+      if(i === mid && !finished){
+        b.classList.add('mid');
+      }
+      if(finished && mid===i && low<=high && arr[mid] === target){
+        b.classList.add('found');
+      }
+    });
+    updateBoundsText();
+    updateCompText();
+  }
+
+  function resetState(newArray){
+    arr = newArray || makeSortedArray(parseInt(sizeSelect.value,10));
+    low = 0;
+    high = arr.length - 1;
+    mid = Math.floor((low + high)/2);
+    target = null;
+    finished = false;
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+    targetInput.value = '';
+    renderArray();
+    // focus
+    setTimeout(()=>updateRangeHighlight(),50);
+  }
+
+  function step(){
+    if(finished){
+      return;
+    }
+    // ensure target is set
+    const raw = targetInput.value;
+    if(raw === '' || raw === null){
+      alert('Please enter a target number to search for.');
+      return;
+    }
+    if(target === null){
+      target = Number(raw);
+    }
+    // safety: if bounds invalid, finish not found
+    if(low > high){
+      finished = true;
+      statusEl.textContent = 'Not found';
+      statusEl.classList.add('notfound');
+      updateBoxes();
+      updateRangeHighlight();
+      compEl.textContent = 'Comparing: -';
+      return;
+    }
+    // recompute mid
+    mid = Math.floor((low + high)/2);
+    // highlight mid and compare
+    updateBoxes();
+    updateRangeHighlight();
+
+    // small delay simulation to feel iterative
+    setTimeout(()=>{
+      if(arr[mid] === target){
+        finished = true;
+        updateBoxes();
+        statusEl.textContent = 'Found at index '+mid;
+        statusEl.classList.add('found');
+        compEl.textContent = 'Comparing: arr['+mid+'] = '+arr[mid] + ' ✓';
+        // visually mark found
+        updateBoxes();
+      } else if(arr[mid] < target){
+        // go right
+        low = mid + 1;
+        compEl.textContent = 'Comparing: arr['+mid+'] = '+arr[mid] + ' < target';
+        mid = Math.floor((low + high)/2);
+        updateRangeHighlight();
+        updateBoxes();
+        // check next step if finished condition now invalid
+        if(low > high){
+          finished = true;
+          statusEl.textContent = 'Not found';
+          statusEl.classList.add('notfound');
+          compEl.textContent = 'Comparing: -';
+        }
+      } else {
+        // go left
+        high = mid - 1;
+        compEl.textContent = 'Comparing: arr['+mid+'] = '+arr[mid] + ' > target';
+        mid = Math.floor((low + high)/2);
+        updateRangeHighlight();
+        updateBoxes();
+        if(low > high){
+          finished = true;
+          statusEl.textContent = 'Not found';
+          statusEl.classList.add('notfound');
+          compEl.textContent = 'Comparing: -';
+        }
+      }
+    }, 150);
+  }
+
+  // Event bindings
+  stepBtn.addEventListener('click', step);
+  resetBtn.addEventListener('click', ()=> resetState());
+  sizeSelect.addEventListener('change', ()=> resetState());
+  targetInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      step();
+    }
+  });
+  // initial
+  resetState();
+
+  // Recompute highlight on resize or scroll
+  window.addEventListener('resize', ()=> setTimeout(updateRangeHighlight,40));
+  document.getElementById('arrayWrap').addEventListener('scroll', ()=> setTimeout(updateRangeHighlight,20));
+})();
+</script>
+</body>
+</html>

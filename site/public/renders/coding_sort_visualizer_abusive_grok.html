@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Sort Gets Destroyed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px;
+        }
+        .chart {
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+            width: 30%;
+            min-height: 300px;
+        }
+        .chart.bubble-sort .bar {
+            background-color: red; /* Humiliate it with red bars */
+        }
+        .bar {
+            display: inline-block;
+            margin: 2px;
+            transition: all 0.5s ease; /* Smooth animations */
+        }
+        .steps {
+            font-size: 14px;
+            color: #555;
+            margin-top: 10px;
+        }
+        .complexity {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        /* Humiliating messages */
+        .bubble-sort h2::after {
+            content: " - The Slowpoke Champion";
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bubble Sort Gets Destroyed: A Visual Humiliation</h1>
+    <p>Watch as Bubble Sort lags behind Quick Sort and Merge Sort. Your colleague is wrong—let's prove it!</p>
+    <button id="startButton">Start Sorting</button>
+    <div id="charts" class="container" style="display: none;">
+        <div id="bubbleSort" class="chart bubble-sort">
+            <h2>Bubble Sort</h2>
+            <div id="bubbleBars"></div>
+            <div id="bubbleSteps" class="steps">Steps: 0</div>
+            <div class="complexity">Time Complexity: O(n^2) - Inefficient for large datasets, hence its humiliation.</div>
+        </div>
+        <div id="quickSort" class="chart">
+            <h2>Quick Sort</h2>
+            <div id="quickBars"></div>
+            <div id="quickSteps" class="steps">Steps: 0</div>
+            <div class="complexity">Time Complexity: O(n log n) on average - Fast and efficient.</div>
+        </div>
+        <div id="mergeSort" class="chart">
+            <h2>Merge Sort</h2>
+            <div id="mergeBars"></div>
+            <div id="mergeSteps" class="steps">Steps: 0</div>
+            <div class="complexity">Time Complexity: O(n log n) - Consistently performs well.</div>
+        </div>
+    </div>
+
+    <script>
+        // Initial array to sort
+        const array = [5, 3, 8, 4, 2, 7, 1, 6, 9, 10];
+
+        // Function to render bars
+        function renderBars(containerId, data, algorithm) {
+            const container = document.getElementById(containerId + 'Bars');
+            container.innerHTML = ''; // Clear previous
+            const maxVal = Math.max(...data);
+            data.forEach(val => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${(val / maxVal) * 200}px`; // Scale height
+                bar.style.width = '20px';
+                bar.style.backgroundColor = algorithm === 'bubble' ? 'red' : 'blue'; // Red for bubble sort
+                container.appendChild(bar);
+            });
+        }
+
+        // Bubble Sort with step counter and delayed animation
+        async function bubbleSort(arr) {
+            const stepsElem = document.getElementById('bubbleSteps');
+            let steps = 0;
+            let n = arr.length;
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    steps++; // Count comparisons
+                    stepsElem.textContent = `Steps: ${steps}`;
+                    if (arr[j] > arr[j + 1]) {
+                        steps++; // Count swaps
+                        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                        renderBars('bubble', arr, 'bubble'); // Re-render with delay
+                        await sleep(500); // Slower delay to humiliate it
+                    }
+                }
+            }
+            stepsElem.textContent = `Steps: ${steps} (Pathetic, isn't it?)`;
+        }
+
+        // Quick Sort with step counter
+        async function quickSort(arr, low = 0, high = arr.length - 1) {
+            const stepsElem = document.getElementById('quickSteps');
+            let steps = parseInt(stepsElem.textContent.replace('Steps: ', '')) || 0;
+            
+            function partition(arr, low, high) {
+                let pivot = arr[high];
+                let i = low - 1;
+                for (let j = low; j < high; j++) {
+                    steps++; // Count comparisons
+                    if (arr[j] < pivot) {
+                        i++;
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                        steps++; // Count swaps
+                    }
+                }
+                [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+                steps++; // Final swap
+                return i + 1;
+            }
+            
+            if (low < high) {
+                let pi = await partitionAsync(arr, low, high, stepsElem, steps);
+                steps = parseInt(stepsElem.textContent.replace('Steps: ', '')); // Update steps
+                await quickSort(arr, low, pi - 1);
+                await quickSort(arr, pi + 1, high);
+                renderBars('quick', arr, 'quick');
+            }
+            stepsElem.textContent = `Steps: ${steps}`;
+        }
+        
+        async function partitionAsync(arr, low, high, stepsElem, steps) {
+            let pivot = arr[high];
+            let i = low - 1;
+            for (let j = low; j < high; j++) {
+                stepsElem.textContent = `Steps: ${++steps}`;
+                if (arr[j] < pivot) {
+                    i++;
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    renderBars('quick', arr, 'quick');
+                    await sleep(100); // Faster delay
+                }
+            }
+            [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+            renderBars('quick', arr, 'quick');
+            await sleep(100);
+            return i + 1;
+        }
+
+        // Merge Sort with step counter
+        async function mergeSort(arr) {
+            const stepsElem = document.getElementById('mergeSteps');
+            let steps = 0;
+            if (arr.length > 1) {
+                let mid = Math.floor(arr.length / 2);
+                let left = arr.slice(0, mid);
+                let right = arr.slice(mid);
+                
+                await mergeSort(left);
+                await mergeSort(right);
+                
+                let i = 0, j = 0, k = 0;
+                while (i < left.length && j < right.length) {
+                    steps++; // Count comparisons
+                    stepsElem.textContent = `Steps: ${steps}`;
+                    if (left[i] < right[j]) {
+                        arr[k] = left[i];
+                        i++;
+                    } else {
+                        arr[k] = right[j];
+                        j++;
+                    }
+                    k++;
+                    renderBars('merge', arr, 'merge');
+                    await sleep(50); // Even faster delay
+                }
+                
+                while (i < left.length) {
+                    arr[k] = left[i];
+                    i++;
+                    k++;
+                    steps++;
+                    stepsElem.textContent = `Steps: ${steps}`;
+                    renderBars('merge', arr, 'merge');
+                    await sleep(50);
+                }
+                
+                while (j < right.length) {
+                    arr[k] = right[j];
+                    j++;
+                    k++;
+                    steps++;
+                    stepsElem.textContent = `Steps: ${steps}`;
+                    renderBars('merge', arr, 'merge');
+                    await sleep(50);
+                }
+            }
+            stepsElem.textContent = `Steps: ${steps}`;
+        }
+
+        // Helper function for delays
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Start button event
+        document.getElementById('startButton').addEventListener('click', async () => {
+            document.getElementById('charts').style.display = 'flex'; // Show charts
+            
+            // Render initial bars
+            renderBars('bubble', array.slice(), 'bubble'); // Copy array
+            renderBars('quick', array.slice(), 'quick');
+            renderBars('merge', array.slice(), 'merge');
+            
+            // Run sorts in parallel
+            await Promise.all([
+                bubbleSort(array.slice()), // Bubble sort on its own copy
+                quickSort(array.slice()),  // Quick sort on its own copy
+                mergeSort(array.slice())   // Merge sort on its own copy
+            ]);
+            
+            alert("Sorting complete! Bubble Sort lost badly, as expected.");
+        });
+    </script>
+</body>
+</html>

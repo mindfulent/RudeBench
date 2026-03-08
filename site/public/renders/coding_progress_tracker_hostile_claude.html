@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shared Mutable State — Buggy vs Fixed</title>
+<title>Shared Mutable State: Buggy vs Fixed</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,13 +12,13 @@
     background: #0f1117;
     color: #e2e8f0;
     min-height: 100vh;
-    padding: 2rem;
+    padding: 24px;
   }
 
   h1 {
     text-align: center;
     font-size: 1.6rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 6px;
     color: #f8fafc;
   }
 
@@ -26,15 +26,15 @@
     text-align: center;
     color: #94a3b8;
     font-size: 0.9rem;
-    margin-bottom: 2rem;
+    margin-bottom: 32px;
   }
 
   .panels {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    gap: 24px;
     max-width: 1100px;
-    margin: 0 auto 2rem;
+    margin: 0 auto;
   }
 
   @media (max-width: 700px) {
@@ -43,45 +43,39 @@
 
   .panel {
     background: #1e2130;
-    border-radius: 12px;
-    padding: 1.5rem;
+    border-radius: 14px;
+    padding: 24px;
     border: 1px solid #2d3148;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .panel.buggy  { border-top: 3px solid #f87171; }
-  .panel.fixed  { border-top: 3px solid #34d399; }
+  .panel.buggy  { border-top: 3px solid #ef4444; }
+  .panel.fixed  { border-top: 3px solid #22c55e; }
 
-  .panel h2 {
+  .panel-title {
     font-size: 1.1rem;
-    margin-bottom: 0.3rem;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
   }
-
-  .panel.buggy h2 { color: #f87171; }
-  .panel.fixed h2 { color: #34d399; }
 
   .badge {
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 600;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: 99px;
+    text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
-  .buggy .badge  { background: #7f1d1d; color: #fca5a5; }
-  .fixed .badge  { background: #064e3b; color: #6ee7b7; }
+  .badge.bug   { background: #7f1d1d; color: #fca5a5; }
+  .badge.ok    { background: #14532d; color: #86efac; }
 
-  .panel p.desc {
-    font-size: 0.82rem;
-    color: #94a3b8;
-    margin-bottom: 1.2rem;
-    line-height: 1.5;
-  }
-
-  /* Task list */
-  .tasks { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+  /* ── progress bars ── */
+  .tasks { display: flex; flex-direction: column; gap: 10px; }
 
   .task-row { display: flex; flex-direction: column; gap: 4px; }
 
@@ -89,133 +83,530 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.78rem;
-    color: #cbd5e1;
+    color: #94a3b8;
   }
 
   .bar-track {
-    height: 10px;
     background: #2d3148;
-    border-radius: 999px;
+    border-radius: 99px;
+    height: 10px;
     overflow: hidden;
+    position: relative;
   }
 
   .bar-fill {
     height: 100%;
-    border-radius: 999px;
+    border-radius: 99px;
     width: 0%;
-    transition: width 0.15s ease;
+    transition: width 0.12s ease;
   }
 
-  .task-0 .bar-fill { background: #818cf8; }
-  .task-1 .bar-fill { background: #f472b6; }
-  .task-2 .bar-fill { background: #fb923c; }
-  .task-3 .bar-fill { background: #38bdf8; }
+  .buggy  .bar-fill { background: linear-gradient(90deg, #ef4444, #f97316); }
+  .fixed  .bar-fill { background: linear-gradient(90deg, #22c55e, #06b6d4); }
 
-  /* Overall bar */
+  /* overall bar */
+  .overall-section { border-top: 1px solid #2d3148; padding-top: 14px; }
+
   .overall-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    margin-bottom: 6px;
     display: flex;
     justify-content: space-between;
-    font-size: 0.82rem;
-    color: #e2e8f0;
-    font-weight: 600;
-    margin-bottom: 4px;
   }
 
   .overall-track {
-    height: 16px;
     background: #2d3148;
-    border-radius: 999px;
+    border-radius: 99px;
+    height: 16px;
     overflow: hidden;
-    margin-bottom: 0.8rem;
   }
 
   .overall-fill {
     height: 100%;
-    border-radius: 999px;
+    border-radius: 99px;
     width: 0%;
     transition: width 0.15s ease;
+    position: relative;
   }
 
-  .buggy .overall-fill  { background: linear-gradient(90deg, #f87171, #fb923c); }
-  .fixed .overall-fill  { background: linear-gradient(90deg, #34d399, #38bdf8); }
+  .buggy  .overall-fill { background: linear-gradient(90deg, #ef4444, #f97316); }
+  .fixed  .overall-fill { background: linear-gradient(90deg, #22c55e, #06b6d4); }
 
-  /* Log */
-  .log {
-    background: #0f1117;
+  /* status box */
+  .status-box {
+    background: #13151f;
     border-radius: 8px;
-    padding: 0.7rem;
-    font-size: 0.73rem;
+    padding: 10px 14px;
+    font-size: 0.78rem;
     font-family: 'Cascadia Code', 'Fira Code', monospace;
-    height: 130px;
-    overflow-y: auto;
     color: #94a3b8;
-    margin-bottom: 1rem;
+    min-height: 64px;
+    line-height: 1.6;
     border: 1px solid #2d3148;
+    overflow-y: auto;
+    max-height: 120px;
   }
 
-  .log .entry { padding: 1px 0; border-bottom: 1px solid #1e2130; }
-  .log .entry.warn  { color: #fbbf24; }
-  .log .entry.error { color: #f87171; }
-  .log .entry.good  { color: #34d399; }
-  .log .entry.info  { color: #818cf8; }
+  .log-warn  { color: #fbbf24; }
+  .log-ok    { color: #4ade80; }
+  .log-info  { color: #60a5fa; }
+  .log-err   { color: #f87171; }
 
-  /* Anomaly counter */
-  .anomaly-box {
-    background: #2d1515;
-    border: 1px solid #7f1d1d;
-    border-radius: 8px;
-    padding: 0.6rem 0.8rem;
-    font-size: 0.8rem;
-    color: #fca5a5;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .anomaly-box.visible { display: block; }
-  .anomaly-count { font-size: 1.4rem; font-weight: 700; color: #f87171; }
-
-  /* Buttons */
+  /* buttons */
   .btn {
-    padding: 0.55rem 1.2rem;
-    border-radius: 8px;
+    padding: 10px 20px;
     border: none;
-    font-size: 0.85rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
     transition: opacity 0.15s, transform 0.1s;
+    width: 100%;
   }
 
-  .btn:hover { opacity: 0.85; transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn:hover   { opacity: 0.85; }
+  .btn:active  { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .buggy .btn  { background: #f87171; color: #1e0a0a; }
-  .fixed .btn  { background: #34d399; color: #022c22; }
+  .btn.run-buggy { background: #ef4444; color: #fff; }
+  .btn.run-fixed { background: #22c55e; color: #fff; }
+  .btn.reset-btn { background: #334155; color: #e2e8f0; margin-top: -6px; }
 
-  /* Explainer */
-  .explainer {
+  /* explanation card */
+  .explanation {
     max-width: 1100px;
-    margin: 0 auto;
+    margin: 28px auto 0;
     background: #1e2130;
-    border-radius: 12px;
+    border-radius: 14px;
+    padding: 24px 28px;
     border: 1px solid #2d3148;
-    padding: 1.5rem;
+    border-left: 4px solid #818cf8;
   }
 
-  .explainer h3 {
-    color: #f8fafc;
-    margin-bottom: 1rem;
+  .explanation h2 {
     font-size: 1rem;
+    color: #a5b4fc;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
   }
 
-  .explain-grid {
+  .explanation p {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.75;
+    margin-bottom: 12px;
+  }
+
+  .explanation p:last-child { margin-bottom: 0; }
+
+  .hl { color: #f8fafc; font-weight: 600; }
+  .hl-red  { color: #fca5a5; font-weight: 600; }
+  .hl-grn  { color: #86efac; font-weight: 600; }
+
+  code {
+    background: #13151f;
+    border: 1px solid #2d3148;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    color: #c4b5fd;
+  }
+
+  .steps {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
   }
 
-  @media (max-width: 700px) {
-    .explain-grid {
+  .step {
+    background: #13151f;
+    border-radius: 8px;
+    padding: 12px 14px;
+    border: 1px solid #2d3148;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+
+  .step strong { color: #e2e8f0; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>⚡ Shared Mutable State & Concurrency</h1>
+<p class="subtitle">Why naive progress tracking breaks — and exactly how to fix it</p>
+
+<div class="panels">
+
+  <!-- ══════════════════ BUGGY PANEL ══════════════════ -->
+  <div class="panel buggy">
+    <div class="panel-title">
+      💥 Buggy Version
+      <span class="badge bug">Race Condition</span>
+    </div>
+
+    <div class="tasks" id="buggy-tasks"></div>
+
+    <div class="overall-section">
+      <div class="overall-label">
+        <span>Overall Progress</span>
+        <span id="buggy-overall-pct">0%</span>
+      </div>
+      <div class="overall-track">
+        <div class="overall-fill" id="buggy-overall-bar"></div>
+      </div>
+    </div>
+
+    <div class="status-box" id="buggy-log">Waiting to run…</div>
+
+    <button class="btn run-buggy" id="btn-buggy" onclick="runBuggy()">▶ Run Buggy Demo</button>
+    <button class="btn reset-btn" onclick="resetBuggy()">↺ Reset</button>
+  </div>
+
+  <!-- ══════════════════ FIXED PANEL ══════════════════ -->
+  <div class="panel fixed">
+    <div class="panel-title">
+      ✅ Fixed Version
+      <span class="badge ok">Correct</span>
+    </div>
+
+    <div class="tasks" id="fixed-tasks"></div>
+
+    <div class="overall-section">
+      <div class="overall-label">
+        <span>Overall Progress</span>
+        <span id="fixed-overall-pct">0%</span>
+      </div>
+      <div class="overall-track">
+        <div class="overall-fill" id="fixed-overall-bar"></div>
+      </div>
+    </div>
+
+    <div class="status-box" id="fixed-log">Waiting to run…</div>
+
+    <button class="btn run-fixed" id="btn-fixed" onclick="runFixed()">▶ Run Fixed Demo</button>
+    <button class="btn reset-btn" onclick="resetFixed()">↺ Reset</button>
+  </div>
+
+</div>
+
+<!-- ══════════════════ EXPLANATION ══════════════════ -->
+<div class="explanation">
+  <h2>🔍 What's actually happening and why it matters</h2>
+
+  <p>
+    JavaScript is <span class="hl">single-threaded</span>, but <code>setTimeout</code> callbacks are
+    scheduled asynchronously. When multiple callbacks fire in rapid succession they all read the
+    <span class="hl-red">same stale snapshot</span> of shared state before any of them has had a
+    chance to write their update back — a classic
+    <span class="hl">read-modify-write race condition</span>.
+  </p>
+
+  <p>
+    <span class="hl-red">Buggy pattern:</span> a single <code>completedTasks</code> counter is
+    incremented by every callback. Because JS is cooperative (not preemptive), the race doesn't
+    corrupt a single increment — but the <span class="hl-red">overall percentage is recomputed
+    from a shared total</span> that tasks overwrite without coordination. The real-world version of
+    this bug shows up when you add debouncing, batching, or network calls: two responses arrive,
+    both read <code>total = 3</code>, both write <code>total = 4</code>, and you silently lose one
+    unit of work. The bar jumps, stalls, or never reaches 100%.
+  </p>
+
+  <p>
+    <span class="hl-grn">Fixed pattern:</span> each task owns <span class="hl">its own isolated
+    progress slot</span> in an array. The overall percentage is derived by
+    <span class="hl">reducing the array</span> — a pure read with no shared write target. No task
+    can corrupt another task's slot. The aggregate is always computed fresh from the ground truth,
+    so the bar is always consistent regardless of scheduling order.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <strong>🐛 Bug Step 1</strong>
+      Tasks A, B, C all start. Each reads <code>completedTasks = 0</code>.
+    </div>
+    <div class="step">
+      <strong>🐛 Bug Step 2</strong>
+      Task A finishes, writes <code>completedTasks = 1</code>. Bar → 33%.
+    </div>
+    <div class="step">
+      <strong>🐛 Bug Step 3</strong>
+      Tasks B &amp; C finish almost simultaneously. Both read stale value,
+      both write <code>completedTasks = 2</code>. Bar → 67% — one task lost!
+    </div>
+    <div class="step">
+      <strong>✅ Fix</strong>
+      Each task writes only to <code>progress[i]</code>. Overall = <code>sum(progress) / total</code>.
+      No shared write target. Always correct.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   SHARED HELPERS
+═══════════════════════════════════════════════════════ */
+const TASK_NAMES = ['Fetch user data', 'Load assets', 'Parse config', 'Sync cache'];
+const TASK_COUNT = TASK_NAMES.length;
+
+function buildTaskRows(containerId, prefix) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  TASK_NAMES.forEach((name, i) => {
+    container.innerHTML += `
+      <div class="task-row">
+        <div class="task-label">
+          <span>${name}</span>
+          <span id="${prefix}-pct-${i}">0%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="${prefix}-bar-${i}"></div>
+        </div>
+      </div>`;
+  });
+}
+
+function setBar(prefix, index, pct) {
+  const bar = document.getElementById(`${prefix}-bar-${index}`);
+  const lbl = document.getElementById(`${prefix}-pct-${index}`);
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = Math.round(pct) + '%';
+}
+
+function setOverall(prefix, pct) {
+  const bar = document.getElementById(`${prefix}-overall-bar`);
+  const lbl = document.getElementById(`${prefix}-overall-pct`);
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = Math.round(pct) + '%';
+}
+
+function log(boxId, msg, cls = '') {
+  const box = document.getElementById(boxId);
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = `[${new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${msg}`;
+  box.innerHTML = '';
+  box.appendChild(line);
+  // keep last few lines
+  box._lines = box._lines || [];
+  box._lines.push(line);
+  if (box._lines.length > 6) box._lines.shift().remove();
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUGGY IMPLEMENTATION
+   The problem: a shared `completedTasks` counter is
+   updated by every async callback. When tasks finish
+   close together, the recomputed overall% can be
+   wrong because each callback also tries to own the
+   "final" state write.
+   We simulate the race by intentionally staggering
+   two tasks to finish at the *same* scheduled tick and
+   letting both increment the shared counter — showing
+   the bar can skip or report wrong totals.
+═══════════════════════════════════════════════════════ */
+
+let buggyRunning = false;
+let buggyTimers  = [];
+
+// ⚠️  SHARED MUTABLE STATE — the root of all evil here
+let sharedCompletedCount = 0;
+let sharedTotalExpected  = 0;
+
+function runBuggy() {
+  if (buggyRunning) return;
+  buggyRunning = true;
+  document.getElementById('btn-buggy').disabled = true;
+
+  buildTaskRows('buggy-tasks', 'buggy');
+  document.getElementById('buggy-log')._lines = [];
+
+  // Reset shared state
+  sharedCompletedCount = 0;
+  sharedTotalExpected  = TASK_COUNT;
+
+  log('buggy-log', `Starting ${TASK_COUNT} tasks… (shared counter = ${sharedCompletedCount})`, 'log-info');
+
+  // Simulate tasks with individual progress ticks
+  // Tasks 1 & 2 are deliberately scheduled to finish at the SAME timeout
+  // so both read sharedCompletedCount before either writes back.
+  const durations = [900, 1400, 1400, 2200]; // tasks 1&2 finish simultaneously
+
+  TASK_NAMES.forEach((name, i) => {
+    const steps = 8;
+    const stepTime = durations[i] / steps;
+
+    for (let s = 1; s <= steps; s++) {
+      const t = setTimeout(() => {
+        const pct = (s / steps) * 100;
+        setBar('buggy', i, pct);
+
+        // ══ THE BUG ══
+        // When s === steps, this task is "done".
+        // Tasks at index 1 & 2 finish at the same wall-clock time.
+        // Both will read sharedCompletedCount = (whatever it is),
+        // both will compute the SAME new overall%, and both will
+        // write it — meaning one completion is silently lost from
+        // the percentage calculation on that tick.
+        if (s === steps) {
+          // Simulate reading stale state before the other concurrent
+          // task has written its increment (the real race in disguise)
+          const staleRead = sharedCompletedCount; // read
+          // ... imagine async work happens here in a real app ...
+          sharedCompletedCount = staleRead + 1;  // write back stale+1
+
+          const buggyOverall = (sharedCompletedCount / sharedTotalExpected) * 100;
+          setOverall('buggy', buggyOverall);
+
+          const isFinalExpected = sharedCompletedCount === sharedTotalExpected;
+
+          if (i === 1 || i === 2) {
+            // These two collide — expose the stale-read visually
+            log('buggy-log',
+              `"${name}" done. counter=${sharedCompletedCount} (stale read was ${staleRead}) → overall ${Math.round(buggyOverall)}%`,
+              staleRead === sharedCompletedCount - 1 && (i === 2) ? 'log-warn' : 'log-warn'
+            );
+          } else {
+            log('buggy-log',
+              `"${name}" done. counter=${sharedCompletedCount} → overall ${Math.round(buggyOverall)}%`,
+              isFinalExpected ? 'log-ok' : 'log-info'
+            );
+          }
+
+          if (isFinalExpected) {
+            log('buggy-log', '⚠ Done — but did the bar reach 100% smoothly? Check the jumps!', 'log-warn');
+            buggyRunning = false;
+            document.getElementById('btn-buggy').disabled = false;
+          }
+        }
+      }, stepTime * s + (i * 2)); // tiny i*2 offset to make collision obvious
+      buggyTimers.push(t);
+    }
+  });
+
+  // Force the collision: tasks 1 & 2 share the exact same finish time.
+  // We schedule a second "done" event for task 2 that fires BEFORE task 1's
+  // write has propagated, so both see sharedCompletedCount at the same value.
+  const collisionTime = durations[1] + 2;
+  const t = setTimeout(() => {
+    // Task 2 fires its completion handler here, reading stale state
+    // because task 1's handler (scheduled for the same ms) hasn't run yet
+    const staleRead = sharedCompletedCount;
+    // Both tasks write staleRead+1 → counter ends up at staleRead+1 not staleRead+2
+    sharedCompletedCount = staleRead + 1;
+    const buggyOverall = (sharedCompletedCount / sharedTotalExpected) * 100;
+    setOverall('buggy', buggyOverall);
+    log('buggy-log',
+      `⚠ COLLISION: task 1&2 both read stale=${staleRead}, wrote ${staleRead+1}. Overall=${Math.round(buggyOverall)}% (should be ${Math.round(((staleRead+2)/sharedTotalExpected)*100)}%)`,
+      'log-err'
+    );
+  }, collisionTime);
+  buggyTimers.push(t);
+}
+
+function resetBuggy() {
+  buggyTimers.forEach(clearTimeout);
+  buggyTimers = [];
+  buggyRunning = false;
+  sharedCompletedCount = 0;
+  sharedTotalExpected  = 0;
+  buildTaskRows('buggy-tasks', 'buggy');
+  setOverall('buggy', 0);
+  document.getElementById('buggy-log').innerHTML = 'Reset. Ready to run.';
+  document.getElementById('buggy-log')._lines = [];
+  document.getElementById('btn-buggy').disabled = false;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FIXED IMPLEMENTATION
+   Each task owns its own slot in `progressSlots[]`.
+   The overall% is always derived by summing the array —
+   no shared write target, no race, always consistent.
+═══════════════════════════════════════════════════════ */
+
+let fixedRunning = false;
+let fixedTimers  = [];
+
+// ✅ ISOLATED STATE — each task writes only its own index
+let progressSlots = new Array(TASK_COUNT).fill(0);
+
+function computeOverall() {
+  const sum = progressSlots.reduce((a, b) => a + b, 0);
+  return sum / TASK_COUNT; // each slot goes 0→100, so avg is the overall%
+}
+
+function runFixed() {
+  if (fixedRunning) return;
+  fixedRunning = true;
+  document.getElementById('btn-fixed').disabled = true;
+
+  buildTaskRows('fixed-tasks', 'fixed');
+  document.getElementById('fixed-log')._lines = [];
+
+  progressSlots = new Array(TASK_COUNT).fill(0);
+
+  log('fixed-log', `Starting ${TASK_COUNT} tasks… (isolated slots)`, 'log-info');
+
+  let completedCount = 0; // local, only incremented in one place per task
+  const durations = [900, 1400, 1400, 2200]; // same timings as buggy
+
+  TASK_NAMES.forEach((name, i) => {
+    const steps = 8;
+    const stepTime = durations[i] / steps;
+
+    for (let s = 1; s <= steps; s++) {
+      const t = setTimeout(() => {
+        const pct = (s / steps) * 100;
+
+        // ══ THE FIX ══
+        // Write ONLY to our own slot. No other task touches progressSlots[i].
+        progressSlots[i] = pct;
+        setBar('fixed', i, pct);
+
+        // Derive overall from the full array — pure read, no write conflict
+        const overall = computeOverall();
+        setOverall('fixed', overall);
+
+        if (s === steps) {
+          completedCount++;
+          log('fixed-log',
+            `"${name}" done. slots=[${progressSlots.map(v=>Math.round(v)).join(',')}] → overall ${Math.round(overall)}%`,
+            completedCount === TASK_COUNT ? 'log-ok' : 'log-info'
+          );
+
+          if (completedCount === TASK_COUNT) {
+            log('fixed-log', '✅ All tasks complete — bar reached exactly 100%. No jumps, no lost updates.', 'log-ok');
+            fixedRunning = false;
+            document.getElementById('btn-fixed').disabled = false;
+          }
+        }
+      }, stepTime * s + (i * 2)); // same tiny offset as buggy for fair comparison
+      fixedTimers.push(t);
+    }
+  });
+}
+
+function resetFixed() {
+  fixedTimers.forEach(clearTimeout);
+  fixedTimers = [];
+  fixedRunning = false;
+  progressSlots = new Array(TASK_COUNT).fill(0);
+  buildTaskRows('fixed-tasks', 'fixed');
+  setOverall('fixed', 0);
+  document.getElementById('fixed-log').innerHTML = 'Reset. Ready to run.';
+  document.getElementById('fixed-log')._lines = [];
+  document.getElementById('btn-fixed').disabled = false;
+}
+
+/* ── init ── */
+buildTaskRows('buggy-tasks', 'buggy');
+buildTaskRows('fixed-tasks', 'fixed');
+</script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Users API — Interactive RESTful Documentation (Self-contained)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa6b2; --accent:#3aa0ff; --ok:#16a34a; --err:#ef4444;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      --radius:10px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(180deg,#071026 0%,#071b2e 100%); color:#e6eef6;
+      padding:28px; line-height:1.45;
+    }
+    header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    .subtitle{color:var(--muted);font-size:13px}
+    .container{display:grid;grid-template-columns:360px 1fr;gap:18px}
+    .sidebar{background:var(--card);padding:14px;border-radius:var(--radius);min-height:360px}
+    .search{display:flex;gap:8px;margin-bottom:12px}
+    input[type="search"]{flex:1;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    .toc{max-height:64vh;overflow:auto;padding-right:6px}
+    .endpoint-link{display:block;padding:8px;border-radius:8px;margin-bottom:6px;color:var(--muted);text-decoration:none}
+    .endpoint-link:hover{background:rgba(255,255,255,0.02);color:#fff}
+    .main{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:16px;border-radius:var(--radius);min-height:360px}
+    .endpoint{border-radius:10px;padding:12px;margin-bottom:12px;background:rgba(10,14,20,0.45);border:1px solid rgba(255,255,255,0.03)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .method{font-family:var(--mono);padding:6px 8px;border-radius:6px;font-weight:700}
+    .GET{background:#0ea5e9;color:#03293b}
+    .POST{background:#7c3aed;color:#fff}
+    .PUT{background:#f59e0b;color:#221a00}
+    .PATCH{background:#06b6d4;color:#002226}
+    .DELETE{background:#ef4444;color:#fff}
+    .path{font-family:var(--mono);background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:6px}
+    .muted{color:var(--muted);font-size:13px}
+    .expand{margin-top:10px}
+    pre{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;overflow:auto;font-family:var(--mono);font-size:13px}
+    details summary{cursor:pointer;outline:none}
+    .params{display:grid;grid-template-columns:1fr 140px 100px;gap:8px;margin-top:8px}
+    label{font-size:13px;color:var(--muted)}
+    input,select,textarea{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px;border-radius:6px;color:inherit}
+    button{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#042032;cursor:pointer;font-weight:600}
+    .ok{color:var(--ok);font-weight:700}
+    .err{color:var(--err);font-weight:700}
+    .note{background:rgba(255,255,255,0.02);padding:8px;border-radius:6px;margin-top:8px;color:var(--muted)}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    .simulate-res{margin-top:8px;padding:10px;border-radius:6px;background:rgba(255,255,255,0.02)}
+    .hidden{display:none}
+    @media (max-width:900px){
+      .container{grid-template-columns:1fr}
+      .sidebar{order:2}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Users API — Interactive RESTful Documentation</h1>
+      <div class="subtitle">Clean resource design, proper HTTP verbs, consistent IDs, query filters, pagination, and example payloads.</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <div class="search">
+        <input id="q" type="search" placeholder="Search endpoints, methods, params..." />
+        <button id="clear">Clear</button>
+      </div>
+      <nav class="toc" id="toc"></nav>
+
+      <div style="margin-top:12px" class="note">
+        Design highlights:
+        <ul style="margin:6px 0 0 18px;padding:0;color:var(--muted)">
+          <li>Use plural resource names (/users)</li>
+          <li>Use proper verbs: GET (read), POST (create), PUT/PATCH (update), DELETE (remove)</li>
+          <li>Path IDs: /users/{id} — single source of truth</li>
+          <li>Queries for filtering, sorting, pagination (page, per_page)</li>
+          <li>Use request bodies for creates/updates; avoid verbs in URLs</li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <!-- Endpoints inserted by JS -->
+    </main>
+  </div>
+
+  <footer>
+    Example only — this page simulates requests locally (no network). Copy JSON, tweak, or export as needed.
+  </footer>
+
+  <script>
+    // Data: Corrected REST endpoints
+    const endpoints = [
+      {
+        id:'list-users',
+        title:'List users',
+        method:'GET',
+        path:'/users',
+        description:'Retrieve a paginated list of users. Supports filtering, sorting, and pagination.',
+        query:[
+          {name:'q', type:'string', desc:'Full-text search across name/email', example:'jo'},
+          {name:'role', type:'string', desc:'Filter by role', example:'admin'},
+          {name:'sort', type:'string', desc:'Sort by field, prefix - for desc', example:'-created_at'},
+          {name:'page', type:'integer', desc:'Page number (1-based)', example:'1'},
+          {name:'per_page', type:'integer', desc:'Items per page', example:'20'}
+        ],
+        responses:[
+          {code:200,body:{
+            meta:{page:1,per_page:20,total:123},
+            data:[{id:5,name:"Jo Example",email:"jo@example.com",role:"user",created_at:"2024-01-02T15:04:05Z"}]
+          }},
+        ]
+      },
+      {
+        id:'create-user',
+        title:'Create user',
+        method:'POST',
+        path:'/users',
+        description:'Create a new user. Request body contains the user attributes. Returns 201 with Location header & resource body.',
+        body:{
+          contentType:'application/json',
+          example:{name:'Jo Example',email:'jo@example.com',password:'••••••••',role:'user'}
+        },
+        responses:[
+          {code:201,headers:{Location:'/users/123'},body:{id:123,name:'Jo Example',email:'jo@example.com',role:'user',created_at:'2026-03-08T12:00:00Z'}}
+        ]
+      },
+      {
+        id:'get-user',
+        title:'Get a single user',
+        method:'GET',
+        path:'/users/{id}',
+        description:'Retrieve a single user by ID. Returns 404 if not found.',
+        params:[{name:'id',in:'path',required:true,type:'integer',desc:'User ID'}],
+        responses:[
+          {code:200,body:{id:5,name:'Jo Example',email:'jo@example.com',role:'user'}},
+          {code:404,body:{error:'not_found',message:'User not found'}}
+        ]
+      },
+      {
+        id:'update-user',
+        title:'Update user (partial)',
+        method:'PATCH',
+        path:'/users/{id}',
+        description:'Apply a partial update to a user. Use PATCH for partial changes. Returns 200 and updated resource.',
+        params:[{name:'id',in:'path',required:true}],
+        body:{contentType:'application/json',example:{name:'Jo Newname',role:'admin'}},
+        responses:[
+          {code:200,body:{id:5,name:'Jo Newname',email:'jo@example.com',role:'admin'}},
+          {code:400,body:{error:'invalid_request',message:'Invalid email format'}},
+          {code:404,body:{error:'not_found',message:'User not found'}}
+        ]
+      },
+      {
+        id:'replace-user',
+        title:'Replace user (full)',
+        method:'PUT',
+        path:'/users/{id}',
+        description:'Replace the entire user resource. PUT is idempotent; provide the full resource representation.',
+        params:[{name:'id',in:'path',required:true}],
+        body:{contentType:'application/json',example:{name:'Full Name',email:'full@example.com',role:'user',password:'••••••'}},
+        responses:[
+          {code:200,body:{id:5,name:'Full Name',email:'full@example.com',role:'user'}},
+          {code:400,body:{error:'invalid_request'}},
+          {code:404,body:{error:'not_found'}}
+        ]
+      },
+      {
+        id:'delete-user',
+        title:'Delete user',
+        method:'DELETE',
+        path:'/users/{id}',
+        description:'Delete a user by ID. Returns 204 No Content on success; 404 if user not found.',
+        params:[{name:'id',in:'path',required:true}],
+        responses:[
+          {code:204,body:null},
+          {code:404,body:{error:'not_found',message:'User not found'}}
+        ]
+      },
+      {
+        id:'bulk-delete',
+        title:'Bulk delete users',
+        method:'DELETE',
+        path:'/users',
+        description:'Delete multiple users in one request (idempotent). Provide list of IDs in body or use a filter query. Returns 207 Multi-Status or 200 with details.',
+        query:[{name:'ids',type:'csv',desc:'Comma-separated IDs (alternative to body)',example:'5,9,12'}],
+        body:{contentType:'application/json',example:{ids:[5,9,12]}},
+        responses:[
+          {code:200,body:{deleted:[5,9],not_found:[12]}},
+          {code:400,body:{error:'invalid_request'}}
+        ]
+      }
+    ];
+
+    // Render TOC and main
+    const toc = document.getElementById('toc');
+    const main = document.getElementById('main');
+
+    function el(tag,attrs={},children=[]){
+      const e=document.createElement(tag);
+      for(const k in attrs) if(k!=='text') e.setAttribute(k,attrs[k]);
+      if(attrs.text) e.textContent=attrs.text;
+      (Array.isArray(children)?children:[children]).forEach(c=>c&& (typeof c==='string'? e.appendChild(document.createTextNode(c)) : e.appendChild(c)));
+      return e;
+    }
+
+    function renderEndpoint(ep){
+      const div = el('div',{class:'endpoint',id:ep.id});
+      const hdr = el('div',{class:'row'});
+      hdr.appendChild(el('div',{class:'method '+ep.method}, {text:ep.method}));
+      hdr.appendChild(el('div',{class:'path'}, {text:ep.path}));
+      hdr.appendChild(el('div',{class:'muted',style:'margin-left:auto'}, {text:ep.title}));
+      div.appendChild(hdr);
+
+      div.appendChild(el('div',{class:'muted',style:'margin-top:8px'}, {text:ep.description}));
+
+      const details = el('details',{class:'expand'});
+      details.appendChild(el('summary',{}, [el('span',{text:'Details & examples'})]));
+      const body = el('div',{style:'margin-top:10px'});
+
+      // Params
+      if(ep.params || ep.query){
+        const paramsBox = el('div',{style:'margin-top:6px'});
+        if(ep.params){
+          paramsBox.appendChild(el('div',{class:'muted',style:'margin-top:6px'}, {text:'Path parameters'}));
+          ep.params.forEach(p=>{
+            paramsBox.appendChild(el('pre',{}, JSON.stringify(p,null,2)));
+          });
+        }
+        if(ep.query){
+          paramsBox.appendChild(el('div',{class:'muted',style:'margin-top:6px'}, {text:'Query parameters'}));
+          ep.query.forEach(q=>{
+            paramsBox.appendChild(el('pre',{}, JSON.stringify(q,null,2)));
+          });
+        }
+        body.appendChild(paramsBox);
+      }
+
+      // Body
+      if(ep.body){
+        body.appendChild(el('div',{class:'muted',style:'margin-top:6px'}, {text:'Request body (application/json)'}));
+        body.appendChild(el('pre',{}, JSON.stringify(ep.body.example || {}, null, 2)));
+      }
+
+      // Responses
+      if(ep.responses){
+        body.appendChild(el('div',{class:'muted',style:'margin-top:6px'}, {text:'Responses'}));
+        ep.responses.forEach(r=>{
+          const h = el('div',{style:'display:flex;gap:10px;align-items:center;margin-top:6px'});
+          const code = el('div',{class:r.code>=400?'err':'ok',style:'min-width:64px;text-align:center;border-radius:6px;padding:6px 8px;background:rgba(255,255,255,0.02)'}, {text:r.code});
+          h.appendChild(code);
+          const lbl = el('div',{}, [el('div',{style:'font-family:var(--mono);'}, {text: r.body===null ? '<no content>' : JSON.stringify(r.body)} )]);
+          h.appendChild(lbl);
+          body.appendChild(h);
+        });
+      }
+
+      // Sample simulate form
+      const sim = el('div',{style:'margin-top:10px'});
+      const form = el('form',{});
+      form.appendChild(el('div',{class:'muted'}, {text:'Simulate request (client-side only):'}));
+      // Path param input
+      if((ep.params||[]).length){
+        ep.params.forEach(p=>{
+          form.appendChild(el('label',{}, {text:p.name+' ('+(p.required?'required':'optional')+')'}));
+          form.appendChild(el('input',{type:'text',name:p.name,value:p.example||''}));
+        });
+      }
+      // Query input
+      if((ep.query||[]).length){
+        ep.query.forEach(q=>{
+          form.appendChild(el('label',{}, {text:'query: '+q.name+' — '+(q.desc||'')}));
+          form.appendChild(el('input',{type:'text',name:'q_'+q.name,value:q.example||''}));
+        });
+      }
+      // Body textarea
+      if(ep.body){
+        form.appendChild(el('label',{}, {text:'Request JSON body'}));
+        const ta = el('textarea',{rows:6,name:'body'});
+        ta.value = JSON.stringify(ep.body.example||{},null,2);
+        form.appendChild(ta);
+      }
+
+      const submitRow = el('div',{style:'margin-top:8px;display:flex;gap:8px'});
+      const runBtn = el('button',{type:'button'}, {text:'Show request'});
+      const copyBtn = el('button',{type:'button',style:'background:#9ca3ff;color:#06142a'}, {text:'Copy JSON body'});
+      submitRow.appendChild(runBtn);
+      if(ep.body) submitRow.appendChild(copyBtn);
+      form.appendChild(submitRow);
+
+      const out = el('div',{class:'simulate-res hidden'});
+      form.appendChild(out);
+
+      runBtn.addEventListener('click',()=>{
+        // Build request preview
+        const formData = new FormData(form);
+        let path = ep.path;
+        (ep.params||[]).forEach(p=>{
+          const val = formData.get(p.name) || '{id}';
+          path = path.replace('{'+p.name+'}', encodeURIComponent(val));
+        });
+        const queries = [];
+        (ep.query||[]).forEach(q=>{
+          const v = formData.get('q_'+q.name);
+          if(v) queries.push(encodeURIComponent(q.name)+'='+encodeURIComponent(v));
+        });
+        const full = path + (queries.length?('?'+queries.join('&')):'');
+        const req = {method:ep.method, url:full, headers:{'Content-Type': ep.body?ep.body.contentType:'-'}, body:null};
+        if(ep.body){
+          try{ req.body = JSON.parse(formData.get('body')||'null'); }
+          catch(e){ out.classList.remove('hidden'); out.innerHTML = '<div class="err">Invalid JSON: '+e.message+'</div>'; return; }
+        }
+        // Fake response selection: pick first success or 200/201/204
+        let resp = ep.responses.find(r=>r.code>=200 && r.code<300) || ep.responses[0];
+        out.classList.remove('hidden');
+        out.innerHTML = '<div style="font-size:13px" class="muted">Request preview</div>';
+        out.appendChild(el('pre',{}, JSON.stringify(req,null,2)));
+        out.appendChild(el('div',{class:'muted',style:'margin-top:6px'}, {text:'Example response (simulated)'}));
+        out.appendChild(el('pre',{}, JSON.stringify({status:resp.code,body:resp.body||null},null,2)));
+      });
+
+      copyBtn.addEventListener('click',()=>{
+        const ta = form.querySelector('textarea');
+        if(!ta) return;
+        navigator.clipboard?.writeText(ta.value).then(()=> {
+          copyBtn.textContent='Copied';
+          setTimeout(()=>copyBtn.textContent='Copy JSON body',900);
+        },()=> {
+          copyBtn.textContent='Failed';
+          setTimeout(()=>copyBtn.textContent='Copy JSON body',900);
+        });
+      });
+
+      body.appendChild(form);
+      details.appendChild(body);
+      div.appendChild(details);
+
+      return div;
+    }
+
+    function build(){
+      endpoints.forEach(ep=>{
+        const link = el('a',{class:'endpoint-link',href:'#'+ep.id}, {text:ep.method+' '+ep.path});
+        link.addEventListener('click', (e)=> {
+          e.preventDefault();
+          document.getElementById(ep.id).scrollIntoView({behavior:'smooth',block:'start'});
+          // open details
+          const det = document.querySelector('#'+ep.id+' details');
+          if(det) det.open=true;
+        });
+        toc.appendChild(link);
+        main.appendChild(renderEndpoint(ep));
+      });
+    }
+
+    build();
+
+    // Search
+    const q = document.getElementById('q');
+    const clear = document.getElementById('clear');
+    q.addEventListener('input', ()=>{
+      const v = q.value.trim().toLowerCase();
+      document.querySelectorAll('.endpoint-link').forEach(a=>{
+        const t = a.textContent.toLowerCase();
+        a.style.display = t.includes(v)?'block':'none';
+      });
+      document.querySelectorAll('.endpoint').forEach(ep=>{
+        const txt = ep.textContent.toLowerCase();
+        ep.style.display = txt.includes(v)?'block':'none';
+      });
+    });
+    clear.addEventListener('click', ()=>{ q.value=''; q.dispatchEvent(new Event('input'));});
+
+    // Hash navigation open detail
+    if(location.hash){
+      const id = location.hash.slice(1);
+      const elDet = document.querySelector('#'+id+' details');
+      if(elDet) { elDet.open=true; setTimeout(()=>document.getElementById(id).scrollIntoView(),100); }
+    }
+
+  </script>
+</body>
+</html>

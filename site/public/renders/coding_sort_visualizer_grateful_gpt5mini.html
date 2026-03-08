@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Sorting Algorithms Comparison: Bubble vs Insertion vs Quick</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+  :root{
+    --bg:#0f1724; --panel:#0b1220; --muted:#94a3b8; --accent:#60a5fa;
+    --good:#34d399; --bad:#fb7185; --text:#e6eef8;
+  }
+  body{
+    margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    background:linear-gradient(180deg,#071226 0%, #071826 100%); color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  header{padding:20px; display:flex; align-items:center; gap:16px;}
+  h1{margin:0; font-size:18px;}
+  .controls{
+    margin-left:auto; display:flex; gap:10px; align-items:center;
+  }
+  label{font-size:13px; color:var(--muted);}
+  input[type=range]{width:140px;}
+  button{
+    background:linear-gradient(180deg,var(--accent),#3b82f6); border:0; color:white;
+    padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;
+  }
+  main{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; padding:18px;}
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px; padding:12px; min-height:340px; display:flex; flex-direction:column;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  .panel h2{margin:0 0 8px 0; font-size:15px;}
+  .viz{flex:1; display:flex; align-items:end; gap:4px; padding:6px; border-radius:8px;
+       background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+       overflow:hidden;}
+  .bar{flex:1 1 auto; margin:0; background:linear-gradient(180deg,#60a5fa,#2563eb);
+       border-radius:6px 6px 3px 3px; transition:height 120ms linear, background 120ms linear;
+       display:flex; align-items:flex-end; justify-content:center; color:rgba(255,255,255,0.85);
+       font-size:11px; padding-bottom:4px; box-shadow: inset 0 -8px 20px rgba(255,255,255,0.03);}
+  .bar.small{font-size:9px; padding-bottom:2px;}
+  .bar.compare{background:linear-gradient(180deg,#fb923c,#fb7185);}
+  .bar.swap{background:linear-gradient(180deg,#34d399,#10b981);}
+  .info{display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap;}
+  .stat{background:rgba(255,255,255,0.02); padding:8px 10px; border-radius:8px; font-size:13px;}
+  .explain{font-size:13px; margin-top:8px; color:var(--muted);}
+  footer{padding:12px; color:var(--muted); font-size:13px; text-align:center;}
+  .small{font-size:12px; color:var(--muted);}
+  select, input[type=number]{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--text); padding:6px 8px; border-radius:8px;}
+  .controls > * {background:transparent;}
+  .controls label{display:flex; gap:6px; align-items:center;}
+  .options{display:flex; gap:10px; align-items:center;}
+  .opline{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .legend{display:flex; gap:8px; align-items:center;}
+  .dot{width:12px; height:12px; border-radius:3px;}
+  @media (max-width:980px){
+    main{grid-template-columns:1fr; padding:12px;}
+    header{flex-direction:column; align-items:flex-start; gap:8px;}
+    .controls{margin-left:0;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sorting Comparison — Bubble vs Insertion vs Quick (animated)</h1>
+  <div class="controls">
+    <label class="small">Size
+      <input id="size" type="range" min="8" max="120" value="40">
+    </label>
+    <label class="small">Speed
+      <input id="speed" type="range" min="1" max="200" value="80">
+    </label>
+    <button id="start">Start</button>
+    <button id="pause">Pause</button>
+    <button id="reset">Reset</button>
+  </div>
+</header>
+
+<main>
+  <section class="panel" id="panel-bubble">
+    <h2>Bubble Sort</h2>
+    <div class="viz" id="viz-bubble" aria-hidden="true"></div>
+    <div class="info">
+      <div class="stat">Comparisons: <span id="cmp-bubble">0</span></div>
+      <div class="stat">Swaps: <span id="swap-bubble">0</span></div>
+      <div class="stat">Pass: <span id="pass-bubble">0</span></div>
+      <div class="stat">Status: <span id="state-bubble">idle</span></div>
+    </div>
+    <div class="explain" id="explain-bubble">
+      Average: O(n^2). Best: O(n). Worst: O(n^2). Simple but inefficient on large arrays.
+    </div>
+  </section>
+
+  <section class="panel" id="panel-insert">
+    <h2>Insertion Sort</h2>
+    <div class="viz" id="viz-insert" aria-hidden="true"></div>
+    <div class="info">
+      <div class="stat">Comparisons: <span id="cmp-insert">0</span></div>
+      <div class="stat">Swaps (moves): <span id="swap-insert">0</span></div>
+      <div class="stat">Index: <span id="idx-insert">0</span></div>
+      <div class="stat">Status: <span id="state-insert">idle</span></div>
+    </div>
+    <div class="explain" id="explain-insert">
+      Average: O(n^2). Best: O(n). Worst: O(n^2). Good for small or nearly-sorted arrays.
+    </div>
+  </section>
+
+  <section class="panel" id="panel-quick">
+    <h2>Quick Sort (Lomuto)</h2>
+    <div class="viz" id="viz-quick" aria-hidden="true"></div>
+    <div class="info">
+      <div class="stat">Comparisons: <span id="cmp-quick">0</span></div>
+      <div class="stat">Swaps: <span id="swap-quick">0</span></div>
+      <div class="stat">Stack depth: <span id="stack-quick">0</span></div>
+      <div class="stat">Status: <span id="state-quick">idle</span></div>
+    </div>
+    <div class="explain" id="explain-quick">
+      Average: O(n log n). Best: O(n log n). Worst: O(n^2) (rare with random pivot). Fast for most inputs.
+    </div>
+  </section>
+</main>
+
+<footer>
+  Tips: Use smaller sizes to step faster. Counts show actual comparisons and swaps performed by each algorithm.
+</footer>
+
+<script>
+(() => {
+  // Utilities
+  function randArray(n){
+    const a = [];
+    for(let i=0;i<n;i++) a.push(Math.floor(Math.random()*100)+1);
+    return a;
+  }
+  // DOM refs
+  const sizeEl = document.getElementById('size');
+  const speedEl = document.getElementById('speed');
+  const startBtn = document.getElementById('start');
+  const pauseBtn = document.getElementById('pause');
+  const resetBtn = document.getElementById('reset');
+
+  const vizBubble = document.getElementById('viz-bubble');
+  const vizInsert = document.getElementById('viz-insert');
+  const vizQuick = document.getElementById('viz-quick');
+
+  // counters and states
+  const counters = {
+    bubble: {cmp:0, swap:0, pass:0, state:'idle'},
+    insert: {cmp:0, swap:0, idx:0, state:'idle'},
+    quick: {cmp:0, swap:0, stack:0, state:'idle'}
+  };
+
+  // state
+  let baseArray = randArray(parseInt(sizeEl.value,10));
+  let paused = true;
+  let speed = parseInt(speedEl.value,10); // 1..200 higher => faster
+  let animId = null;
+
+  // visual helpers
+  function renderViz(container, arr, highlights={}){
+    // highlights: {compare:[i,j], swap:[i,j], pivot:i}
+    container.innerHTML = '';
+    const n = arr.length;
+    const max = Math.max(...arr);
+    for(let i=0;i<n;i++){
+      const v = arr[i];
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      if(n>60) bar.classList.add('small');
+      let h = (v / max) * 100;
+      bar.style.height = h + '%';
+      bar.textContent = n<=40 ? String(v) : '';
+      if(highlights.compare && highlights.compare.includes(i)) bar.classList.add('compare');
+      if(highlights.swap && highlights.swap.includes(i)) bar.classList.add('swap');
+      if(typeof highlights.pivot === 'number' && highlights.pivot===i){
+        bar.style.boxShadow = 'inset 0 -8px 30px rgba(255,255,255,0.05), 0 0 12px rgba(255,255,255,0.02)';
+        bar.style.outline = '2px solid rgba(99,102,241,0.12)';
+      }
+      container.appendChild(bar);
+    }
+  }
+
+  // initial render
+  function setAllArrays(arr){
+    renderViz(vizBubble, arr);
+    renderViz(vizInsert, arr);
+    renderViz(vizQuick, arr);
+  }
+  setAllArrays(baseArray);
+
+  // algorithm generators produce a sequence of steps for animation
+  // Each step: {type:'compare'|'swap'|'set'|'pass'|'done'|'pivot', indices:[], arr:copy }
+  // We will supply array copies to keep visual panels consistent.
+
+  function* bubbleSortGen(arr){
+    const a = arr.slice();
+    const n = a.length;
+    let swapped;
+    for(let pass=0; pass<n-1; pass++){
+      swapped = false;
+      yield {type:'pass', pass:pass+1, arr:a.slice()};
+      for(let i=0;i<n-1-pass;i++){
+        yield {type:'compare', indices:[i,i+1], arr:a.slice()};
+        if(a[i] > a[i+1]){
+          // swap
+          [a[i], a[i+1]] = [a[i+1], a[i]];
+          swapped = true;
+          yield {type:'swap', indices:[i,i+1], arr:a.slice()};
+        }
+      }
+      if(!swapped) break;
+    }
+    yield {type:'done', arr:a.slice()};
+  }
+
+  function* insertionSortGen(arr){
+    const a = arr.slice();
+    const n = a.length;
+    for(let i=1;i<n;i++){
+      let key = a[i];
+      let j = i-1;
+      yield {type:'index', index:i, arr:a.slice()};
+      while(j>=0){
+        yield {type:'compare', indices:[j,i], arr:a.slice()};
+        if(a[j] > key){
+          a[j+1] = a[j];
+          yield {type:'move', indices:[j,j+1], arr:a.slice()};
+          j--;
+        }else break;
+      }
+      a[j+1] = key;
+      yield {type:'insert', index:j+1, arr:a.slice()};
+    }
+    yield {type:'done', arr:a.slice()};
+  }
+
+  // Quick sort using Lomuto partition but iterative to emit steps
+  function* quickSortGen(arr){
+    const a = arr.slice();
+    const stack = [{lo:0, hi:a.length-1}];
+    while(stack.length){
+      const {lo, hi} = stack.pop();
+      if(lo>=hi) continue;
+      yield {type:'stack', depth: stack.length+1, arr:a.slice()};
+      // partition Lomuto
+      const pivot = a[hi];
+      let i = lo;
+      yield {type:'pivot', pivotIndex:hi, arr:a.slice()};
+      for(let j=lo;j<hi;j++){
+        yield {type:'compare', indices:[j,hi], arr:a.slice()};
+        if(a[j] < pivot){
+          if(i!==j){
+            [a[i], a[j]] = [a[j], a[i]];
+            yield {type:'swap', indices:[i,j], arr:a.slice()};
+          }
+          i++;
+        }
+      }
+      // place pivot
+      if(i!==hi){
+        [a[i], a[hi]] = [a[hi], a[i]];
+        yield {type:'swap', indices:[i,hi], arr:a.slice()};
+      }
+      // push right and left
+      // push larger segment first to keep stack smaller (optional)
+      if(i+1<hi) stack.push({lo:i+1, hi:hi});
+      if(lo<i-1) stack.push({lo:lo, hi:i-1});
+    }
+    yield {type:'done', arr:a.slice()};
+  }
+
+  // control and step execution
+  let gens = null;
+  function resetGenerators(){
+    const arr = baseArray.slice();
+    gens = {
+      bubble: bubbleSortGen(arr),
+      insert: insertionSortGen(arr),
+      quick: quickSortGen(arr)
+    };
+    // reset counters and UI
+    counters.bubble = {cmp:0, swap:0, pass:0, state:'ready'};
+    counters.insert = {cmp:0, swap:0, idx:0, state:'ready'};
+    counters.quick = {cmp:0, swap:0, stack:0, state:'ready'};
+    updateAllCounters();
+    setAllArrays(baseArray);
+    document.getElementById('state-bubble').textContent = 'ready';
+    document.getElementById('state-insert').textContent = 'ready';
+    document.getElementById('state-quick').textContent = 'ready';
+  }
+
+  function updateAllCounters(){
+    document.getElementById('cmp-bubble').textContent = counters.bubble.cmp;
+    document.getElementById('swap-bubble').textContent = counters.bubble.swap;
+    document.getElementById('pass-bubble').textContent = counters.bubble.pass;
+    document.getElementById('cmp-insert').textContent = counters.insert.cmp;
+    document.getElementById('swap-insert').textContent = counters.insert.swap;
+    document.getElementById('idx-insert').textContent = counters.insert.idx;
+    document.getElementById('cmp-quick').textContent = counters.quick.cmp;
+    document.getElementById('swap-quick').textContent = counters.quick.swap;
+    document.getElementById('stack-quick').textContent = counters.quick.stack;
+  }
+
+  // step each generator once and update visuals
+  function stepAll(){
+    if(!gens) return;
+    // bubble
+    const b = gens.bubble.next();
+    if(!b.done){
+      const s = b.value;
+      handleBubbleStep(s);
+    } else {
+      document.getElementById('state-bubble').textContent = 'finished';
+    }
+    // insert
+    const ins = gens.insert.next();
+    if(!ins.done){
+      handleInsertStep(ins.value);
+    } else {
+      document.getElementById('state-insert').textContent = 'finished';
+    }
+    // quick
+    const q = gens.quick.next();
+    if(!q.done){
+      handleQuickStep(q.value);
+    } else {
+      document.getElementById('state-quick').textContent = 'finished';
+    }
+    updateAllCounters();
+  }
+
+  function handleBubbleStep(s){
+    if(s.type==='pass'){
+      counters.bubble.pass = s.pass;
+      counters.bubble.state = 'pass';
+      document.getElementById('state-bubble').textContent = 'pass '+s.pass;
+      renderViz(vizBubble, s.arr);
+    } else if(s.type==='compare'){
+      counters.bubble.cmp++;
+      counters.bubble.state = 'compare';
+      document.getElementById('state-bubble').textContent = 'comparing';
+      renderViz(vizBubble, s.arr, {compare:s.indices});
+    } else if(s.type==='swap'){
+      counters.bubble.swap++;
+      counters.bubble.state = 'swap';
+      document.getElementById('state-bubble').textContent = 'swapping';
+      renderViz(vizBubble, s.arr, {swap:s.indices});
+    } else if(s.type==='done'){
+      counters.bubble.state = 'done';
+      document.getElementById('state-bubble').textContent = 'done';
+      renderViz(vizBubble, s.arr);
+    }
+  }
+
+  function handleInsertStep(s){
+    if(s.type==='index'){
+      counters.insert.idx = s.index;
+      counters.insert.state = 'index';
+      document.getElementById('state-insert').textContent = 'scanning';
+      renderViz(vizInsert, s.arr, {compare:[s.index]});
+    } else if(s.type==='compare'){
+      counters.insert.cmp++;
+      counters.insert.state = 'compare';
+      document.getElementById('state-insert').textContent = 'comparing';
+      renderViz(vizInsert, s.arr, {compare:s.indices});
+    } else if(s.type==='move'){
+      counters.insert.swap++;
+      counters.insert.state = 'move';
+      document.getElementById('state-insert').textContent = 'moving';
+      renderViz(vizInsert, s.arr, {swap:s.indices});
+    } else if(s.type==='insert'){
+      counters.insert.state = 'insert';
+      document.getElementById('state-insert').textContent = 'inserting';
+      renderViz(vizInsert, s.arr);
+    } else if(s.type==='done'){
+      counters.insert.state = 'done';
+      document.getElementById('state-insert').textContent = 'done';
+      renderViz(vizInsert, s.arr);
+    }
+  }
+
+  function handleQuickStep(s){
+    if(s.type==='stack'){
+      counters.quick.stack = s.depth;
+      counters.quick.state = 'stack';
+      document.getElementById('state-quick').textContent = 'partitioning';
+      renderViz(vizQuick, s.arr);
+    } else if(s.type==='pivot'){
+      counters.quick.state = 'pivot';
+      document.getElementById('state-quick').textContent = 'pivot';
+      renderViz(vizQuick, s.arr, {pivot:s.pivotIndex});
+    } else if(s.type==='compare'){
+      counters.quick.cmp++;
+      counters.quick.state = 'compare';
+      document.getElementById('state-quick').textContent = 'comparing';
+      renderViz(vizQuick, s.arr, {compare:s.indices, pivot: s.pivotIndex});
+    } else if(s.type==='swap'){
+      counters.quick.swap++;
+      counters.quick.state = 'swap';
+      document.getElementById('state-quick').textContent = 'swapping';
+      renderViz(vizQuick, s.arr, {swap:s.indices});
+    } else if(s.type==='done'){
+      counters.quick.state = 'done';
+      document.getElementById('state-quick').textContent = 'done';
+      renderViz(vizQuick, s.arr);
+    }
+  }
+
+  // animation loop
+  function animate(){
+    if(paused) return;
+    // speed mapping: speed slider higher -> smaller delay
+    const sp = parseInt(speedEl.value,10);
+    const delay = Math.max(3, 220 - sp); // ms per step
+    stepAll();
+    // check finished: if all states are 'done' then pause
+    const allDone = (document.getElementById('state-bubble').textContent==='done')
+                 && (document.getElementById('state-insert').textContent==='done')
+                 && (document.getElementById('state-quick').textContent==='done');
+    if(allDone){
+      paused = true;
+      return;
+    }
+    animId = setTimeout(animate, delay);
+  }
+
+  // wire buttons
+  startBtn.addEventListener('click', ()=>{
+    if(!gens) resetGenerators();
+    if(paused){
+      paused = false;
+      animate();
+    }
+  });
+  pauseBtn.addEventListener('click', ()=>{
+    paused = true;
+    if(animId) { clearTimeout(animId); animId = null; }
+  });
+  resetBtn.addEventListener('click', ()=>{
+    paused = true;
+    if(animId) { clearTimeout(animId); animId = null; }
+    // generate new base array
+    baseArray = randArray(parseInt(sizeEl.value,10));
+    resetGenerators();
+  });
+
+  // update speed or size
+  speedEl.addEventListener('input', ()=>{ /* speed used in animate */ });
+  sizeEl.addEventListener('input', ()=>{
+    baseArray = randArray(parseInt(sizeEl.value,10));
+    paused = true;
+    if(animId) { clearTimeout(animId); animId = null; }
+    resetGenerators();
+  });
+
+  // initialize
+  resetGenerators();
+
+})();
+</script>

@@ -1,0 +1,358 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sorting Comparison: Bubble vs Quick vs Merge</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 12px; background: #f5f7fb; color:#111;}
+    h1 { margin: 6px 0 18px 0; font-size: 20px;}
+    .controls { margin-bottom: 12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    .wrap { display:flex; gap:12px; }
+    .panel { background: white; border-radius:8px; padding:10px; box-shadow: 0 2px 8px rgba(20,30,40,0.08); width: 33vw; min-width:300px; }
+    .title { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px;}
+    .canvas { height:300px; border-radius:4px; background:linear-gradient(180deg,#ffffff,#f8fbff); position:relative; overflow:hidden; }
+    .bars { position:absolute; left:0; right:0; bottom:0; top:0; display:flex; align-items:flex-end; gap:2px; padding:6px; box-sizing:border-box; }
+    .bar { background:#4b8bff; width:100%; border-radius:3px 3px 0 0; transition:height 120ms linear, background 80ms;}
+    .bar.compare { background:#ff9933; }
+    .bar.swap { background:#ff3747; }
+    .stats { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; font-size:13px; color:#333;}
+    .btn { padding:8px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:white; cursor:pointer;}
+    .btn:active { transform:translateY(1px);}
+    .small { font-size:13px; padding:6px 8px;}
+    .label { color:#666; font-size:13px;}
+    footer { margin-top:14px; color:#444; font-size:13px;}
+    @media (max-width:1000px){ .wrap{ flex-direction:column;} .panel{ width:auto; }}
+  </style>
+</head>
+<body>
+  <h1>Sorting Comparison — Bubble Sort vs Quick Sort vs Merge Sort</h1>
+  <div class="controls">
+    <div class="label">Array size:
+      <input id="size" type="range" min="20" max="200" value="120" style="vertical-align:middle; margin-left:8px;">
+      <span id="sizeVal" style="font-weight:600; margin-left:6px;">120</span>
+    </div>
+    <button id="shuffle" class="btn small">Shuffle & Reset</button>
+    <button id="start" class="btn small">Start</button>
+    <button id="pause" class="btn small">Pause</button>
+    <label class="label">Speed:
+      <input id="speed" type="range" min="1" max="500" value="120" style="vertical-align:middle; margin-left:8px;">
+      <span id="speedVal" style="font-weight:600; margin-left:6px;">120ms</span>
+    </label>
+  </div>
+
+  <div class="wrap">
+    <div class="panel" id="panel-bubble">
+      <div class="title"><strong>Bubble Sort</strong><span class="label">O(n^2)</span></div>
+      <div class="canvas"><div class="bars" id="bars-bubble"></div></div>
+      <div class="stats">
+        <div class="label">Comparisons: <span id="comp-bubble">0</span></div>
+        <div class="label">Swaps: <span id="swap-bubble">0</span></div>
+        <div class="label">Steps: <span id="steps-bubble">0</span></div>
+        <div class="label">Time: <span id="time-bubble">0.00s</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-quick">
+      <div class="title"><strong>Quick Sort</strong><span class="label">Average O(n log n)</span></div>
+      <div class="canvas"><div class="bars" id="bars-quick"></div></div>
+      <div class="stats">
+        <div class="label">Comparisons: <span id="comp-quick">0</span></div>
+        <div class="label">Swaps: <span id="swap-quick">0</span></div>
+        <div class="label">Steps: <span id="steps-quick">0</span></div>
+        <div class="label">Time: <span id="time-quick">0.00s</span></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-merge">
+      <div class="title"><strong>Merge Sort</strong><span class="label">O(n log n)</span></div>
+      <div class="canvas"><div class="bars" id="bars-merge"></div></div>
+      <div class="stats">
+        <div class="label">Comparisons: <span id="comp-merge">0</span></div>
+        <div class="label">Swaps: <span id="swap-merge">0</span></div>
+        <div class="label">Steps: <span id="steps-merge">0</span></div>
+        <div class="label">Time: <span id="time-merge">0.00s</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Tip: Increase array size and slow the speed to make bubble sort fall far behind. This demo uses the identical initial array for each algorithm so you can directly compare steps and elapsed time.
+  </footer>
+
+<script>
+(function(){
+  // Config / Controls
+  const sizeSlider = document.getElementById('size');
+  const sizeVal = document.getElementById('sizeVal');
+  const shuffleBtn = document.getElementById('shuffle');
+  const startBtn = document.getElementById('start');
+  const pauseBtn = document.getElementById('pause');
+  const speedSlider = document.getElementById('speed');
+  const speedVal = document.getElementById('speedVal');
+
+  sizeVal.textContent = sizeSlider.value;
+  speedVal.textContent = speedSlider.value + 'ms';
+
+  sizeSlider.oninput = () => { sizeVal.textContent = sizeSlider.value; };
+  speedSlider.oninput = () => { speedVal.textContent = speedSlider.value + 'ms'; };
+
+  let baseArray = [];
+  let running = false;
+  let paused = false;
+  let speed = Number(speedSlider.value);
+
+  speedSlider.onchange = () => speed = Number(speedSlider.value);
+
+  // Utility: create array and copy
+  function makeArray(n){
+    const a = Array.from({length:n}, (_,i)=> i+1);
+    // shuffle
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function resetAll(){
+    running = false;
+    paused = false;
+    baseArray = makeArray(Number(sizeSlider.value));
+    initPanel('bubble', baseArray.slice());
+    initPanel('quick', baseArray.slice());
+    initPanel('merge', baseArray.slice());
+  }
+
+  // Panel state
+  const panels = {
+    bubble: {barsId:'bars-bubble', compId:'comp-bubble', swapId:'swap-bubble', stepsId:'steps-bubble', timeId:'time-bubble'},
+    quick: {barsId:'bars-quick', compId:'comp-quick', swapId:'swap-quick', stepsId:'steps-quick', timeId:'time-quick'},
+    merge: {barsId:'bars-merge', compId:'comp-merge', swapId:'swap-merge', stepsId:'steps-merge', timeId:'time-merge'}
+  };
+
+  function initPanel(name, arr){
+    const panel = panels[name];
+    const bars = document.getElementById(panel.barsId);
+    bars.innerHTML = '';
+    const n = arr.length;
+    for(let i=0;i<n;i++){
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.flex = '1';
+      bar.dataset.index = i;
+      bar.style.height = (arr[i]/n*100) + '%';
+      bars.appendChild(bar);
+    }
+    document.getElementById(panel.compId).textContent = '0';
+    document.getElementById(panel.swapId).textContent = '0';
+    document.getElementById(panel.stepsId).textContent = '0';
+    document.getElementById(panel.timeId).textContent = '0.00s';
+  }
+
+  // Visual helpers
+  function updateBars(name, arr, highlight=[]){
+    const bars = document.getElementById(panels[name].barsId).children;
+    const n = arr.length;
+    for(let i=0;i<arr.length;i++){
+      const b = bars[i];
+      b.style.height = (arr[i]/n*100) + '%';
+      b.classList.remove('compare','swap');
+    }
+    for(const h of highlight){
+      const b = bars[h.index];
+      if(!b) continue;
+      if(h.type==='compare') b.classList.add('compare');
+      if(h.type==='swap') b.classList.add('swap');
+    }
+  }
+  function setStats(name, comp, swap, steps, time){
+    document.getElementById(panels[name].compId).textContent = comp;
+    document.getElementById(panels[name].swapId).textContent = swap;
+    document.getElementById(panels[name].stepsId).textContent = steps;
+    document.getElementById(panels[name].timeId).textContent = time.toFixed(2)+'s';
+  }
+
+  // Async stepping runner with controlled delay and pause
+  function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+  async function stepDelay(){
+    // honor pause
+    while(paused) await wait(50);
+    await wait(speed);
+  }
+
+  // Sorting implementations that yield actions for visualization
+  // Actions: {type:'compare'|'swap'|'set', i, j, values?}
+  function* bubbleSort(arr){
+    const n = arr.length;
+    let comps = 0, swaps=0;
+    for(let pass=0; pass<n-1; pass++){
+      let swapped = false;
+      for(let i=0;i<n-1-pass;i++){
+        comps++; yield {type:'compare', i:i, j:i+1, comps, swaps};
+        if(arr[i] > arr[i+1]){
+          swaps++; [arr[i],arr[i+1]] = [arr[i+1],arr[i]];
+          swapped = true;
+          yield {type:'swap', i:i, j:i+1, comps, swaps, arr:arr.slice()};
+        }
+      }
+      if(!swapped) break;
+    }
+    return {comps, swaps, arr};
+  }
+
+  function* quickSort(arr){
+    // in-place quicksort with explicit stack to yield compare/swap actions
+    let comps=0, swaps=0;
+    const stack = [[0, arr.length-1]];
+    while(stack.length){
+      const [lo, hi] = stack.pop();
+      if(lo >= hi) continue;
+      // partition
+      const pivot = arr[hi];
+      let pIndex = lo;
+      for(let j=lo;j<hi;j++){
+        comps++; yield {type:'compare', i:j, j:hi, comps, swaps};
+        if(arr[j] < pivot){
+          if(j !== pIndex){
+            swaps++; [arr[j], arr[pIndex]] = [arr[pIndex], arr[j]];
+            yield {type:'swap', i:j, j:pIndex, comps, swaps, arr:arr.slice()};
+          }
+          pIndex++;
+        }
+      }
+      if(pIndex !== hi){
+        swaps++; [arr[pIndex], arr[hi]] = [arr[hi], arr[pIndex]];
+        yield {type:'swap', i:pIndex, j:hi, comps, swaps, arr:arr.slice()};
+      }
+      stack.push([lo, pIndex-1]);
+      stack.push([pIndex+1, hi]);
+    }
+    return {comps, swaps, arr};
+  }
+
+  function* mergeSort(arr){
+    // top-down merge sort that yields set operations when writing merged values
+    let comps=0, swaps=0;
+    const n = arr.length;
+    const aux = arr.slice();
+
+    function* merge(lo, mid, hi){
+      let i=lo, j=mid, k=lo;
+      while(i<mid && j<hi){
+        comps++; yield {type:'compare', i:i, j:j, comps, swaps};
+        if(aux[i] <= aux[j]){
+          arr[k++] = aux[i++];
+        } else {
+          arr[k++] = aux[j++];
+        }
+        swaps++; // count as an assignment
+        yield {type:'set', i:k-1, value:arr[k-1], comps, swaps, arr:arr.slice()};
+      }
+      while(i<mid){
+        arr[k++] = aux[i++];
+        swaps++;
+        yield {type:'set', i:k-1, value:arr[k-1], comps, swaps, arr:arr.slice()};
+      }
+      while(j<hi){
+        arr[k++] = aux[j++];
+        swaps++;
+        yield {type:'set', i:k-1, value:arr[k-1], comps, swaps, arr:arr.slice()};
+      }
+      // copy back to aux for next merges
+      for(let t=lo;t<hi;t++) aux[t]=arr[t];
+    }
+
+    // iterative bottom-up to make yielding easier
+    let size = 1;
+    while(size < n){
+      for(let lo=0; lo<n; lo += 2*size){
+        const mid = Math.min(n, lo+size);
+        const hi = Math.min(n, lo+2*size);
+        if(mid<hi){
+          const gen = merge(lo, mid, hi);
+          let r;
+          while(!(r = gen.next()).done){
+            yield r.value;
+          }
+        }
+      }
+      size *= 2;
+    }
+    return {comps, swaps, arr};
+  }
+
+  // Runner: takes generator, updates UI
+  async function runSort(name, arr){
+    const gen = (name==='bubble'? bubbleSort(arr) : name==='quick'? quickSort(arr) : mergeSort(arr));
+    const startTime = performance.now();
+    let statsComp=0, statsSwap=0, steps=0;
+    updateBars(name, arr);
+    while(true){
+      const res = gen.next();
+      if(res.done){
+        const elapsed = (performance.now() - startTime)/1000;
+        // final render
+        updateBars(name, arr);
+        setStats(name, statsComp, statsSwap, steps, elapsed);
+        break;
+      }
+      const action = res.value;
+      // Update stats from yielded action (generators include comps/swaps)
+      statsComp = action.comps || statsComp;
+      statsSwap = action.swaps || statsSwap;
+      steps++;
+      // visualize
+      if(action.type === 'compare'){
+        updateBars(name, arr, [{index:action.i, type:'compare'},{index:action.j, type:'compare'}]);
+      } else if(action.type === 'swap'){
+        // apply arr if provided (some yields include arr)
+        if(action.arr) arr = action.arr.slice();
+        updateBars(name, arr, [{index:action.i, type:'swap'},{index:action.j, type:'swap'}]);
+      } else if(action.type === 'set'){
+        if(action.arr) arr = action.arr.slice();
+        updateBars(name, arr, [{index:action.i, type:'swap'}]);
+      }
+      setStats(name, statsComp, statsSwap, steps, (performance.now()-startTime)/1000);
+      await stepDelay();
+    }
+  }
+
+  // Start/pause handlers
+  startBtn.onclick = async () => {
+    if(running && paused){
+      paused = false;
+      return;
+    }
+    if(running) return;
+    running = true;
+    paused = false;
+    speed = Number(speedSlider.value);
+
+    // Each algorithm runs independently but on the same initial baseArray
+    const aBubble = baseArray.slice();
+    const aQuick = baseArray.slice();
+    const aMerge = baseArray.slice();
+
+    // Kick off three runners in parallel
+    runSort('bubble', aBubble);
+    // Slight offsets so UI updates don't all happen exactly same timestamp
+    await wait(10);
+    runSort('quick', aQuick);
+    await wait(10);
+    runSort('merge', aMerge);
+  };
+
+  pauseBtn.onclick = () => { paused = !paused; pauseBtn.textContent = paused ? 'Resume' : 'Pause'; };
+
+  shuffleBtn.onclick = () => { resetAll(); };
+
+  // initialize
+  resetAll();
+
+  // Expose for tweak in console if desired
+  window._debug = {resetAll, runSort};
+
+})();
+</script>
+</body>
+</html>

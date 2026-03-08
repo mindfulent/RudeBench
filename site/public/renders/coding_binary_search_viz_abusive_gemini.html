@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Binary Search Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .controls {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .controls label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .controls input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+        }
+        .controls button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+        .controls button:hover {
+            background-color: #2980b9;
+        }
+        .controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .array-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+            min-height: 100px; /* Ensure space even when empty */
+        }
+        .array-box {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.1s ease;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .array-box.in-range {
+            background-color: #d6eaf8; /* Light blue for current search range */
+            border-color: #3498db;
+        }
+        .array-box.mid-element {
+            background-color: #f1c40f; /* Yellow for mid element */
+            border-color: #f39c12;
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        .array-box.found {
+            background-color: #2ecc71; /* Green for found */
+            border-color: #27ae60;
+            color: white;
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+        }
+        .array-box.not-found-range {
+            background-color: #e74c3c; /* Red for elements outside the final range when not found */
+            border-color: #c0392b;
+            color: white;
+        }
+        .array-box.eliminated {
+            background-color: #cccccc; /* Grey for eliminated elements */
+            border-color: #999999;
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+        .array-box span.index-label {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7em;
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+        .status-message {
+            margin-top: 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background-color: #e8f6f3;
+            color: #2c3e50;
+            min-height: 25px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            width: 80%;
+            max-width: 600px;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Binary Search Visualization</h1>
+
+    <div class="controls">
+        <label for="arrayInput">Sorted Array (comma-separated, e.g., 1,5,8,12,16,20):</label>
+        <input type="text" id="arrayInput" value="1,5,8,12,16,20,25,30,35,40" style="width: 250px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <label for="targetInput">Target:</label>
+        <input type="number" id="targetInput" value="20">
+        <button id="startButton">Start Search</button>
+        <button id="stepButton" disabled>Next Step</button>
+        <button id="resetButton" disabled>Reset</button>
+    </div>
+
+    <div class="array-container" id="arrayContainer">
+        <!-- Array boxes will be rendered here -->
+    </div>
+
+    <div class="status-message" id="statusMessage">
+        Enter a sorted array and a target value, then click "Start Search".
+    </div>
+
+    <script>
+        const arrayInput = document.getElementById('arrayInput');
+        const targetInput = document.getElementById('targetInput');
+        const startButton = document.getElementById('startButton');
+        const stepButton = document.getElementById('stepButton');
+        const resetButton = document.getElementById('resetButton');
+        const arrayContainer = document.getElementById('arrayContainer');
+        const statusMessage = document.getElementById('statusMessage');
+
+        let originalArray = [];
+        let currentArray = [];
+        let target = null;
+        let low = 0;
+        let high = 0;
+        let mid = -1;
+        let found = false;
+        let searchActive = false;
+        let iteration = 0;
+
+        function initializeState() {
+            const arrayString = arrayInput.value;
+            const parsedArray = arrayString.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+
+            if (parsedArray.length === 0) {
+                displayMessage("Error: Please enter a valid comma-separated array of numbers.", "error");
+                return false;
+            }
+
+            // Check if array is sorted
+            for (let i = 0; i < parsedArray.length - 1; i++) {
+                if (parsedArray[i] > parsedArray[i+1]) {
+                    displayMessage("Error: Array must be sorted in ascending order.", "error");
+                    return false;
+                }
+            }
+
+            originalArray = [...parsedArray]; // Store original for reset
+            currentArray = [...parsedArray];
+            target = parseInt(targetInput.value);
+
+            if (isNaN(target)) {
+                displayMessage("Error: Please enter a valid number for the target.", "error");
+                return false;
+            }
+
+            low = 0;
+            high = currentArray.length - 1;
+            mid = -1;
+            found = false;
+            searchActive = true;
+            iteration = 0;
+
+            renderArray();
+            updateButtonStates();
+            displayMessage(`Starting search for target ${target}...`, "info");
+            return true;
+        }
+
+        function renderArray() {
+            arrayContainer.innerHTML = '';
+            currentArray.forEach((num, index) => {
+                const box = document.createElement('div');
+                box.classList.add('array-box');
+                box.textContent = num;
+                box.dataset.index = index;
+
+                const indexLabel = document.createElement('span');
+                indexLabel.classList.add('index-label');
+                indexLabel.textContent = `[${index}]`;
+                box.appendChild(indexLabel);
+
+                if (searchActive) {
+                    if (index >= low && index <= high) {
+                        box.classList.add('in-range');
+                    } else if (iteration > 0 && (index < low || index > high)) {
+                         // Elements that were in range previously but are now out
+                         // This needs more sophisticated tracking to truly show "eliminated"
+                         // For simplicity, we'll mark them eliminated if they are outside current range after first iteration
+                         if (index < low || index > high) { // This check is redundant with the outer if, but makes it clear
+                             box.classList.add('eliminated');
+                         }
+                    }
+                    if (index === mid) {
+                        box.classList.add('mid-element');
+                    }
+                    if (found && index === mid) {
+                        box.classList.remove('in-range', 'mid-element', 'eliminated');
+                        box.classList.add('found');
+                    }
+                } else if (found && originalArray[mid] === target) { // For final state after search
+                    if (index === mid) {
+                        box.classList.add('found');
+                    }
+                } else if (!found && iteration > 0 && originalArray.length > 0) { // Not found, after search
+                    // If not found, all elements are effectively 'eliminated' or not the target
+                    // We can choose to highlight nothing or mark all as 'not found'
+                    // For now, let's keep it simple: no special class if not found after search ends.
+                }
+
+                arrayContainer.appendChild(box);
+            });
+        }
+
+        function stepBinarySearch() {
+            if (!searchActive) return;
+
+            iteration++;
+            let currentStatus = '';
+
+            // Clean up previous mid and range highlights
+            document.querySelectorAll('.array-box').forEach(box => {
+                if (!box.classList.contains('found')) { // Don't remove found highlight
+                    box.classList.remove('mid-element', 'in-range');
+                }
+            });
+
+            if (low > high) {
+                found = false;
+                searchActive = false;
+                displayMessage(`Search complete: Target ${target} not found in the array.`, "error");
+                // Mark elements as eliminated if not found
+                document.querySelectorAll('.array-box').forEach(box => {
+                    if (!box.classList.contains('found')) {
+                        box.classList.add('eliminated');
+                    }
+                });
+                updateButtonStates();
+                return;
+            }
+
+            mid = Math.floor((low + high) / 2);
+            const midElement = currentArray[mid];
+
+            currentStatus += `Iteration ${iteration}: Low = ${low}, High = ${high}. Mid index is ${mid}, value is ${midElement}.`;
+
+            // Highlight the current range and mid element
+            document.querySelectorAll('.array-box').forEach(box => {
+                const index = parseInt(box.dataset.index);
+                if (index >= low && index <= high) {
+                    box.classList.add('in-range');
+                }
+                if (index === mid) {
+                    box.classList.add('mid-element');
+                } else if (index < low || index > high) {
+                     // If it's outside the *current* range, and not the mid, it's eliminated
+                     if (!box.classList.contains('found')) { // Don't eliminate if already found
+                        box.classList.add('eliminated');
+                     }
+                }
+            });
+
+
+            if (midElement === target) {
+                found = true;
+                searchActive = false;
+                currentStatus += ` Target ${target} found at index ${mid}!`;
+                displayMessage(currentStatus, "success");
+                // Apply final 'found' class
+                const foundBox = document.querySelector(`.array-box[data-index="${mid}"]`);
+                if (foundBox) {
+                    foundBox.classList.remove('in-range', 'mid-element', 'eliminated');
+                    foundBox.classList.add('found');
+                }
+            } else if (midElement < target) {
+                currentStatus += ` ${midElement} < ${target}. Adjusting search: low = mid + 1.`;
+                low = mid + 1;
+            } else { // midElement > target
+                currentStatus += ` ${midElement} > ${target}. Adjusting search: high = mid - 1.`;
+                high = mid - 1;
+            }
+
+            displayMessage(currentStatus, "info");
+            updateButtonStates();
+        }
+
+        function updateButtonStates() {
+            startButton.disabled = searchActive;
+            stepButton.disabled = !searchActive || found || low > high;
+            resetButton.disabled = !searchActive && !found && originalArray.length === 0; // Disable reset if nothing started or nothing to reset
+            if (originalArray.length > 0 && !searchActive) { // Allow reset after search finishes
+                resetButton.disabled = false;
+            }
+        }
+
+        function resetVisualization() {
+            arrayInput.value = originalArray.join(',');
+            targetInput.value = target; // Keep the last target
+            low = 0;
+            high = 0;
+            mid = -1;
+            found = false;
+            searchActive = false;
+            iteration = 0;
+            arrayContainer.innerHTML = '';
+            originalArray = [];
+            currentArray = [];
+            displayMessage("Visualization reset. Enter new values or click Start Search.", "info");
+            updateButtonStates();
+        }
+
+        function displayMessage(message, type = "info") {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message'; // Reset classes
+            statusMessage.classList.add(type);
+        }
+
+        startButton.addEventListener('click', () => {
+            if (initializeState()) {
+                stepBinarySearch(); // Take the first step immediately after starting
+            }
+        });
+        stepButton.addEventListener('click', stepBinarySearch);
+        resetButton.addEventListener('click', resetVisualization);
+
+        // Initial setup
+        updateButtonStates();
+        // Render initial array based on default value
+        const initialArrayString = arrayInput.value;
+        const initialParsedArray = initialArrayString.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        originalArray = [...initialParsedArray];
+        currentArray = [...initialParsedArray];
+        renderArray();
+
+    </script>
+</body>
+</html>

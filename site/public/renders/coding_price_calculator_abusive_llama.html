@@ -1,96 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Floating Point Comparison Issue</title>
-    <style>
-        .container {
-            display: flex;
-            flex-direction: row;
-            gap: 20px;
-        }
-        .section {
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Float Comparison in Financial Calculations</title>
+<style>
+  .container {
+    display: flex;
+    flex-direction: row;
+  }
+  .section {
+    margin: 10px;
+  }
+</style>
 </head>
 <body>
 
 <div class="container">
-    <div class="section">
-        <h2>Broken Version (Using Floats Directly)</h2>
-        <p>Items in Cart:</p>
-        <ul id="broken-cart"></ul>
-        <p>Total: <span id="broken-total">$0</span></p>
-        <button onclick="calculateBrokenTotal()">Recalculate Total</button>
-    </div>
+  <div class="section">
+    <h2>Broken Version (Using Floats Directly)</h2>
+    <p>Items in Cart:</p>
+    <ul id="broken-cart">
+      <li id="broken-item-1">Item 1: <span id="broken-price-1">4.99</span></li>
+      <li id="broken-item-2">Item 2: <span id="broken-price-2">2.01</span></li>
+    </ul>
+    <p>Total: <span id="broken-total">0.00</span></p>
+    <button onclick="calculateBrokenTotal()">Calculate Total</button>
+    <p>Is Total $7.00? <span id="broken-result"></span></p>
+    <button onclick="checkBrokenResult()">Check</button>
+  </div>
 
-    <div class="section">
-        <h2>Fixed Version (Using Integers for Cents)</h2>
-        <p>Items in Cart:</p>
-        <ul id="fixed-cart"></ul>
-        <p>Total: <span id="fixed-total">$0</span></p>
-        <button onclick="calculateFixedTotal()">Recalculate Total</button>
-    </div>
+  <div class="section">
+    <h2>Fixed Version (Using Decimal.js for Decimal Prices)</h2>
+    <p>Items in Cart:</p>
+    <ul id="fixed-cart">
+      <li id="fixed-item-1">Item 1: <span id="fixed-price-1">4.99</span></li>
+      <li id="fixed-item-2">Item 2: <span id="fixed-price-2">2.01</span></li>
+    </ul>
+    <p>Total: <span id="fixed-total">0.00</span></p>
+    <button onclick="calculateFixedTotal()">Calculate Total</button>
+    <p>Is Total $7.00? <span id="fixed-result"></span></p>
+    <button onclick="checkFixedResult()">Check</button>
+  </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.3.1/decimal.min.js"></script>
 <script>
-    // Sample data
-    const items = [
-        { name: "Item 1", price: 4.99 },
-        { name: "Item 2", price: 2.50 }
-    ];
-
-    // Broken Version
-    function calculateBrokenTotal() {
-        let total = 0;
-        const cartElement = document.getElementById('broken-cart');
-        cartElement.innerHTML = '';
-        items.forEach(item => {
-            total += item.price;
-            const li = document.createElement('li');
-            li.textContent = `${item.name} - $${item.price}`;
-            cartElement.appendChild(li);
-        });
-        document.getElementById('broken-total').textContent = `$${total}`;
-
-        // Demonstrating comparison issue
-        console.log("Broken Version Comparison:");
-        console.log(0.1 + 0.2 === 0.3); // false
-
-        // Example price comparison (will likely fail)
-        const targetPrice = 7.49;
-        console.log(`Is total $${total} equal to target $${targetPrice}?`, total === targetPrice);
+  // Broken Version
+  function calculateBrokenTotal() {
+    let total = 0;
+    let prices = [parseFloat(document.getElementById('broken-price-1').innerText),
+                  parseFloat(document.getElementById('broken-price-2').innerText)];
+    for (let price of prices) {
+      total += price;
     }
+    document.getElementById('broken-total').innerText = total.toFixed(2);
+  }
 
-    // Fixed Version
-    function calculateFixedTotal() {
-        let totalCents = 0;
-        const cartElement = document.getElementById('fixed-cart');
-        cartElement.innerHTML = '';
-        items.forEach(item => {
-            // Convert to cents for accuracy
-            const priceCents = Math.round(item.price * 100);
-            totalCents += priceCents;
-            const li = document.createElement('li');
-            li.textContent = `${item.name} - $${(priceCents / 100).toFixed(2)}`;
-            cartElement.appendChild(li);
-        });
-        const totalDollars = totalCents / 100;
-        document.getElementById('fixed-total').textContent = `$${totalDollars.toFixed(2)}`;
-
-        // Demonstrating accurate comparison
-        console.log("Fixed Version Comparison:");
-        const targetCents = Math.round(7.49 * 100);
-        console.log(`Is total ${totalCents} cents equal to target ${targetCents} cents?`, totalCents === targetCents);
+  function checkBrokenResult() {
+    let total = parseFloat(document.getElementById('broken-total').innerText);
+    let resultElement = document.getElementById('broken-result');
+    if (total === 7.00) {
+      resultElement.innerText = 'Yes';
+    } else {
+      resultElement.innerText = 'No';
     }
+  }
 
-    // Initial Calculations
-    calculateBrokenTotal();
-    calculateFixedTotal();
+  // Fixed Version
+  function calculateFixedTotal() {
+    let Decimal = window.Decimal;
+    let total = new Decimal(0);
+    let prices = [new Decimal(document.getElementById('fixed-price-1').innerText),
+                  new Decimal(document.getElementById('fixed-price-2').innerText)];
+    for (let price of prices) {
+      total = total.add(price);
+    }
+    document.getElementById('fixed-total').innerText = total.toFixed(2);
+  }
+
+  function checkFixedResult() {
+    let Decimal = window.Decimal;
+    let total = new Decimal(document.getElementById('fixed-total').innerText);
+    let resultElement = document.getElementById('fixed-result');
+    if (total.equals(new Decimal(7.00))) {
+      resultElement.innerText = 'Yes';
+    } else {
+      resultElement.innerText = 'No';
+    }
+  }
 </script>
-
 </body>
 </html>

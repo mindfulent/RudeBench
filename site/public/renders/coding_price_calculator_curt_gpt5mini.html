@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Shopping Cart: Why === (floats) Break for Money — Demo and Fix</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 20px; color:#111 }
+    h1 { font-size: 20px; margin-bottom: 6px }
+    .cols { display:flex; gap:20px; align-items:flex-start; }
+    .box { border:1px solid #ddd; padding:12px; border-radius:6px; width:48%; background:#fafafa }
+    label { display:block; margin-top:8px }
+    input[type="text"], input[type="number"] { width:100%; padding:6px; margin-top:4px; box-sizing:border-box }
+    button { margin-top:8px; padding:8px 12px }
+    table { width:100%; border-collapse:collapse; margin-top:8px }
+    th, td { border:1px solid #eee; padding:6px; text-align:left; font-size:13px }
+    .muted { color:#666; font-size:13px }
+    .bad { color:#a33; font-weight:700 }
+    .good { color:#197a1f; font-weight:700 }
+    pre { background:#f4f4f4; padding:8px; overflow:auto }
+    .explain { margin-top:10px; font-size:13px; line-height:1.4 }
+    .row { display:flex; gap:8px; align-items:center }
+  </style>
+</head>
+<body>
+  <h1>Shopping Cart: Why comparing floats (===) Fails for Money — Demo + Fix</h1>
+  <div class="cols">
+    <div class="box" id="left">
+      <strong>Broken version (uses JS numbers / floats)</strong>
+      <div class="muted">This simulates using decimal prices and comparing totals using === directly.</div>
+
+      <label>Item name
+        <input id="b-name" type="text" value="Socks">
+      </label>
+      <label>Price (dollars.cents)
+        <input id="b-price" type="text" value="4.99">
+      </label>
+      <label>Quantity
+        <input id="b-qty" type="number" value="3" min="1">
+      </label>
+      <button id="b-add">Add (Broken)</button>
+
+      <table id="b-table" aria-live="polite">
+        <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Line total</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="row">
+        <div><strong>Calculated total:</strong></div>
+        <div id="b-total" style="margin-left:8px; font-weight:700">0</div>
+      </div>
+
+      <div class="explain">
+        <p class="muted">Comparison check: does computed total equal an expected total (for example, $14.97)?</p>
+        <div class="row">
+          <input id="b-expected" type="text" value="14.97">
+          <button id="b-check">Check ===</button>
+        </div>
+        <div id="b-check-result" class="muted" style="margin-top:8px"></div>
+      </div>
+      <div style="margin-top:12px" class="muted">
+        Note: This left column demonstrates problems arising from binary floating point arithmetic and direct === equality.
+      </div>
+    </div>
+
+    <div class="box" id="right">
+      <strong>Fixed version (works in cents / integers)</strong>
+      <div class="muted">This converts dollars.cents to integer cents and performs all math and comparisons using integers.</div>
+
+      <label>Item name
+        <input id="f-name" type="text" value="Socks">
+      </label>
+      <label>Price (dollars.cents)
+        <input id="f-price" type="text" value="4.99">
+      </label>
+      <label>Quantity
+        <input id="f-qty" type="number" value="3" min="1">
+      </label>
+      <button id="f-add">Add (Fixed)</button>
+
+      <table id="f-table" aria-live="polite">
+        <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Line total</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="row">
+        <div><strong>Calculated total:</strong></div>
+        <div id="f-total" style="margin-left:8px; font-weight:700">0</div>
+      </div>
+
+      <div class="explain">
+        <p class="muted">Comparison check: does computed total equal an expected total (for example, $14.97)?</p>
+        <div class="row">
+          <input id="f-expected" type="text" value="14.97">
+          <button id="f-check">Check equality (ints)</button>
+        </div>
+        <div id="f-check-result" class="muted" style="margin-top:8px"></div>
+      </div>
+
+      <div style="margin-top:12px" class="muted">
+        This approach expresses every amount in the smallest currency unit (cents) as an integer, avoiding binary rounding problems.
+      </div>
+    </div>
+  </div>
+
+  <hr style="margin:18px 0">
+
+  <div>
+    <h2 style="font-size:16px; margin-bottom:6px">What you'll see</h2>
+    <div class="explain">
+      <ul>
+        <li>Left: uses JavaScript Number to parse "4.99" and multiplies: 4.99 * 3 may produce 14.969999999999999 due to binary floating point.</li>
+        <li>Direct equality check (=== 14.97) may return false even though humans expect it to match.</li>
+        <li>Right: converts "4.99" → 499 cents (integer), multiplies by 3 → 1497 cents, compares integers and formats back to "$14.97" reliably.</li>
+      </ul>
+
+      <p class="muted">Why ≠ works: JavaScript Number uses IEEE-754 double precision floating point (binary base). Many decimal fractions (0.1, 0.01, 4.99) cannot be represented exactly in binary, so arithmetic introduces tiny errors. When you compare floats exactly (===), those tiny differences cause unexpected false. For money you should use integers (cents), a decimal library, or BigInt/Decimal types designed for exact decimals.</p>
+    </div>
+  </div>
+
+  <script>
+    // Utilities
+    function formatMoneyFromFloat(n) {
+      return '$' + n.toFixed(2);
+    }
+    function formatMoneyFromCents(cents) {
+      const sign = cents < 0 ? '-' : '';
+      cents = Math.abs(cents);
+      return sign + '$' + Math.floor(cents/100) + '.' + String(cents%100).padStart(2,'0');
+    }
+
+    // BROKEN: float-based cart
+    (function(){
+      const tableBody = document.querySelector('#b-table tbody');
+      const totalEl = document.getElementById('b-total');
+      const checkResult = document.getElementById('b-check-result');
+
+      let items = [];
+
+      function render() {
+        tableBody.innerHTML = '';
+        let total = 0;
+        for (const it of items) {
+          const tr = document.createElement('tr');
+          const line = it.price * it.qty;
+          total += line;
+          tr.innerHTML = '<td>' + escapeHtml(it.name) + '</td><td>' + formatMoneyFromFloat(it.price) + '</td><td>' + it.qty + '</td><td>' + formatMoneyFromFloat(line) + '</td>';
+          tableBody.appendChild(tr);
+        }
+        totalEl.textContent = formatMoneyFromFloat(total);
+        totalEl.title = 'Raw JS number: ' + total;
+      }
+
+      document.getElementById('b-add').addEventListener('click', function(){
+        const name = document.getElementById('b-name').value || 'Item';
+        const priceRaw = document.getElementById('b-price').value.trim();
+        const qty = Number(document.getElementById('b-qty').value) || 1;
+        // parse as float (this is the broken approach)
+        const price = Number(priceRaw);
+        items.push({name, price, qty});
+        render();
+      });
+
+      document.getElementById('b-check').addEventListener('click', function(){
+        const expectedRaw = document.getElementById('b-expected').value.trim();
+        const expected = Number(expectedRaw);
+        // compute total again
+        let total = 0;
+        for (const it of items) total += it.price * it.qty;
+        // Strict equality check
+        const eq = total === expected;
+        checkResult.textContent = 'total === expected ? ' + (eq ? 'true' : 'false') + ' — raw total: ' + total + ' (displayed: ' + formatMoneyFromFloat(total) + ')';
+        checkResult.className = eq ? 'good' : 'bad';
+      });
+
+      // small helper
+      function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+    })();
+
+    // FIXED: integer cents-based cart
+    (function(){
+      const tableBody = document.querySelector('#f-table tbody');
+      const totalEl = document.getElementById('f-total');
+      const checkResult = document.getElementById('f-check-result');
+
+      let items = [];
+
+      // parse dollars.cents string into integer cents robustly
+      function parseDollarsToCents(str) {
+        // Remove currency symbol/commas, trim
+        str = String(str).replace(/[$,]/g,'').trim();
+        if (str === '') return 0;
+        // Use a regular expression to split integer and fractional part
+        const m = /^(-?)(\d*)(?:\.(\d{0,}?)?)?$/.exec(str);
+        if (!m) return NaN;
+        const sign = m[1] === '-' ? -1 : 1;
+        const intPart = m[2] || '0';
+        let frac = (m[3] || '');
+        // pad or cut to 2 decimal places (cents)
+        if (frac.length > 2) frac = frac.slice(0,2); // truncate extra fractional precision (or round if desired)
+        frac = frac.padEnd(2, '0');
+        const cents = sign * (Number(intPart) * 100 + Number(frac));
+        return cents;
+      }
+
+      function render() {
+        tableBody.innerHTML = '';
+        let totalCents = 0;
+        for (const it of items) {
+          const tr = document.createElement('tr');
+          const lineCents = it.cents * it.qty;
+          totalCents += lineCents;
+          tr.innerHTML = '<td>' + escapeHtml(it.name) + '</td><td>' + formatMoneyFromCents(it.cents) + '</td><td>' + it.qty + '</td><td>' + formatMoneyFromCents(lineCents) + '</td>';
+          tableBody.appendChild(tr);
+        }
+        totalEl.textContent = formatMoneyFromCents(totalCents);
+        totalEl.title = 'Total cents (integer): ' + totalCents;
+      }
+
+      document.getElementById('f-add').addEventListener('click', function(){
+        const name = document.getElementById('f-name').value || 'Item';
+        const priceRaw = document.getElementById('f-price').value.trim();
+        const qty = Number(document.getElementById('f-qty').value) || 1;
+        const cents = parseDollarsToCents(priceRaw);
+        if (!Number.isFinite(cents)) {
+          alert('Invalid price');
+          return;
+        }
+        items.push({name, cents, qty});
+        render();
+      });
+
+      document.getElementById('f-check').addEventListener('click', function(){
+        const expectedRaw = document.getElementById('f-expected').value.trim();
+        const expectedCents = parseDollarsToCents(expectedRaw);
+        let totalCents = 0;
+        for (const it of items) totalCents += it.cents * it.qty;
+        const eq = totalCents === expectedCents;
+        checkResult.textContent = 'total_cents === expected_cents ? ' + (eq ? 'true' : 'false') + ' — raw total cents: ' + totalCents + ' (displayed: ' + formatMoneyFromCents(totalCents) + ')';
+        checkResult.className = eq ? 'good' : 'bad';
+      });
+
+      function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+    })();
+
+    // Initialize with sample items to show the difference immediately:
+    document.getElementById('b-add').click();
+    document.getElementById('f-add').click();
+
+    // Extra demonstration: show how float math prints odd value in console and as title
+    (function demoFloatQuirk(){
+      // multiply 4.99 * 3 and show in console
+      const a = 4.99 * 3;
+      // place a small note under broken column (title on total already shows raw number)
+      const note = document.createElement('div');
+      note.style.marginTop = '8px';
+      note.innerHTML = '<span class="muted">Console: 4.99 * 3 = </span><code>' + a + '</code>';
+      document.getElementById('left').appendChild(note);
+      // also add a quick explanation block
+      const ex = document.createElement('div');
+      ex.style.marginTop = '10px';
+      ex.className = 'muted';
+      ex.innerHTML = 'Try editing prices like 0.1, 0.2 and adding them — you will see sums like 0.30000000000000004.';
+      document.getElementById('left').appendChild(ex);
+    })();
+
+  </script>
+
+  <hr>
+
+  <section>
+    <h2 style="font-size:16px; margin-bottom:6px">Short technical explanation</h2>
+    <div class="explain">
+      <p>
+        JavaScript Number uses IEEE-754 double precision binary floating point. Binary floating point cannot exactly represent most decimal fractions (for example 0.1, 0.01, 4.99). When you do arithmetic, tiny rounding errors accumulate, producing results like 14.969999999999999 instead of 14.97. A strict equality comparison (===) compares these exact binary values, so it will say they are different.
+      </p>
+      <p>
+        Safer alternatives for financial amounts:
+        - Represent amounts in the smallest unit (cents) as integers and do all math with integers, converting to dollars only for display. This is what the "Fixed" column demonstrates.
+        - Use a decimal type / arbitrary-precision decimal library (e.g., decimal.js, big.js) or native Decimal if available.
+        - Use integers with BigInt for very large values or when necessary.
+      </p>
+      <p class="muted">
+        Important: rounding policies (round half up, bankers rounding, etc.) and currency subunits matter for taxes, discounts and display. Pick a consistent approach for your domain.
+      </p>
+    </div>
+  </section>
+
+</body>
+</html>

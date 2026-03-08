@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 800px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input, select, button {
+            padding: 8px;
+            margin-right: 10px;
+        }
+        #results {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .explanation {
+            background-color: #e6f7ff;
+            padding: 15px;
+            border-left: 5px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>SQL Injection Demonstration</h1>
+    <p>This demo uses an in-memory JavaScript array as a product database. Enter a search term and select a mode to see how inputs are handled.</p>
+    
+    <form id="searchForm">
+        <label for="mode">Select Mode:</label>
+        <select id="mode">
+            <option value="vulnerable">Vulnerable (String Concatenation)</option>
+            <option value="safe">Safe (Parameterized Filtering)</option>
+        </select><br>
+        
+        <label for="searchTerm">Search Term (e.g., "Lap" or try injecting ".*" in vulnerable mode):</label>
+        <input type="text" id="searchTerm" placeholder="Enter search term"><br>
+        
+        <button type="submit">Search</button>
+    </form>
+    
+    <div id="results"></div>
+    
+    <h2>Explanation of SQL Injection and Parameterized Queries</h2>
+    <div class="explanation">
+        <p><strong>What is SQL Injection?</strong> SQL injection is a security vulnerability that occurs when user input is directly incorporated into SQL queries without proper sanitization. An attacker can manipulate the input to alter the query's intent, potentially accessing, modifying, or deleting data.</p>
+        
+        <p><strong>How This Demo Works:</strong></p>
+        <ul>
+            <li><strong>Vulnerable Mode:</strong> The search term is directly used to construct a regular expression (e.g., <code>new RegExp(searchTerm, 'i')</code>). This mimics string concatenation in SQL queries. If you enter something like ".*", it will match all products, demonstrating how an attacker could bypass filters (similar to injecting "OR 1=1" in SQL). If the input is invalid (e.g., malformed regex), it may result in an error.</li>
+            <li><strong>Safe Mode:</strong> The search term is treated as a literal string using a simple inclusion check (e.g., <code>product.name.toLowerCase().includes(searchTerm.toLowerCase())</code>). This is analogous to using parameterized queries in SQL, where user input is isolated as data, not part of the query logic.</li>
+        </ul>
+        
+        <p><strong>Why Parameterized Approaches Prevent Injection:</strong> In parameterized queries (or prepared statements), user input is sent separately from the query structure. For example, in SQL, you might use: <code>SELECT * FROM products WHERE name LIKE ?</code>, where "?" is a placeholder for the user's input. The database engine treats the input as data, not code, preventing it from altering the query. This demo's safe mode isolates the input similarly, ensuring it can't manipulate the filtering logic. Always use parameterized queries in real applications to avoid SQL injection vulnerabilities.</p>
+        
+        <p><strong>Try It Out:</strong></p>
+        <ul>
+            <li>Search for "Lap" in both modes – it should work as expected.</li>
+            <li>In Vulnerable Mode, try ".*" to see all products (injection simulation).</li>
+            <li>In Safe Mode, ".*" will be treated literally and likely return no results.</li>
+        </ul>
+    </div>
+    
+    <script>
+        // In-memory product database
+        const products = [
+            { id: 1, name: 'Laptop', price: 999 },
+            { id: 2, name: 'Smartphone', price: 499 },
+            { id: 3, name: 'Tablet', price: 299 },
+            { id: 4, name: 'Wireless Mouse', price: 25 }
+        ];
+        
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();  // Prevent form submission
+            
+            const mode = document.getElementById('mode').value;
+            const searchTerm = document.getElementById('searchTerm').value.trim();
+            const resultsDiv = document.getElementById('results');
+            let results = [];
+            
+            if (mode === 'safe') {
+                // Safe mode: Use simple string inclusion (parameterized-like)
+                results = products.filter(product => 
+                    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            } else {  // Vulnerable mode
+                try {
+                    // Vulnerable mode: Directly use input in a regex (simulates string concatenation)
+                    const regex = new RegExp(searchTerm, 'i');  // This can be manipulated
+                    results = products.filter(product => regex.test(product.name));
+                } catch (error) {
+                    resultsDiv.innerHTML = `<h3>Error:</h3><p>The search term caused an error (e.g., invalid regex). This simulates how injection can break queries: ${error.message}</p>`;
+                    return;  // Stop further execution
+                }
+            }
+            
+            // Display results
+            if (results.length > 0) {
+                resultsDiv.innerHTML = `<h3>Results (${results.length} found):</h3>` +
+                    results.map(product => 
+                        `<p>ID: ${product.id}, Name: "${product.name}", Price: $${product.price}</p>`
+                    ).join('');
+            } else {
+                resultsDiv.innerHTML = `<h3>No results found.</h3>`;
+            }
+        });
+    </script>
+</body>
+</html>

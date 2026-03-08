@@ -14,223 +14,368 @@
     padding: 2rem;
   }
 
-  /* ── THEMES ── */
   body.light {
     background: #f0f4f8;
     color: #1a202c;
   }
+
   body.dark {
     background: #1a202c;
     color: #f0f4f8;
   }
 
-  /* ── LAYOUT ── */
   .container {
-    max-width: 900px;
+    max-width: 800px;
     margin: 0 auto;
   }
 
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid currentColor;
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
   }
 
-  h1 { font-size: 1.8rem; }
-  h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+  .subtitle {
+    font-size: 0.95rem;
+    opacity: 0.6;
+    margin-bottom: 2rem;
+  }
 
-  .grid {
+  .cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
 
-  /* ── CARDS ── */
   .card {
-    padding: 1.5rem;
     border-radius: 12px;
-    border: 2px solid;
-    transition: background 0.3s, border-color 0.3s;
+    padding: 1.5rem;
+    transition: background 0.3s, border 0.3s, box-shadow 0.3s;
   }
 
   body.light .card {
     background: #ffffff;
-    border-color: #cbd5e0;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
+
   body.dark .card {
     background: #2d3748;
-    border-color: #4a5568;
+    border: 1px solid #4a5568;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
   }
 
   .card p {
-    font-size: 0.9rem;
-    line-height: 1.6;
-    opacity: 0.8;
+    font-size: 0.875rem;
+    opacity: 0.7;
+    line-height: 1.5;
   }
 
-  /* ── BADGE ── */
-  .badge {
+  .card .badge {
     display: inline-block;
+    font-size: 0.75rem;
     padding: 0.2rem 0.6rem;
     border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    transition: background 0.3s, color 0.3s;
+    margin-top: 0.75rem;
+    font-weight: 600;
   }
 
-  body.light .badge {
-    background: #bee3f8;
-    color: #2b6cb0;
-  }
-  body.dark .badge {
-    background: #2b6cb0;
-    color: #bee3f8;
+  body.light .badge { background: #ebf8ff; color: #2b6cb0; }
+  body.dark  .badge { background: #2c5282; color: #bee3f8; }
+
+  .navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    transition: background 0.3s;
   }
 
-  /* ── TOGGLE BUTTON ── */
+  body.light .navbar { background: #ffffff; border: 1px solid #e2e8f0; }
+  body.dark  .navbar { background: #2d3748; border: 1px solid #4a5568; }
+
+  .nav-links { display: flex; gap: 1.5rem; }
+
+  .nav-links a {
+    text-decoration: none;
+    font-size: 0.9rem;
+    opacity: 0.75;
+    transition: opacity 0.2s;
+    color: inherit;
+  }
+
+  .nav-links a:hover { opacity: 1; }
+
   .toggle-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.6rem 1.2rem;
+    padding: 0.5rem 1.2rem;
+    border: none;
     border-radius: 999px;
-    border: 2px solid currentColor;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    background: transparent;
-    color: inherit;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.3s, color 0.3s, transform 0.1s;
   }
 
-  .toggle-btn:hover {
-    background: currentColor;
-  }
+  .toggle-btn:active { transform: scale(0.96); }
 
-  body.light .toggle-btn:hover { color: #f0f4f8; }
-  body.dark  .toggle-btn:hover { color: #1a202c; }
+  body.light .toggle-btn { background: #1a202c; color: #f0f4f8; }
+  body.dark  .toggle-btn { background: #f0f4f8; color: #1a202c; }
 
-  /* ── FOOTER ── */
-  footer {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid currentColor;
-    font-size: 0.8rem;
-    opacity: 0.6;
-    text-align: center;
-  }
-
-  /* ── STATUS BAR ── */
   .status-bar {
-    padding: 0.75rem 1.25rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: background 0.3s, color 0.3s;
-  }
-
-  body.light .status-bar { background: #c6f6d5; color: #276749; }
-  body.dark  .status-bar { background: #276749; color: #c6f6d5; }
-
-  /* ── CRITIQUE SECTION ── */
-  .critique {
-    padding: 1.5rem;
     border-radius: 12px;
-    border-left: 5px solid #e53e3e;
-    margin-bottom: 1.5rem;
-    transition: background 0.3s;
-  }
-
-  body.light .critique { background: #fff5f5; }
-  body.dark  .critique { background: #2d1f1f; }
-
-  .critique h2 { color: #e53e3e; margin-bottom: 1rem; }
-
-  .critique ul {
-    list-style: none;
+    padding: 1rem 1.5rem;
+    font-size: 0.875rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    transition: background 0.3s;
   }
 
-  .critique ul li::before {
-    content: '✗ ';
-    color: #e53e3e;
-    font-weight: 700;
+  body.light .status-bar { background: #fff5f5; border: 1px solid #fed7d7; color: #742a2a; }
+  body.dark  .status-bar { background: #2d1515; border: 1px solid #742a2a; color: #feb2b2; }
+
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulse 1.5s infinite;
   }
 
-  .critique ul li {
-    font-size: 0.9rem;
-    line-height: 1.5;
+  body.light .dot { background: #e53e3e; }
+  body.dark  .dot { background: #fc8181; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
   }
 
-  /* ── ALTERNATIVES SECTION ── */
-  .alternatives {
-    padding: 1.5rem;
+  .info-box {
     border-radius: 12px;
-    border-left: 5px solid #38a169;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
     transition: background 0.3s;
   }
 
-  body.light .alternatives { background: #f0fff4; }
-  body.dark  .alternatives { background: #1a2e1f; }
+  body.light .info-box { background: #fffff0; border: 1px solid #f6e05e; }
+  body.dark  .info-box { background: #2d2a14; border: 1px solid #b7791f; }
 
-  .alternatives h2 { color: #38a169; margin-bottom: 1rem; }
+  .info-box h3 { margin-bottom: 0.75rem; font-size: 1rem; }
 
-  .alt-item {
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    line-height: 1.5;
+  .info-box ul {
+    padding-left: 1.25rem;
+    font-size: 0.875rem;
+    line-height: 1.9;
+    opacity: 0.85;
   }
 
-  .alt-item strong {
-    display: block;
-    margin-bottom: 0.2rem;
-    font-size: 0.95rem;
+  .counter {
+    font-size: 0.8rem;
+    opacity: 0.5;
+    text-align: right;
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
   }
 
-  body.light .alt-item strong { color: #276749; }
-  body.dark  .alt-item strong { color: #68d391; }
-
-  code {
-    font-family: monospace;
-    font-size: 0.85rem;
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
-    transition: background 0.3s;
+  .instance-warning {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    font-style: italic;
   }
-
-  body.light code { background: #edf2f7; }
-  body.dark  code { background: #4a5568; }
 </style>
 </head>
 <body class="light">
 
 <div class="container">
 
-  <!-- HEADER -->
-  <header>
-    <h1>🔁 Singleton Theme Demo</h1>
-    <button class="toggle-btn" id="mainToggle" onclick="ThemeManager.getInstance().toggle()">
-      🌙 Dark Mode
-    </button>
-  </header>
+  <!-- NAVBAR - subscribes to theme -->
+  <nav class="navbar">
+    <strong>🎨 SingletonDemo</strong>
+    <div class="nav-links">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+    </div>
+    <button class="toggle-btn" id="navToggle">🌙 Dark</button>
+  </nav>
 
-  <!-- STATUS BAR (subscriber 1) -->
-  <div class="status-bar" id="statusBar">
-    ✅ ThemeManager singleton created. Current theme: <strong>light</strong>.
-    Instance ID: <span id="instanceId"></span>
+  <h1>Singleton Theme Manager</h1>
+  <p class="subtitle">One instance. Global state. Junior devs rejoice. Architects weep.</p>
+
+  <!-- STATUS BAR - also subscribes -->
+  <div class="status-bar">
+    <div class="dot"></div>
+    <span id="statusText">Theme: LIGHT — Singleton instance #1 — Toggle count: 0</span>
   </div>
 
-  <!-- CARDS GRID (subscribers 2-4) -->
-  <div class="grid">
+  <!-- CARDS - all react to the same singleton -->
+  <div class="cards">
     <div class="card">
-      <span class="badge">Component A</span>
-      <h2>Navigation Widget</h2>
-      <p>This card has no idea a singleton exists
+      <h2>🧩 Component A</h2>
+      <p>This card reads theme state directly from the singleton. No props. No context. Just global glory.</p>
+      <span class="badge" id="badgeA">light mode</span>
+    </div>
+    <div class="card">
+      <h2>🔌 Component B</h2>
+      <p>Also coupled directly to the singleton. Testing this in isolation? Good luck with that.</p>
+      <span class="badge" id="badgeB">light mode</span>
+    </div>
+    <div class="card">
+      <h2>💣 Component C</h2>
+      <p>A third consumer. The singleton doesn't care how many grab it — it hands out the same instance.</p>
+      <span class="badge" id="badgeC">light mode</span>
+    </div>
+  </div>
+
+  <!-- SECOND TOGGLE to prove single instance -->
+  <div style="text-align:center; margin-bottom:1.5rem;">
+    <button class="toggle-btn" id="cardToggle">🌙 Toggle from down here too</button>
+    <p class="instance-warning" style="margin-top:0.5rem;">
+      Both buttons share the exact same singleton instance
+    </p>
+  </div>
+
+  <p class="counter" id="instanceCounter">Singleton getInstance() called: 0 times</p>
+
+  <!-- WHY SINGLETONS ARE BAD -->
+  <div class="info-box">
+    <h3>⚠️ Why Singletons Are Often Terrible</h3>
+    <ul>
+      <li><strong>Global mutable state</strong> — anything, anywhere can change it with zero traceability</li>
+      <li><strong>Hidden dependencies</strong> — consumers don't declare what they need, they just reach in and grab it</li>
+      <li><strong>Untestable</strong> — you can't inject a mock; the singleton IS the dependency</li>
+      <li><strong>Tight coupling</strong> — every consumer is married to one concrete implementation</li>
+      <li><strong>Concurrency nightmares</strong> — shared mutable state across threads is a race condition waiting to happen</li>
+      <li><strong>Violates SRP</strong> — the class manages its own lifecycle AND its own logic</li>
+      <li><strong>Order-of-initialization bugs</strong> — which singleton initialized first? Nobody knows until it crashes</li>
+      <li><strong>Impossible to reset between tests</strong> — state leaks from one test into the next</li>
+    </ul>
+  </div>
+
+  <div class="info-box">
+    <h3>✅ Better Alternatives</h3>
+    <ul>
+      <li><strong>Dependency Injection</strong> — pass dependencies explicitly; swap them freely; test with mocks</li>
+      <li><strong>React Context / Provide-Inject</strong> — scoped, declarative, framework-native state sharing</li>
+      <li><strong>Module-level constants</strong> — if the value truly never changes, a plain exported const is simpler and honest</li>
+      <li><strong>Service Locator (with caution)</strong> — at least centralises the registry; still has hidden-dependency smell</li>
+      <li><strong>Event Bus / Pub-Sub</strong> — decoupled communication without shared state ownership</li>
+      <li><strong>State management libraries</strong> — Redux, Zustand, Pinia — explicit, traceable, devtools-friendly</li>
+      <li><strong>Composition Root</strong> — wire everything together at startup; nothing self-instantiates</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  // ─────────────────────────────────────────────
+  //  THE SINGLETON
+  //  Classic lazy-initialisation pattern.
+  //  One instance. Ever. Global. Proud of nothing.
+  // ─────────────────────────────────────────────
+  const ThemeManager = (() => {
+    let instance = null;
+    let getInstanceCallCount = 0;
+
+    class _ThemeManager {
+      constructor() {
+        this.theme        = 'light';
+        this.toggleCount  = 0;
+        this.subscribers  = [];
+        console.warn(
+          '[ThemeManager] Instance created. ' +
+          'If you see this more than once, something is very wrong.'
+        );
+      }
+
+      // Any module can subscribe — hidden coupling at its finest
+      subscribe(fn) {
+        this.subscribers.push(fn);
+      }
+
+      toggle() {
+        this.theme = this.theme === 'light' ? 'dark' : 'light';
+        this.toggleCount++;
+        this._notify();
+      }
+
+      _notify() {
+        this.subscribers.forEach(fn => fn(this.theme, this.toggleCount));
+      }
+
+      getTheme()       { return this.theme;       }
+      getToggleCount() { return this.toggleCount; }
+    }
+
+    return {
+      getInstance() {
+        getInstanceCallCount++;
+        // Update the counter display every time getInstance is called
+        const el = document.getElementById('instanceCounter');
+        if (el) el.textContent =
+          `Singleton getInstance() called: ${getInstanceCallCount} times`;
+
+        if (!instance) {
+          instance = new _ThemeManager();
+        }
+        return instance;
+      }
+    };
+  })();
+
+  // ─────────────────────────────────────────────
+  //  CONSUMERS
+  //  Each grabs the singleton independently.
+  //  They don't know about each other.
+  //  They don't need to. That's the problem.
+  // ─────────────────────────────────────────────
+
+  // Consumer 1 — Navbar toggle button
+  const navToggle = document.getElementById('navToggle');
+  navToggle.addEventListener('click', () => {
+    ThemeManager.getInstance().toggle();
+  });
+
+  // Consumer 2 — Card section toggle button
+  const cardToggle = document.getElementById('cardToggle');
+  cardToggle.addEventListener('click', () => {
+    ThemeManager.getInstance().toggle();
+  });
+
+  // Consumer 3 — Body / global theme applier
+  ThemeManager.getInstance().subscribe((theme, count) => {
+    document.body.className = theme;
+  });
+
+  // Consumer 4 — Button label updater
+  ThemeManager.getInstance().subscribe((theme) => {
+    const label = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    navToggle.textContent  = label;
+    cardToggle.textContent = label + ' Toggle from down here too';
+  });
+
+  // Consumer 5 — Status bar
+  ThemeManager.getInstance().subscribe((theme, count) => {
+    document.getElementById('statusText').textContent =
+      `Theme: ${theme.toUpperCase()} — Singleton instance #1 — Toggle count: ${count}`;
+  });
+
+  // Consumer 6, 7, 8 — Individual card badges
+  ThemeManager.getInstance().subscribe((theme) => {
+    ['badgeA', 'badgeB', 'badgeC'].forEach(id => {
+      document.getElementById(id).textContent = theme + ' mode';
+    });
+  });
+</script>
+</body>
+</html>

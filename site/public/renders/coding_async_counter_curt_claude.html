@@ -1,229 +1,791 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Race Condition Counter Demo</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race Condition Demo: Counter Widget</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0f1117;
-      color: #e0e0e0;
-      min-height: 100vh;
-      padding: 24px 16px;
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  .panels {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+
+  .panel {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 28px;
+    width: 340px;
+    border: 1px solid #2a2a4a;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+
+  .panel.buggy::before  { background: linear-gradient(90deg, #ff4444, #ff8800); }
+  .panel.fixed::before  { background: linear-gradient(90deg, #00cc66, #00aaff); }
+
+  .panel-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel.buggy  .panel-title { color: #ff6b6b; }
+  .panel.fixed  .panel-title { color: #6bcb77; }
+
+  .panel-desc {
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+
+  .counter-display {
+    background: #0f0f1a;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 18px;
+    border: 1px solid #2a2a4a;
+    position: relative;
+  }
+
+  .count-value {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    transition: transform 0.1s ease;
+  }
+
+  .panel.buggy  .count-value { color: #ff6b6b; }
+  .panel.fixed  .count-value { color: #6bcb77; }
+
+  .count-value.bump {
+    transform: scale(1.2);
+  }
+
+  .count-label {
+    font-size: 0.75rem;
+    color: #555;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .pending-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: #ff8800;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .pending-badge.visible { opacity: 1; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.1s, box-shadow 0.1s;
+    user-select: none;
+  }
+
+  .btn:active { transform: scale(0.94); }
+
+  .panel.buggy  .btn-inc { background: linear-gradient(135deg, #ff4444, #ff8800); color: #fff; }
+  .panel.buggy  .btn-dec { background: linear-gradient(135deg, #cc0000, #880000); color: #fff; }
+  .panel.fixed  .btn-inc { background: linear-gradient(135deg, #00cc66, #00aaff); color: #fff; }
+  .panel.fixed  .btn-dec { background: linear-gradient(135deg, #007744, #004488); color: #fff; }
+
+  .btn-reset {
+    width: 100%;
+    padding: 9px 0;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #22223a;
+    color: #aaa;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 14px;
+  }
+  .btn-reset:hover { background: #2e2e4e; color: #ddd; }
+
+  .stats {
+    background: #0f0f1a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    color: #666;
+    border: 1px solid #1e1e3a;
+    line-height: 1.8;
+  }
+
+  .stats span { color: #aaa; font-weight: 600; }
+  .stats .warn { color: #ff8800; }
+  .stats .ok   { color: #6bcb77; }
+
+  /* Log panel */
+  .log-panel {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 724px;
+    margin: 0 auto 30px;
+    border: 1px solid #2a2a4a;
+  }
+
+  .log-panel h2 {
+    font-size: 1rem;
+    color: #aaa;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .log-box {
+    background: #0a0a14;
+    border-radius: 8px;
+    padding: 12px;
+    height: 140px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    border: 1px solid #1e1e3a;
+  }
+
+  .log-box::-webkit-scrollbar { width: 4px; }
+  .log-box::-webkit-scrollbar-track { background: #0a0a14; }
+  .log-box::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+  .log-entry { margin-bottom: 1px; }
+  .log-entry.buggy-log { color: #ff8866; }
+  .log-entry.fixed-log { color: #66ff99; }
+  .log-entry.race      { color: #ffdd44; font-weight: bold; }
+  .log-entry.info      { color: #4488ff; }
+
+  /* Explanation */
+  .explanation {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 724px;
+    margin: 0 auto 30px;
+    border: 1px solid #2a2a4a;
+  }
+
+  .explanation h2 {
+    font-size: 1.1rem;
+    color: #ffd93d;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media(max-width: 600px) {
+    .exp-grid { grid-template-columns: 1fr; }
+    .panels { flex-direction: column; align-items: center; }
+  }
+
+  .exp-box {
+    background: #0f0f1a;
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 3px solid;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: #bbb;
+  }
+
+  .exp-box.bug-box  { border-color: #ff4444; }
+  .exp-box.fix-box  { border-color: #00cc66; }
+
+  .exp-box h3 {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+
+  .exp-box.bug-box h3 { color: #ff6b6b; }
+  .exp-box.fix-box h3 { color: #6bcb77; }
+
+  .code-snippet {
+    background: #0a0a14;
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    margin-top: 16px;
+    border: 1px solid #1e1e3a;
+    overflow-x: auto;
+    white-space: pre;
+    color: #ccc;
+  }
+
+  .code-snippet .kw  { color: #cc99ff; }
+  .code-snippet .fn  { color: #66d9ef; }
+  .code-snippet .str { color: #a8ff78; }
+  .code-snippet .cm  { color: #555; font-style: italic; }
+  .code-snippet .bad { color: #ff6b6b; background: rgba(255,80,80,0.1); border-radius: 3px; padding: 0 2px; }
+  .code-snippet .good{ color: #6bcb77; background: rgba(80,255,120,0.1); border-radius: 3px; padding: 0 2px; }
+
+  /* Timeline visualizer */
+  .timeline-section {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 724px;
+    margin: 0 auto 30px;
+    border: 1px solid #2a2a4a;
+  }
+
+  .timeline-section h2 {
+    font-size: 1rem;
+    color: #aaa;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #timeline-canvas {
+    width: 100%;
+    height: 120px;
+    border-radius: 8px;
+    background: #0a0a14;
+    border: 1px solid #1e1e3a;
+    display: block;
+  }
+
+  .tl-legend {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    color: #666;
+    flex-wrap: wrap;
+  }
+
+  .tl-legend span { display: flex; align-items: center; gap: 5px; }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  .stress-btn {
+    display: block;
+    margin: 0 auto 10px;
+    padding: 10px 28px;
+    background: linear-gradient(135deg, #ff4444, #ff8800);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  .stress-btn:hover { opacity: 0.9; }
+  .stress-btn:active { transform: scale(0.96); }
+
+  .footer {
+    text-align: center;
+    color: #444;
+    font-size: 0.75rem;
+    padding-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1>⚡ Race Condition: Counter Widget</h1>
+<p class="subtitle">Rapid clicks expose async read-modify-write conflicts — click fast to see the bug!</p>
+
+<!-- COUNTER PANELS -->
+<div class="panels">
+
+  <!-- BUGGY PANEL -->
+  <div class="panel buggy">
+    <div class="panel-title">🐛 Buggy Counter</div>
+    <p class="panel-desc">Uses setTimeout to simulate async work. Each click reads the current count, waits, then writes back — causing stale reads on rapid clicks.</p>
+    <div class="counter-display">
+      <div class="pending-badge" id="buggy-pending">⏳ pending ops</div>
+      <div class="count-value" id="buggy-count">0</div>
+      <div class="count-label">current count</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-inc" onclick="buggyIncrement()">＋ Increment</button>
+      <button class="btn btn-dec" onclick="buggyDecrement()">－ Decrement</button>
+    </div>
+    <button class="btn-reset" onclick="buggyReset()">↺ Reset</button>
+    <div class="stats" id="buggy-stats">
+      <div>Expected: <span id="buggy-expected">0</span></div>
+      <div>Displayed: <span id="buggy-displayed">0</span></div>
+      <div>Lost updates: <span class="warn" id="buggy-lost">0</span></div>
+      <div>Pending ops: <span id="buggy-pending-count">0</span></div>
+    </div>
+  </div>
+
+  <!-- FIXED PANEL -->
+  <div class="panel fixed">
+    <div class="panel-title">✅ Fixed Counter</div>
+    <p class="panel-desc">Uses a queue + sequential processing so each async operation completes before the next one reads the shared state. No stale reads.</p>
+    <div class="counter-display">
+      <div class="pending-badge" id="fixed-pending" style="background:#00cc66">⏳ processing</div>
+      <div class="count-value" id="fixed-count">0</div>
+      <div class="count-label">current count</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-inc" onclick="fixedIncrement()">＋ Increment</button>
+      <button class="btn btn-dec" onclick="fixedDecrement()">－ Decrement</button>
+    </div>
+    <button class="btn-reset" onclick="fixedReset()">↺ Reset</button>
+    <div class="stats" id="fixed-stats">
+      <div>Expected: <span id="fixed-expected">0</span></div>
+      <div>Displayed: <span id="fixed-count-stat">0</span></div>
+      <div>Lost updates: <span class="ok" id="fixed-lost">0</span></div>
+      <div>Pending ops: <span id="fixed-pending-count">0</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STRESS TEST -->
+<div style="text-align:center; margin-bottom: 20px;">
+  <button class="stress-btn" onclick="stressTest()">🔥 Stress Test (20 rapid clicks on both)</button>
+</div>
+
+<!-- LIVE LOG -->
+<div class="log-panel">
+  <h2>📋 Live Operation Log <span style="font-size:0.75rem;color:#555;font-weight:400;">(most recent at bottom)</span>
+    <button onclick="clearLog()" style="margin-left:auto;background:#22223a;border:1px solid #333;color:#888;padding:3px 10px;border-radius:6px;cursor:pointer;font-size:0.72rem;">Clear</button>
+  </h2>
+  <div class="log-box" id="log-box"></div>
+</div>
+
+<!-- TIMELINE -->
+<div class="timeline-section">
+  <h2>⏱️ Async Operation Timeline</h2>
+  <canvas id="timeline-canvas"></canvas>
+  <div class="tl-legend">
+    <span><span class="tl-dot" style="background:#ff6b6b"></span> Buggy op (start)</span>
+    <span><span class="tl-dot" style="background:#ff8800"></span> Buggy op (commit)</span>
+    <span><span class="tl-dot" style="background:#6bcb77"></span> Fixed op (start)</span>
+    <span><span class="tl-dot" style="background:#00aaff"></span> Fixed op (commit)</span>
+    <span><span class="tl-dot" style="background:#ffdd44"></span> Race detected</span>
+  </div>
+</div>
+
+<!-- EXPLANATION -->
+<div class="explanation">
+  <h2>🔍 What's Happening & Why</h2>
+  <div class="exp-grid">
+    <div class="exp-box bug-box">
+      <h3>🐛 The Race Condition</h3>
+      When you click rapidly, multiple async operations launch concurrently.
+      Each one <b>reads</b> the count at click-time (e.g. 5), waits 200ms,
+      then <b>writes</b> count+1 (6). If 3 clicks happen before any write
+      completes, all 3 read <b>5</b> and all write <b>6</b> — you lose 2 updates.
+      <br><br>
+      This is a classic <b>read-modify-write</b> race on shared mutable state.
+    </div>
+    <div class="exp-box fix-box">
+      <h3>✅ The Fix: Operation Queue</h3>
+      Instead of reading state immediately, each click enqueues a <b>delta</b>
+      (+1 or -1). A single processor dequeues one operation at a time,
+      applies it, updates the display, then picks the next — fully sequential.
+      <br><br>
+      No two operations ever overlap, so there are <b>no stale reads</b>.
+      Every click is guaranteed to be applied exactly once.
+    </div>
+  </div>
+
+  <div class="code-snippet"><span class="cm">// ❌ BUGGY — concurrent async read-modify-write</span>
+<span class="kw">async function</span> <span class="fn">buggyIncrement</span>() {
+  <span class="kw">const</span> snapshot = <span class="bad">count</span>;          <span class="cm">// read shared state NOW</span>
+  <span class="kw">await</span> <span class="fn">delay</span>(200);              <span class="cm">// other clicks run here!</span>
+  <span class="bad">count</span> = snapshot + 1;         <span class="cm">// write STALE value back</span>
+  display(<span class="bad">count</span>);
+}
+
+<span class="cm">// ✅ FIXED — sequential queue, delta-based</span>
+<span class="kw">const</span> queue = [];
+<span class="kw">let</span> processing = <span class="kw">false</span>;
+
+<span class="kw">function</span> <span class="fn">fixedIncrement</span>() {
+  queue.<span class="fn">push</span>(+1);              <span class="cm">// enqueue a delta, not a snapshot</span>
+  <span class="fn">processQueue</span>();
+}
+
+<span class="kw">async function</span> <span class="fn">processQueue</span>() {
+  <span class="kw">if</span> (processing) <span class="kw">return</span>;      <span class="cm">// only one processor at a time</span>
+  processing = <span class="kw">true</span>;
+  <span class="kw">while</span> (queue.length > 0) {
+    <span class="kw">const</span> delta = queue.<span class="fn">shift</span>();
+    <span class="kw">await</span> <span class="fn">delay</span>(200);
+    <span class="good">count</span> += delta;             <span class="cm">// always reads fresh state</span>
+    display(<span class="good">count</span>);
+  }
+  processing = <span class="kw">false</span>;
+}</div>
+</div>
+
+<p class="footer">Race Condition Demo — Educational purposes. Open DevTools console for extra detail.</p>
+
+<script>
+// ─────────────────────────────────────────────
+//  SHARED UTILITIES
+// ─────────────────────────────────────────────
+const DELAY_MS = 250;
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+let logEntries = [];
+function log(msg, cls = 'info') {
+  const box = document.getElementById('log-box');
+  const ts = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', fractionalSecondDigits:2});
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${cls}`;
+  entry.textContent = `[${ts}] ${msg}`;
+  box.appendChild(entry);
+  box.scrollTop = box.scrollHeight;
+  // keep max 200 entries
+  while (box.children.length > 200) box.removeChild(box.firstChild);
+}
+
+function clearLog() {
+  document.getElementById('log-box').innerHTML = '';
+}
+
+function bumpAnimation(el) {
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+  setTimeout(() => el.classList.remove('bump'), 150);
+}
+
+// ─────────────────────────────────────────────
+//  TIMELINE VISUALIZER
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('timeline-canvas');
+const ctx = canvas.getContext('2d');
+const tlEvents = [];
+const TL_WINDOW = 6000; // show last 6 seconds
+
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function addTLEvent(type, value) {
+  tlEvents.push({ t: Date.now(), type, value });
+  if (tlEvents.length > 500) tlEvents.shift();
+}
+
+const TL_COLORS = {
+  buggy_start:  '#ff6b6b',
+  buggy_commit: '#ff8800',
+  fixed_start:  '#6bcb77',
+  fixed_commit: '#00aaff',
+  race:         '#ffdd44',
+};
+
+function drawTimeline() {
+  const W = canvas.offsetWidth;
+  const H = canvas.offsetHeight;
+  ctx.clearRect(0, 0, W, H);
+
+  // background grid
+  ctx.strokeStyle = '#1e1e3a';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 60) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+
+  // center line
+  ctx.strokeStyle = '#2a2a4a';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+
+  // labels
+  ctx.fillStyle = '#333';
+  ctx.font = '10px monospace';
+  ctx.fillText('BUGGY', 4, 14);
+  ctx.fillText('FIXED', 4, H - 4);
+
+  const now = Date.now();
+  tlEvents.forEach(ev => {
+    const age = now - ev.t;
+    if (age > TL_WINDOW) return;
+    const x = W - (age / TL_WINDOW) * W;
+    const isBuggy = ev.type.startsWith('buggy') || ev.type === 'race';
+    const y = isBuggy ? H * 0.28 : H * 0.72;
+    const color = TL_COLORS[ev.type] || '#888';
+    const r = ev.type === 'race' ? 7 : 5;
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    if (ev.type === 'race') {
+      ctx.strokeStyle = '#ffdd44';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#ffdd44';
+      ctx.font = 'bold 9px monospace';
+      ctx.fillText('RACE!', x + 8, y - 4);
     }
 
-    h1 {
-      text-align: center;
-      font-size: 1.8rem;
-      margin-bottom: 6px;
-      color: #fff;
-      letter-spacing: 1px;
-    }
+    // value label
+    ctx.fillStyle = color;
+    ctx.font = '9px monospace';
+    ctx.fillText(ev.value !== undefined ? ev.value : '', x - 6, y + 18);
+  });
 
-    .subtitle {
-      text-align: center;
-      color: #888;
-      font-size: 0.95rem;
-      margin-bottom: 28px;
-    }
+  requestAnimationFrame(drawTimeline);
+}
+drawTimeline();
 
-    /* ── Layout ── */
-    .panels {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 32px;
-    }
+// ─────────────────────────────────────────────
+//  BUGGY COUNTER
+// ─────────────────────────────────────────────
+let buggyCount = 0;
+let buggyExpected = 0;
+let buggyLost = 0;
+let buggyPendingOps = 0;
 
-    .panel {
-      background: #1a1d27;
-      border-radius: 16px;
-      padding: 28px 24px;
-      width: 340px;
-      border: 2px solid transparent;
-      transition: border-color 0.3s;
-    }
+function updateBuggyDisplay() {
+  const el = document.getElementById('buggy-count');
+  el.textContent = buggyCount;
+  bumpAnimation(el);
+  document.getElementById('buggy-displayed').textContent = buggyCount;
+  document.getElementById('buggy-expected').textContent = buggyExpected;
+  document.getElementById('buggy-lost').textContent = buggyLost;
+  document.getElementById('buggy-pending-count').textContent = buggyPendingOps;
+  const badge = document.getElementById('buggy-pending');
+  badge.classList.toggle('visible', buggyPendingOps > 0);
+}
 
-    .panel.buggy  { border-color: #ff4757; }
-    .panel.fixed  { border-color: #2ed573; }
+async function buggyUpdate(delta) {
+  buggyPendingOps++;
+  updateBuggyDisplay();
 
-    .panel-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+  // ❌ READ shared state right now (stale if other ops are in flight)
+  const snapshot = buggyCount;
+  const opId = Math.random().toString(36).slice(2,6);
 
-    .panel.buggy .panel-title { color: #ff4757; }
-    .panel.fixed .panel-title { color: #2ed573; }
+  addTLEvent('buggy_start', snapshot);
+  log(`[BUGGY #${opId}] READ count=${snapshot}, delta=${delta > 0 ? '+' : ''}${delta}`, 'buggy-log');
 
-    .badge {
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
+  await delay(DELAY_MS);
 
-    .badge.bug  { background: #ff475733; color: #ff4757; border: 1px solid #ff4757; }
-    .badge.ok   { background: #2ed57333; color: #2ed573; border: 1px solid #2ed573; }
+  // ❌ WRITE back stale value
+  const newVal = snapshot + delta;
+  const actualExpected = buggyCount + delta; // what it should be
 
-    .panel-desc {
-      font-size: 0.8rem;
-      color: #777;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
+  if (newVal !== actualExpected) {
+    buggyLost++;
+    addTLEvent('race', newVal);
+    log(`[BUGGY #${opId}] ⚠️ RACE! Writing ${newVal} but count is now ${buggyCount} (expected ${actualExpected})`, 'race');
+    console.warn(`Race condition detected! Wrote ${newVal}, should be ${actualExpected}`);
+  } else {
+    addTLEvent('buggy_commit', newVal);
+    log(`[BUGGY #${opId}] WRITE count=${newVal}`, 'buggy-log');
+  }
 
-    /* ── Counter display ── */
-    .counter-display {
-      background: #12141e;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 16px;
-      position: relative;
-      overflow: hidden;
-    }
+  buggyCount = newVal;
+  buggyPendingOps--;
+  updateBuggyDisplay();
+}
 
-    .count-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #555;
-      margin-bottom: 6px;
-    }
+function buggyIncrement() {
+  buggyExpected++;
+  buggyUpdate(+1);
+  updateBuggyDisplay();
+}
 
-    .count-value {
-      font-size: 4rem;
-      font-weight: 800;
-      line-height: 1;
-      transition: transform 0.1s, color 0.3s;
-    }
+function buggyDecrement() {
+  buggyExpected--;
+  buggyUpdate(-1);
+  updateBuggyDisplay();
+}
 
-    .panel.buggy  .count-value { color: #ff6b81; }
-    .panel.fixed  .count-value { color: #7bed9f; }
+function buggyReset() {
+  buggyCount = 0;
+  buggyExpected = 0;
+  buggyLost = 0;
+  buggyPendingOps = 0;
+  updateBuggyDisplay();
+  log('[BUGGY] Reset', 'info');
+}
 
-    .count-value.bump {
-      transform: scale(1.25);
-    }
+// ─────────────────────────────────────────────
+//  FIXED COUNTER
+// ─────────────────────────────────────────────
+let fixedCount = 0;
+let fixedExpected = 0;
+let fixedLost = 0;
+let fixedQueue = [];
+let fixedProcessing = false;
 
-    .expected-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.78rem;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #1e2030;
-    }
+function updateFixedDisplay() {
+  const el = document.getElementById('fixed-count');
+  el.textContent = fixedCount;
+  bumpAnimation(el);
+  document.getElementById('fixed-count-stat').textContent = fixedCount;
+  document.getElementById('fixed-expected').textContent = fixedExpected;
+  document.getElementById('fixed-lost').textContent = fixedLost;
+  document.getElementById('fixed-pending-count').textContent = fixedQueue.length;
+  const badge = document.getElementById('fixed-pending');
+  badge.classList.toggle('visible', fixedQueue.length > 0 || fixedProcessing);
+}
 
-    .expected-label { color: #555; }
+async function processFixedQueue() {
+  if (fixedProcessing) return;
+  fixedProcessing = true;
 
-    .expected-value { font-weight: 700; }
+  while (fixedQueue.length > 0) {
+    const { delta, opId } = fixedQueue.shift();
+    updateFixedDisplay();
 
-    .drift {
-      font-size: 0.72rem;
-      margin-top: 6px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      display: inline-block;
-    }
+    // ✅ READ fresh state (no concurrent ops can run here)
+    const before = fixedCount;
+    addTLEvent('fixed_start', before);
+    log(`[FIXED  #${opId}] READ count=${before}, delta=${delta > 0 ? '+' : ''}${delta}`, 'fixed-log');
 
-    .drift.ok   { background: #2ed57322; color: #2ed573; }
-    .drift.warn { background: #ff475722; color: #ff4757; }
+    await delay(DELAY_MS);
 
-    /* ── Buttons ── */
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
+    // ✅ WRITE — state is guaranteed fresh, no other op ran during wait
+    fixedCount += delta;
+    addTLEvent('fixed_commit', fixedCount);
+    log(`[FIXED  #${opId}] WRITE count=${fixedCount} ✓`, 'fixed-log');
+    updateFixedDisplay();
+  }
 
-    .btn {
-      flex: 1;
-      padding: 11px 0;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-      letter-spacing: 0.5px;
-    }
+  fixedProcessing = false;
+  updateFixedDisplay();
+}
 
-    .btn:active { transform: scale(0.96); }
+function fixedIncrement() {
+  fixedExpected++;
+  const opId = Math.random().toString(36).slice(2,6);
+  fixedQueue.push({ delta: +1, opId });
+  updateFixedDisplay();
+  processFixedQueue();
+}
 
-    .btn-inc.buggy-btn  { background: #ff4757; color: #fff; }
-    .btn-inc.fixed-btn  { background: #2ed573; color: #111; }
+function fixedDecrement() {
+  fixedExpected--;
+  const opId = Math.random().toString(36).slice(2,6);
+  fixedQueue.push({ delta: -1, opId });
+  updateFixedDisplay();
+  processFixedQueue();
+}
 
-    .btn-reset {
-      background: #2a2d3e;
-      color: #888;
-      font-size: 0.85rem;
-      flex: 0 0 70px;
-    }
+function fixedReset() {
+  fixedCount = 0;
+  fixedExpected = 0;
+  fixedLost = 0;
+  fixedQueue = [];
+  fixedProcessing = false;
+  updateFixedDisplay();
+  log('[FIXED] Reset', 'info');
+}
 
-    .btn-spam {
-      width: 100%;
-      padding: 9px 0;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.15s;
-      letter-spacing: 0.5px;
-      margin-bottom: 14px;
-    }
+// ─────────────────────────────────────────────
+//  STRESS TEST
+// ─────────────────────────────────────────────
+async function stressTest() {
+  log('═══ STRESS TEST START (20 increments on each) ═══', 'info');
+  buggyReset();
+  fixedReset();
 
-    .btn-spam.buggy-spam { background: #ff475722; color: #ff6b81; border: 1px solid #ff4757; }
-    .btn-spam.fixed-spam { background: #2ed57322; color: #7bed9f; border: 1px solid #2ed573; }
+  const clicks = 20;
+  for (let i = 0; i < clicks; i++) {
+    setTimeout(() => {
+      buggyIncrement();
+      fixedIncrement();
+    }, i * 30); // 30ms apart — faster than DELAY_MS so they overlap
+  }
 
-    /* ── Activity log ── */
-    .log-title {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #444;
-      margin-bottom: 6px;
-    }
+  // Check results after all should be done
+  setTimeout(() => {
+    log(`═══ STRESS TEST RESULTS ═══`, 'info');
+    log(`BUGGY: expected=${buggyExpected}, got=${buggyCount}, lost=${buggyLost}`, buggyLost > 0 ? 'race' : 'fixed-log');
+    log(`FIXED: expected=${fixedExpected}, got=${fixedCount}, lost=${fixedLost}`, 'fixed-log');
+  }, clicks * 30 + DELAY_MS * 3 + 500);
+}
 
-    .log-box {
-      background: #12141e;
-      border-radius: 8px;
-      padding: 10px;
-      height: 110px;
-      overflow-y: auto;
-      font-size: 0.72rem;
-      font-family: 'Courier New', monospace;
-      line-height: 1.6;
-    }
-
-    .log-box::-webkit-scrollbar { width: 4px; }
-    .log-box::-webkit-scrollbar-track { background: transparent; }
-    .log-box::-webkit-scrollbar-thumb { background: #2a2d3e; border-radius: 4px; }
-
-    .log-entry { color: #555; }
-    .log-entry.race  { color: #ff6b81; }
-    .log-entry.write { color: #7bed9f; }
-    .log-entry.read  { color: #ffa502; }
-    .log-entry.info  { color: #70a1ff; }
-
-    /* ── Explanation ── */
-    .explanation {
-      max-width: 720px;
-      margin: 0 auto 32px;
-      background: #1a1d27;
-      border-radius: 16px;
-      padding: 28px 28px;
-      border: 1px solid #2a2d3e;
-    }
-
-    .explanation h2 {
-      font-size: 1
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+updateBuggyDisplay();
+updateFixedDisplay();
+log('Demo ready — click buttons rapidly to see the race condition!', 'info');
+</script>
+</body>
+</html>

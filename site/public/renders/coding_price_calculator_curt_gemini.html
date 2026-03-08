@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart: Float Arithmetic Pitfalls</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { display: flex; flex-wrap: wrap; gap: 30px; max-width: 1200px; margin: auto; }
+        .column { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1, h2 { color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        h3 { color: #d9534f; margin-top: 25px; }
+        h3.fixed { color: #5cb85c; }
+        input[type="text"], input[type="number"] { padding: 8px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .item-list { border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; }
+        .item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; }
+        .total { font-weight: bold; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; font-size: 1.1em; }
+        .comparison-result { margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .comparison-result.fail { background-color: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+        .comparison-result.pass { background-color: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .explanation { background-color: #e9f7fe; border-left: 5px solid #007bff; padding: 15px; margin-top: 30px; border-radius: 4px; }
+        .explanation p { margin-bottom: 10px; }
+        .explanation code { background-color: #e0e0e0; padding: 2px 4px; border-radius: 3px; }
+        .note { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 10px; margin-top: 20px; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart: The Perils of Float Arithmetic</h1>
+
+    <div class="container">
+        <!-- Item Input Section -->
+        <div class="column" style="flex: 0 0 100%;">
+            <h2>Add Items to Cart</h2>
+            <p>Enter item name and its price (e.g., 4.99, 10.00):</p>
+            <input type="text" id="itemName" placeholder="Item Name" value="Fancy Gadget">
+            <input type="number" id="itemPrice" step="0.01" placeholder="Price (e.g., 4.99)" value="4.99">
+            <button onclick="addItem()">Add Item</button>
+            <hr style="margin-top: 20px;">
+            <p><strong>Common Prices to Test:</strong></p>
+            <ul>
+                <li><code>0.1 + 0.2</code> (should be 0.3, but often isn't)</li>
+                <li><code>4.99</code> (multiple times)</li>
+                <li><code>10.00</code></li>
+                <li><code>0.01</code></li>
+            </ul>
+            <div class="note">
+                Try adding "Item A" at 0.10, "Item B" at 0.20. Then observe the "Broken Total".
+                Then try adding "Item C" at 4.99, "Item D" at 4.99.
+                Observe how the comparison to 9.98 might fail in the broken version.
+            </div>
+        </div>
+
+        <!-- Broken Version Column -->
+        <div class="column">
+            <h2 style="color: #d9534f;">Broken Version (Direct Float Arithmetic)</h2>
+            <p>This version directly uses JavaScript's default floating-point numbers for calculations and comparisons.</p>
+            <h3>Shopping Cart Items</h3>
+            <div id="brokenCartItems" class="item-list">
+                <!-- Items will be added here -->
+            </div>
+            <div id="brokenTotal" class="total">
+                Total: $0.00
+            </div>
+            <h3>Comparison Example: Discount Check</h3>
+            <p>Is the total exactly <strong>$9.98</strong> for a special discount?</p>
+            <div id="brokenComparison" class="comparison-result">
+                Checking...
+            </div>
+        </div>
+
+        <!-- Fixed Version Column -->
+        <div class="column">
+            <h2 style="color: #5cb85c;">Fixed Version (Using Integers/Scaled Values)</h2>
+            <p>This version converts prices to cents (integers) for calculations to avoid float errors, then converts back for display.</p>
+            <h3>Shopping Cart Items</h3>
+            <div id="fixedCartItems" class="item-list">
+                <!-- Items will be added here -->
+            </div>
+            <div id="fixedTotal" class="total">
+                Total: $0.00
+            </div>
+            <h3>Comparison Example: Discount Check</h3>
+            <p>Is the total exactly <strong>$9.98</strong> for a special discount?</p>
+            <div id="fixedComparison" class="comparison-result">
+                Checking...
+            </div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h2>Why Float Equality Fails for Financial Calculations</h2>
+        <p>JavaScript (and most programming languages) uses the IEEE 754 standard for representing floating-point numbers (<code>number</code> type). This standard represents numbers in binary, which can perfectly represent numbers like 0.5 (1/2) or 0.25 (1/4).</p>
+        <p>However, many common decimal fractions, like 0.1 (1/10), 0.2 (2/10), or 0.99 (99/100), cannot be represented exactly in binary. They become repeating fractions, similar to how 1/3 is 0.333... in decimal. When these numbers are stored, they are rounded to the nearest representable binary fraction, leading to tiny inaccuracies.</p>
+        <p>For example, <code>0.1 + 0.2</code> in JavaScript doesn't equal <code>0.3</code>. It equals <code>0.30000000000000004</code>. If you then compare <code>(0.1 + 0.2) === 0.3</code>, it will evaluate to <code>false</code>.</p>
+        <p>In financial calculations:</p>
+        <ul>
+            <li><strong>Totals:</strong> Accumulating these small errors can lead to a final total that is off by a tiny fraction of a cent, which can be significant in large-scale systems.</li>
+            <li><strong>Comparisons:</strong> Using <code>===</code> for equality checks (e.g., "is the total exactly $9.98?") will often fail unexpectedly because the "target" number ($9.98) might be represented as <code>9.979999999999999</code> or <code>9.980000000000001</code> after calculations, making it not strictly equal to <code>9.98</code>.</li>
+        </ul>
+        <h3>The Solution: Work with Integers (Cents)</h3>
+        <p>The standard practice for financial calculations is to avoid floating-point numbers where precision is critical. Instead, represent monetary values as integers by scaling them up (e.g., store $4.99 as 499 cents). All calculations are then performed using these integers, which are exact.</p>
+        <p>When displaying values to the user, convert the integer cents back to dollars and format them appropriately (e.g., <code>(499 / 100).toFixed(2)</code>).</p>
+        <p>This approach guarantees accuracy for sums, subtractions, and comparisons, eliminating the subtle bugs caused by floating-point inaccuracies.</p>
+        <p>For very complex financial systems or extremely large numbers, specialized libraries like <a href="https://mikemcl.github.io/decimal.js/" target="_blank">Decimal.js</a> or <a href="https://github.com/MikeMcl/big.js/" target="_blank">Big.js</a> (which work with arbitrary-precision decimals) or even JavaScript's native <code>BigInt</code> for whole numbers of cents are used.</p>
+    </div>
+
+    <script>
+        let brokenCartItems = []; // Stores prices as floats
+        let fixedCartItems = [];  // Stores prices as integers (cents)
+
+        const discountThreshold = 9.98; // Target for comparison
+
+        function addItem() {
+            const name = document.getElementById('itemName').value;
+            const priceInput = document.getElementById('itemPrice').value;
+            const priceFloat = parseFloat(priceInput);
+
+            if (isNaN(priceFloat) || priceFloat <= 0) {
+                alert("Please enter a valid positive price.");
+                return;
+            }
+
+            // Broken Version: Store directly as float
+            brokenCartItems.push({ name: name, price: priceFloat });
+
+            // Fixed Version: Store as cents (integer)
+            // Multiply by 100 and use Math.round to handle potential input float inaccuracies
+            const priceCents = Math.round(priceFloat * 100);
+            fixedCartItems.push({ name: name, priceCents: priceCents });
+
+            renderCart();
+
+            // Clear inputs
+            document.getElementById('itemName').value = 'Another Item';
+            document.getElementById('itemPrice').value = '';
+        }
+
+        function renderCart() {
+            const brokenCartDiv = document.getElementById('brokenCartItems');
+            const fixedCartDiv = document.getElementById('fixedCartItems');
+            const brokenTotalDiv = document.getElementById('brokenTotal');
+            const fixedTotalDiv = document.getElementById('fixedTotal');
+            const brokenComparisonDiv = document.getElementById('brokenComparison');
+            const fixedComparisonDiv = document.getElementById('fixedComparison');
+
+            brokenCartDiv.innerHTML = '';
+            fixedCartDiv.innerHTML = '';
+
+            let brokenTotal = 0;
+            let fixedTotalCents = 0;
+
+            // Render items and calculate totals
+            brokenCartItems.forEach(item => {
+                brokenCartDiv.innerHTML += `<div class="item"><span>${item.name}</span><span>$${item.price.toFixed(2)}</span></div>`;
+                brokenTotal += item.price;
+            });
+
+            fixedCartItems.forEach(item => {
+                // Convert back to dollars for display
+                const priceDollars = (item.priceCents / 100).toFixed(2);
+                fixedCartDiv.innerHTML += `<div class="item"><span>${item.name}</span><span>$${priceDollars}</span></div>`;
+                fixedTotalCents += item.priceCents;
+            });
+
+            // Display totals
+            brokenTotalDiv.innerHTML = `Total: $${brokenTotal.toFixed(2)}`;
+            fixedTotalDiv.innerHTML = `Total: $${(fixedTotalCents / 100).toFixed(2)}`;
+
+            // --- Demonstrate Comparison Failure ---
+            const brokenComparisonTarget = discountThreshold; // 9.98
+            const fixedComparisonTargetCents = Math.round(discountThreshold * 100); // 998
+
+            // Broken Comparison
+            if (brokenTotal === brokenComparisonTarget) {
+                brokenComparisonDiv.className = 'comparison-result pass';
+                brokenComparisonDiv.innerHTML = `&#x2713; Total is EXACTLY $${brokenComparisonTarget.toFixed(2)}! Discount applied.`;
+            } else {
+                brokenComparisonDiv.className = 'comparison-result fail';
+                brokenComparisonDiv.innerHTML = `&#x2717; Total is NOT exactly $${brokenComparisonTarget.toFixed(2)}.<br>
+                                                 Calculated: <code>${brokenTotal}</code> (often <code>${brokenTotal}</code>). Target: <code>${brokenComparisonTarget}</code>.
+                                                 <br>Comparison <code>${brokenTotal} === ${brokenComparisonTarget}</code> is <strong>false</strong>.`;
+            }
+
+            // Fixed Comparison
+            if (fixedTotalCents === fixedComparisonTargetCents) {
+                fixedComparisonDiv.className = 'comparison-result pass';
+                fixedComparisonDiv.innerHTML = `&#x2713; Total is EXACTLY $${(fixedComparisonTargetCents / 100).toFixed(2)}! Discount applied.`;
+            } else {
+                fixedComparisonDiv.className = 'comparison-result fail';
+                fixedComparisonDiv.innerHTML = `&#x2717; Total is NOT exactly $${(fixedComparisonTargetCents / 100).toFixed(2)}.<br>
+                                                 Calculated (cents): <code>${fixedTotalCents}</code>. Target (cents): <code>${fixedComparisonTargetCents}</code>.
+                                                 <br>Comparison <code>${fixedTotalCents} === ${fixedComparisonTargetCents}</code> is <strong>false</strong>.`;
+            }
+        }
+
+        // Initial render
+        renderCart();
+    </script>
+</body>
+</html>

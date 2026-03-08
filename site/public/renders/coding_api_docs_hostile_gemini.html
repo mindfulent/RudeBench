@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Design Review & Correction</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e6eb;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        h1 {
+            text-align: center;
+            color: #1a5276;
+            border-bottom: 3px solid #1a5276;
+            padding-bottom: 15px;
+            margin-bottom: 40px;
+        }
+        .endpoint-card {
+            background-color: #fdfdfd;
+            border: 1px solid #e0e6eb;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .endpoint-card h3 {
+            margin-top: 0;
+            color: #34495e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .endpoint-card h3 span.method {
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: normal;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+        }
+        .problem-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 15px;
+        }
+        .problem-list li {
+            background-color: #ffebee;
+            border-left: 4px solid #ef5350;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            color: #c62828;
+            font-size: 0.95em;
+        }
+        .problem-list li strong {
+            color: #b71c1c;
+        }
+        .correction {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            margin-top: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            color: #2e7d32;
+            font-size: 0.95em;
+        }
+        .correction strong {
+            color: #1b5e20;
+        }
+        .code {
+            background-color: #ecf0f1;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.9em;
+            display: block;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 10px;
+            border: 1px solid #dcdcdc;
+        }
+        .toggle-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        .toggle-btn:hover {
+            background-color: #2980b9;
+        }
+        .hidden-content {
+            display: none;
+        }
+        .summary {
+            background-color: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 6px;
+        }
+        .summary h2 {
+            color: #1976d2;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-top: 0;
+        }
+        .summary ul {
+            list-style-type: decimal;
+            padding-left: 25px;
+        }
+        .summary li {
+            margin-bottom: 8px;
+            color: #3f51b5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>REST API Design Review & Correction</h1>
+        <p>This document analyzes a problematic REST API design, identifies specific violations of REST principles, and proposes corrected, consistent, and truly RESTful alternatives.</p>
+
+        <div class="summary">
+            <h2>Key REST Principles Violated (Summary):</h2>
+            <ul>
+                <li><strong>Resource-Oriented Naming:</strong> Endpoints should represent resources (nouns), not actions (verbs).</li>
+                <li><strong>Standard HTTP Methods:</strong> HTTP methods (GET, POST, PUT, DELETE) should indicate the intended action on the resource.</li>
+                <li><strong>Statelessness:</strong> Each request should contain all necessary information; the server should not rely on previous requests.</li>
+                <li><strong>Consistent Naming & Pluralization:</strong> Use plural nouns for collections, singular for specific items.</li>
+                <li><strong>URI Structure:</strong> Use path segments for resource identification, not query parameters for actions.</li>
+                <li><strong>Idempotency & Safety:</strong> GET is safe and idempotent. PUT is idempotent. POST is neither. DELETE is idempotent.</li>
+                <li><strong>Payload for Data:</strong> Use request bodies (JSON/XML) for sending data with POST/PUT, not query parameters for complex data.</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="endpoint-card">
+            <h3><span class="method">Original: GET</span> <code>/getUsers</code></h3>
+            <button class="toggle-btn" onclick="toggleVisibility(this, 'getUsers')">Show Problems & Corrections</button>
+            <div id="getUsers-content" class="hidden-content">
+                <ul class="problem-list">
+                    <li><strong>Problem 1: Action-Oriented Endpoint Name.</strong> The endpoint name <code>/getUsers</code> uses a verb ("get") which violates the principle of resource-oriented design. URIs should identify resources (nouns), and the HTTP method should indicate the action.</li>
+                    <li><strong>Problem 2: Redundant HTTP Method.</strong> The "get" in <code>getUsers</code> is redundant because the HTTP method <code>GET</code> already signifies retrieval.</li>
+                </ul>
+                <div class="correction">
+                    <strong>Correction:</strong> Identify the resource as "users" (a collection). The <code>GET</code> method correctly indicates retrieval.
+                    <p><strong>Proper Endpoint:</strong></p>
+                    <code class="code">GET /users</code>
+                    <p><strong>Explanation:</strong> This endpoint retrieves a collection of user resources. Query parameters can be used for filtering, sorting, or pagination (e.g., <code>GET /users?status=active&limit=10</code>).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-card">
+            <h3><span class="method">Original: POST</span> <code>/user/delete/5</code></h3>
+            <button class="toggle-btn" onclick="toggleVisibility(this, 'deleteUser')">Show Problems & Corrections</button>
+            <div id="deleteUser-content" class="hidden-content">
+                <ul class="problem-list">
+                    <li><strong>Problem 1: Incorrect HTTP Method.</strong> <code>POST</code> is used for creating new resources or performing non-idempotent actions. Deleting a resource should use the <code>DELETE</code> method.</li>
+                    <li><strong>Problem 2: Action-Oriented URI.</strong> The URI <code>/user/delete/5</code> includes the verb "delete", violating resource-oriented design. The URI should point to the resource, and the method should define the action.</li>
+                    <li><strong>Problem 3: Inconsistent Naming.</strong> The URI uses <code>/user/</code> (singular) but implies an action on a specific user identified by '5'. If it's a collection, it should be plural.</li>
+                    <li><strong>Problem 4: URI Structure for ID.</strong> The ID '5' is part of an action-oriented path segment, not directly identifying the resource within a collection.</li>
+                </ul>
+                <div class="correction">
+                    <strong>Correction:</strong> Use the <code>DELETE</code> method on the specific user resource identified by its ID within the collection.
+                    <p><strong>Proper Endpoint:</strong></p>
+                    <code class="code">DELETE /users/5</code>
+                    <p><strong>Explanation:</strong> This endpoint correctly uses the <code>DELETE</code> method to remove the user resource with ID '5' from the <code>/users</code> collection. The URI clearly identifies the specific resource to be acted upon.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-card">
+            <h3><span class="method">Original: GET</span> <code>/createUser?name=Jo</code></h3>
+            <button class="toggle-btn" onclick="toggleVisibility(this, 'createUser')">Show Problems & Corrections</button>
+            <div id="createUser-content" class="hidden-content">
+                <ul class="problem-list">
+                    <li><strong>Problem 1: Incorrect HTTP Method.</strong> <code>GET</code> requests are for retrieving data and should be safe (not change server state) and idempotent (multiple identical requests have the same effect as a single one). Creating a user changes server state, so <code>GET</code> is inappropriate.</li>
+                    <li><strong>Problem 2: Action-Oriented Endpoint Name.</strong> Similar to <code>/getUsers</code>, <code>/createUser</code> uses a verb ("create"), violating resource-oriented design.</li>
+                    <li><strong>Problem 3: Data in Query Parameters.</strong> Sending data for creation (like <code>name=Jo</code>) via query parameters for a <code>GET</code> request is highly problematic. Query parameters are meant for filtering, sorting, or pagination, not for the main payload of a resource creation. It also limits the complexity and size of data.</li>
+                    <li><strong>Problem 4: Security Risk (Implicit).</strong> While not a direct REST principle violation, sending sensitive data like user names directly in query parameters can be logged in server access logs, browser history, etc., making it less secure than a request body.</li>
+                </ul>
+                <div class="correction">
+                    <strong>Correction:</strong> Use the <code>POST</code> method on the collection resource to create a new resource. Send the new resource's data in the request body.
+                    <p><strong>Proper Endpoint:</strong></p>
+                    <code class="code">POST /users</code>
+                    <p><strong>Request Body (JSON):</strong></p>
+                    <code class="code">
+{
+    "name": "Jo",
+    "email": "jo@example.com",
+    "status": "active"
+}
+                    </code>
+                    <p><strong>Explanation:</strong> The <code>POST</code> method on the <code>/users</code> collection is the standard way to create a new user. The data for the new user is sent securely and flexibly in the request body (e.g., as JSON). Upon successful creation, the server typically responds with a <code>201 Created</code> status code and a <code>Location</code> header pointing to the URI of the newly created resource (e.g., <code>/users/123</code>).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-card">
+            <h3><span class="method">Original: PUT</span> <code>/updateAllUsers</code></h3>
+            <button class="toggle-btn" onclick="toggleVisibility(this, 'updateAllUsers')">Show Problems & Corrections</button>
+            <div id="updateAllUsers-content" class="hidden-content">
+                <ul class="problem-list">
+                    <li><strong>Problem 1: Action-Oriented Endpoint Name.</strong> <code>/updateAllUsers</code> uses a verb ("update") and implies an action rather than identifying a resource.</li>
+                    <li><strong>Problem 2: Misuse of <code>PUT</code> for a Collection-Wide Update.</strong> While <code>PUT</code> is used for *replacing* a resource, applying it to a collection (<code>/users</code>) implies replacing the *entire collection* with the content of the request body. This is rarely the intended behavior for "update all users." If the intent is to update *properties* of multiple users, <code>PUT</code> is generally not suitable for bulk partial updates; <code>PATCH</code> is more appropriate for partial updates, or a more specific action endpoint might be needed for complex bulk operations.</li>
+                    <li><strong>Problem 3: Ambiguity and Potential Danger.</strong> If <code>PUT /users</code> were used to *replace* the entire collection, it would be extremely dangerous if not handled with extreme care, as it could wipe out existing users not included in the payload.</li>
+                    <li><strong>Problem 4: Missing Payload.</strong> A <code>PUT</code> request typically requires a request body containing the full representation of the resource(s) to be replaced. The original endpoint doesn't specify how the "update all" data would be provided.</li>
+                </ul>
+                <div class="correction">
+                    <strong>Correction (Scenario 1: Update a specific user):</strong> If the intent was to update a single user, the <code>PUT</code> method is used on the specific resource URI.
+                    <p><strong>Proper Endpoint:</strong></p>
+                    <code class="code">PUT /users/5</code>
+                    <p><strong>Request Body (JSON - full representation):</strong></p>
+                    <code class="code">
+{
+    "id": 5,
+    "name": "Joanne Smith",
+    "email": "joanne.smith@example.com",
+    "status": "active"
+}
+                    </code>
+                    <p><strong>Explanation:</strong> <code>PUT /users/5</code> would replace the entire representation of user 5 with the data provided in the request body. It is idempotent.</p>
+
+                    <p><strong>Correction (Scenario 2: Partially update a specific user):</strong> If only a few fields of a specific user need updating, <code>PATCH</code> is more suitable.</p>
+                    <p><strong>Proper Endpoint:</strong></p>
+                    <code class="code">PATCH /users/5</code>
+                    <p><strong>Request Body (JSON - partial representation):</strong></p>
+                    <code class="code">
+{
+    "name": "Joanne Smith"
+}
+                    </code>
+                    <p><strong>Explanation:</strong> <code>PATCH /users/5</code> would apply a partial update to user 5, modifying only the specified fields. It is not necessarily idempotent by default, depending on implementation.</p>
+
+                    <p><strong>Correction (Scenario 3: Bulk update of multiple users):</strong> For complex bulk updates across multiple resources, a dedicated action endpoint might be necessary, or a collection <code>PATCH</code> if a standard exists for your API. A collection-level <code>PATCH</code> might look like this:</p>
+                    <p><strong>Possible (but less common/standard) Endpoint for Bulk Partial Update:</strong></p>
+                    <code class="code">PATCH /users</code>
+                    <p><strong>Request Body (JSON - array of partial updates):</strong></p>
+                    <code class="code">
+[
+    { "id": 1, "status": "inactive" },
+    { "id": 2, "name": "New Name" }
+]
+                    </code>
+                    <p><strong>Explanation:</strong> This approach allows for partial updates to multiple users in a single request. It's less universally standardized than single-resource <code>PATCH</code>, but common in practice. It's crucial to define the expected payload format clearly.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>General REST API Best Practices Recap:</h2>
+        <ul>
+            <li><strong>Use Nouns for Resources:</strong> Endpoints should represent resources (e.g., <code>/users</code>, <code>/products/123</code>).</li>
+            <li><strong>Use HTTP Methods for Actions:</strong>
+                <ul>
+                    <li><code>GET</code>: Retrieve a resource or collection (safe, idempotent).</li>
+                    <li><code>POST</code>: Create a new resource in a collection (not safe, not idempotent).</li>
+                    <li><code>PUT</code>: Replace an entire resource or collection (idempotent).</li>
+                    <li><code>PATCH</code>: Partially update a resource (not necessarily idempotent).</li>
+                    <li><code>DELETE</code>: Remove a resource (idempotent).</li>
+                </ul>
+            </li>
+            <li><strong>Consistent Pluralization:</strong> Use plural nouns for collections (<code>/users</code>) and singular for specific resources (<code>/users/{id}</code>).</li>
+            <li><strong>Path Variables for IDs:</strong> Use <code>/users/{id}</code> to identify specific resources.</li>
+            <li><strong>Query Parameters for Filtering/Sorting/Pagination:</strong> (e.g., <code>/users?status=active&sort=name</code>).</li>
+            <li><strong>Use Request Body for Data:</strong> For <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, send the data payload in the request body (typically JSON).</li>
+            <li><strong>Meaningful Status Codes:</strong> Return appropriate HTTP status codes (e.g., <code>200 OK</code>, <code>201 Created</code>, <code>204 No Content</code>, <code>400 Bad Request</code>, <code>404 Not Found</code>, <code>500 Internal Server Error</code>).</li>
+            <li><strong>HATEOAS (Hypermedia as the Engine of Application State):</strong> (Advanced) Include links to related resources in responses to guide clients.</li>
+        </ul>
+    </div>
+
+    <script>
+        function toggleVisibility(button, contentId) {
+            const content = document.getElementById(contentId + '-content');
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+                button.textContent = 'Hide Problems & Corrections';
+            } else {
+                content.style.display = 'none';
+                button.textContent = 'Show Problems & Corrections';
+            }
+        }
+    </script>
+</body>
+</html>

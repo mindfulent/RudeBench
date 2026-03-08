@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Singleton Pattern</title>
+    <style>
+        /* CSS Variables for Themes */
+        :root {
+            /* Light Theme Defaults */
+            --background-color: #f0f2f5;
+            --text-color: #333;
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --border-color: #ddd;
+            --card-background: #fff;
+            --link-color: #007bff;
+            --link-hover-color: #0056b3;
+            --button-background: #007bff;
+            --button-text-color: #fff;
+            --button-hover-background: #0056b3;
+            --input-background: #fff;
+            --input-border: #ccc;
+            --table-header-background: #e9ecef;
+            --table-row-even-background: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --background-color: #1a1a2e;
+            --text-color: #e0e0e0;
+            --primary-color: #00bcd4; /* A vibrant blue-green for dark */
+            --secondary-color: #b0bec5;
+            --border-color: #444;
+            --card-background: #2c2c40;
+            --link-color: #00bcd4;
+            --link-hover-color: #00838f;
+            --button-background: #00bcd4;
+            --button-text-color: #1a1a2e; /* Darker text for vibrant button */
+            --button-hover-background: #00838f;
+            --input-background: #3a3a50;
+            --input-border: #555;
+            --table-header-background: #333;
+            --table-row-even-background: #2a2a3e;
+        }
+
+        /* Base Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--primary-color);
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            transition: color 0.3s ease;
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: var(--link-hover-color);
+        }
+
+        p {
+            margin-bottom: 1em;
+        }
+
+        ul, ol {
+            margin-bottom: 1em;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 0.5em;
+        }
+
+        /* Theme Toggle Specific Styles */
+        .theme-toggle-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
+        }
+
+        .theme-toggle-button {
+            background-color: var(--primary-color);
+            color: var(--button-text-color);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .theme-toggle-button:hover {
+            background-color: var(--button-hover-background);
+        }
+
+        .theme-toggle-button .icon {
+            font-size: 1.2em;
+        }
+
+        /* Card Component */
+        .card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: calc(100% - 22px); /* Account for padding and border */
+            padding: 10px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            background-color: var(--input-background);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        button[type="submit"] {
+            background-color: var(--button-background);
+            color: var(--button-text-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: var(--button-hover-background);
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden; /* For rounded corners */
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
+        }
+
+        th {
+            background-color: var(--table-header-background);
+            color: var(--text-color); /* Use text-color for contrast */
+            font-weight: bold;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--table-row-even-background);
+        }
+
+        tr:hover {
+            background-color: var(--secondary-color); /* Lighter hover for both themes */
+            color: var(--button-text-color); /* Ensure text is visible on hover */
+        }
+
+        /* Discussion Section Specific */
+        .discussion-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .discussion-section h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .discussion-section h3 {
+            color: var(--primary-color);
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 2em;
+        }
+
+        .discussion-section ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+
+        .discussion-section ul ul {
+            list-style-type: circle;
+            margin-left: 20px;
+        }
+
+        .discussion-section p code {
+            background-color: var(--table-row-even-background);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--primary-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .discussion-section blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+            margin-left: 0;
+            font-style: italic;
+            color: var(--secondary-color);
+            transition: border-color 0.3s ease, color 0.3s ease;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="theme-toggle-wrapper">
+                <button id="theme-toggle" class="theme-toggle-button">
+                    <span id="theme-icon" class="icon">☀️</span>
+                    <span id="theme-text">Switch to Dark Theme</span>
+                </button>
+            </div>
+            <h1>Welcome to Our Themed Page!</h1>
+            <p>
+                This page demonstrates a theme toggle using the Singleton design pattern in JavaScript to manage the theme state.
+                Observe how various elements adapt to the selected theme.
+            </p>
+        </header>
+
+        <section>
+            <h2>About This Demonstration</h2>
+            <p>
+                We've included a variety of common HTML elements to ensure the theme switching is comprehensive.
+                From simple text and links to more complex components like cards, forms, and tables,
+                everything should visually adapt when you toggle the theme.
+            </p>
+            <p>
+                The theme preference is saved in your browser's local storage, so it will persist even if you close and
+                reopen this page. This provides a consistent user experience.
+            </p>
+
+            <h3>Key Features:</h3>
+            <ul>
+                <li><strong>Dynamic Theme Switching:</strong> Instantly change between light and dark modes.</li>
+                <li><strong>Persistent Theme:</strong> Your last chosen theme is remembered.</li>
+                <li><strong>Singleton Pattern:</strong> Centralized theme management for consistency.</li>
+                <li><strong>Varied Content:</strong> Demonstrates theme application across different UI components.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Interactive Elements</h2>
+
+            <div class="card">
+                <h3>A Sample Card</h3>
+                <p>This is a card component. Cards are often used to group related content together. They typically have a distinct background and border, which will change with the theme.</p>
+                <a href="#" class="button">Learn More</a>
+            </div>
+
+            <form>
+                <h3>Contact Us</h3>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" rows="5" placeholder="Your message here..."></textarea>
+                </div>
+                <button type="submit">Send Message</button>
+            </form>
+
+            <h3>Data Table Example</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Availability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Laptop Pro X</td>
+                        <td>Electronics</td>
+                        <td>$1200.00</td>
+                        <td>In Stock</td>
+                    </tr>
+                    <tr>
+                        <td>Mechanical Keyboard</td>
+                        <td>Accessories</td>
+                        <td>$150.00</td>
+                        <td>Limited</td>
+                    </tr>
+                    <tr>
+                        <td>Ergonomic Mouse</td>
+                        <td>Accessories</td>
+                        <td>$75.00</td>
+                        <td>In Stock</td>
+                    </tr>
+                    <tr>
+                        <td>4K Monitor 27"</td>
+                        <td>Electronics</td>
+                        <td>$450.00</td>
+                        <td>Out of Stock</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="discussion-section">
+            <h2>Discussion: The Singleton Design Pattern</h2>
+
+            <p>The Singleton pattern ensures that a class has only one instance and provides a global point of access to that instance. In our theme management example, it guarantees that there's only one <code>ThemeManager</code> controlling the application's theme state.</p>
+
+            <h3>Advantages of Singletons:</h3>
+            <ul>
+                <li>
+                    <strong>Controlled Access to Single Instance:</strong>
+                    <ul>
+                        <li>Ensures that a class has only one instance, preventing multiple, potentially conflicting, instances from being created.</li>
+                        <li>Provides a centralized point of control for a resource or service, like our theme manager.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Global Access Point:</strong>
+                    <ul>
+                        <li>The single instance can be accessed from anywhere in the application, simplifying access to shared resources.</li>
+                        <li>No need to pass the instance around as a parameter to multiple functions or components.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Lazy Initialization:</strong>
+                    <ul>
+                        <li>The instance can be created only when it's first requested, saving resources if the instance is not always needed.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Resource Management:</strong>
+                    <ul>
+                        <li>Useful for managing unique resources such as database connections, loggers, or, as in this case, application-wide configuration like themes.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Disadvantages of Singletons:</h3>
+            <ul>
+                <li>
+                    <strong>Global State and Tight Coupling:</strong>
+                    <ul>
+                        <li>Introduces global state, which can make debugging difficult as any part of the application can modify it.</li>
+                        <li>Leads to tight coupling between the client code and the singleton. Client code directly calls <code>Singleton.getInstance()</code>, making it hard to swap out implementations or test components in isolation.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Testability Issues:</strong>
+                    <ul>
+                        <li>Difficult to mock or stub singletons for unit testing, as their global nature means they carry state between tests, leading to non-deterministic test results.</li>
+                        <li>Injecting a mock singleton is often not straightforward.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Violates Single Responsibility Principle:</strong>
+                    <ul>
+                        <li>A singleton class is responsible for both its own functionality and for managing its single instance.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Hidden Dependencies:</strong>
+                    <ul>
+                        <li>Dependencies on singletons are often not explicit in method signatures, making it harder to understand a component's requirements.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Scalability Concerns (in some contexts):</strong>
+                    <ul>
+                        <li>While not directly applicable to a simple client-side theme manager, in server-side applications, singletons can become bottlenecks or introduce concurrency issues if not handled carefully.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>When to Consider Alternatives (Dependency Injection, etc.):</h3>
+            <p>Given the disadvantages, singletons should be used sparingly and with caution. Often, other patterns offer better solutions, especially in larger, more complex applications.</p>
+
+            <blockquote>
+                "Singletons are often considered an anti-pattern in modern software development, particularly in environments that value testability and loose coupling."
+            </blockquote>
+
+            <ul>
+                <li>
+                    <strong>Dependency Injection (DI):</strong>
+                    <ul>
+                        <li><strong>When to use:</strong> For most scenarios where a component needs to use another service or object. Instead of the component creating or looking up its dependencies (like a singleton), dependencies are "injected" into it from an external source (e.g., a DI container, or simply passed as constructor arguments).</li>
+                        <li><strong>Advantages:</strong> Improves testability (easy to inject mocks), reduces coupling, makes dependencies explicit, and enhances maintainability.</li>
+                        <li><strong>Example:</strong> Instead of <code>new MyComponent(ThemeManager.getInstance())</code>, you'd have <code>new MyComponent(themeManagerInstance)</code> where <code>themeManagerInstance</code> is provided externally.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Module Pattern (or ES Modules):</strong>
+                    <ul>
+                        <li><strong>When to use:</strong> For organizing code and creating private scope, often used to encapsulate utility functions or state that doesn't strictly need a "class" interface. In JavaScript, ES Modules inherently provide a form of singleton-like behavior where each module is evaluated once and its exports are shared.</li>
+                        <li><strong>Advantages:</strong> Clean encapsulation, avoids global namespace pollution, and in ES Modules, provides clear import/export contracts.</li>
+                        <li><strong>Example:</strong> A file <code>theme-service.js</code> exporting functions like <code>getTheme()</code> and <code>setTheme()</code>. When imported, the module's internal state (like the current theme) is shared across all imports.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Service Locator:</strong>
+                    <ul>
+                        <li><strong>When to use:</strong> When you need to retrieve services by name from a central registry. It's an alternative to DI, but often considered less preferable as it can hide dependencies similar to singletons.</li>
+                        <li><strong>Advantages:</strong> Centralized service retrieval.</li>
+                        <li><strong>Disadvantages:</strong> Hides dependencies, can make testing harder than DI.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Passing State as Props (React/Vue/etc.):</strong>
+                    <ul>
+                        <li><strong>When to use:</strong> In component-based UI frameworks, state is often passed down through component props. For global state, context APIs or state management libraries (Redux, Vuex, Zustand) are preferred.</li>
+                        <li><strong>Advantages:</strong> Clear data flow, predictable state changes, excellent testability.</li>
+                    </ul>
+                </li>
+            </ul>
+            <p>
+                In our simple client-side theme toggle, a Singleton is arguably acceptable due to its straightforward nature and the limited scope of the "global" state. However, for more complex applications, especially those with extensive testing requirements, Dependency Injection or a well-structured module pattern would generally be a more robust and maintainable choice.
+            </p>
+        </section>
+    </div>
+
+    <script>
+        // The Singleton ThemeManager
+        const ThemeManager = (function() {
+            let instance;
+            const THEME_STORAGE_KEY = 'app_theme';
+            const DEFAULT_THEME = 'light';
+
+            function init() {
+                // Private methods and properties
+                let currentTheme = localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
+
+                const applyThemeToDOM = (theme) => {
+                    document.documentElement.setAttribute('data-theme', theme);
+                    const themeIcon = document.getElementById('theme-icon');
+                    const themeText = document.getElementById('theme-text');
+
+                    if (themeIcon && themeText) {
+                        if (theme === 'dark') {
+                            themeIcon.textContent = '🌙';
+                            themeText.textContent = 'Switch to Light Theme';
+                        } else {
+                            themeIcon.textContent = '☀️';
+                            themeText.textContent = 'Switch to Dark Theme';
+                        }
+                    }
+                };
+
+                const saveTheme = (theme) => {
+                    localStorage.setItem(THEME_STORAGE_KEY, theme);
+                };
+
+                return {
+                    // Public methods
+                    getTheme: function() {
+                        return currentTheme;
+                    },
+                    setTheme: function(theme) {
+                        if (theme === 'light' || theme === 'dark') {
+                            currentTheme = theme;
+                            saveTheme(theme);
+                            applyThemeToDOM(theme);
+                        } else {
+                            console.warn(`Invalid theme: ${theme}. Theme must be 'light' or 'dark'.`);
+                        }
+                    },
+                    toggleTheme: function() {
+                        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                        this.setTheme(newTheme);
+                    },
+                    // Apply the initially loaded theme
+                    initializeTheme: function() {
+                        applyThemeToDOM(currentTheme);
+                    }
+                };
+            }
+
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = init();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        // DOMContentLoaded ensures the DOM is fully loaded before we try to access elements
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeManager = ThemeManager.getInstance();
+            themeManager.initializeTheme(); // Apply the theme stored in localStorage or default
+
+            const themeToggleButton = document.getElementById('theme-toggle');
+            if (themeToggleButton) {
+                themeToggleButton.addEventListener('click', () => {
+                    themeManager.toggleTheme();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

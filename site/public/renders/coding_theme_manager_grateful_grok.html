@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Singleton Pattern</title>
+    
+    <style>
+        /* CSS Variables for Themes */
+        :root {
+            --bg-color: #ffffff; /* Light theme default */
+            --text-color: #000000;
+            --accent-color: #007bff;
+        }
+
+        body.dark-theme {
+            --bg-color: #333333; /* Dark theme */
+            --text-color: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        /* Varied content styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid var(--text-color);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Theme Toggle Example</h1>
+    <button id="theme-toggle">Toggle Theme</button>
+
+    <h2>Varied Page Content</h2>
+    <p>This is a paragraph in the main content area. It demonstrates how the theme affects text and background colors across the page.</p>
+    
+    <h3>A Sample List</h3>
+    <ul>
+        <li>Item 1: This list item will change color based on the theme.</li>
+        <li>Item 2: Themes make the page more user-friendly.</li>
+        <li>Item 3: Singleton pattern manages the state globally.</li>
+    </ul>
+
+    <h3>A Sample Table</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Header 1</th>
+                <th>Header 2</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Row 1, Cell 1: This table row will adapt to the theme.</td>
+                <td>Row 1, Cell 2: Themes affect borders and text.</td>
+            </tr>
+            <tr>
+                <td>Row 2, Cell 1: More varied content to show consistency.</td>
+                <td>Row 2, Cell 2: Switching themes updates everything.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>An Image Element</h3>
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='40' stroke='black' stroke-width='3' fill='red' /></svg>" alt="Embedded SVG Circle">
+    <p>The image above is an embedded SVG, and while it doesn't change with the theme, the surrounding elements do.</p>
+
+    <section id="discussion">
+        <h2>Discussion: Singleton Pattern in This Example</h2>
+        <p>In this HTML file, we've used the Singleton pattern to manage the theme state. The JavaScript code creates a single instance of a ThemeManager object, which ensures that only one global state for the theme exists. This allows the theme to be toggled and applied consistently across all page elements.</p>
+        
+        <h3>Pros of the Singleton Pattern:</h3>
+        <ul>
+            <li><strong>Global Access and Consistency:</strong> It provides a single point of access to the theme state, making it easy to manage and ensure that all parts of the application use the same instance. In this example, any part of the page can query or update the theme without creating multiple managers.</li>
+            <li><strong>Simplicity for Small Applications:</strong> For a self-contained file like this, it's straightforward to implement and avoids the overhead of passing objects around. It's ideal for managing shared resources, like configuration or state, in simple scripts.</li>
+            <li><strong>Resource Efficiency:</strong> By restricting to one instance, it prevents unnecessary object creation, which can be beneficial in resource-constrained environments.</li>
+        </ul>
+
+        <h3>Cons of the Singleton Pattern:</h3>
+        <ul>
+            <li><strong>Tight Coupling:</strong> The Singleton creates global state, which can make the code harder to maintain or test. For instance, if you wanted to mock the theme manager for unit testing, it's challenging because it's a global object.</li>
+            <li><strong>Potential for Hidden Dependencies:</strong> Other parts of the code might rely on the Singleton without explicitly declaring it, leading to bugs that are hard to trace. In a larger application, this could violate the principle of least privilege.</li>
+            <li><strong>Not Thread-Safe in All Environments:</strong> While JavaScript is single-threaded, in more complex setups (e.g., with web workers), Singletons can introduce race conditions if not handled carefully.</li>
+            <li><strong>Difficulty in Extension:</strong> If you need multiple instances (e.g., different themes per user session), the pattern makes it hard to adapt without refactoring.</li>
+        </ul>
+
+        <h3>When Are Alternatives Like Dependency Injection More Appropriate?</h3>
+        <p>Dependency Injection (DI) is a better choice in larger, more modular applications. DI involves passing dependencies (like a theme manager) explicitly to objects that need them, rather than relying on a global instance. Here's when you might prefer DI:</p>
+        <ul>
+            <li><strong>Improved Testability:</strong> With DI, you can easily swap out the theme manager for a mock version during tests, making your code more isolated and easier to verify.</li>
+            <li><strong>Modularity and Reusability:</strong> In complex apps, DI promotes loose coupling by allowing components to be independent. For example, you could inject a theme service into specific components without affecting the global state.</li>
+            <li><strong>Scalability:</strong> As your application grows, DI helps manage dependencies more flexibly. If you need multiple theme managers (e.g., for different sections of a multi-page app), DI makes this straightforward, whereas Singleton would require significant changes.</li>
+            <li><strong>Avoiding Global State Issues:</strong> In modern web development (e.g., with frameworks like React or Angular), global state can lead to unpredictable behavior. DI, often combined with state management libraries, provides a cleaner alternative.</li>
+        </ul>
+        <p>In summary, while Singleton works well for this simple, self-contained example, for real-world applications with multiple components or potential for growth, consider using DI or other patterns to enhance maintainability and flexibility.</p>
+    </section>
+
+    <script>
+        // Singleton Pattern for Theme Management
+        const ThemeManager = (function() {
+            // Private variables and functions
+            let instance; // To hold the single instance
+            let currentTheme = 'light'; // Default theme
+
+            function createInstance() {
+                return {
+                    getTheme: function() {
+                        return currentTheme;
+                    },
+                    setTheme: function(newTheme) {
+                        currentTheme = newTheme; // Update the theme
+                        applyTheme(); // Apply it to the page
+                    },
+                    applyTheme: function() {
+                        document.body.className = currentTheme + '-theme'; // Add class to body
+                    }
+                };
+            }
+
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = createInstance();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        // Initialize and set up the toggle button
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeManager = ThemeManager.getInstance(); // Get the single instance
+            themeManager.applyTheme(); // Apply the initial theme
+
+            const toggleButton = document.getElementById('theme-toggle');
+            toggleButton.addEventListener('click', function() {
+                const current = themeManager.getTheme();
+                const newTheme = current === 'light' ? 'dark' : 'light';
+                themeManager.setTheme(newTheme); // Toggle and apply
+                toggleButton.textContent = `Switch to ${newTheme === 'light' ? 'Dark' : 'Light'} Theme`;
+            });
+        });
+    </script>
+</body>
+</html>

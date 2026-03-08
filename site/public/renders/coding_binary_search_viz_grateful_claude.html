@@ -16,217 +16,638 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            padding: 30px 20px;
+            color: #e0e0e0;
         }
 
         h1 {
+            font-size: 2.2rem;
+            margin-bottom: 6px;
+            background: linear-gradient(90deg, #00d2ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-align: center;
-            color: #e0e0e0;
-            font-size: 2rem;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
         }
 
         .subtitle {
+            color: #8892b0;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
             text-align: center;
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 30px;
         }
 
-        /* Legend */
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 860px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
         }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #ccc;
-            font-size: 0.85rem;
-        }
-
-        .legend-box {
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
-            border: 2px solid transparent;
-        }
-
-        .legend-box.range    { background: rgba(99, 179, 237, 0.25); border-color: #63b3ed; }
-        .legend-box.mid      { background: rgba(246, 173, 85, 0.4);  border-color: #f6ad55; }
-        .legend-box.found    { background: rgba(72, 187, 120, 0.4);  border-color: #48bb78; }
-        .legend-box.excluded { background: rgba(255,255,255,0.03);   border-color: #333; }
-
-        /* Controls */
+        /* ── Controls ── */
         .controls {
             display: flex;
-            gap: 12px;
-            justify-content: center;
-            align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 30px;
+            gap: 14px;
+            align-items: flex-end;
+            justify-content: center;
+            margin-bottom: 10px;
         }
 
-        .controls label {
-            color: #ccc;
-            font-size: 0.95rem;
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .controls input[type="number"] {
-            width: 100px;
+        .control-group label {
+            font-size: 0.8rem;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="number"], input[type="text"] {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
             padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.08);
-            color: #fff;
             font-size: 1rem;
+            width: 180px;
             outline: none;
-            transition: border 0.3s;
+            transition: border-color 0.2s;
         }
 
-        .controls input[type="number"]:focus {
-            border-color: #63b3ed;
+        input[type="number"]:focus, input[type="text"]:focus {
+            border-color: #00d2ff;
         }
 
-        .btn {
+        button {
             padding: 10px 22px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
         }
 
-        .btn:active { transform: scale(0.96); }
+        button:active { transform: scale(0.96); }
+
+        button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d2ff, #7b2ff7);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.18);
+        }
 
         .btn-step {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+            box-shadow: 0 4px 15px rgba(255, 210, 0, 0.3);
         }
 
         .btn-step:hover:not(:disabled) {
-            box-shadow: 0 6px 20px rgba(102,126,234,0.6);
-            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 210, 0, 0.5);
         }
 
-        .btn-step:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
+        /* ── Array display ── */
+        .array-section {
+            margin-top: 10px;
         }
 
-        .btn-reset {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(245,87,108,0.4);
+        .array-label {
+            font-size: 0.8rem;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 14px;
         }
 
-        .btn-reset:hover {
-            box-shadow: 0 6px 20px rgba(245,87,108,0.6);
-            transform: translateY(-1px);
-        }
-
-        .btn-auto {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            color: #1a1a2e;
-            box-shadow: 0 4px 15px rgba(79,172,254,0.4);
-        }
-
-        .btn-auto:hover:not(:disabled) {
-            box-shadow: 0 6px 20px rgba(79,172,254,0.6);
-            transform: translateY(-1px);
-        }
-
-        .btn-auto:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Array display */
         .array-wrapper {
             overflow-x: auto;
             padding-bottom: 10px;
-            margin-bottom: 20px;
         }
 
         .array-container {
             display: flex;
             gap: 8px;
-            justify-content: center;
             min-width: max-content;
             padding: 10px 4px;
         }
 
-        .cell-wrapper {
+        .box-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 5px;
         }
 
-        .cell-index {
-            color: #666;
-            font-size: 0.72rem;
-            font-family: monospace;
-        }
-
-        .cell {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
+        .box {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            border: 2px solid #333;
-            background: rgba(255,255,255,0.04);
-            color: #555;
-            transition: all 0.4s ease;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.07);
+            color: #c0c8e0;
+            transition: all 0.35s ease;
             position: relative;
         }
 
-        /* States */
-        .cell.in-range {
-            background: rgba(99, 179, 237, 0.2);
-            border-color: #63b3ed;
-            color: #90cdf4;
+        .box-index {
+            font-size: 0.68rem;
+            color: #555e7a;
         }
 
-        .cell.is-mid {
-            background: rgba(246, 173, 85, 0.35);
-            border-color: #f6ad55;
-            color: #fbd38d;
-            transform: scale(1.15);
-            box-shadow: 0 0 20px rgba(246,173,85,0.5);
-            z-index: 1;
+        /* State classes */
+        .box.in-range {
+            border-color: rgba(0, 210, 255, 0.5);
+            background: rgba(0, 210, 255, 0.1);
+            color: #e0f7ff;
         }
 
-        .cell.is-found {
-            background: rgba(72, 187, 120, 0.4);
-            border-color: #48bb78;
-            color: #9ae6b4;
-            transform: scale(1.2);
-            box-shadow: 0 0 25px rgba(72,187,120,
+        .box.mid {
+            border-color: #ffd200;
+            background: rgba(255, 210, 0, 0.2);
+            color: #fff8cc;
+            box-shadow: 0 0 14px rgba(255, 210, 0, 0.5);
+            transform: translateY(-4px) scale(1.08);
+        }
+
+        .box.out-of-range {
+            opacity: 0.25;
+            border-color: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .box.found {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.2);
+            color: #ccffe8;
+            box-shadow: 0 0 18px rgba(0, 255, 136, 0.6);
+            transform: translateY(-4px) scale(1.12);
+        }
+
+        .box.not-found-range {
+            opacity: 0.2;
+        }
+
+        /* Pointer labels */
+        .pointer-row {
+            display: flex;
+            gap: 8px;
+            min-width: max-content;
+            padding: 0 4px;
+            margin-top: 4px;
+        }
+
+        .pointer-cell {
+            width: 54px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .ptr-lo  { color: #00d2ff; }
+        .ptr-hi  { color: #ff6b9d; }
+        .ptr-mid { color: #ffd200; }
+
+        /* ── Log ── */
+        .log-section { margin-top: 6px; }
+
+        .log-title {
+            font-size: 0.8rem;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+
+        .log-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.07);
+            padding: 14px 16px;
+            min-height: 80px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+
+        .log-entry { display: flex; gap: 10px; }
+        .log-step  { color: #555e7a; min-width: 24px; }
+        .log-text  { color: #b0bec5; }
+        .log-text.highlight { color: #ffd200; }
+        .log-text.success   { color: #00ff88; }
+        .log-text.fail      { color: #ff6b9d; }
+        .log-text.info      { color: #00d2ff; }
+
+        /* ── Result banner ── */
+        .result-banner {
+            border-radius: 10px;
+            padding: 14px 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: none;
+            margin-top: 14px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .result-banner.found-banner {
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+            display: block;
+        }
+
+        .result-banner.not-found-banner {
+            background: rgba(255, 107, 157, 0.15);
+            border: 1px solid rgba(255, 107, 157, 0.4);
+            color: #ff6b9d;
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Legend ── */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.8rem;
+            color: #8892b0;
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .dot-range   { border-color: rgba(0,210,255,0.7);  background: rgba(0,210,255,0.15); }
+        .dot-mid     { border-color: #ffd200;               background: rgba(255,210,0,0.2);  }
+        .dot-found   { border-color: #00ff88;               background: rgba(0,255,136,0.2);  }
+        .dot-out     { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); opacity:0.5; }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<h1>Binary Search Visualizer</h1>
+<p class="subtitle">Step through the algorithm and watch it divide and conquer</p>
+
+<!-- Controls Card -->
+<div class="card">
+    <div class="controls">
+        <div class="control-group">
+            <label>Sorted Array (comma-separated)</label>
+            <input type="text" id="arrayInput"
+                   value="3, 7, 12, 18, 24, 31, 45, 56, 63, 77, 84, 95"
+                   placeholder="e.g. 1, 5, 9, 14, 22">
+        </div>
+        <div class="control-group">
+            <label>Target Value</label>
+            <input type="number" id="targetInput" value="45" placeholder="e.g. 45">
+        </div>
+        <div class="control-group">
+            <label>&nbsp;</label>
+            <button class="btn-primary" onclick="initSearch()">▶ Start</button>
+        </div>
+        <div class="control-group">
+            <label>&nbsp;</label>
+            <button class="btn-step" id="stepBtn" onclick="step()" disabled>⏭ Next Step</button>
+        </div>
+        <div class="control-group">
+            <label>&nbsp;</label>
+            <button class="btn-secondary" onclick="resetAll()">↺ Reset</button>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot dot-range"></div> Search Range
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot dot-mid"></div> Mid Element
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot dot-found"></div> Found
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot dot-out"></div> Eliminated
+        </div>
+        <div class="legend-item">
+            <span style="color:#00d2ff; font-weight:700; font-size:0.85rem;">LO</span>&nbsp;Low Pointer
+        </div>
+        <div class="legend-item">
+            <span style="color:#ffd200; font-weight:700; font-size:0.85rem;">MID</span>&nbsp;Mid Pointer
+        </div>
+        <div class="legend-item">
+            <span style="color:#ff6b9d; font-weight:700; font-size:0.85rem;">HI</span>&nbsp;High Pointer
+        </div>
+    </div>
+</div>
+
+<!-- Array Visualization Card -->
+<div class="card">
+    <div class="array-section">
+        <div class="array-label">Array</div>
+        <div class="array-wrapper">
+            <div class="array-container" id="arrayContainer"></div>
+            <div class="pointer-row" id="pointerRow"></div>
+        </div>
+    </div>
+    <div id="resultBanner" class="result-banner"></div>
+</div>
+
+<!-- Log Card -->
+<div class="card log-section">
+    <div class="log-title">Step Log</div>
+    <div class="log-box" id="logBox">
+        <div class="log-entry">
+            <span class="log-step">—</span>
+            <span class="log-text info">Enter an array and target, then press ▶ Start.</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── State ──────────────────────────────────────────────────
+    let arr       = [];
+    let target    = null;
+    let lo        = 0;
+    let hi        = 0;
+    let stepCount = 0;
+    let done      = false;
+
+    // ── Helpers ────────────────────────────────────────────────
+    function parseArray(str) {
+        return str.split(',')
+                  .map(s => parseInt(s.trim(), 10))
+                  .filter(n => !isNaN(n));
+    }
+
+    function isSorted(a) {
+        for (let i = 1; i < a.length; i++) {
+            if (a[i] < a[i - 1]) return false;
+        }
+        return true;
+    }
+
+    function addLog(stepNum, text, cls = '') {
+        const box   = document.getElementById('logBox');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span class="log-step">${stepNum}.</span>
+                           <span class="log-text ${cls}">${text}</span>`;
+        box.appendChild(entry);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    // ── Render array boxes ─────────────────────────────────────
+    function renderArray(midIndex = -1, foundIndex = -1) {
+        const container  = document.getElementById('arrayContainer');
+        const pointerRow = document.getElementById('pointerRow');
+        container.innerHTML  = '';
+        pointerRow.innerHTML = '';
+
+        arr.forEach((val, i) => {
+            // Box
+            const wrapper = document.createElement('div');
+            wrapper.className = 'box-wrapper';
+
+            const box = document.createElement('div');
+            box.className = 'box';
+            box.id = `box-${i}`;
+            box.textContent = val;
+
+            if (foundIndex !== -1) {
+                box.classList.add(i === foundIndex ? 'found' : 'not-found-range');
+            } else if (!done) {
+                if (i < lo || i > hi)        box.classList.add('out-of-range');
+                else if (i === midIndex)      box.classList.add('mid');
+                else                          box.classList.add('in-range');
+            }
+
+            const idx = document.createElement('div');
+            idx.className = 'box-index';
+            idx.textContent = i;
+
+            wrapper.appendChild(box);
+            wrapper.appendChild(idx);
+            container.appendChild(wrapper);
+
+            // Pointer cell
+            const cell = document.createElement('div');
+            cell.className = 'pointer-cell';
+
+            const labels = [];
+            if (!done || foundIndex !== -1) {
+                if (i === lo  && foundIndex === -1) labels.push(`<span class="ptr-lo">LO</span>`);
+                if (i === hi  && foundIndex === -1) labels.push(`<span class="ptr-hi">HI</span>`);
+                if (i === midIndex && foundIndex === -1) labels.push(`<span class="ptr-mid">MID</span>`);
+            }
+            cell.innerHTML = labels.join(' ');
+            pointerRow.appendChild(cell);
+        });
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    function initSearch() {
+        const rawArr = document.getElementById('arrayInput').value;
+        const rawTgt = document.getElementById('targetInput').value;
+
+        arr    = parseArray(rawArr);
+        target = parseInt(rawTgt, 10);
+
+        // Validations
+        if (arr.length === 0) {
+            alert('Please enter a valid array of numbers.');
+            return;
+        }
+        if (!isSorted(arr)) {
+            alert('Array must be sorted in ascending order!');
+            return;
+        }
+        if (isNaN(target)) {
+            alert('Please enter a valid target number.');
+            return;
+        }
+
+        lo        = 0;
+        hi        = arr.length - 1;
+        stepCount = 0;
+        done      = false;
+
+        document.getElementById('stepBtn').disabled    = false;
+        document.getElementById('resultBanner').className = 'result-banner';
+        document.getElementById('resultBanner').textContent = '';
+
+        // Clear log
+        const logBox = document.getElementById('logBox');
+        logBox.innerHTML = '';
+        addLog('→', `Array: [${arr.join(', ')}]`, 'info');
+        addLog('→', `Target: <strong>${target}</strong> | Indices 0 – ${arr.length - 1}`, 'info');
+
+        renderArray();
+    }
+
+    // ── Step ───────────────────────────────────────────────────
+    function step() {
+        if (done) return;
+        stepCount++;
+
+        if (lo > hi) {
+            // Not found
+            finishNotFound();
+            return;
+        }
+
+        const mid    = Math.floor((lo + hi) / 2);
+        const midVal = arr[mid];
+
+        addLog(stepCount,
+            `lo=${lo}, hi=${hi} → mid=${mid} (value <strong>${midVal}</strong>)`,
+            'highlight');
+
+        if (midVal === target) {
+            // Found!
+            addLog(stepCount,
+                `🎉 arr[${mid}] = ${midVal} === target ${target}. Found at index ${mid}!`,
+                'success');
+            renderArray(-1, mid);
+            showBanner(true, mid);
+            done = true;
+            document.getElementById('stepBtn').disabled = true;
+            return;
+        }
+
+        if (midVal < target) {
+            addLog(stepCount,
+                `arr[${mid}]=${midVal} < ${target} → search right half (lo = ${mid + 1})`,
+                'info');
+            renderArray(mid);
+            lo = mid + 1;
+        } else {
+            addLog(stepCount,
+                `arr[${mid}]=${midVal} > ${target} → search left half (hi = ${mid - 1})`,
+                'info');
+            renderArray(mid);
+            hi = mid - 1;
+        }
+
+        // After updating, check if exhausted
+        if (lo > hi) {
+            stepCount++;
+            finishNotFound();
+        }
+    }
+
+    function finishNotFound() {
+        addLog(stepCount, `lo (${lo}) > hi (${hi}): search space exhausted.`, 'fail');
+        addLog(stepCount, `✗ Target ${target} not found in array.`, 'fail');
+        renderArray();
+        showBanner(false, -1);
+        done = true;
+        document.getElementById('stepBtn').disabled = true;
+    }
+
+    function showBanner(found, index) {
+        const banner = document.getElementById('resultBanner');
+        if (found) {
+            banner.className   = 'result-banner found-banner';
+            banner.textContent = `✅ Found ${target} at index ${index}!`;
+        } else {
+            banner.className   = 'result-banner not-found-banner';
+            banner.textContent = `❌ ${target} is not in the array.`;
+        }
+    }
+
+    // ── Reset ──────────────────────────────────────────────────
+    function resetAll() {
+        arr       = [];
+        target    = null;
+        lo = hi   = 0;
+        stepCount = 0;
+        done      = false;
+
+        document.getElementById('arrayContainer').innerHTML  = '';
+        document.getElementById('pointerRow').innerHTML      = '';
+        document.getElementById('resultBanner').className    = 'result-banner';
+        document.getElementById('resultBanner').textContent  = '';
+        document.getElementById('stepBtn').disabled          = true;
+
+        const logBox = document.getElementById('logBox');
+        logBox.innerHTML = '';
+        addLog('—', 'Enter an array and target, then press ▶ Start.', 'info');
+    }
+
+    // ── Init on load ───────────────────────────────────────────
+    window.onload = () => {
+        resetAll();
+        // Pre-render the default array for a nice first impression
+        arr    = parseArray(document.getElementById('arrayInput').value);
+        target = parseInt(document.getElementById('targetInput').value, 10);
+        lo     = 0;
+        hi     = arr.length - 1;
+        renderArray();
+    };
+</script>
+</body>
+</html>

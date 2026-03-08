@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Dashboard Memory Leak Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        #dashboard {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .widget {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer; /* Makes it clear that clicking does something */
+        }
+        
+        .widget.buggy {
+            background-color: #ffeeee; /* Reddish for buggy widgets */
+        }
+        
+        .widget.fixed {
+            background-color: #eeffee; /* Greenish for fixed widgets */
+        }
+        
+        button {
+            margin-right: 10px;
+            padding: 5px 10px;
+        }
+        
+        #counters {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Widget Dashboard Memory Leak Demo</h1>
+    <p>Use the buttons below to add and remove widgets. Watch the counters to see the memory leak in action.</p>
+    
+    <button id="addBuggy">Add Buggy Widget</button>
+    <button id="addFixed">Add Fixed Widget</button>
+    <button id="removeLast">Remove Last Widget</button>
+    
+    <div id="counters">
+        Buggy Widgets (Leaking): <span id="buggyCounter">0</span><br>
+        Fixed Widgets: <span id="fixedCounter">0</span>
+    </div>
+    
+    <div id="dashboard"></div>
+    
+    <h2>Explanation of the Scenario</h2>
+    <p>
+        In this demo, we're simulating a memory leak in a dashboard widget system. The "buggy" widgets attach an event listener (a click handler) and store a DOM reference in a global array when added. However, when removed, the event listener and reference are not cleaned up. This prevents the JavaScript garbage collector from freeing the memory associated with those widgets, as the references keep the objects alive.
+    </p>
+    <p>
+        The "fixed" widgets, on the other hand, properly remove the event listener and clear the reference when deleted, allowing the garbage collector to reclaim the memory.
+    </p>
+    <p>
+        <strong>Why is the garbage collector not at fault?</strong> The garbage collector in JavaScript (or any language) works by identifying and freeing objects that are no longer reachable (i.e., no references point to them). In the buggy version, the problem isn't with the garbage collector—it's with the code that fails to release references and event listeners. As long as those references exist (e.g., in the global array), the garbage collector can't collect the objects. Your colleague's diagnosis is incorrect because the GC is doing its job; the issue lies in the application logic. To fix this in real code, always clean up resources (like event listeners and arrays) when they're no longer needed.
+    </p>
+    <p>
+        In this demo, the "Buggy Widgets" counter doesn't decrease when you remove a buggy widget, simulating the leak. The "Fixed Widgets" counter decreases correctly.
+    </p>
+    
+    <script>
+        // Global arrays to store references (simulating potential leaks)
+        let buggyReferences = [];  // For buggy widgets: References are never cleared
+        let fixedReferences = [];  // For fixed widgets: References are cleared on removal
+        
+        let buggyCount = 0;  // Counter for buggy widgets
+        let fixedCount = 0;  // Counter for fixed widgets
+        
+        const dashboard = document.getElementById('dashboard');
+        const buggyCounterSpan = document.getElementById('buggyCounter');
+        const fixedCounterSpan = document.getElementById('fixedCounter');
+        
+        function updateCounters() {
+            buggyCounterSpan.textContent = buggyCount;
+            fixedCounterSpan.textContent = fixedCount;
+        }
+        
+        function addBuggyWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget buggy';
+            widget.textContent = `Buggy Widget ${buggyCount + 1}`;
+            
+            // Attach an event listener (simulating something that holds a reference)
+            widget.addEventListener('click', () => {
+                alert('You clicked a buggy widget!');
+            });
+            
+            // Store a reference in the global array (this won't be cleaned up)
+            buggyReferences.push(widget);  // Leaking reference
+            
+            dashboard.appendChild(widget);
+            buggyCount++;  // Increment counter
+            updateCounters();
+        }
+        
+        function addFixedWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget fixed';
+            widget.textContent = `Fixed Widget ${fixedCount + 1}`;
+            
+            // Attach an event listener
+            const clickHandler = () => {
+                alert('You clicked a fixed widget!');
+            };
+            widget.addEventListener('click', clickHandler);
+            
+            // Store a reference in the global array
+            fixedReferences.push({ element: widget, handler: clickHandler });  // We'll clean this up later
+            
+            dashboard.appendChild(widget);
+            fixedCount++;  // Increment counter
+            updateCounters();
+        }
+        
+        function removeLastWidget() {
+            const children = dashboard.children;
+            if (children.length > 0) {
+                const lastChild = children[children.length - 1];
+                
+                if (lastChild.classList.contains('buggy')) {
+                    // Buggy removal: Only remove from DOM, but don't clean up references or listeners
+                    dashboard.removeChild(lastChild);
+                    // Intentional leak: buggyReferences still holds the reference, so buggyCount doesn't decrease
+                    // In a real scenario, this would prevent GC from collecting the object
+                } else if (lastChild.classList.contains('fixed')) {
+                    // Fixed removal: Properly clean up
+                    dashboard.removeChild(lastChild);
+                    const refIndex = fixedReferences.length - 1;
+                    if (refIndex >= 0) {
+                        const ref = fixedReferences[refIndex];
+                        lastChild.removeEventListener('click', ref.handler);  // Remove event listener
+                        fixedReferences.splice(refIndex, 1);  // Clear the reference
+                        fixedCount--;  // Decrement counter
+                    }
+                }
+                updateCounters();
+            } else {
+                alert('No widgets to remove!');
+            }
+        }
+        
+        // Event listeners for buttons
+        document.getElementById('addBuggy').addEventListener('click', addBuggyWidget);
+        document.getElementById('addFixed').addEventListener('click', addFixedWidget);
+        document.getElementById('removeLast').addEventListener('click', removeLastWidget);
+    </script>
+</body>
+</html>

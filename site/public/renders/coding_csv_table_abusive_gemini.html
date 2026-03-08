@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robust CSV Parser</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        textarea {
+            width: 98%;
+            height: 200px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding in width */
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #ecf0f1;
+            color: #333;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternating row color */
+        }
+        tr:hover {
+            background-color: #eef;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSV Parser Challenge</h1>
+
+    <p>Paste your CSV data below:</p>
+    <textarea id="csvInput" placeholder="Paste CSV data here. Example:
+Name,Description,Value
+"John Doe","A test with a comma, inside quotes",123
+"Jane ""The Best"" Smith","Another, example with escaped ""quotes"" and a newline
+character inside",456
+Field A,Field B,Field C"></textarea>
+    <button onclick="parseCSV()">Parse CSV</button>
+
+    <div id="errorMessage" class="error"></div>
+
+    <h2>Parsed Data:</h2>
+    <table id="csvTable">
+        <!-- Table data will be inserted here -->
+    </table>
+
+    <script>
+        function parseCSV() {
+            const csvText = document.getElementById('csvInput').value;
+            const table = document.getElementById('csvTable');
+            const errorMessageDiv = document.getElementById('errorMessage');
+            table.innerHTML = ''; // Clear previous table data
+            errorMessageDiv.innerHTML = ''; // Clear previous error messages
+
+            if (!csvText.trim()) {
+                errorMessageDiv.textContent = "Please enter some CSV data.";
+                return;
+            }
+
+            try {
+                const rows = [];
+                let currentRow = [];
+                let currentField = '';
+                let inQuote = false;
+
+                for (let i = 0; i < csvText.length; i++) {
+                    const char = csvText[i];
+                    const nextChar = csvText[i + 1];
+
+                    if (inQuote) {
+                        if (char === '"') {
+                            if (nextChar === '"') {
+                                // Escaped quote: "" -> "
+                                currentField += '"';
+                                i++; // Skip the next quote character
+                            } else {
+                                // End of quote
+                                inQuote = false;
+                            }
+                        } else {
+                            currentField += char;
+                        }
+                    } else {
+                        if (char === '"') {
+                            // Start of quote
+                            inQuote = true;
+                        } else if (char === ',') {
+                            // End of field
+                            currentRow.push(currentField);
+                            currentField = '';
+                        } else if (char === '\n' || char === '\r') {
+                            // End of row
+                            if (char === '\r' && nextChar === '\n') {
+                                i++; // Handle CRLF
+                            }
+                            currentRow.push(currentField);
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentField = '';
+                            // Important: If we are at the end of the file and there's a trailing newline,
+                            // we don't want to add an empty row.
+                            // This also prevents adding an empty row if the last char is a newline.
+                            if (i === csvText.length - 1 && char === '\n') {
+                                // Do nothing, we've already processed the last row
+                            } else if (csvText.substring(i + 1).trim() === '') {
+                                // If remaining text is just whitespace, don't add an empty row
+                                break;
+                            }
+                        } else {
+                            currentField += char;
+                        }
+                    }
+                }
+
+                // Add the last field and row if there's any pending data
+                if (currentField !== '' || currentRow.length > 0 || rows.length === 0) {
+                     // Only push if there's actual data or if it's the very first row being processed
+                    currentRow.push(currentField);
+                    rows.push(currentRow);
+                }
+
+                // Filter out genuinely empty rows that might result from trailing newlines
+                const filteredRows = rows.filter(row => row.some(field => field.trim() !== '') || row.length > 0);
+                if (filteredRows.length === 0 && csvText.trim() !== '') {
+                    // This case handles a single field input without a trailing newline
+                    filteredRows.push(rows[0]);
+                }
+
+
+                if (filteredRows.length === 0) {
+                    errorMessageDiv.textContent = "No valid CSV data parsed.";
+                    return;
+                }
+
+                // Create table header
+                const thead = table.createTHead();
+                const headerRow = thead.insertRow();
+                filteredRows[0].forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    headerRow.appendChild(th);
+                });
+
+                // Create table body
+                const tbody = table.createTBody();
+                for (let i = 1; i < filteredRows.length; i++) {
+                    const dataRow = tbody.insertRow();
+                    filteredRows[i].forEach(cellText => {
+                        const td = dataRow.insertCell();
+                        td.textContent = cellText;
+                    });
+                }
+
+            } catch (e) {
+                errorMessageDiv.textContent = `Error parsing CSV: ${e.message}`;
+                console.error("CSV Parsing Error:", e);
+            }
+        }
+
+        // Optional: Populate with example data on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const exampleCSV = `Name,Description,Value
+"John Doe","A test with a comma, inside quotes",123
+"Jane ""The Best"" Smith","Another, example with escaped ""quotes"" and a newline
+character inside",456
+"Quotes at end","A field ending with a quote"",true
+Field A,Field B,Field C
+"Empty field, next to quoted","","Test"
+"","An empty first field"`;
+            document.getElementById('csvInput').value = exampleCSV;
+            parseCSV(); // Parse it immediately to show output
+        });
+    </script>
+</body>
+</html>

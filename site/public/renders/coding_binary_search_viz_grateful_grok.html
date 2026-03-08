@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualizer</title>
+    <style>
+        /* Styles for the array boxes */
+        #array-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .box {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+            border: 1px solid black;
+            background-color: white;
+            text-align: center;
+            line-height: 50px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            transition: background-color 0.3s ease; /* Smooth highlight transition */
+        }
+        
+        /* Highlight for the search range (low to high) */
+        .highlight-range {
+            background-color: yellow;
+        }
+        
+        /* Highlight for the middle element */
+        .highlight-middle {
+            background-color: red; /* Overrides range highlight for middle */
+        }
+        
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualizer</h1>
+    <p>Enter a target number to search in the sorted array: [1, 3, 5, 7, 9, 11, 13, 15]</p>
+    <input type="number" id="target-input" placeholder="e.g., 7">
+    <button id="step-button">Start/Next Step</button>
+    <div id="array-container"></div>
+    <div id="status"></div>
+
+    <script>
+        // The sorted array to visualize
+        const array = [1, 3, 5, 7, 9, 11, 13, 15];
+        
+        // State variables
+        let low = 0;
+        let high = array.length - 1;
+        let target = null;
+        let found = false;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const arrayContainer = document.getElementById('array-container');
+            
+            // Create and append boxes for each element in the array
+            array.forEach((num, index) => {
+                const box = document.createElement('div');
+                box.className = 'box';
+                box.textContent = num;
+                box.dataset.index = index;  // Store index for reference
+                arrayContainer.appendChild(box);
+            });
+            
+            const stepButton = document.getElementById('step-button');
+            stepButton.addEventListener('click', performStep);
+        });
+        
+        function performStep() {
+            const statusDiv = document.getElementById('status');
+            
+            if (target === null) {
+                // First click: Get the target from input
+                target = parseInt(document.getElementById('target-input').value);
+                if (isNaN(target)) {
+                    statusDiv.textContent = 'Please enter a valid number.';
+                    return;
+                }
+                low = 0;  // Reset low
+                high = array.length - 1;  // Reset high
+                found = false;  // Reset found flag
+                statusDiv.textContent = `Searching for ${target}...`;
+            } else if (low <= high && !found) {
+                // Perform one step of binary search
+                const mid = Math.floor((low + high) / 2);
+                
+                // Highlight the range (low to high)
+                highlightRange(low, high);
+                
+                // Highlight the middle element
+                highlightMiddle(mid);
+                
+                if (array[mid] === target) {
+                    found = true;
+                    statusDiv.textContent = `Found ${target} at index ${mid}!`;
+                    // Optionally, keep the middle highlighted
+                    document.querySelectorAll('.box').forEach(box => {
+                        if (parseInt(box.dataset.index) === mid) {
+                            box.classList.add('highlight-middle');  // Permanent highlight for found
+                        }
+                    });
+                } else if (array[mid] > target) {
+                    high = mid - 1;
+                    statusDiv.textContent = `Too high: ${array[mid]} > ${target}. New high: ${high}`;
+                } else {
+                    low = mid + 1;
+                    statusDiv.textContent = `Too low: ${array[mid]} < ${target}. New low: ${low}`;
+                }
+            } else if (!found) {
+                // Search completed, not found
+                statusDiv.textContent = `${target} not found in the array.`;
+            }
+        }
+        
+        function highlightRange(lowIndex, highIndex) {
+            const boxes = document.querySelectorAll('.box');
+            boxes.forEach((box, index) => {
+                const boxIndex = parseInt(box.dataset.index);
+                if (boxIndex >= lowIndex && boxIndex <= highIndex) {
+                    box.classList.add('highlight-range');
+                } else {
+                    box.classList.remove('highlight-range', 'highlight-middle');  // Remove previous highlights
+                }
+            });
+        }
+        
+        function highlightMiddle(midIndex) {
+            const boxes = document.querySelectorAll('.box');
+            boxes.forEach(box => {
+                const boxIndex = parseInt(box.dataset.index);
+                if (boxIndex === midIndex) {
+                    box.classList.add('highlight-middle');
+                } else {
+                    box.classList.remove('highlight-middle');  // Remove from others
+                }
+            });
+        }
+    </script>
+</body>
+</html>

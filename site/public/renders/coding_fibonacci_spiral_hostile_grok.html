@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral: Buggy vs Fixed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid black;
+            margin: 20px auto;
+            display: block;
+        }
+        h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fibonacci Spiral Demonstration</h1>
+    <p>The buggy version draws all arcs from the same center, causing overlap and an incorrect spiral. The fixed version correctly updates the center for each arc, producing a proper Fibonacci spiral.</p>
+    
+    <h2>Buggy Version (Incorrect Calculation)</h2>
+    <canvas id="buggyCanvas" width="400" height="400"></canvas>
+    
+    <h2>Fixed Version (Correct Calculation)</h2>
+    <canvas id="fixedCanvas" width="400" height="400"></canvas>
+    
+    <script>
+        // Function to generate Fibonacci numbers up to n terms
+        function generateFibonacci(n) {
+            const fib = [1, 1];  // Start with the first two Fibonacci numbers
+            while (fib.length < n) {
+                fib.push(fib[fib.length - 1] + fib[fib.length - 2]);
+            }
+            return fib;
+        }
+
+        // Function to draw the buggy spiral
+        // Bug: All arcs are drawn from the same center, regardless of the spiral's progression.
+        function drawBuggySpiral(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const fib = generateFibonacci(8);  // Generate 8 Fibonacci numbers for the spiral
+            let angle = 0;  // Starting angle
+            const centerX = 200;  // Fixed center X (bug: never updates)
+            const centerY = 200;  // Fixed center Y (bug: never updates)
+            
+            ctx.strokeStyle = 'blue';  // Blue for buggy
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < fib.length; i++) {
+                const r = fib[i];  // Radius based on Fibonacci number
+                const startAngle = angle;
+                const endAngle = angle - (Math.PI / 2);  // Clockwise quarter-circle
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, startAngle, endAngle, true);  // true for clockwise
+                ctx.stroke();
+                
+                angle = endAngle;  // Update angle for next arc, but center stays the same
+            }
+        }
+
+        // Function to draw the fixed spiral
+        // Fix: Properly update the center for each arc based on the direction.
+        function drawFixedSpiral(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const fib = generateFibonacci(8);  // Generate 8 Fibonacci numbers
+            let x = 200;  // Starting X (adjusted for canvas center)
+            let y = 200;  // Starting Y
+            let angle = 0;  // Starting angle
+            let directionIndex = 0;  // 0: right, 1: down, 2: left, 3: up
+            
+            ctx.strokeStyle = 'green';  // Green for fixed
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < fib.length; i++) {
+                const r = fib[i];  // Radius based on Fibonacci number
+                const startAngle = angle;
+                const endAngle = angle - (Math.PI / 2);  // Clockwise quarter-circle
+                const centerX = x;  // Current center X
+                const centerY = y;  // Current center Y
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, startAngle, endAngle, true);  // Draw the arc
+                ctx.stroke();
+                
+                // Update position for the next arc based on the current direction
+                if (directionIndex % 4 === 0) {  // Right: Move down next
+                    y += r;  // Move Y down by radius
+                } else if (directionIndex % 4 === 1) {  // Down: Move left next
+                    x -= r;  // Move X left by radius
+                } else if (directionIndex % 4 === 2) {  // Left: Move up next
+                    y -= r;  // Move Y up by radius
+                } else if (directionIndex % 4 === 3) {  // Up: Move right next
+                    x += r;  // Move X right by radius
+                }
+                
+                angle = endAngle;  // Update angle
+                directionIndex++;  // Move to next direction
+            }
+        }
+
+        // Run the drawings on page load
+        window.onload = function() {
+            drawBuggySpiral('buggyCanvas');  // Draw buggy version
+            drawFixedSpiral('fixedCanvas');  // Draw fixed version
+        };
+    </script>
+</body>
+</html>

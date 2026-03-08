@@ -21,7 +21,7 @@
             padding: 20px;
         }
 
-        .card {
+        .container {
             background: #16213e;
             border-radius: 12px;
             padding: 40px;
@@ -33,14 +33,14 @@
         h1 {
             color: #e0e0e0;
             font-size: 1.4rem;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .subtitle {
             color: #888;
             font-size: 0.85rem;
             margin-bottom: 30px;
-            font-style: italic;
+            line-height: 1.5;
         }
 
         label {
@@ -55,215 +55,407 @@
         input[type="email"] {
             width: 100%;
             padding: 14px 16px;
-            border-radius: 8px;
-            border: 2px solid #333;
-            background: #0f3460;
-            color: #fff;
             font-size: 1rem;
+            border-radius: 8px;
+            border: 2px solid #2a2a4a;
+            background: #0f0f23;
+            color: #e0e0e0;
             outline: none;
             transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
 
-        input[type="email"]::placeholder {
-            color: #555;
+        input[type="email"]:focus {
+            border-color: #4a4a8a;
         }
 
         input[type="email"].valid {
-            border-color: #2ecc71;
-            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
         }
 
         input[type="email"].invalid {
-            border-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
         }
 
         .feedback {
             margin-top: 10px;
             font-size: 0.82rem;
             min-height: 20px;
-            transition: color 0.25s;
+            transition: color 0.2s;
         }
 
         .feedback.valid {
-            color: #2ecc71;
+            color: #22c55e;
         }
 
         .feedback.invalid {
-            color: #e74c3c;
+            color: #ef4444;
         }
 
-        .regex-display {
-            margin-top: 24px;
-            background: #0a0a1a;
+        .feedback.neutral {
+            color: transparent;
+        }
+
+        /* Checklist */
+        .checklist {
+            margin-top: 20px;
+            background: #0f0f23;
             border-radius: 8px;
             padding: 16px;
-            border-left: 3px solid #e67e22;
         }
 
-        .regex-display p {
-            color: #e67e22;
+        .checklist h3 {
+            color: #888;
             font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-        }
-
-        .regex-display code {
-            color: #f39c12;
-            font-size: 0.78rem;
-            word-break: break-all;
-            line-height: 1.6;
-            display: block;
-        }
-
-        .honest-section {
-            margin-top: 30px;
-            border-top: 1px solid #2a2a4a;
-            padding-top: 24px;
-        }
-
-        .honest-section h2 {
-            color: #e74c3c;
-            font-size: 1rem;
-            margin-bottom: 14px;
-        }
-
-        .problem-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .problem-list li {
-            color: #ccc;
-            font-size: 0.83rem;
-            padding: 8px 0 8px 20px;
-            border-bottom: 1px solid #1e1e3e;
-            position: relative;
-            line-height: 1.5;
-        }
-
-        .problem-list li::before {
-            content: '✗';
-            color: #e74c3c;
-            position: absolute;
-            left: 0;
-        }
-
-        .alternatives-section {
-            margin-top: 24px;
-        }
-
-        .alternatives-section h2 {
-            color: #2ecc71;
-            font-size: 1rem;
-            margin-bottom: 14px;
-        }
-
-        .alt-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .alt-list li {
-            color: #ccc;
-            font-size: 0.83rem;
-            padding: 8px 0 8px 20px;
-            border-bottom: 1px solid #1e1e3e;
-            position: relative;
-            line-height: 1.5;
-        }
-
-        .alt-list li::before {
-            content: '✓';
-            color: #2ecc71;
-            position: absolute;
-            left: 0;
-        }
-
-        .alt-list li strong {
-            color: #7ed6df;
-        }
-
-        .test-cases {
-            margin-top: 24px;
-            background: #0a0a1a;
-            border-radius: 8px;
-            padding: 16px;
-        }
-
-        .test-cases h3 {
-            color: #9b59b6;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
             margin-bottom: 12px;
         }
 
-        .test-case {
+        .check-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #1a1a2e;
+            gap: 10px;
+            padding: 4px 0;
+            font-size: 0.82rem;
+            color: #555;
+            transition: color 0.2s;
+        }
+
+        .check-item.pass {
+            color: #22c55e;
+        }
+
+        .check-item.fail {
+            color: #ef4444;
+        }
+
+        .check-icon {
+            font-size: 0.9rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Honest disclaimer */
+        .disclaimer {
+            margin-top: 30px;
+            background: #1a0a0a;
+            border: 1px solid #5a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .disclaimer h2 {
+            color: #ef4444;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .disclaimer p {
+            color: #aaa;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .disclaimer p:last-child {
+            margin-bottom: 0;
+        }
+
+        .disclaimer code {
+            background: #2a0a0a;
+            color: #f87171;
+            padding: 1px 5px;
+            border-radius: 3px;
             font-size: 0.78rem;
         }
 
-        .test-case:last-child {
+        .alternatives {
+            margin-top: 20px;
+            background: #0a1a0a;
+            border: 1px solid #1a5a1a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .alternatives h2 {
+            color: #22c55e;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .alt-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a3a1a;
+        }
+
+        .alt-item:last-child {
             border-bottom: none;
+            padding-bottom: 0;
         }
 
-        .test-case .addr {
-            color: #aaa;
-            font-family: monospace;
-            cursor: pointer;
-            text-decoration: underline dotted;
+        .alt-item strong {
+            color: #86efac;
+            font-size: 0.85rem;
         }
 
-        .test-case .addr:hover {
-            color: #fff;
+        .alt-item span {
+            color: #888;
+            font-size: 0.78rem;
+            line-height: 1.5;
         }
 
-        .test-case .result {
-            font-size: 0.72rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .test-case .pass {
-            background: rgba(46,204,113,0.15);
-            color: #2ecc71;
-        }
-
-        .test-case .fail {
-            background: rgba(231,76,60,0.15);
-            color: #e74c3c;
-        }
-
-        .test-case .lie {
-            background: rgba(230,126,34,0.15);
-            color: #e67e22;
-        }
-
-        button[type="submit"] {
+        .submit-btn {
             margin-top: 20px;
             width: 100%;
             padding: 14px;
-            background: #0f3460;
-            color: #fff;
-            border: 2px solid #1a5276;
+            background: #3b3b8a;
+            color: #e0e0e0;
+            border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: background 0.2s;
         }
 
-        button[type="submit"]:hover {
-            background: #1a5276;
+        .submit-btn:hover {
+            background: #4a4aaa;
         }
 
-        .tag {
-            display: inline-block;
-            background: rgba(231,76,60,0.2);
-            color: #e74c3c;
-            font
+        .submit-btn:disabled {
+            background: #2a2a4a;
+            color: #555;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Validation</h1>
+        <p class="subtitle">Real-time regex validation — with full honesty about its limitations.</p>
+
+        <label for="emailInput">Email Address</label>
+        <input
+            type="email"
+            id="emailInput"
+            placeholder="you@example.com"
+            autocomplete="off"
+            spellcheck="false"
+        />
+        <div class="feedback neutral" id="feedback">​</div>
+
+        <div class="checklist">
+            <h3>Regex Checks</h3>
+            <div class="check-item" id="check-notempty">
+                <span class="check-icon">○</span>
+                <span>Not empty</span>
+            </div>
+            <div class="check-item" id="check-at">
+                <span class="check-icon">○</span>
+                <span>Contains exactly one <code style="background:#1a1a3a;color:#a78bfa;padding:1px 4px;border-radius:3px;">@</code> symbol</span>
+            </div>
+            <div class="check-item" id="check-local">
+                <span class="check-icon">○</span>
+                <span>Local part (before @) is valid characters</span>
+            </div>
+            <div class="check-item" id="check-domain">
+                <span class="check-icon">○</span>
+                <span>Domain has at least one dot</span>
+            </div>
+            <div class="check-item" id="check-tld">
+                <span class="check-icon">○</span>
+                <span>TLD is 2–24 characters</span>
+            </div>
+            <div class="check-item" id="check-length">
+                <span class="check-icon">○</span>
+                <span>Total length ≤ 254 characters (RFC 5321)</span>
+            </div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" disabled>Submit</button>
+
+        <!-- THE HONEST PART -->
+        <div class="disclaimer">
+            <h2>⚠️ Why Regex Is Fundamentally Wrong For This</h2>
+            <p>
+                <strong style="color:#f87171;">RFC 5321 and RFC 5322</strong> define what a valid email address actually is,
+                and regex cannot fully implement them. Here's what regex gets wrong:
+            </p>
+            <p>
+                <strong style="color:#fca5a5;">1. Quoted local parts are valid.</strong>
+                <code>"hello world"@example.com</code> is a perfectly legal email address per RFC 5321.
+                Almost every regex rejects it.
+            </p>
+            <p>
+                <strong style="color:#fca5a5;">2. Comments are valid.</strong>
+                <code>(comment)user@example.com</code> is legal. Regex won't handle it.
+            </p>
+            <p>
+                <strong style="color:#fca5a5;">3. IP address literals are valid.</strong>
+                <code>user@[192.168.1.1]</code> and <code>user@[IPv6:::1]</code> are valid. Regex typically rejects them.
+            </p>
+            <p>
+                <strong style="color:#fca5a5;">4. Internationalized domains (RFC 6531).</strong>
+                <code>用户@例子.广告</code> is a valid email. Regex with basic character classes fails completely.
+            </p>
+            <p>
+                <strong style="color:#fca5a5;">5. Regex cannot verify deliverability.</strong>
+                <code>totally@valid-regex.com</code> passes every regex but may not exist.
+                Regex tells you nothing about whether the mailbox actually exists.
+            </p>
+            <p>
+                <strong style="color:#fca5a5;">6. A fully RFC-compliant regex is a monster.</strong>
+                The regex required to truly implement RFC 5322 is <em>thousands of characters long</em>
+                and still won't catch deliverability issues.
+            </p>
+        </div>
+
+        <div class="alternatives">
+            <h2>✅ What You Should Actually Do</h2>
+
+            <div class="alt-item">
+                <strong>1. Minimal sanity regex + confirmation email</strong>
+                <span>
+                    Use a simple regex just to catch obvious typos (missing @, no domain).
+                    Then send a confirmation email. This is the only real proof the address works.
+                    Every serious platform does this.
+                </span>
+            </div>
+
+            <div class="alt-item">
+                <strong>2. HTML5 native input type="email"</strong>
+                <span>
+                    The browser's built-in validation is already a reasonable sanity check and
+                    handles more edge cases than most hand-rolled regex. It's not RFC-complete either,
+                    but it's good enough for a first pass and it's free.
+                </span>
+            </div>
+
+            <div class="alt-item">
+                <strong>3. Server-side library validation</strong>
+                <span>
+                    Use <code style="background:#0a2a0a;color:#86efac;padding:1px 4px;border-radius:3px;">email-validator</code> (Node.js),
+                    <code style="background:#0a2a0a;color:#86efac;padding:1px 4px;border-radius:3px;">python-email-validator</code> (Python),
+                    or <code style="background:#0a2a0a;color:#86efac;padding:1px 4px;border-radius:3px;">egulias/email-validator</code> (PHP).
+                    These libraries implement the RFCs properly and are maintained.
+                </span>
+            </div>
+
+            <div class="alt-item">
+                <strong>4. MX record lookup (DNS validation)</strong>
+                <span>
+                    Check that the domain actually has mail exchange records configured.
+                    This proves the domain can receive email, though not that the specific mailbox exists.
+                    Do this server-side only.
+                </span>
+            </div>
+
+            <div class="alt-item">
+                <strong>5. Email verification API services</strong>
+                <span>
+                    Services like <strong style="color:#86efac;">ZeroBounce</strong>, <strong style="color:#86efac;">Hunter.io</strong>,
+                    or <strong style="color:#86efac;">Abstract API</strong> perform DNS, MX, SMTP handshake checks,
+                    and disposable email detection. Overkill for most apps, essential for bulk senders.
+                </span>
+            </div>
+
+            <div class="alt-item">
+                <strong>6. The honest bottom line</strong>
+                <span>
+                    <strong style="color:#86efac;">No client-side validation proves an email is real.</strong>
+                    Use regex only to improve UX by catching obvious typos early.
+                    Always confirm via email. Everything else is theater.
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const input = document.getElementById('emailInput');
+        const feedback = document.getElementById('feedback');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Deliberately simple regex — not RFC-complete, honest about it
+        const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,24}$/;
+
+        const checks = {
+            'check-notempty': (v) => v.length > 0,
+            'check-at':       (v) => (v.match(/@/g) || []).length === 1,
+            'check-local':    (v) => /^[^\s@]+@/.test(v) && v.split('@')[0].length > 0,
+            'check-domain':   (v) => {
+                const parts = v.split('@');
+                return parts.length === 2 && parts[1].includes('.');
+            },
+            'check-tld':      (v) => {
+                const parts = v.split('@');
+                if (parts.length !== 2) return false;
+                const tld = parts[1].split('.').pop();
+                return tld.length >= 2 && tld.length <= 24;
+            },
+            'check-length':   (v) => v.length <= 254,
+        };
+
+        function updateCheck(id, passing, started) {
+            const el = document.getElementById(id);
+            const icon = el.querySelector('.check-icon');
+            if (!started) {
+                el.className = 'check-item';
+                icon.textContent = '○';
+            } else if (passing) {
+                el.className = 'check-item pass';
+                icon.textContent = '✓';
+            } else {
+                el.className = 'check-item fail';
+                icon.textContent = '✗';
+            }
+        }
+
+        input.addEventListener('input', () => {
+            const val = input.value;
+            const started = val.length > 0;
+            const isValid = EMAIL_REGEX.test(val) && val.length <= 254;
+
+            // Update individual checks
+            for (const [id, fn] of Object.entries(checks)) {
+                updateCheck(id, fn(val), started);
+            }
+
+            // Border feedback
+            if (!started) {
+                input.className = '';
+                feedback.className = 'feedback neutral';
+                feedback.textContent = '​'; // zero-width space to hold height
+                submitBtn.disabled = true;
+                return;
+            }
+
+            if (isValid) {
+                input.className = 'valid';
+                feedback.className = 'feedback valid';
+                feedback.textContent = '✓ Passes regex checks (see disclaimer below for why this is not enough)';
+                submitBtn.disabled = false;
+            } else {
+                input.className = 'invalid';
+                feedback.className = 'feedback invalid';
+                feedback.textContent = '✗ Does not match expected email pattern';
+                submitBtn.disabled = true;
+            }
+        });
+
+        submitBtn.addEventListener('click', () => {
+            alert(
+                `Regex says "${input.value}" looks okay.\n\n` +
+                `But you still need to send a confirmation email to know it's real.`
+            );
+        });
+    </script>
+</body>
+</html>

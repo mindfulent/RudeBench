@@ -2,59 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shared State Concurrency Bug</title>
+    <title>Progress Bar Tracker</title>
     <style>
         .progress-bar {
             width: 0%;
             height: 20px;
-            background-color: blue;
-            color: white;
+            background-color: #4CAF50;
             text-align: center;
+            color: #fff;
+        }
+        .container {
+            width: 500px;
+            height: 200px;
+            border: 1px solid #ddd;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Buggy Progress Bar</h1>
-    <div id="buggy-progress-bar" class="progress-bar">0%</div>
-    <button id="buggy-start-button">Start Buggy Progress</button>
+    <h1>Shared State Concurrency Bug</h1>
+    <div class="container">
+        <h2>Buggy Implementation</h2>
+        <div id="buggy-progress-bar" class="progress-bar"></div>
+        <p id="buggy-progress-text">Progress: 0%</p>
+        <button id="buggy-start-button">Start</button>
+    </div>
 
-    <h1>Fixed Progress Bar</h1>
-    <div id="fixed-progress-bar" class="progress-bar">0%</div>
-    <button id="fixed-start-button">Start Fixed Progress</button>
+    <div class="container">
+        <h2>Fixed Implementation</h2>
+        <div id="fixed-progress-bar" class="progress-bar"></div>
+        <p id="fixed-progress-text">Progress: 0%</p>
+        <button id="fixed-start-button">Start</button>
+    </div>
 
     <script>
         // Buggy Implementation
-        let buggyProgress = 0;
+        let progress = 0;
         document.getElementById('buggy-start-button').addEventListener('click', () => {
             for (let i = 1; i <= 10; i++) {
                 setTimeout(() => {
-                    buggyProgress += 10;
-                    document.getElementById('buggy-progress-bar').style.width = `${buggyProgress}%`;
-                    document.getElementById('buggy-progress-bar').innerText = `${buggyProgress}%`;
+                    progress += 10;
+                    document.getElementById('buggy-progress-bar').style.width = `${progress}%`;
+                    document.getElementById('buggy-progress-text').innerText = `Progress: ${progress}%`;
                 }, i * 1000);
             }
         });
 
         // Fixed Implementation
         let fixedProgress = 0;
-        let fixedProgressLock = false;
+        let updateFixedProgress = (value) => {
+            fixedProgress = Math.min(fixedProgress + value, 100);
+            document.getElementById('fixed-progress-bar').style.width = `${fixedProgress}%`;
+            document.getElementById('fixed-progress-text').innerText = `Progress: ${fixedProgress}%`;
+        };
         document.getElementById('fixed-start-button').addEventListener('click', () => {
             for (let i = 1; i <= 10; i++) {
-                setTimeout(async () => {
-                    while (fixedProgressLock) {
-                        await new Promise(resolve => setTimeout(resolve, 10));
-                    }
-                    fixedProgressLock = true;
-                    try {
-                        fixedProgress = Math.min(fixedProgress + 10, 100);
-                        document.getElementById('fixed-progress-bar').style.width = `${fixedProgress}%`;
-                        document.getElementById('fixed-progress-bar').innerText = `${fixedProgress}%`;
-                    } finally {
-                        fixedProgressLock = false;
-                    }
-                }, i * 1000);
+                (async () => {
+                    await new Promise(resolve => setTimeout(resolve, i * 1000));
+                    updateFixedProgress(10);
+                })();
             }
         });
     </script>

@@ -12,38 +12,37 @@
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0f1117;
-            color: #e2e8f0;
+            color: #e1e4e8;
             min-height: 100vh;
         }
 
         header {
             background: linear-gradient(135deg, #1a1d2e 0%, #16213e 100%);
-            border-bottom: 1px solid #2d3748;
+            border-bottom: 1px solid #30363d;
             padding: 2rem;
             text-align: center;
         }
 
         header h1 {
             font-size: 2rem;
-            font-weight: 700;
             color: #fff;
             margin-bottom: 0.5rem;
         }
 
         header p {
-            color: #94a3b8;
-            font-size: 1rem;
+            color: #8b949e;
+            font-size: 0.95rem;
         }
 
         .score-banner {
-            background: linear-gradient(135deg, #7f1d1d, #991b1b);
-            border: 1px solid #ef4444;
+            background: #161b22;
+            border: 1px solid #30363d;
+            margin: 2rem auto;
+            max-width: 900px;
             border-radius: 12px;
             padding: 1.5rem 2rem;
-            margin: 2rem auto;
-            max-width: 1100px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -51,194 +50,1031 @@
             gap: 1rem;
         }
 
-        .score-banner .label {
-            font-size: 1.1rem;
-            color: #fca5a5;
+        .score-label {
+            font-size: 1rem;
+            color: #8b949e;
+        }
+
+        .score-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f85149;
+        }
+
+        .score-value span {
+            font-size: 1rem;
+            color: #8b949e;
+        }
+
+        .score-pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 600;
         }
 
-        .score-banner .score {
-            font-size: 3rem;
-            font-weight: 800;
-            color: #ef4444;
-        }
-
-        .score-banner .summary {
-            color: #fca5a5;
-            font-size: 0.9rem;
-            max-width: 400px;
-            line-height: 1.6;
-        }
+        .pill-red   { background: #3d1515; color: #f85149; border: 1px solid #f85149; }
+        .pill-green { background: #0d2818; color: #3fb950; border: 1px solid #3fb950; }
 
         .container {
-            max-width: 1100px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 0 2rem 4rem;
+            padding: 0 1.5rem 4rem;
         }
 
         .section-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin: 2.5rem 0 1rem;
+            font-size: 1.2rem;
+            color: #fff;
+            margin: 2rem 0 1rem;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid #2d3748;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        /* Principles Reference */
-        .principles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 0.3rem;
         }
 
-        .principle-card {
-            background: #1a1d2e;
-            border: 1px solid #2d3748;
-            border-radius: 10px;
-            padding: 1.2rem;
+        .tab-btn {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            background: transparent;
+            border: none;
+            color: #8b949e;
             cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
             transition: all 0.2s;
         }
 
-        .principle-card:hover {
-            border-color: #6366f1;
-            transform: translateY(-2px);
+        .tab-btn.active {
+            background: #21262d;
+            color: #fff;
         }
 
-        .principle-card h3 {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #818cf8;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+        .tab-btn:hover:not(.active) {
+            color: #c9d1d9;
         }
 
-        .principle-card p {
-            font-size: 0.82rem;
-            color: #94a3b8;
-            line-height: 1.5;
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         /* Endpoint Cards */
         .endpoint-card {
-            background: #1a1d2e;
-            border: 1px solid #2d3748;
-            border-radius: 14px;
-            margin-bottom: 2rem;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
             overflow: hidden;
-            transition: box-shadow 0.2s;
+            transition: border-color 0.2s;
         }
 
         .endpoint-card:hover {
-            box-shadow: 0 0 0 1px #4f46e5;
+            border-color: #58a6ff;
         }
 
-        .endpoint-header {
-            padding: 1.2rem 1.5rem;
+        .card-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #1c2128;
             cursor: pointer;
-            background: #12152a;
-            border-bottom: 1px solid #2d3748;
+            user-select: none;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
-        .endpoint-header:hover {
-            background: #161929;
-        }
-
-        .endpoint-left {
+        .card-header-left {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
 
         .method-badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 6px;
+            padding: 0.25rem 0.6rem;
+            border-radius: 5px;
             font-size: 0.78rem;
-            font-weight: 800;
-            letter-spacing: 0.05em;
+            font-weight: 700;
             font-family: monospace;
+            min-width: 52px;
+            text-align: center;
         }
 
-        .method-GET    { background: #064e3b; color: #6ee7b7; border: 1px solid #065f46; }
-        .method-POST   { background: #1e3a5f; color: #93c5fd; border: 1px solid #1e40af; }
-        .method-PUT    { background: #3b2f00; color: #fcd34d; border: 1px solid #92400e; }
-        .method-DELETE { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
-        .method-PATCH  { background: #2e1065; color: #d8b4fe; border: 1px solid #4c1d95; }
+        .badge-get    { background: #0d419d; color: #79c0ff; border: 1px solid #1f6feb; }
+        .badge-post   { background: #1a4731; color: #56d364; border: 1px solid #2ea043; }
+        .badge-put    { background: #5a3e1b; color: #e3b341; border: 1px solid #d29922; }
+        .badge-delete { background: #3d1515; color: #f85149; border: 1px solid #da3633; }
+        .badge-patch  { background: #2d1f5e; color: #bc8cff; border: 1px solid #8957e5; }
 
         .endpoint-path {
-            font-family: 'Courier New', monospace;
-            font-size: 1rem;
-            color: #e2e8f0;
-            font-weight: 600;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #c9d1d9;
         }
 
         .problem-count {
-            background: #7f1d1d;
-            color: #fca5a5;
-            border: 1px solid #ef4444;
-            border-radius: 20px;
-            padding: 0.25rem 0.75rem;
             font-size: 0.78rem;
-            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
         }
 
-        .toggle-icon {
-            color: #64748b;
-            font-size: 1.2rem;
-            transition: transform 0.3s;
+        .count-red   { background: #3d1515; color: #f85149; }
+        .count-green { background: #0d2818; color: #3fb950; }
+
+        .chevron {
+            color: #8b949e;
+            font-size: 0.8rem;
+            transition: transform 0.2s;
         }
 
-        .toggle-icon.open {
+        .chevron.open {
             transform: rotate(180deg);
         }
 
-        .endpoint-body {
+        .card-body {
             display: none;
             padding: 1.5rem;
+            border-top: 1px solid #30363d;
         }
 
-        .endpoint-body.open {
+        .card-body.open {
             display: block;
         }
 
-        /* Problems list */
+        /* Comparison Grid */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .comparison { grid-template-columns: 1fr; }
+        }
+
+        .comp-box {
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .comp-box.bad {
+            background: #1c1010;
+            border: 1px solid #f85149;
+        }
+
+        .comp-box.good {
+            background: #0c1f10;
+            border: 1px solid #3fb950;
+        }
+
+        .comp-box h4 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .comp-box.bad  h4 { color: #f85149; }
+        .comp-box.good h4 { color: #3fb950; }
+
+        .comp-box code {
+            font-family: monospace;
+            font-size: 0.88rem;
+            color: #e1e4e8;
+            display: block;
+            word-break: break-all;
+        }
+
+        /* Problems List */
         .problems-list {
             margin-bottom: 1.5rem;
         }
 
+        .problems-list h4 {
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
         .problem-item {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             align-items: flex-start;
-            background: #2d1515;
-            border: 1px solid #7f1d1d;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.6rem;
+            padding: 0.75rem;
+            background: #1c1010;
+            border: 1px solid #3d1515;
+            border-radius: 6px;
         }
 
         .problem-icon {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             flex-shrink: 0;
-            margin-top: 0.1rem;
+            margin-top: 0.05rem;
         }
 
-        .problem-content h4 {
+        .problem-text {
             font-size: 0.88rem;
-            font-weight: 700;
-            color: #fca5a5;
-            margin-bottom: 0.3rem;
+            color: #c9d1d9;
+            line-height: 1.5;
         }
 
-        .
+        .problem-text strong {
+            color: #f85149;
+        }
+
+        /* Principle Tags */
+        .principle-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ptag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-weight: 500;
+            background: #21262d;
+            color: #8b949e;
+            border: 1px solid #30363d;
+        }
+
+        .ptag.violated {
+            background: #2d1f0e;
+            color: #e3b341;
+            border-color: #d29922;
+        }
+
+        /* Fix Explanation */
+        .fix-block {
+            background: #0c1f10;
+            border: 1px solid #3fb950;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+        }
+
+        .fix-block h4 {
+            color: #3fb950;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .fix-block p {
+            font-size: 0.88rem;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+
+        .fix-block p + p {
+            margin-top: 0.5rem;
+        }
+
+        /* Principles Reference Tab */
+        .principle-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .principle-card h3 {
+            color: #58a6ff;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .principle-card p {
+            color: #8b949e;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        /* Summary Tab */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: #8b949e;
+        }
+
+        .stat-red    .stat-number { color: #f85149; }
+        .stat-yellow .stat-number { color: #e3b341; }
+        .stat-green  .stat-number { color: #3fb950; }
+        .stat-blue   .stat-number { color: #58a6ff; }
+
+        .issue-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .issue-table th {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            background: #1c2128;
+            color: #8b949e;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .issue-table td {
+            padding: 0.7rem 0.75rem;
+            border-bottom: 1px solid #21262d;
+            color: #c9d1d9;
+            vertical-align: top;
+        }
+
+        .issue-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .issue-table tr:hover td {
+            background: #1c2128;
+        }
+
+        .severity {
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .sev-high   { background: #3d1515; color: #f85149; }
+        .sev-medium { background: #2d1f0e; color: #e3b341; }
+        .sev-low    { background: #0d2818; color: #3fb950; }
+
+        /* HTTP Methods Reference */
+        .method-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-top: 1rem;
+        }
+
+        .method-table th {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            background: #1c2128;
+            color: #8b949e;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .method-table td {
+            padding: 0.7rem 0.75rem;
+            border-bottom: 1px solid #21262d;
+            color: #c9d1d9;
+            vertical-align: top;
+        }
+
+        .method-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tick   { color: #3fb950; }
+        .cross  { color: #f85149; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🔍 REST API Audit Report</h1>
+    <p>Full analysis of every violation with corrected endpoints and REST principles</p>
+</header>
+
+<div class="container">
+
+    <!-- Score Banner -->
+    <div class="score-banner">
+        <div>
+            <div class="score-label">Overall API Health Score</div>
+            <div class="score-value">4<span>/100</span></div>
+        </div>
+        <div class="score-pills">
+            <span class="pill pill-red">4 Endpoints Audited</span>
+            <span class="pill pill-red">15 Violations Found</span>
+            <span class="pill pill-red">0 Correct Endpoints</span>
+            <span class="pill pill-green">4 Fixed Endpoints</span>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('endpoints', this)">Endpoint Audit</button>
+        <button class="tab-btn" onclick="switchTab('summary', this)">Issue Summary</button>
+        <button class="tab-btn" onclick="switchTab('principles', this)">REST Principles</button>
+        <button class="tab-btn" onclick="switchTab('methods', this)">HTTP Methods</button>
+    </div>
+
+    <!-- TAB: Endpoints -->
+    <div id="tab-endpoints" class="tab-content active">
+
+        <div class="section-title">📋 Endpoint-by-Endpoint Analysis</div>
+
+        <!-- ─── ENDPOINT 1 ─── -->
+        <div class="endpoint-card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-header-left">
+                    <span class="method-badge badge-get">GET</span>
+                    <span class="endpoint-path">/getUsers</span>
+                    <span class="problem-count count-red">4 problems</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="card-body">
+                <div class="comparison">
+                    <div class="comp-box bad">
+                        <h4>❌ ORIGINAL</h4>
+                        <code>GET /getUsers</code>
+                    </div>
+                    <div class="comp-box good">
+                        <h4>✅ CORRECTED</h4>
+                        <code>GET /users</code>
+                    </div>
+                </div>
+
+                <div class="principle-tags">
+                    <span class="ptag violated">Violated: Resource Naming</span>
+                    <span class="ptag violated">Violated: Noun-Only URIs</span>
+                    <span class="ptag violated">Violated: Plural Collections</span>
+                    <span class="ptag violated">Violated: No Verb in Path</span>
+                </div>
+
+                <div class="problems-list">
+                    <h4>Problems Identified</h4>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Verb in URI:</strong> "get" is embedded in the path. REST URIs must identify <em>resources</em>, not actions. The HTTP method (GET) already communicates the action — duplicating it in the path is redundant and violates the uniform interface constraint.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Camel case naming:</strong> "getUsers" mixes a verb prefix with a noun using camelCase. REST URI conventions use lowercase kebab-case (e.g., <code>/user-profiles</code>) or simple lowercase nouns.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Singular vs. Plural inconsistency risk:</strong> While the word "Users" is plural here, the pattern set by this endpoint is inconsistent with the other endpoints which use singular "user". Collections should always be plural nouns: <code>/users</code>.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>RPC-style design:</strong> This endpoint reads like a remote procedure call (<code>getUsers()</code>) rather than a REST resource. REST is resource-oriented, not action-oriented.</span>
+                    </div>
+                </div>
+
+                <div class="fix-block">
+                    <h4>✅ Why the Fix is Correct</h4>
+                    <p><code>GET /users</code> — The HTTP verb GET already declares the intent to retrieve. The URI <code>/users</code> identifies the resource collection (plural noun, lowercase). No verb needed, no ambiguity.</p>
+                    <p>To retrieve a specific user: <code>GET /users/{id}</code>. To filter: <code>GET /users?role=admin&status=active</code>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── ENDPOINT 2 ─── -->
+        <div class="endpoint-card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-header-left">
+                    <span class="method-badge badge-post">POST</span>
+                    <span class="endpoint-path">/user/delete/5</span>
+                    <span class="problem-count count-red">5 problems</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="card-body">
+                <div class="comparison">
+                    <div class="comp-box bad">
+                        <h4>❌ ORIGINAL</h4>
+                        <code>POST /user/delete/5</code>
+                    </div>
+                    <div class="comp-box good">
+                        <h4>✅ CORRECTED</h4>
+                        <code>DELETE /users/5</code>
+                    </div>
+                </div>
+
+                <div class="principle-tags">
+                    <span class="ptag violated">Violated: Correct HTTP Method</span>
+                    <span class="ptag violated">Violated: No Verb in Path</span>
+                    <span class="ptag violated">Violated: Plural Collections</span>
+                    <span class="ptag violated">Violated: Idempotency Semantics</span>
+                    <span class="ptag violated">Violated: Uniform Interface</span>
+                </div>
+
+                <div class="problems-list">
+                    <h4>Problems Identified</h4>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Wrong HTTP method:</strong> POST is used for creating new resources or submitting data. Deletion must use the <strong>DELETE</strong> method. Using POST for deletion breaks the HTTP specification's semantic contract and makes the API unpredictable to clients, proxies, and caches.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Verb in URI ("delete"):</strong> The action "delete" is baked into the path. This is the most common REST anti-pattern. The DELETE HTTP method communicates this intent. The path should only identify the resource: <code>/users/5</code>.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Singular resource name:</strong> <code>/user/</code> uses a singular noun for a collection segment. REST convention requires plural nouns for collections: <code>/users/</code>. Singular is only used when the resource is a singleton (e.g., <code>/users/5/profile</code>).</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Broken idempotency:</strong> DELETE must be idempotent — calling it multiple times must produce the same result (resource stays deleted). POST is explicitly non-idempotent. Using POST for deletion breaks this guarantee and confuses caching layers and retry logic.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Inconsistent naming with other endpoints:</strong> This uses <code>/user/</code> while endpoint 1 uses <code>/getUsers</code>. The collection path must be consistent across all operations on the same resource type.</span>
+                    </div>
+                </div>
+
+                <div class="fix-block">
+                    <h4>✅ Why the Fix is Correct</h4>
+                    <p><code>DELETE /users/5</code> — DELETE is the correct HTTP method for removal. It is idempotent (calling it twice is safe). The URI <code>/users/5</code> cleanly identifies the specific resource: user with ID 5, inside the users collection.</p>
+                    <p>Expected responses: <code>204 No Content</code> on success, <code>404 Not Found</code> if user doesn't exist, <code>409 Conflict</code> if deletion is blocked by a dependency.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── ENDPOINT 3 ─── -->
+        <div class="endpoint-card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-header-left">
+                    <span class="method-badge badge-get">GET</span>
+                    <span class="endpoint-path">/createUser?name=Jo</span>
+                    <span class="problem-count count-red">4 problems</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="card-body">
+                <div class="comparison">
+                    <div class="comp-box bad">
+                        <h4>❌ ORIGINAL</h4>
+                        <code>GET /createUser?name=Jo</code>
+                    </div>
+                    <div class="comp-box good">
+                        <h4>✅ CORRECTED</h4>
+                        <code>POST /users</code>
+                        <code style="margin-top:0.5rem; color:#8b949e; font-size:0.8rem;">Body: { "name": "Jo" }</code>
+                    </div>
+                </div>
+
+                <div class="principle-tags">
+                    <span class="ptag violated">Violated: Correct HTTP Method</span>
+                    <span class="ptag violated">Violated: No Verb in Path</span>
+                    <span class="ptag violated">Violated: Safe Method Semantics</span>
+                    <span class="ptag violated">Violated: Data in Request Body</span>
+                </div>
+
+                <div class="problems-list">
+                    <h4>Problems Identified</h4>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>GET used for a state-changing operation:</strong> GET is a <em>safe</em> method — it must never modify server state. Creating a resource is a state change. This must use <strong>POST</strong>. Using GET to create data means browsers, crawlers, and prefetch mechanisms can accidentally trigger resource creation.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Verb in URI ("createUser"):</strong> Same violation as endpoint 1. "create" is an action, not a resource. The POST method to a collection URI (<code>/users</code>) already communicates "create a new user in this collection".</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Resource data in query string:</strong> Sending <code>?name=Jo</code> in a GET request exposes resource data in the URL. This data will appear in server logs, browser history, and referrer headers — a security and privacy risk. Creation data belongs in the <strong>request body</strong> of a POST request.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Cacheable mutation:</strong> GET responses are cached by browsers and proxies. A GET that creates a resource could be cached and replayed, causing duplicate resource creation or stale "creation" responses being served from cache.</span>
+                    </div>
+                </div>
+
+                <div class="fix-block">
+                    <h4>✅ Why the Fix is Correct</h4>
+                    <p><code>POST /users</code> with body <code>{"name": "Jo"}</code> — POST to a collection creates a new member. Data travels in the request body (not the URL), keeping it out of logs and caches. POST is non-idempotent, which correctly signals that each call may create a new resource.</p>
+                    <p>Expected responses: <code>201 Created</code> with a <code>Location: /users/6</code> header pointing to the new resource, plus the created resource in the body.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── ENDPOINT 4 ─── -->
+        <div class="endpoint-card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-header-left">
+                    <span class="method-badge badge-put">PUT</span>
+                    <span class="endpoint-path">/updateAllUsers</span>
+                    <span class="problem-count count-red">4 problems</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="card-body">
+                <div class="comparison">
+                    <div class="comp-box bad">
+                        <h4>❌ ORIGINAL</h4>
+                        <code>PUT /updateAllUsers</code>
+                    </div>
+                    <div class="comp-box good">
+                        <h4>✅ CORRECTED</h4>
+                        <code>PATCH /users</code>
+                        <code style="margin-top:0.5rem; color:#8b949e; font-size:0.8rem;">Body: { "status": "inactive" }</code>
+                    </div>
+                </div>
+
+                <div class="principle-tags">
+                    <span class="ptag violated">Violated: Correct HTTP Method</span>
+                    <span class="ptag violated">Violated: No Verb in Path</span>
+                    <span class="ptag violated">Violated: PUT Semantics</span>
+                    <span class="ptag violated">Violated: Bulk Operation Pattern</span>
+                </div>
+
+                <div class="problems-list">
+                    <h4>Problems Identified</h4>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Wrong HTTP method (PUT vs PATCH):</strong> PUT requires sending the <em>complete</em> replacement representation of a resource. Using PUT on a collection to "update all" would mean replacing the entire collection with a new one — almost certainly not the intent. <strong>PATCH</strong> is correct for partial updates, including bulk partial updates to a collection.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Verb in URI ("update"):</strong> "update" is an action. The PATCH/PUT method already communicates modification intent. The URI should identify the resource being modified: <code>/users</code> (the collection).</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Ambiguous scope ("All"):</strong> "updateAllUsers" encodes business logic scope into the URI. In REST, scope is controlled through query parameters: <code>PATCH /users</code> (all), <code>PATCH /users?status=active</code> (filtered subset). Encoding scope in the URI path creates an explosion of endpoint variants.</span>
+                    </div>
+                    <div class="problem-item">
+                        <span class="problem-icon">🔴</span>
+                        <span class="problem-text"><strong>Naming inconsistency:</strong> camelCase "updateAllUsers" is inconsistent with REST URI conventions (lowercase, hyphen-separated) and inconsistent with the other endpoints in this API, making the API harder to predict and consume.</span>
+                    </div>
+                </div>
+
+                <div class="fix-block">
+                    <h4>✅ Why the Fix is Correct</h4>
+                    <p><code>PATCH /users</code> with a partial update body — PATCH applies partial modifications. Applied to the collection URI <code>/users</code>, it signals a bulk partial update. Filters can be added via query params: <code>PATCH /users?department=engineering</code>.</p>
+                    <p>If truly replacing all users with a complete new dataset, use <code>PUT /users</code> with the full collection in the body. Expected responses: <code>200 OK</code> with update summary, or <code>204 No Content</code>.</p>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end tab-endpoints -->
+
+    <!-- TAB: Summary -->
+    <div id="tab-summary" class="tab-content">
+        <div class="section-title">📊 Issue Summary</div>
+
+        <div class="summary-grid">
+            <div class="stat-card stat-red">
+                <span class="stat-number">15</span>
+                <span class="stat-label">Total Violations</span>
+            </div>
+            <div class="stat-card stat-red">
+                <span class="stat-number">4</span>
+                <span class="stat-label">Wrong HTTP Methods</span>
+            </div>
+            <div class="stat-card stat-yellow">
+                <span class="stat-number">4</span>
+                <span class="stat-label">Verbs in URIs</span>
+            </div>
+            <div class="stat-card stat-blue">
+                <span class="stat-number">0</span>
+                <span class="stat-label">Correct Endpoints</span>
+            </div>
+        </div>
+
+        <table class="issue-table">
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Violation</th>
+                    <th>Category</th>
+                    <th>Severity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>GET /getUsers</code></td>
+                    <td>Verb "get" in URI path</td>
+                    <td>Resource Naming</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>GET /getUsers</code></td>
+                    <td>camelCase URI naming</td>
+                    <td>Naming Convention</td>
+                    <td><span class="severity sev-medium">Medium</span></td>
+                </tr>
+                <tr>
+                    <td><code>GET /getUsers</code></td>
+                    <td>RPC-style design</td>
+                    <td>Architecture</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>GET /getUsers</code></td>
+                    <td>Inconsistent plural naming vs other endpoints</td>
+                    <td>Consistency</td>
+                    <td><span class="severity sev-medium">Medium</span></td>
+                </tr>
+                <tr>
+                    <td><code>POST /user/delete/5</code></td>
+                    <td>POST used instead of DELETE</td>
+                    <td>HTTP Method</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>POST /user/delete/5</code></td>
+                    <td>Verb "delete" in URI path</td>
+                    <td>Resource Naming</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>POST /user/delete/5</code></td>
+                    <td>Singular "user" instead of plural "users"</td>
+                    <td>Naming Convention</td>
+                    <td><span class="severity sev-medium">Medium</span></td>
+                </tr>
+                <tr>
+                    <td><code>POST /user/delete/5</code></td>
+                    <td>Broken idempotency semantics</td>
+                    <td>HTTP Semantics</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>POST /user/delete/5</code></td>
+                    <td>Inconsistent collection name vs endpoint 1</td>
+                    <td>Consistency</td>
+                    <td><span class="severity sev-medium">Medium</span></td>
+                </tr>
+                <tr>
+                    <td><code>GET /createUser?name=Jo</code></td>
+                    <td>GET used for state-changing operation</td>
+                    <td>HTTP Method</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>GET /createUser?name=Jo</code></td>
+                    <td>Verb "create" in URI path</td>
+                    <td>Resource Naming</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>GET /createUser?name=Jo</code></td>
+                    <td>Resource data exposed in query string</td>
+                    <td>Security / Data Handling</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>GET /createUser?name=Jo</code></td>
+                    <td>Mutation via cacheable GET request</td>
+                    <td>HTTP Semantics</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>PUT /updateAllUsers</code></td>
+                    <td>PUT used instead of PATCH for partial update</td>
+                    <td>HTTP Method</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+                <tr>
+                    <td><code>PUT /updateAllUsers</code></td>
+                    <td>Verb "update" + scope "All" in URI path</td>
+                    <td>Resource Naming</td>
+                    <td><span class="severity sev-high">High</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB: Principles -->
+    <div id="tab-principles" class="tab-content">
+        <div class="section-title">📚 REST Principles Violated in This API</div>
+
+        <div class="principle-card">
+            <h3>🔤 1. Resources, Not Actions — URIs Are Nouns</h3>
+            <p>URIs identify <strong>resources</strong> (things), not operations (actions). Actions are expressed through HTTP methods. A URI like <code>/deleteUser</code> or <code>/getUsers</code> encodes the action in the path — this is an RPC pattern, not REST. Every endpoint in this API violates this principle. Correct: <code>GET /users</code>, <code>DELETE /users/5</code>.</p>
+        </div>
+
+        <div class="principle-card">
+            <h3>🔧 2. HTTP Method Semantics Must Be Honoured</h3>
+            <p><strong>GET</strong> = safe + idempotent, retrieves state, never modifies it.<br>
+            <strong>POST</strong> = creates a new resource in a collection, non-idempotent.<br>
+            <strong>PUT</strong> = replaces a resource completely, idempotent.<br>
+            <strong>PATCH</strong> = partially updates a resource, not necessarily idempotent.<br>
+            <strong>DELETE</strong> = removes a resource, idempotent.<br>
+            Using POST to delete, or GET to create, breaks the HTTP contract that clients, proxies, and caches rely on.</p>
+        </div>
+
+        <div class="principle-card">
+            <h3>📦 3. Plural Nouns for Collections</h3>
+            <p>Collections are plural: <code>/users</code>, <code>/orders</code>, <code>/products</code>. Individual resources are addressed by ID within the collection: <code>/users/5</code>. Mixing singular and plural (<code>/user</code> vs <code>/users</code>) across endpoints for the same resource type breaks consistency and predictability.</p>
+        </div>
+
+        <div class="principle-card">
+            <h3>🔒 4. Safe and Idempotent Method Guarantees</h3>
+            <p><strong>Safe</strong> methods (GET, HEAD, OPTIONS) must not change server state. Browsers, prefetch engines, and link crawlers call GET freely. A GET that creates data is a security and data integrity disaster.<br><strong>Idempotent</strong> methods (GET, PUT, DELETE, HEAD) must produce the same result when called multiple times. This enables safe retries. POST and PATCH are not idempotent by definition.</p>
+        </div>
+
+        <div class="principle-card">
+            <h3>🔗 5. Uniform Interface</h3>
+            <p>One of REST's core constraints. The interface between client and server must be uniform and predictable. This means consistent resource naming, consistent use of HTTP methods, consistent response structures, and consistent use of status codes. An API where you must read documentation for every endpoint because each follows different conventions is not RESTful.</p>
+        </div>
+
+        <div class="principle-card">
+            <h3>🔍 6. Query Parameters for Filtering, Not Scoping Actions</h3>
+            <p>Query parameters filter, sort, or paginate a resource collection. They should not encode business logic scope into the URI path. <code>/updateAllUsers</code> encodes "all" as scope in the path. The REST way: <code>PATCH /users</code> (all), <code>PATCH /users?status=active</code> (filtered). This avoids URI proliferation.</p>
+        </div>
+
+        <div class="principle-card">
+            <h3>📨 7. Resource Data Belongs in the Request Body</h3>
+            <p>Data used to create or update a resource belongs in the request body, not the URL. Query strings are for filtering/sorting existing resources. Putting creation data in a GET query string (<code>?name=Jo</code>) exposes sensitive data in server logs, browser history, and referrer headers, and breaks caching semantics.</p>
+        </div>
+
+        <div class="principle-card">
+            <h3>📝 8. Consistent URI Naming Conventions</h3>
+            <p>REST URIs should use: lowercase letters, hyphens (not underscores or camelCase) for multi-word names, no trailing slashes, and no file extensions. Examples: <code>/user-profiles</code> not <code>/userProfiles</code> or <code>/user_profiles</code>. Consistency across the entire API is more important than any single convention choice.</p>
+        </div>
+    </div>
+
+    <!-- TAB: HTTP Methods -->
+    <div id="tab-methods" class="tab-content">
+        <div class="section-title">⚙️ HTTP Methods Quick Reference</div>
+
+        <table class="method-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Purpose</th>
+                    <th>Safe?</th>
+                    <th>Idempotent?</th>
+                    <th>Request Body?</th>
+                    <th>Success Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="method-badge badge-get">GET</span></td>
+                    <td>Retrieve a resource or collection</td>
+                    <td class="tick">✔ Yes</td>
+                    <td class="tick">✔ Yes</td>
+                    <td class="cross">✘ No</td>
+                    <td>200 OK</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge badge-post">POST</span></td>
+                    <td>Create a new resource in a collection</td>
+                    <td class="cross">✘ No</td>
+                    <td class="cross">✘ No</td>
+                    <td class="tick">✔ Yes</td>
+                    <td>201 Created</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge badge-put">PUT</span></td>
+                    <td>Replace a resource completely</td>
+                    <td class="cross">✘ No</td>
+                    <td class="tick">✔ Yes</td>
+                    <td class="tick">✔ Yes</td>
+                    <td>200 OK / 204</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge badge-patch">PATCH</span></td>
+                    <td>Partially update a resource</td>
+                    <td class="cross">✘ No</td>
+                    <td class="cross">✘ No*</td>
+                    <td class="tick">✔ Yes</td>
+                    <td>200 OK / 204</td>
+                </tr>
+                <tr>
+                    <td><span class="method-badge badge-delete">DELETE</span></td>
+                    <td>Remove a resource</td>
+                    <td class="cross">✘ No</td>
+                    <td class="tick">✔ Yes</td>
+                    <td class="cross">✘ No</td>
+                    <td>204 No Content</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p style="color:#8b949e; font-size:0.8rem; margin-top:0.75rem;">* PATCH can be made idempotent depending on implementation (e.g., set operations vs. increment operations).</p>
+
+        <div class="section-title" style="margin-top:2rem;">📋 Corrected API at a Glance</div>
+
+        <table class="method-table">
+            <thead>
+                <tr>
+                    <th>Operation</th>
+                    <th>Original (Wrong)</th>
+                    <th>Corrected</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>List all users</td>
+                    <td><code style="color:#f85149">GET /getUsers</code></td>
+                    <td><code style="color:#3fb950">GET /users</code></td>
+                </tr>
+                <tr>
+                    <td>Get one user</td>
+                    <td><em style="color:#8b949e">Not provided</em></td>
+                    <td><code style="color:#3fb950">GET /users/{id}</code></td>
+                </tr>
+                <tr>
+                    <td>Create a user</td>
+                    <td><code style="color:#f85149">GET /createUser?name=Jo</code></td>
+                    <td><code style="color:#3fb950">POST /users</code></td>
+                </tr>
+                <tr>
+                    <td>Replace a user</td>
+                    <td><em style="color:#8b949e">Not provided</em></td>
+                    <td><code style="color:#3fb950">PUT /users/{id}</code></td>
+                </tr>
+                <tr>
+                    <td>Partially update a user</td>
+                    <td><em style="color:#8b949e">Not provided</em></td>
+                    <td><code style="color:#3fb950">PATCH /users/{id}</code></td>
+                </tr>
+                <tr>
+                    <td>Bulk partial update</td>
+                    <td><code style="color:#f85149">PUT /updateAllUsers</code></td>
+                    <td><code style="color:#3fb950">PATCH /users</code></td>
+                </tr>
+                <tr>
+                    <td>Delete a user</td>
+                    <td><code style="color:#f85149">POST /user/delete/5</code></td>
+                    <td><code style="color:#3fb950">DELETE /users/5</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div><!-- end container -->
+
+<script>
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function toggleCard(header) {
+        const body    = header.nextElementSibling;
+        const chevron = header.querySelector('.chevron');
+        const isOpen  = body.classList.contains('open');
+        body.classList.toggle('open', !isOpen);
+        chevron.classList.toggle('open', !isOpen);
+    }
+</script>
+
+</body>
+</html>

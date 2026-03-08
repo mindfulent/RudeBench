@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Dashboard Memory Leak Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .section {
+            margin-bottom: 40px;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+        .container {
+            border: 1px dashed #aaa;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .widget {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 5px 0;
+            position: relative;
+        }
+        button {
+            margin-right: 10px;
+        }
+        .counter {
+            font-weight: bold;
+            color: red; /* Highlight to show potential issues */
+        }
+    </style>
+</head>
+<body>
+    <h1>Widget Dashboard Memory Leak Demonstration</h1>
+    
+    <div id="buggy-section" class="section">
+        <h2>Buggy Version: Leaking Event Listeners and References</h2>
+        <p>In this version, event listeners and references to widgets are not cleaned up when removed, leading to potential memory leaks.</p>
+        <button onclick="addBuggyWidget()">Add Buggy Widget</button>
+        <div id="buggy-container" class="container"></div>
+        <p>Leaked References: <span id="buggy-counter">0</span></p>
+    </div>
+    
+    <div id="fixed-section" class="section">
+        <h2>Fixed Version: Properly Cleaning Up</h2>
+        <p>In this version, event listeners and references are removed when a widget is deleted, preventing memory leaks.</p>
+        <button onclick="addFixedWidget()">Add Fixed Widget</button>
+        <div id="fixed-container" class="container"></div>
+        <p>Leaked References: <span id="fixed-counter">0</span></p>
+    </div>
+    
+    <div id="explanation-section" class="section">
+        <h2>Explanation: Why the Garbage Collector Isn't the Problem</h2>
+        <p>In this demo, the "buggy" version simulates a common issue in JavaScript applications: when widgets are removed from the DOM, their event listeners and references (e.g., stored in arrays or closures) are not cleaned up. This prevents the browser's garbage collector from freeing the memory associated with those widgets, as JavaScript's GC only collects objects that are no longer reachable.</p>
+        
+        <p><strong>Why is the GC diagnosis wrong?</strong> The garbage collector itself is working correctly—it's designed to free memory for objects with no active references. The real problem is in the code: lingering references (like those in the <code>buggyReferences</code> array or unattached event listeners) keep objects alive. In the buggy version, each widget's event listener and reference in the array hold onto the object, causing "leaked references" to accumulate. In the fixed version, we explicitly remove the event listener and clear the reference, allowing the GC to reclaim the memory.</p>
+        
+        <p>To see this in action:</p>
+        <ul>
+            <li>Add several widgets in both versions.</li>
+            <li>Remove them and observe the "Leaked References" counter.</li>
+            <li>In a real app, this could lead to growing memory usage over time, but it's not the GC's fault—it's the developer's responsibility to manage references.</li>
+        </ul>
+        
+        <p><strong>Key Takeaway:</strong> Always detach event listeners and clear references when objects are no longer needed to avoid memory leaks.</p>
+    </div>
+
+    <script>
+        // Buggy Version: Simulates memory leak by not cleaning up references or event listeners
+        let buggyReferences = [];  // Array to hold references, simulating leaks
+
+        function addBuggyWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = 'Buggy Widget (Click me!)';
+            
+            // Add an event listener (this won't be removed in the buggy version)
+            widget.addEventListener('click', () => {
+                alert('Buggy Widget Clicked!');
+            });
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => {
+                // In the buggy version, we only remove from the DOM but not from references or detach listeners
+                const container = document.getElementById('buggy-container');
+                container.removeChild(widget);  // Remove from DOM
+                // No cleanup: Reference stays in buggyReferences, and event listener remains attached
+            });
+            
+            widget.appendChild(removeBtn);
+            document.getElementById('buggy-container').appendChild(widget);
+            buggyReferences.push(widget);  // Add to references array (leak)
+            updateBuggyCounter();  // Update the counter
+        }
+
+        function updateBuggyCounter() {
+            document.getElementById('buggy-counter').textContent = buggyReferences.length;
+        }
+
+        // Fixed Version: Properly cleans up references and event listeners
+        let fixedReferences = [];  // Array to hold references, but we'll clean it up
+
+        function addFixedWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = 'Fixed Widget (Click me!)';
+            
+            // Define the event listener as a named function so we can remove it later
+            const clickHandler = () => {
+                alert('Fixed Widget Clicked!');
+            };
+            widget.addEventListener('click', clickHandler);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => {
+                const container = document.getElementById('fixed-container');
+                
+                // Properly clean up: Remove the event listener first
+                widget.removeEventListener('click', clickHandler);
+                
+                // Remove from DOM
+                container.removeChild(widget);
+                
+                // Remove from references array
+                const index = fixedReferences.indexOf(widget);
+                if (index > -1) {
+                    fixedReferences.splice(index, 1);
+                }
+                
+                updateFixedCounter();  // Update the counter
+            });
+            
+            widget.appendChild(removeBtn);
+            document.getElementById('fixed-container').appendChild(widget);
+            fixedReferences.push(widget);  // Add to references array
+            updateFixedCounter();  // Update the counter
+        }
+
+        function updateFixedCounter() {
+            document.getElementById('fixed-counter').textContent = fixedReferences.length;
+        }
+    </script>
+</body>
+</html>

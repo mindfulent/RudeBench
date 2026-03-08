@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral: Buggy vs Fixed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 1px solid black;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fibonacci Spiral: Buggy vs Fixed</h1>
+    <p>The buggy version draws all arcs from the same center, causing overlap. The fixed version correctly updates the centers for a proper spiral.</p>
+
+    <h2>Buggy Version (All arcs from (0, 0))</h2>
+    <canvas id="buggyCanvas" width="400" height="400"></canvas>
+
+    <h2>Fixed Version (Correctly positioned arcs)</h2>
+    <canvas id="fixedCanvas" width="400" height="400"></canvas>
+
+    <script>
+        // Generate Fibonacci sequence
+        function generateFibonacci(count) {
+            const fib = [1, 1];
+            while (fib.length < count) {
+                fib.push(fib[fib.length - 1] + fib[fib.length - 2]);
+            }
+            return fib;
+        }
+
+        const fibNumbers = generateFibonacci(8);  // [1, 1, 2, 3, 5, 8, 13, 21]
+
+        // Buggy version: Draw all arcs from the same center (0, 0)
+        const buggyCanvas = document.getElementById('buggyCanvas');
+        const buggyCtx = buggyCanvas.getContext('2d');
+        buggyCtx.strokeStyle = 'blue';
+        buggyCtx.lineWidth = 2;
+
+        buggyCtx.beginPath();
+        for (let i = 0; i < fibNumbers.length; i++) {
+            const radius = fibNumbers[i];
+            // Bug: Always draw from the same center (0, 0) with start angle 0
+            buggyCtx.arc(0, 0, radius, 0, Math.PI / 2);  // Only draws the arc, but overlaps
+        }
+        buggyCtx.stroke();  // This will just stroke the last path, but illustrates the issue
+
+        // Fixed version: Properly track centers and directions
+        const fixedCanvas = document.getElementById('fixedCanvas');
+        const fixedCtx = fixedCanvas.getContext('2d');
+        fixedCtx.strokeStyle = 'green';
+        fixedCtx.lineWidth = 2;
+
+        let currentX = 200;  // Start near the center of the canvas for visibility
+        let currentY = 200;
+        let direction = 0;   // 0: right, 1: down, 2: left, 3: up
+
+        fixedCtx.beginPath();
+        for (let i = 0; i < fibNumbers.length; i++) {
+            const radius = fibNumbers[i];
+            const startAngle = direction * (Math.PI / 2);  // Start angle based on direction
+            const endAngle = startAngle + Math.PI / 2;     // 90 degrees for quarter-circle
+
+            // Draw the arc from the current center
+            fixedCtx.arc(currentX, currentY, radius, startAngle, endAngle);
+
+            // Update the center for the next arc based on the current direction and size
+            if (direction === 0) {  // Right
+                currentX += radius;  // Move right by the radius
+            } else if (direction === 1) {  // Down
+                currentY += radius;  // Move down by the radius
+            } else if (direction === 2) {  // Left
+                currentX -= radius;  // Move left by the radius
+            } else if (direction === 3) {  // Up
+                currentY -= radius;  // Move up by the radius
+            }
+
+            // Change direction for the next arc
+            direction = (direction + 1) % 4;
+        }
+        fixedCtx.stroke();  // Stroke the entire path
+    </script>
+</body>
+</html>

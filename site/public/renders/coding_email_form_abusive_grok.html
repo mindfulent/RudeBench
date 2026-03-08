@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Email Validation with Regex</title>
+    <style>
+        /* Basic styling for the form */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .email-form {
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="email"] {
+            padding: 10px;
+            width: 300px;
+            border: 2px solid #ccc; /* Default border */
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        /* Green border for valid input */
+        input.valid {
+            border-color: green;
+        }
+        /* Red border for invalid input */
+        input.invalid {
+            border-color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-form">
+        <h2>Enter Your Email</h2>
+        <form id="emailForm">
+            <input type="email" id="emailInput" placeholder="e.g., user@example.com" oninput="validateEmail()">
+            <p id="feedback" style="font-size: 12px; color: gray; margin-top: 5px;"></p>
+        </form>
+    </div>
+
+    <script>
+        function validateEmail() {
+            const emailInput = document.getElementById('emailInput');
+            const feedback = document.getElementById('feedback');
+            const email = emailInput.value.trim();  // Get the input value and trim whitespace
+            const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;  // Basic email regex pattern
+
+            if (regex.test(email)) {
+                // If it matches the regex, mark as valid
+                emailInput.classList.remove('invalid');
+                emailInput.classList.add('valid');
+                feedback.textContent = 'Looks good!';  // Optional feedback text
+            } else {
+                // If it doesn't match, mark as invalid
+                emailInput.classList.remove('valid');
+                emailInput.classList.add('invalid');
+                feedback.textContent = 'Invalid email format.';  // Optional feedback text
+            }
+        }
+    </script>
+</body>
+</html>

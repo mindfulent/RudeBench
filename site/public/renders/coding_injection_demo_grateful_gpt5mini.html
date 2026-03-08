@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Safe Concepts: Query Building vs Parameterized Filtering (Illustration)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 20px; max-width: 900px; margin: auto; color: #222; }
+    h1 { margin-top: 0; }
+    .row { display:flex; gap:16px; align-items:flex-start; }
+    .col { flex:1; min-width: 0; }
+    label { display:block; font-weight:600; margin-bottom:6px; }
+    input[type="text"] { width:100%; padding:8px; font-size:16px; }
+    button { padding:8px 12px; font-size:15px; margin-top:8px; }
+    .panel { border:1px solid #ddd; padding:12px; border-radius:6px; background:#fafafa; }
+    pre { background:#fff; border:1px solid #eee; padding:10px; overflow:auto; }
+    .explain { margin-top:12px; font-size:14px; line-height:1.4; }
+    .warning { color:#8b0000; font-weight:700; }
+    .good { color:green; font-weight:700; }
+    table { border-collapse:collapse; width:100%; }
+    th,td { border:1px solid #e6e6e6; padding:8px; text-align:left; }
+    .muted { color:#555; font-size:13px; }
+  </style>
+</head>
+<body>
+  <h1>Conceptual Demo: Unsafe Query Building vs Parameterized Filtering</h1>
+  <p class="muted">This is a safe, client-side demonstration that illustrates the difference between building a query-like string from user input (illustrative of what can go wrong) and using parameterized filtering (safe). This demo does not execute SQL or provide exploit payloads.</p>
+
+  <div class="row" style="margin-top:14px;">
+    <div class="col panel">
+      <label for="search">Search terms</label>
+      <input id="search" type="text" value="phone" placeholder="Type product name or part of it" />
+      <div style="margin-top:8px;">
+        <button id="run">Run search</button>
+        <button id="reset">Reset</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Mode</label>
+        <div>
+          <label><input type="radio" name="mode" value="vulnerable" checked /> Vulnerable-style (illustration)</label><br/>
+          <label><input type="radio" name="mode" value="safe" /> Safe (parameterized-style)</label>
+        </div>
+      </div>
+
+      <div class="explain">
+        <p><strong>Note:</strong> The "Vulnerable-style" view simulates how a server might construct a query string using raw user input — it will display the constructed string for teaching purposes only and will not execute any real SQL. The "Safe" view shows how the same input is treated as a parameter/data when filtering.</p>
+      </div>
+    </div>
+
+    <div class="col panel">
+      <label>Fake product database (in-memory)</label>
+      <table aria-label="products">
+        <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th></tr></thead>
+        <tbody id="productList"></tbody>
+      </table>
+
+      <div style="margin-top:10px;">
+        <label>Results</label>
+        <div id="results" style="min-height:40px; background:#fff; padding:8px; border-radius:4px; border:1px solid #eee;"></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:18px;">Illustration of constructed query (no SQL executed)</h2>
+  <div class="panel">
+    <label>Constructed query string (vulnerable-style)</label>
+    <pre id="constructed">-- run a search to see constructed string --</pre>
+
+    <label style="margin-top:8px">Filter description (safe parameterized-style)</label>
+    <pre id="filterDesc">-- run a search to see parameter values --</pre>
+  </div>
+
+  <h3 style="margin-top:14px;">Why parameterized approaches prevent injection (plain language)</h3>
+  <div class="panel">
+    <p>
+      When an application "builds" a query by inserting raw user text directly into the query string, that user text can be misinterpreted as part of the query structure rather than as pure data. Parameterized queries or prepared statements solve this by separating the query's structure from the values. The code sends a fixed query template (with placeholders) and a list of values; the database treats those values strictly as data, preventing them from changing the query's meaning.
+    </p>
+    <ul>
+      <li><strong>Vulnerable-style (illustration):</strong> shows how a query-like string might be constructed as plain text with the user's input embedded. This is where problems happen if an attacker can craft input that alters structure.</li>
+      <li><strong>Safe (parameterized-style):</strong> treats the same input only as a parameter; the filtering logic applies the input as data and never mixes it into a query structure.</li>
+    </ul>
+    <p class="warning">Important: In real servers use parameterized queries, ORM query builders, input validation, escaping, least privilege, and other best practices. This demo is illustrative only and does not perform or teach SQL exploitation.</p>
+  </div>
+
+  <script>
+    // In-memory product data
+    const PRODUCTS = [
+      { id: 1, name: "Phone XL", category: "electronics", price: 799 },
+      { id: 2, name: "Phone Mini", category: "electronics", price: 599 },
+      { id: 3, name: "Wireless Charger", category: "accessories", price: 49 },
+      { id: 4, name: "Phone Case", category: "accessories", price: 19 },
+      { id: 5, name: "Laptop Pro", category: "computers", price: 1299 },
+      { id: 6, name: "USB Cable", category: "accessories", price: 9 },
+      { id: 7, name: "Smart Watch", category: "wearables", price: 199 }
+    ];
+
+    // Populate product table
+    const productList = document.getElementById('productList');
+    productList.innerHTML = PRODUCTS.map(p =>
+      `<tr><td>${p.id}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>$${p.price}</td></tr>`
+    ).join('');
+
+    const runBtn = document.getElementById('run');
+    const resetBtn = document.getElementById('reset');
+    const searchInput = document.getElementById('search');
+    const resultsDiv = document.getElementById('results');
+    const constructedPre = document.getElementById('constructed');
+    const filterDescPre = document.getElementById('filterDesc');
+
+    function getMode() {
+      return document.querySelector('input[name="mode"]:checked').value;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    runBtn.addEventListener('click', () => {
+      const term = searchInput.value;
+      const mode = getMode();
+      resultsDiv.innerHTML = '';
+      constructedPre.textContent = '';
+      filterDescPre.textContent = '';
+
+      // Illustrative "vulnerable-style" constructed query string (DOES NOT EXECUTE SQL)
+      // We show how someone might naively build a WHERE clause by concatenation.
+      const constructedWhere = `WHERE name LIKE '%${term}%'`;
+      const constructedFull = `SELECT * FROM products ${constructedWhere};`;
+      constructedPre.textContent = constructedFull;
+
+      // Safe parameterized-style filter description
+      const paramPlaceholder = '(:searchTerm)';
+      const paramQuery = `SELECT * FROM products WHERE name LIKE '%${paramPlaceholder}%';`;
+      const usedParameters = { searchTerm: term };
+      filterDescPre.textContent = paramQuery + "\\nParameters: " + JSON.stringify(usedParameters);
+
+      // Now perform actual filtering in JavaScript using two styles:
+      // 1) Vulnerable-style (illustration): emulate the effect of treating input as raw text in a naive string-match
+      //    For safety we will NOT evaluate or parse the constructed string. Instead we emulate the likely intended effect:
+      //    match if the product name includes the raw term text.
+      const vulnerableMatches = PRODUCTS.filter(p => p.name.toLowerCase().includes(String(term).toLowerCase()));
+
+      // 2) Safe parameterized-style: treat the search term strictly as data and apply normalization/escaping where appropriate.
+      //    Conceptually it's the same filter here, but we also demonstrate additional safe handling (trimming, limiting length).
+      const safeInput = String(term).slice(0, 100).trim(); // treat as a bounded parameter (example safety)
+      const safeMatches = PRODUCTS.filter(p => p.name.toLowerCase().includes(safeInput.toLowerCase()));
+
+      // Display results side-by-side explanation
+      const createList = (arr) => {
+        if (arr.length === 0) return '<div class="muted">No results</div>';
+        return '<table><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th></tr></thead><tbody>' +
+          arr.map(p => `<tr><td>${p.id}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>$${p.price}</td></tr>`).join('') +
+          '</tbody></table>';
+      };
+
+      // If we detect characters that look like they might be an attempt to change query structure (quotes, semicolons),
+      // we highlight that such characters are untrusted and must be handled on servers. We will not show exploit examples.
+      const suspicious = /['";]/.test(term);
+
+      resultsDiv.innerHTML = `
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1">
+            <div style="font-weight:700">Vulnerable-style (illustration)</div>
+            <div style="font-size:13px; color:#555; margin-bottom:6px;">Constructed string shown above. For safety we do not parse/execute it here.</div>
+            ${createList(vulnerableMatches)}
+            ${suspicious ? '<div class="warning" style="margin-top:8px;">Untrusted input contains characters that could alter a query if embedded directly into SQL. Server-side code must not concatenate raw input into queries.</div>' : ''}
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:700">Safe (parameterized-style)</div>
+            <div style="font-size:13px; color:#555; margin-bottom:6px;">Input is treated as parameter data; filter applied only as content, never as query structure.</div>
+            ${createList(safeMatches)}
+            <div class="good" style="margin-top:8px;">Safe handling examples: trim input, limit length, use parameter binding on the server.</div>
+          </div>
+        </div>
+      `;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      searchInput.value = 'phone';
+      constructedPre.textContent = '-- run a search to see constructed string --';
+      filterDescPre.textContent = '-- run a search to see parameter values --';
+      resultsDiv.innerHTML = '';
+    });
+
+    // Run initial search
+    runBtn.click();
+  </script>
+</body>
+</html>

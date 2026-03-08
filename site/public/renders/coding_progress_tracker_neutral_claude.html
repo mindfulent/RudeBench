@@ -5,226 +5,674 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Concurrency Bug: Progress Bar Tracker</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #0f0f1a;
       color: #e0e0f0;
       min-height: 100vh;
-      padding: 30px 20px;
+      padding: 24px;
     }
 
     h1 {
       text-align: center;
       font-size: 1.8rem;
       margin-bottom: 8px;
-      color: #a78bfa;
+      color: #c9b8ff;
       letter-spacing: 1px;
     }
 
     .subtitle {
       text-align: center;
-      color: #94a3b8;
+      color: #888;
       font-size: 0.95rem;
-      margin-bottom: 30px;
+      margin-bottom: 32px;
     }
 
-    .panels {
-      display: flex;
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 24px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
     }
 
     .panel {
       background: #1a1a2e;
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 24px;
-      width: 100%;
-      max-width: 480px;
-      border: 1px solid #2d2d4e;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      border: 1px solid #2a2a4a;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .panel.buggy {
-      border-color: #ef4444;
-    }
-
-    .panel.fixed {
-      border-color: #22c55e;
-    }
+    .panel.buggy { border-color: #ff4d6d; }
+    .panel.fixed  { border-color: #4dffb4; }
 
     .panel-title {
       font-size: 1.2rem;
       font-weight: 700;
-      margin-bottom: 6px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .panel.buggy .panel-title { color: #f87171; }
-    .panel.fixed .panel-title { color: #4ade80; }
+    .panel.buggy .panel-title { color: #ff4d6d; }
+    .panel.fixed  .panel-title { color: #4dffb4; }
 
     .badge {
       font-size: 0.7rem;
-      padding: 2px 8px;
+      padding: 3px 8px;
       border-radius: 20px;
       font-weight: 600;
       letter-spacing: 0.5px;
     }
 
-    .badge.bug { background: #7f1d1d; color: #fca5a5; }
-    .badge.ok  { background: #14532d; color: #86efac; }
+    .panel.buggy .badge { background: #ff4d6d33; color: #ff4d6d; border: 1px solid #ff4d6d55; }
+    .panel.fixed  .badge { background: #4dffb433; color: #4dffb4; border: 1px solid #4dffb455; }
 
-    .panel-desc {
-      font-size: 0.82rem;
-      color: #94a3b8;
-      margin-bottom: 18px;
-      line-height: 1.5;
-    }
-
+    /* Progress bar */
     .progress-label {
       display: flex;
       justify-content: space-between;
       font-size: 0.85rem;
-      margin-bottom: 6px;
-      color: #cbd5e1;
+      color: #aaa;
     }
 
-    .progress-wrap {
-      background: #0f0f1a;
-      border-radius: 50px;
-      height: 22px;
+    .progress-track {
+      background: #0d0d1a;
+      border-radius: 999px;
+      height: 28px;
       overflow: hidden;
-      margin-bottom: 16px;
-      border: 1px solid #2d2d4e;
+      border: 1px solid #2a2a4a;
       position: relative;
     }
 
-    .progress-bar {
+    .progress-fill {
       height: 100%;
-      border-radius: 50px;
+      border-radius: 999px;
       transition: width 0.15s ease, background 0.3s;
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      padding-right: 8px;
+      padding-right: 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #000;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .panel.buggy .progress-fill {
+      background: linear-gradient(90deg, #ff4d6d, #ff9a3c);
+    }
+
+    .panel.fixed .progress-fill {
+      background: linear-gradient(90deg, #4dffb4, #00cfff);
+    }
+
+    .overflow-indicator {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
       font-size: 0.7rem;
       font-weight: 700;
-      color: #fff;
-      white-space: nowrap;
-      min-width: 0;
+      color: #ff4d6d;
+      display: none;
     }
 
-    .panel.buggy .progress-bar { background: linear-gradient(90deg, #dc2626, #f97316); }
-    .panel.fixed  .progress-bar { background: linear-gradient(90deg, #16a34a, #22d3ee); }
-
-    .overflow-bar {
-      background: linear-gradient(90deg, #7c3aed, #ec4899) !important;
+    /* Tasks */
+    .tasks-title {
+      font-size: 0.8rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .task-log {
-      background: #0a0a14;
-      border-radius: 10px;
-      padding: 12px;
-      height: 180px;
-      overflow-y: auto;
-      font-size: 0.75rem;
-      font-family: 'Courier New', monospace;
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 8px;
+    }
+
+    .task-card {
+      background: #12122a;
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid #2a2a4a;
+      font-size: 0.78rem;
+    }
+
+    .task-card .task-name {
+      font-weight: 600;
+      color: #c9b8ff;
+      margin-bottom: 4px;
+    }
+
+    .task-card .task-status {
+      color: #666;
+      font-size: 0.72rem;
+    }
+
+    .task-card.running  { border-color: #f0c040; }
+    .task-card.done     { border-color: #4dffb4; }
+    .task-card.error    { border-color: #ff4d6d; }
+
+    .task-card.running  .task-status { color: #f0c040; }
+    .task-card.done     .task-status { color: #4dffb4; }
+    .task-card.error    .task-status { color: #ff4d6d; }
+
+    /* Log */
+    .log-box {
+      background: #0a0a18;
+      border-radius: 8px;
       border: 1px solid #1e1e3a;
-      margin-bottom: 16px;
+      padding: 10px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      height: 160px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
-    .log-entry {
-      padding: 2px 0;
-      border-bottom: 1px solid #1a1a2e;
-      line-height: 1.6;
+    .log-entry { line-height: 1.5; }
+    .log-entry.warn  { color: #f0c040; }
+    .log-entry.error { color: #ff4d6d; }
+    .log-entry.ok    { color: #4dffb4; }
+    .log-entry.info  { color: #7a8aaa; }
+    .log-entry.highlight { color: #c9b8ff; font-weight: 700; }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .log-entry.warn  { color: #fbbf24; }
-    .log-entry.error { color: #f87171; }
-    .log-entry.info  { color: #60a5fa; }
-    .log-entry.ok    { color: #4ade80; }
-    .log-entry.dim   { color: #475569; }
-
-    .btn {
-      width: 100%;
-      padding: 10px;
+    button {
       border: none;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      font-weight: 700;
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
-      letter-spacing: 0.5px;
       transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.3px;
     }
 
-    .btn:active { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    button:hover  { opacity: 0.85; }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    .panel.buggy .btn { background: linear-gradient(90deg, #dc2626, #f97316); color: #fff; }
-    .panel.fixed  .btn { background: linear-gradient(90deg, #16a34a, #22d3ee); color: #fff; }
+    .btn-run-buggy { background: #ff4d6d; color: #fff; }
+    .btn-run-fixed { background: #4dffb4; color: #000; }
+    .btn-reset     { background: #2a2a4a; color: #aaa; }
 
-    /* Explanation box */
+    /* Explanation */
     .explanation {
+      max-width: 1200px;
+      margin: 28px auto 0;
       background: #1a1a2e;
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 24px;
-      max-width: 984px;
-      margin: 0 auto 30px;
-      border: 1px solid #2d2d4e;
-    }
-
-    .explanation h2 {
-      color: #a78bfa;
-      margin-bottom: 14px;
-      font-size: 1.1rem;
-    }
-
-    .exp-grid {
+      border: 1px solid #2a2a4a;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      gap: 24px;
     }
 
-    @media (max-width: 640px) {
-      .exp-grid { grid-template-columns: 1fr; }
+    @media (max-width: 768px) {
+      .explanation { grid-template-columns: 1fr; }
     }
 
-    .exp-block h3 {
-      font-size: 0.9rem;
-      margin-bottom: 8px;
+    .exp-section h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .exp-block.bug h3 { color: #f87171; }
-    .exp-block.fix h3 { color: #4ade80; }
+    .exp-section.bug  h3 { color: #ff4d6d; }
+    .exp-section.fix  h3 { color: #4dffb4; }
 
-    .exp-block p {
-      font-size: 0.82rem;
-      color: #94a3b8;
+    .exp-section p, .exp-section li {
+      font-size: 0.84rem;
+      color: #aaa;
       line-height: 1.7;
     }
 
-    pre {
-      background: #0a0a14;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 0.72rem;
-      overflow-x: auto;
-      margin-top: 10px;
-      border: 1px solid #1e1e3a;
-      color: #e2e8f0;
-      line-height: 1.6;
+    .exp-section ul { padding-left: 18px; }
+    .exp-section li { margin-bottom: 4px; }
+
+    code {
+      background: #0d0d1a;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      color: #c9b8ff;
     }
 
-    .kw  { color: #c084fc; }
-    .fn  { color: #60a5fa; }
-    .str { color: #86efac; }
-    .cm  { color: #475569
+    /* Stats row */
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: #12122a;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      border: 1px solid #2a2a4a;
+    }
+
+    .stat-pill span { color: #c9b8ff; font-weight: 700; }
+
+    /* Anomaly flash */
+    @keyframes flashRed {
+      0%   { background: #ff4d6d33; }
+      100% { background: transparent; }
+    }
+
+    .anomaly-flash {
+      animation: flashRed 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⚡ Concurrency Bug: Progress Bar Tracker</h1>
+<p class="subtitle">Watch how shared mutable state causes race conditions in async JavaScript</p>
+
+<div class="grid">
+
+  <!-- ═══════════════════ BUGGY PANEL ═══════════════════ -->
+  <div class="panel buggy" id="buggyPanel">
+    <div class="panel-title">
+      🐛 Buggy Implementation
+      <span class="badge">RACE CONDITION</span>
+    </div>
+
+    <div>
+      <div class="progress-label">
+        <span>Shared <code>progress</code> variable (no locking)</span>
+        <span id="buggyPct">0%</span>
+      </div>
+      <div class="progress-track" id="buggyTrack">
+        <div class="progress-fill" id="buggyFill" style="width:0%"></div>
+        <span class="overflow-indicator" id="buggyOverflow">⚠ OVERFLOW!</span>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-pill">Anomalies: <span id="buggyAnomalies">0</span></div>
+      <div class="stat-pill">Overflows: <span id="buggyOverflows">0</span></div>
+      <div class="stat-pill">Skips: <span id="buggySkips">0</span></div>
+      <div class="stat-pill">Final: <span id="buggyFinal">—</span></div>
+    </div>
+
+    <div class="tasks-title">Tasks</div>
+    <div class="tasks-grid" id="buggyTasks"></div>
+
+    <div class="tasks-title">Event Log</div>
+    <div class="log-box" id="buggyLog"></div>
+
+    <div class="btn-row">
+      <button class="btn-run-buggy" id="btnRunBuggy" onclick="runBuggy()">▶ Run Buggy</button>
+      <button class="btn-reset" onclick="resetBuggy()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ FIXED PANEL ═══════════════════ -->
+  <div class="panel fixed" id="fixedPanel">
+    <div class="panel-title">
+      ✅ Fixed Implementation
+      <span class="badge">QUEUE + LOCK</span>
+    </div>
+
+    <div>
+      <div class="progress-label">
+        <span>Serialized updates via async queue</span>
+        <span id="fixedPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="fixedFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-pill">Anomalies: <span id="fixedAnomalies">0</span></div>
+      <div class="stat-pill">Overflows: <span id="fixedOverflows">0</span></div>
+      <div class="stat-pill">Skips: <span id="fixedSkips">0</span></div>
+      <div class="stat-pill">Final: <span id="fixedFinal">—</span></div>
+    </div>
+
+    <div class="tasks-title">Tasks</div>
+    <div class="tasks-grid" id="fixedTasks"></div>
+
+    <div class="tasks-title">Event Log</div>
+    <div class="log-box" id="fixedLog"></div>
+
+    <div class="btn-row">
+      <button class="btn-run-fixed" id="btnRunFixed" onclick="runFixed()">▶ Run Fixed</button>
+      <button class="btn-reset" onclick="resetFixed()">↺ Reset</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ EXPLANATION ═══════════════════ -->
+<div class="explanation">
+  <div class="exp-section bug">
+    <h3>🐛 Why the Buggy Version Fails</h3>
+    <p>Each task reads <code>sharedProgress</code>, adds its chunk, then writes back — a classic <strong>read-modify-write</strong> race:</p>
+    <ul>
+      <li>Task A reads <code>progress = 40</code></li>
+      <li>Task B reads <code>progress = 40</code> (same snapshot!)</li>
+      <li>Task A writes <code>progress = 60</code> (+20)</li>
+      <li>Task B writes <code>progress = 60</code> (+20 again, overwriting A's result)</li>
+      <li>Net effect: only +20 instead of +40 → <strong>lost updates</strong></li>
+      <li>Or tasks accumulate beyond 100 → <strong>overflow</strong></li>
+      <li>JS is single-threaded but <code>await</code> yields control between tasks, creating the interleaving window</li>
+    </ul>
+  </div>
+  <div class="exp-section fix">
+    <h3>✅ How the Fix Works</h3>
+    <p>Updates are serialized through a <strong>Promise-based async queue (mutex)</strong>:</p>
+    <ul>
+      <li>Each task enqueues its update; the queue processes one at a time</li>
+      <li>A <code>lock</code> Promise chains updates sequentially: <code>lock = lock.then(update)</code></li>
+      <li>No two tasks can be inside the critical section simultaneously</li>
+      <li>Progress increments are clamped to <code>[0, 100]</code> as an extra guard</li>
+      <li>Result: monotonically increasing, no skips, no overflow, correct final value</li>
+      <li>This pattern mirrors <code>Mutex</code> / <code>Semaphore</code> in multi-threaded languages</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   TASK DEFINITIONS — same work for both implementations
+═══════════════════════════════════════════════════════ */
+const TASK_DEFS = [
+  { name: 'Loader A',   steps: 4, stepSize: 8,  delay: 80  },
+  { name: 'Loader B',   steps: 3, stepSize: 12, delay: 60  },
+  { name: 'Loader C',   steps: 5, stepSize: 5,  delay: 100 },
+  { name: 'Loader D',   steps: 2, stepSize: 15, delay: 50  },
+  { name: 'Loader E',   steps: 6, stepSize: 4,  delay: 70  },
+  { name: 'Loader F',   steps: 3, stepSize: 10, delay: 90  },
+];
+
+/* ═══════════════════════════════════════════════════════
+   SHARED HELPERS
+═══════════════════════════════════════════════════════ */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function logEntry(boxId, text, type = 'info') {
+  const box = document.getElementById(boxId);
+  const el  = document.createElement('div');
+  el.className = `log-entry ${type}`;
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit', fractionalSecondDigits: 3 });
+  el.textContent = `[${ts}] ${text}`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setTaskState(containerId, name, status, extra = '') {
+  const container = document.getElementById(containerId);
+  let card = container.querySelector(`[data-task="${name}"]`);
+  if (!card) {
+    card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.task = name;
+    card.innerHTML = `<div class="task-name">${name}</div><div class="task-status"></div>`;
+    container.appendChild(card);
+  }
+  card.className = `task-card ${status}`;
+  card.querySelector('.task-status').textContent = extra || status;
+}
+
+function buildTaskCards(containerId) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  TASK_DEFS.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.task = t.name;
+    card.innerHTML = `<div class="task-name">${t.name}</div><div class="task-status">waiting</div>`;
+    c.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   ██████  BUGGY IMPLEMENTATION  ██████
+   Shared mutable variable — no synchronisation
+═══════════════════════════════════════════════════════ */
+let buggyRunning = false;
+let buggyProgress = 0;
+let buggyStats = { anomalies: 0, overflows: 0, skips: 0, lastValue: 0 };
+
+function updateBuggyBar(value) {
+  const pct  = Math.min(value, 150); // allow visual overflow up to 150%
+  const disp = value;
+  const fill = document.getElementById('buggyFill');
+  const pctEl = document.getElementById('buggyPct');
+  const overflow = document.getElementById('buggyOverflow');
+  const track = document.getElementById('buggyTrack');
+
+  fill.style.width = Math.min(pct, 100) + '%';
+  pctEl.textContent = disp + '%';
+
+  if (value > 100) {
+    overflow.style.display = 'block';
+    pctEl.style.color = '#ff4d6d';
+    track.classList.add('anomaly-flash');
+    setTimeout(() => track.classList.remove('anomaly-flash'), 500);
+    buggyStats.overflows++;
+    document.getElementById('buggyOverflows').textContent = buggyStats.overflows;
+  } else {
+    overflow.style.display = 'none';
+    pctEl.style.color = '';
+  }
+
+  // Detect skip (jump > 20 in one update)
+  if (value - buggyStats.lastValue > 20 && buggyStats.lastValue < value) {
+    buggyStats.skips++;
+    document.getElementById('buggySkips').textContent = buggyStats.skips;
+  }
+
+  buggyStats.lastValue = value;
+  document.getElementById('buggyFinal').textContent = value + '%';
+}
+
+async function buggyTask(taskDef) {
+  setTaskState('buggyTasks', taskDef.name, 'running', 'running…');
+  logEntry('buggyLog', `${taskDef.name} started (${taskDef.steps} steps × ${taskDef.stepSize}%)`, 'info');
+
+  for (let i = 0; i < taskDef.steps; i++) {
+    await sleep(taskDef.delay + Math.random() * 40);
+
+    // ⚠️ BUG: read-modify-write without any lock
+    const snapshot = buggyProgress;          // READ  (stale snapshot possible)
+    await sleep(Math.random() * 20);         // artificial yield — widens the race window
+    buggyProgress = snapshot + taskDef.stepSize; // WRITE (may overwrite another task's update)
+
+    const anomaly = buggyProgress > 100 || buggyProgress < snapshot;
+    if (anomaly) {
+      buggyStats.anomalies++;
+      document.getElementById('buggyAnomalies').textContent = buggyStats.anomalies;
+      logEntry('buggyLog', `⚠ ${taskDef.name} step ${i+1}: ${snapshot}% → ${buggyProgress}% (ANOMALY)`, 'error');
+    } else {
+      logEntry('buggyLog', `${taskDef.name} step ${i+1}: ${snapshot}% → ${buggyProgress}%`, 'warn');
+    }
+
+    updateBuggyBar(buggyProgress);
+  }
+
+  setTaskState('buggyTasks', taskDef.name, 'done', `done (${taskDef.steps * taskDef.stepSize}% added)`);
+  logEntry('buggyLog', `${taskDef.name} finished`, 'ok');
+}
+
+async function runBuggy() {
+  if (buggyRunning) return;
+  buggyRunning = true;
+  document.getElementById('btnRunBuggy').disabled = true;
+
+  logEntry('buggyLog', '═══ Starting buggy run ═══', 'highlight');
+
+  // Launch ALL tasks concurrently — they all race on buggyProgress
+  const promises = TASK_DEFS.map(t => buggyTask(t));
+  await Promise.all(promises);
+
+  logEntry('buggyLog', `═══ All done. Final progress: ${buggyProgress}% ═══`, 'highlight');
+  if (buggyProgress !== 100) {
+    logEntry('buggyLog', `Expected 100%, got ${buggyProgress}% — BUG CONFIRMED ✗`, 'error');
+  }
+
+  buggyRunning = false;
+  document.getElementById('btnRunBuggy').disabled = false;
+}
+
+function resetBuggy() {
+  buggyProgress = 0;
+  buggyStats = { anomalies: 0, overflows: 0, skips: 0, lastValue: 0 };
+  document.getElementById('buggyFill').style.width = '0%';
+  document.getElementById('buggyPct').textContent = '0%';
+  document.getElementById('buggyPct').style.color = '';
+  document.getElementById('buggyOverflow').style.display = 'none';
+  document.getElementById('buggyAnomalies').textContent = '0';
+  document.getElementById('buggyOverflows').textContent = '0';
+  document.getElementById('buggySkips').textContent = '0';
+  document.getElementById('buggyFinal').textContent = '—';
+  document.getElementById('buggyLog').innerHTML = '';
+  buildTaskCards('buggyTasks');
+  document.getElementById('btnRunBuggy').disabled = false;
+  buggyRunning = false;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ██████  FIXED IMPLEMENTATION  ██████
+   Async mutex queue — serialises all progress updates
+═══════════════════════════════════════════════════════ */
+let fixedRunning = false;
+let fixedProgress = 0;
+let fixedStats = { anomalies: 0, overflows: 0, skips: 0, lastValue: 0 };
+
+// The mutex: a chain of Promises that ensures sequential execution
+let fixedLock = Promise.resolve();
+
+/**
+ * Enqueue a critical-section callback.
+ * Each call appends to the Promise chain, so updates run one-at-a-time.
+ */
+function withLock(fn) {
+  // Chain: new work starts only after previous work resolves
+  fixedLock = fixedLock.then(() => fn());
+  return fixedLock;
+}
+
+function updateFixedBar(value) {
+  const fill  = document.getElementById('fixedFill');
+  const pctEl = document.getElementById('fixedPct');
+
+  fill.style.width  = value + '%';
+  pctEl.textContent = value + '%';
+  document.getElementById('fixedFinal').textContent = value + '%';
+
+  if (value - fixedStats.lastValue > 20) {
+    fixedStats.skips++;
+    document.getElementById('fixedSkips').textContent = fixedStats.skips;
+  }
+  fixedStats.lastValue = value;
+}
+
+async function fixedTask(taskDef) {
+  setTaskState('fixedTasks', taskDef.name, 'running', 'running…');
+  logEntry('fixedLog', `${taskDef.name} started (${taskDef.steps} steps × ${taskDef.stepSize}%)`, 'info');
+
+  for (let i = 0; i < taskDef.steps; i++) {
+    await sleep(taskDef.delay + Math.random() * 40);
+
+    // ✅ FIX: wrap the read-modify-write in withLock()
+    // The callback runs exclusively — no other update can interleave
+    await withLock(async () => {
+      const before = fixedProgress;
+
+      await sleep(Math.random() * 20); // same artificial yield as buggy version
+
+      // Clamp to [0, 100] as a safety net
+      fixedProgress = Math.min(100, fixedProgress + taskDef.stepSize);
+
+      const after = fixedProgress;
+      logEntry('fixedLog', `${taskDef.name} step ${i+1}: ${before}% → ${after}%`, 'ok');
+      updateFixedBar(fixedProgress);
+    });
+  }
+
+  setTaskState('fixedTasks', taskDef.name, 'done', `done (${taskDef.steps * taskDef.stepSize}% added)`);
+  logEntry('fixedLog', `${taskDef.name} finished`, 'ok');
+}
+
+async function runFixed() {
+  if (fixedRunning) return;
+  fixedRunning = true;
+  document.getElementById('btnRunFixed').disabled = true;
+
+  logEntry('fixedLog', '═══ Starting fixed run ═══', 'highlight');
+
+  // Same concurrent launch — but updates are serialised by the lock
+  const promises = TASK_DEFS.map(t => fixedTask(t));
+  await Promise.all(promises);
+
+  // Wait for any queued lock operations to drain
+  await fixedLock;
+
+  logEntry('fixedLog', `═══ All done. Final progress: ${fixedProgress}% ═══`, 'highlight');
+  if (fixedProgress === 100) {
+    logEntry('fixedLog', 'Progress reached exactly 100% — CORRECT ✓', 'ok');
+  } else {
+    logEntry('fixedLog', `Progress is ${fixedProgress}% (clamped at 100 due to excess work)`, 'info');
+  }
+
+  fixedRunning = false;
+  document.getElementById('btnRunFixed').disabled = false;
+}
+
+function resetFixed() {
+  fixedProgress = 0;
+  fixedLock = Promise.resolve();
+  fixedStats = { anomalies: 0, overflows: 0, skips: 0, lastValue: 0 };
+  document.getElementById('fixedFill').style.width = '0%';
+  document.getElementById('fixedPct').textContent = '0%';
+  document.getElementById('fixedAnomalies').textContent = '0';
+  document.getElementById('fixedOverflows').textContent = '0';
+  document.getElementById('fixedSkips').textContent = '0';
+  document.getElementById('fixedFinal').textContent = '—';
+  document.getElementById('fixedLog').innerHTML = '';
+  buildTaskCards('fixedTasks');
+  document.getElementById('btnRunFixed').disabled = false;
+  fixedRunning = false;
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+buildTaskCards('buggyTasks');
+buildTaskCards('fixedTasks');
+</script>
+</body>
+</html>

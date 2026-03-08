@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Concurrency Bug Demo - Progress Bar</title>
+    <title>Concurrency Bug: Shared State Progress Tracker</title>
     <style>
         * {
             margin: 0;
@@ -22,225 +22,882 @@
         h1 {
             text-align: center;
             font-size: 1.8rem;
-            margin-bottom: 6px;
-            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 8px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(100, 150, 255, 0.5);
         }
 
         .subtitle {
             text-align: center;
             color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 24px;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
         }
 
-        .panels {
+        .container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            max-width: 1100px;
-            margin: 0 auto 24px auto;
-        }
-
-        @media (max-width: 700px) {
-            .panels { grid-template-columns: 1fr; }
-            h1 { font-size: 1.2rem; }
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .panel {
             background: #1a1a2e;
-            border-radius: 14px;
-            padding: 22px;
+            border-radius: 16px;
+            padding: 24px;
             border: 1px solid #2a2a4a;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
-        .panel.buggy { border-color: #ff4444; }
-        .panel.fixed  { border-color: #44cc88; }
+        .panel.buggy {
+            border-color: #ff4444;
+            box-shadow: 0 8px 32px rgba(255, 68, 68, 0.15);
+        }
 
-        .panel-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            padding: 3px 10px;
+        .panel.fixed {
+            border-color: #44ff88;
+            box-shadow: 0 8px 32px rgba(68, 255, 136, 0.15);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            padding: 4px 12px;
             border-radius: 20px;
-            margin-bottom: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .buggy  .panel-badge { background: #ff444422; color: #ff6666; border: 1px solid #ff4444; }
-        .fixed  .panel-badge { background: #44cc8822; color: #66ddaa; border: 1px solid #44cc88; }
-
-        .panel h2 {
-            font-size: 1.1rem;
-            margin-bottom: 6px;
-            color: #fff;
+        .badge.bug {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff6666;
+            border: 1px solid #ff4444;
         }
 
-        .panel p.desc {
-            font-size: 0.8rem;
-            color: #999;
-            margin-bottom: 16px;
-            line-height: 1.5;
+        .badge.fix {
+            background: rgba(68, 255, 136, 0.2);
+            color: #66ffaa;
+            border: 1px solid #44ff88;
         }
 
-        /* Task rows */
-        .task-list {
-            margin-bottom: 14px;
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
         }
 
-        .task-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+        .progress-section {
+            margin-bottom: 20px;
         }
 
-        .task-label {
-            font-size: 0.75rem;
-            width: 62px;
-            flex-shrink: 0;
-            color: #bbb;
-        }
-
-        .task-bar-wrap {
-            flex: 1;
-            background: #111128;
-            border-radius: 6px;
-            height: 10px;
-            overflow: hidden;
-        }
-
-        .task-bar-fill {
-            height: 100%;
-            border-radius: 6px;
-            width: 0%;
-            transition: width 0.15s ease;
-        }
-
-        .task-pct {
-            font-size: 0.72rem;
-            width: 36px;
-            text-align: right;
-            color: #ccc;
-        }
-
-        /* Shared / combined progress bar */
-        .shared-label {
-            font-size: 0.78rem;
-            color: #aaa;
-            margin-bottom: 5px;
+        .progress-label {
             display: flex;
             justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #aaa;
         }
 
-        .shared-bar-wrap {
-            background: #111128;
-            border-radius: 8px;
-            height: 22px;
+        .progress-value {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .buggy .progress-value {
+            color: #ff6666;
+        }
+
+        .fixed .progress-value {
+            color: #66ffaa;
+        }
+
+        .progress-bar-container {
+            height: 28px;
+            background: #0f0f1a;
+            border-radius: 14px;
             overflow: hidden;
-            margin-bottom: 6px;
+            border: 1px solid #2a2a4a;
             position: relative;
         }
 
-        .shared-bar-fill {
+        .progress-bar {
             height: 100%;
+            border-radius: 14px;
+            transition: width 0.15s ease, background-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255,255,255,0.15) 50%,
+                transparent 100%
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .buggy .progress-bar {
+            background: linear-gradient(90deg, #ff4444, #ff8800);
+        }
+
+        .buggy .progress-bar.overflow {
+            background: linear-gradient(90deg, #ff0000, #ff00ff);
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .fixed .progress-bar {
+            background: linear-gradient(90deg, #00aa44, #44ff88);
+        }
+
+        .overflow-warning {
+            color: #ff4444;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            min-height: 18px;
+            font-weight: bold;
+            animation: pulse 0.5s ease infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.6; }
+            to { opacity: 1; }
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .task-item {
+            background: #0f0f1a;
             border-radius: 8px;
-            width: 0%;
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid #2a2a4a;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.running {
+            border-color: #ffaa00;
+            box-shadow: 0 0 8px rgba(255, 170, 0, 0.3);
+        }
+
+        .task-item.done {
+            border-color: #44ff88;
+            box-shadow: 0 0 8px rgba(68, 255, 136, 0.2);
+        }
+
+        .task-item.conflict {
+            border-color: #ff4444;
+            box-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
+            animation: conflictPulse 0.4s ease infinite alternate;
+        }
+
+        @keyframes conflictPulse {
+            from { background: #0f0f1a; }
+            to { background: #2a0a0a; }
+        }
+
+        .task-name {
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .task-contribution {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .task-status {
+            font-size: 0.65rem;
+            margin-top: 4px;
+            min-height: 14px;
+        }
+
+        .task-item.running .task-status { color: #ffaa00; }
+        .task-item.done .task-status { color: #44ff88; }
+        .task-item.conflict .task-status { color: #ff4444; }
+
+        .log-box {
+            background: #0a0a14;
+            border-radius: 8px;
+            padding: 12px;
+            height: 160px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            border: 1px solid #1a1a2e;
+            margin-bottom: 16px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .log-entry.error { color: #ff6666; }
+        .log-entry.warn  { color: #ffaa44; }
+        .log-entry.info  { color: #66aaff; }
+        .log-entry.success { color: #66ffaa; }
+        .log-entry.normal { color: #888; }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-buggy {
+            background: linear-gradient(135deg, #cc2222, #ff4444);
+            color: white;
+        }
+
+        .btn-fixed {
+            background: linear-gradient(135deg, #007733, #44ff88);
+            color: #001a0a;
+        }
+
+        .explanation {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #2a2a4a;
+        }
+
+        .explanation h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #ffffff;
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            padding-right: 8px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: #fff;
-            transition: width 0.1s ease, background 0.3s;
-            white-space: nowrap;
+            gap: 8px;
         }
 
-        .buggy .shared-bar-fill  { background: linear-gradient(90deg, #ff4444, #ff8800); }
-        .fixed  .shared-bar-fill { background: linear-gradient(90deg, #44cc88, #00aaff); }
-
-        .overflow-indicator {
-            display: none;
-            font-size: 0.72rem;
-            color: #ff6666;
-            margin-top: 3px;
-            font-weight: 600;
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        /* Log */
-        .log-box {
-            background: #0d0d1f;
-            border-radius: 8px;
-            padding: 10px 12px;
-            height: 130px;
-            overflow-y: auto;
-            font-size: 0.72rem;
+        .explain-block {
+            background: #0f0f1a;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .explain-block h3 {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .explain-block.bug-explain h3 { color: #ff6666; }
+        .explain-block.fix-explain h3 { color: #66ffaa; }
+
+        .explain-block p, .explain-block li {
+            font-size: 0.82rem;
+            color: #aaa;
+            line-height: 1.6;
+        }
+
+        .explain-block ul {
+            padding-left: 16px;
+        }
+
+        .explain-block li {
+            margin-bottom: 4px;
+        }
+
+        code {
+            background: #0a0a14;
+            padding: 2px 6px;
+            border-radius: 4px;
             font-family: 'Courier New', monospace;
-            border: 1px solid #222244;
-            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #88aaff;
         }
 
-        .log-line { margin-bottom: 2px; color: #aaa; }
-        .log-line.warn  { color: #ffaa44; }
-        .log-line.error { color: #ff5555; }
-        .log-line.ok    { color: #55dd99; }
-        .log-line.info  { color: #66aaff; }
-
-        /* Stats */
         .stats-row {
             display: flex;
             gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
+            margin-bottom: 16px;
         }
 
         .stat-box {
-            background: #111128;
-            border-radius: 8px;
-            padding: 7px 12px;
             flex: 1;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .stat-val {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .stat-key {
-            font-size: 0.65rem;
-            color: #777;
-            margin-top: 1px;
-        }
-
-        .buggy .stat-val.bad  { color: #ff5555; }
-        .fixed  .stat-val.good { color: #55dd99; }
-
-        /* Buttons */
-        .btn-row {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 24px;
-            max-width: 1100px;
-            margin-left: auto;
-            margin-right: auto;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 10px 24px;
-            border: none;
+            background: #0f0f1a;
             border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #2a2a4a;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .buggy .stat-value { color: #ff6666; }
+        .fixed .stat-value { color: #66ffaa; }
+
+        .race-indicator {
+            text-align: center;
+            font-size: 0.75rem;
+            padding: 6px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .race-indicator.active {
+            background: rgba(255, 68, 68, 0.15);
+            color: #ff6666;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+        }
+
+        .race-indicator.idle {
+            background: rgba(40, 40, 60, 0.5);
+            color: #555;
+            border: 1px solid #2a2a4a;
+        }
+
+        @media (max-width: 768px) {
+            .container, .explanation-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>⚡ Shared State Concurrency Bug</h1>
+<p class="subtitle">Watch how concurrent tasks corrupt shared progress state — and how to fix it</p>
+
+<div class="container">
+
+    <!-- BUGGY PANEL -->
+    <div class="panel buggy">
+        <div class="panel-header">
+            <span class="badge bug">🐛 Buggy</span>
+            <span class="panel-title">Race Condition Version</span>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>Shared Progress (Corrupted)</span>
+                <span class="progress-value" id="buggy-pct">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="buggy-bar" style="width:0%"></div>
+            </div>
+            <div class="overflow-warning" id="buggy-warning"></div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label">Expected</div>
+                <div class="stat-value" id="buggy-expected">100%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Actual</div>
+                <div class="stat-value" id="buggy-actual">—</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Lost Updates</div>
+                <div class="stat-value" id="buggy-lost">—</div>
+            </div>
+        </div>
+
+        <div class="race-indicator idle" id="buggy-race-indicator">
+            Waiting to start...
+        </div>
+
+        <div class="tasks-grid" id="buggy-tasks"></div>
+
+        <div class="log-box" id="buggy-log"></div>
+
+        <button class="btn btn-buggy" id="buggy-btn" onclick="runBuggy()">
+            🐛 Run Buggy Demo
+        </button>
+    </div>
+
+    <!-- FIXED PANEL -->
+    <div class="panel fixed">
+        <div class="panel-header">
+            <span class="badge fix">✅ Fixed</span>
+            <span class="panel-title">Synchronized Version</span>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>Shared Progress (Correct)</span>
+                <span class="progress-value" id="fixed-pct">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="fixed-bar" style="width:0%"></div>
+            </div>
+            <div class="overflow-warning" id="fixed-warning" style="color:#66ffaa; min-height:18px;"></div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label">Expected</div>
+                <div class="stat-value" id="fixed-expected">100%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Actual</div>
+                <div class="stat-value" id="fixed-actual">—</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Lost Updates</div>
+                <div class="stat-value" id="fixed-lost">—</div>
+            </div>
+        </div>
+
+        <div class="race-indicator idle" id="fixed-race-indicator">
+            Waiting to start...
+        </div>
+
+        <div class="tasks-grid" id="fixed-tasks"></div>
+
+        <div class="log-box" id="fixed-log"></div>
+
+        <button class="btn btn-fixed" id="fixed-btn" onclick="runFixed()">
+            ✅ Run Fixed Demo
+        </button>
+    </div>
+
+</div>
+
+<!-- EXPLANATION -->
+<div class="explanation">
+    <h2>🔬 Understanding the Shared State Concurrency Bug</h2>
+    <div class="explanation-grid">
+        <div class="explain-block bug-explain">
+            <h3>🐛 Why the Buggy Version Fails</h3>
+            <p style="margin-bottom:8px;">
+                Each task reads the <em>current</em> value of <code>sharedProgress</code>,
+                adds its chunk, then writes back. But because JavaScript's event loop
+                interleaves microtasks and macrotasks, multiple tasks can read the
+                <strong>same stale value</strong> before any of them write back:
+            </p>
+            <ul>
+                <li>Task A reads <code>progress = 20</code></li>
+                <li>Task B reads <code>progress = 20</code> (same snapshot!)</li>
+                <li>Task A writes <code>progress = 30</code></li>
+                <li>Task B writes <code>progress = 30</code> — <strong>Task A's update is lost!</strong></li>
+            </ul>
+            <p style="margin-top:8px;">
+                Result: the final value is <strong>wrong</strong>, updates are skipped,
+                and in some runs the bar can even <strong>exceed 100%</strong>.
+            </p>
+        </div>
+        <div class="explain-block fix-explain">
+            <h3>✅ How the Fixed Version Works</h3>
+            <p style="margin-bottom:8px;">
+                The fix uses a <strong>Promise-based serial queue</strong> (mutex pattern).
+                Each task must acquire a lock before touching the shared variable.
+                If the lock is held, the task waits until it's released:
+            </p>
+            <ul>
+                <li>Only <strong>one task at a time</strong> can read-modify-write</li>
+                <li>Other tasks <strong>queue up</strong> and wait their turn</li>
+                <li>No stale reads — every task sees the latest committed value</li>
+                <li>Final result is always exactly <strong>100%</strong></li>
+            </ul>
+            <p style="margin-top:8px;">
+                This is equivalent to a <strong>mutex / critical section</strong>
+                in multi-threaded languages like Java or C++, adapted for JS's
+                async/await model using a chained Promise queue.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  SHARED CONFIG
+// ─────────────────────────────────────────────
+const TASK_COUNT   = 10;
+const CHUNK        = 10;   // each task should add 10% → total = 100%
+const DELAY_MIN    = 50;
+const DELAY_MAX    = 300;
+
+function randDelay() {
+    return Math.floor(Math.random() * (DELAY_MAX - DELAY_MIN)) + DELAY_MIN;
+}
+
+// ─────────────────────────────────────────────
+//  LOGGING HELPERS
+// ─────────────────────────────────────────────
+function log(boxId, msg, type = 'normal') {
+    const box = document.getElementById(boxId);
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    entry.textContent = `[${time}] ${msg}`;
+    box.appendChild(entry);
+    box.scrollTop = box.scrollHeight;
+}
+
+function clearLog(boxId) {
+    document.getElementById(boxId).innerHTML = '';
+}
+
+// ─────────────────────────────────────────────
+//  TASK GRID HELPERS
+// ─────────────────────────────────────────────
+function buildTaskGrid(containerId, prefix) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    for (let i = 0; i < TASK_COUNT; i++) {
+        const div = document.createElement('div');
+        div.className = 'task-item';
+        div.id = `${prefix}-task-${i}`;
+        div.innerHTML = `
+            <div class="task-name">Task ${i + 1}</div>
+            <div class="task-contribution">+${CHUNK}%</div>
+            <div class="task-status" id="${prefix}-task-status-${i}">idle</div>
+        `;
+        container.appendChild(div);
+    }
+}
+
+function setTaskState(prefix, i, state, statusText) {
+    const el = document.getElementById(`${prefix}-task-${i}`);
+    const st = document.getElementById(`${prefix}-task-status-${i}`);
+    if (el) el.className = `task-item ${state}`;
+    if (st) st.textContent = statusText;
+}
+
+// ─────────────────────────────────────────────
+//  PROGRESS BAR HELPERS
+// ─────────────────────────────────────────────
+function setProgress(prefix, pct, overflow = false) {
+    const bar   = document.getElementById(`${prefix}-bar`);
+    const label = document.getElementById(`${prefix}-pct`);
+    const warn  = document.getElementById(`${prefix}-warning`);
+
+    const displayPct = Math.min(pct, 100);
+    bar.style.width = displayPct + '%';
+    label.textContent = pct.toFixed(1) + '%';
+
+    if (overflow || pct > 100) {
+        bar.classList.add('overflow');
+        warn.textContent = `⚠️ OVERFLOW! Progress is ${pct.toFixed(1)}% — exceeded 100%!`;
+    } else {
+        bar.classList.remove('overflow');
+        if (prefix === 'fixed') {
+            warn.textContent = pct >= 100 ? '✅ Exactly 100% — no lost updates!' : '';
+        } else {
+            warn.textContent = '';
+        }
+    }
+}
+
+function resetPanel(prefix) {
+    setProgress(prefix, 0);
+    document.getElementById(`${prefix}-warning`).textContent = '';
+    document.getElementById(`${prefix}-actual`).textContent  = '—';
+    document.getElementById(`${prefix}-lost`).textContent    = '—';
+    document.getElementById(`${prefix}-bar`).classList.remove('overflow');
+
+    const ri = document.getElementById(`${prefix}-race-indicator`);
+    ri.className = 'race-indicator idle';
+    ri.textContent = 'Waiting to start...';
+}
+
+// ─────────────────────────────────────────────
+//  ██████╗ ██╗   ██╗ ██████╗  ██████╗ ██╗   ██╗
+//  ██╔══██╗██║   ██║██╔════╝ ██╔════╝ ╚██╗ ██╔╝
+//  ██████╔╝██║   ██║██║  ███╗██║  ███╗ ╚████╔╝
+//  ██╔══██╗██║   ██║██║   ██║██║   ██║  ╚██╔╝
+//  ██████╔╝╚██████╔╝╚██████╔╝╚██████╔╝   ██║
+//  ╚═════╝  ╚═════╝  ╚═════╝  ╚═════╝    ╚═╝
+//  BUGGY VERSION — shared mutable state, no synchronization
+// ─────────────────────────────────────────────
+let buggyRunning = false;
+
+async function runBuggy() {
+    if (buggyRunning) return;
+    buggyRunning = true;
+
+    const btn = document.getElementById('buggy-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Running...';
+
+    resetPanel('buggy');
+    clearLog('buggy-log');
+    buildTaskGrid('buggy-tasks', 'buggy');
+
+    // ⚠️  THE BUG: a plain shared variable, no locking
+    let sharedProgress = 0;
+    let updateCount    = 0;
+    let conflictCount  = 0;
+
+    const ri = document.getElementById('buggy-race-indicator');
+    ri.className = 'race-indicator active';
+    ri.textContent = '⚡ Race condition in progress...';
+
+    log('buggy-log', `Starting ${TASK_COUNT} concurrent tasks (each adds ${CHUNK}%)`, 'warn');
+    log('buggy-log', 'Expected final value: 100% — watch what actually happens!', 'warn');
+
+    // Launch all tasks simultaneously — THIS is the problem
+    const tasks = Array.from({ length: TASK_COUNT }, (_, i) => {
+        return new Promise(resolve => {
+            setTimeout(async () => {
+                setTaskState('buggy', i, 'running', 'reading...');
+
+                // ── RACE CONDITION ZONE ──────────────────────────────────
+                // Step 1: Read current value (may be stale!)
+                const readValue = sharedProgress;
+
+                // Simulate async work (another task may write here!)
+                await new Promise(r => setTimeout(r, randDelay()));
+
+                // Step 2: Compute new value based on the (now possibly stale) read
+                const newValue = readValue + CHUNK;
+
+                // Detect if someone else wrote between our read and write
+                if (sharedProgress !== readValue) {
+                    conflictCount++;
+                    setTaskState('buggy', i, 'conflict', '💥 conflict!');
+                    log('buggy-log',
+                        `Task ${i+1}: READ ${readValue}% but state is now ${sharedProgress}% → LOST UPDATE! Writing ${newValue}% anyway`,
+                        'error');
+                } else {
+                    setTaskState('buggy', i, 'running', 'writing...');
+                }
+
+                // Step 3: Write back — possibly overwriting another task's work!
+                sharedProgress = newValue;
+                updateCount++;
+
+                setProgress('buggy', sharedProgress, sharedProgress > 100);
+                document.getElementById('buggy-actual').textContent = sharedProgress.toFixed(1) + '%';
+
+                if (sharedProgress !== readValue + CHUNK || conflictCount > 0) {
+                    log('buggy-log',
+                        `Task ${i+1}: Wrote ${newValue}% (read was ${readValue}%, current is ${sharedProgress}%)`,
+                        sharedProgress > 100 ? 'error' : 'warn');
+                } else {
+                    log('buggy-log', `Task ${i+1}: OK — wrote ${newValue}%`, 'info');
+                }
+
+                setTaskState('buggy', i, 'done', '✓ done');
+                resolve();
+            }, randDelay());
+        });
+    });
+
+    await Promise.all(tasks);
+
+    // Final assessment
+    const expected   = TASK_COUNT * CHUNK;
+    const lostUpdates = Math.round((expected - sharedProgress) / CHUNK);
+
+    document.getElementById('buggy-actual').textContent = sharedProgress.toFixed(1) + '%';
+    document.getElementById('buggy-lost').textContent   =
+        sharedProgress === expected ? '0' : `~${Math.abs(lostUpdates)}`;
+
+    ri.textContent = `⚠️ Done! Final: ${sharedProgress}% | Conflicts detected: ${conflictCount}`;
+
+    if (sharedProgress !== expected) {
+        log('buggy-log', `─── FINAL: ${sharedProgress}% (expected ${expected}%) — ${conflictCount} conflicts! ───`, 'error');
+        setProgress('buggy', sharedProgress, sharedProgress > 100);
+    } else {
+        log('buggy-log', `─── FINAL: ${sharedProgress}% — Got lucky this run! Try again. ───`, 'warn');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🐛 Run Buggy Demo Again';
+    buggyRunning = false;
+}
+
+// ─────────────────────────────────────────────
+//  ███████╗██╗██╗  ██╗███████╗██████╗
+//  ██╔════╝██║╚██╗██╔╝██╔════╝██╔══██╗
+//  █████╗  ██║ ╚███╔╝ █████╗  ██║  ██║
+//  ██╔══╝  ██║ ██╔██╗ ██╔══╝  ██║  ██║
+//  ██║     ██║██╔╝ ██╗███████╗██████╔╝
+//  ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═════╝
+//  FIXED VERSION — Promise-based mutex (serial queue)
+// ─────────────────────────────────────────────
+let fixedRunning = false;
+
+// ✅ THE FIX: A simple async mutex using a chained Promise queue
+class AsyncMutex {
+    constructor() {
+        this._queue = Promise.resolve();   // start with a resolved promise
+    }
+
+    // Acquire the lock: returns a release function
+    acquire() {
+        let release;
+        // Chain onto the current queue tail
+        const next = new Promise(resolve => { release = resolve; });
+        // The caller must wait for the current tail to resolve
+        const waitForLock = this._queue.then(() => release);
+        // Advance the queue tail to the new promise
+        this._queue = next;
+        return waitForLock;
+    }
+}
+
+async function runFixed() {
+    if (fixedRunning) return;
+    fixedRunning = true;
+
+    const btn = document.getElementById('fixed-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Running...';
+
+    resetPanel('fixed');
+    clearLog('fixed-log');
+    buildTaskGrid('fixed-tasks', 'fixed');
+
+    let sharedProgress = 0;
+    const mutex = new AsyncMutex();
+
+    const ri = document.getElementById('fixed-race-indicator');
+    ri.className = 'race-indicator active';
+    ri.textContent = '🔒 Mutex protecting shared state...';
+
+    log('fixed-log', `Starting ${TASK_COUNT} concurrent tasks (each adds ${CHUNK}%)`, 'info');
+    log('fixed-log', 'Mutex ensures serial access — no lost updates possible', 'success');
+
+    const tasks = Array.from({ length: TASK_COUNT }, (_, i) => {
+        return new Promise(resolve => {
+            setTimeout(async () => {
+                setTaskState('fixed', i, 'running', 'waiting...');
+                log('fixed-log', `Task ${i+1}: Requesting mutex lock...`, 'normal');
+
+                // ── CRITICAL SECTION (protected by mutex) ────────────────
+                const release = await mutex.acquire();
+                // At this point, we are the ONLY task in the critical section
+
+                try {
+                    setTaskState('fixed', i, 'running', '🔒 locked');
+                    log('fixed-log', `Task ${i+1}: Lock acquired — reading ${sharedProgress}%`, 'info');
+
+                    // Simulate async work while holding the lock
+                    await new Promise(r => setTimeout(r, randDelay()));
+
+                    // Safe read-modify-write: no other task can interfere
+                    const before = sharedProgress;
+                    sharedProgress += CHUNK;
+
+                    setProgress('fixed', sharedProgress);
+                    document.getElementById('fixed-actual').textContent = sharedProgress.toFixed(1) + '%';
+
+                    log('fixed-log',
+                        `Task ${i+1}: ${before}% → ${sharedProgress}% ✓ (lock held, no conflicts possible)`,
+                        'success');
+
+                    setTaskState('fixed', i, 'done', '✓ done');
+                } finally {
+                    // ALWAYS release the lock, even if an error occurred
+                    release();
+                    log('fixed-log', `Task ${i+1}: Lock released`, 'normal');
+                }
+                // ── END CRITICAL SECTION ─────────────────────────────────
+
+                resolve();
+            }, randDelay());
+        });
+    });
+
+    await Promise.all(tasks);
+
+    const expected = TASK_COUNT * CHUNK;
+    document.getElementById('fixed-actual').textContent = sharedProgress.toFixed(1) + '%';
+    document.getElementById('fixed-lost').textContent   = '0';
+
+    ri.className = 'race-indicator idle';
+    ri.textContent = `✅ Done! Final: ${sharedProgress}% — Exactly correct!`;
+
+    setProgress('fixed', sharedProgress);
+
+    log('fixed-log', `─── FINAL: ${sharedProgress}% (expected ${expected}%) — Perfect! ───`, 'success');
+
+    btn.disabled = false;
+    btn.textContent = '✅ Run Fixed Demo Again';
+    fixedRunning = false;
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+buildTaskGrid('buggy-tasks', 'buggy');
+buildTaskGrid('fixed-tasks', 'fixed');
+</script>
+</body>
+</html>

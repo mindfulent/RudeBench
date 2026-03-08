@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        #array-container {
+            display: flex;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap; /* Allow wrapping for larger arrays */
+            justify-content: center;
+            gap: 5px; /* Space between boxes */
+        }
+
+        .array-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .highlight-range {
+            background-color: #d0eaff; /* Light blue/green for range */
+            border-color: #87cefa;
+        }
+
+        .highlight-mid {
+            background-color: #ffb74d; /* Orange for middle element */
+            border-color: #fb8c00;
+        }
+
+        .highlight-found {
+            background-color: #a5d6a7; /* Green for found */
+            border-color: #66bb6a;
+        }
+
+        .highlight-not-found {
+            background-color: #ef9a9a; /* Red for not found */
+            border-color: #e57373;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #startSearchBtn {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+
+        #nextStepBtn {
+            background-color: #2196F3; /* Blue */
+            color: white;
+        }
+
+        #resetBtn {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            min-height: 1.5em; /* Prevent layout shift */
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualization</h1>
+
+    <div id="array-container">
+        <!-- Array boxes will be rendered here by JavaScript -->
+    </div>
+
+    <div id="controls">
+        <label for="targetInput">Target:</label>
+        <input type="number" id="targetInput" value="35">
+        <button id="startSearchBtn">Start Search</button>
+        <button id="nextStepBtn" disabled>Next Step</button>
+        <button id="resetBtn" disabled>Reset</button>
+    </div>
+
+    <div id="status">Ready to search!</div>
+
+    <script>
+        const originalArray = [5, 12, 18, 23, 30, 35, 42, 48, 55, 60, 67, 72, 79, 85, 90, 95];
+        let currentArray = []; // A copy to manipulate
+        let target = null;
+        let low = 0;
+        let high = 0;
+        let mid = -1;
+        let searchActive = false;
+        let found = false;
+
+        const arrayContainer = document.getElementById('array-container');
+        const targetInput = document.getElementById('targetInput');
+        const startSearchBtn = document.getElementById('startSearchBtn');
+        const nextStepBtn = document.getElementById('nextStepBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusDiv = document.getElementById('status');
+
+        function renderArray(arr) {
+            arrayContainer.innerHTML = '';
+            arr.forEach((num, index) => {
+                const box = document.createElement('div');
+                box.classList.add('array-box');
+                box.dataset.index = index; // Store index for easy access
+                box.textContent = num;
+                arrayContainer.appendChild(box);
+            });
+        }
+
+        function resetVisualization() {
+            currentArray = [...originalArray]; // Restore original array
+            target = null;
+            low = 0;
+            high = currentArray.length - 1;
+            mid = -1;
+            searchActive = false;
+            found = false;
+
+            renderArray(currentArray);
+            statusDiv.textContent = 'Ready to search!';
+            targetInput.value = ''; // Clear target input
+            targetInput.disabled = false;
+            startSearchBtn.disabled = false;
+            nextStepBtn.disabled = true;
+            resetBtn.disabled = true;
+
+            // Remove all highlights
+            document.querySelectorAll('.array-box').forEach(box => {
+                box.classList.remove('highlight-range', 'highlight-mid', 'highlight-found', 'highlight-not-found');
+            });
+        }
+
+        function highlightCurrentState() {
+            // Remove previous highlights
+            document.querySelectorAll('.array-box').forEach(box => {
+                box.classList.remove('highlight-range', 'highlight-mid');
+            });
+
+            // Highlight current search range
+            for (let i = low; i <= high; i++) {
+                const box = arrayContainer.querySelector(`[data-index="${i}"]`);
+                if (box) box.classList.add('highlight-range');
+            }
+
+            // Highlight middle element if valid
+            if (mid >= low && mid <= high) {
+                const midBox = arrayContainer.querySelector(`[data-index="${mid}"]`);
+                if (midBox) midBox.classList.add('highlight-mid');
+            }
+        }
+
+        function startSearch() {
+            target = parseInt(targetInput.value);
+            if (isNaN(target)) {
+                statusDiv.textContent = 'Please enter a valid number for the target.';
+                return;
+            }
+
+            resetVisualization(); // Ensure a clean start
+            low = 0;
+            high = currentArray.length - 1;
+            searchActive = true;
+            found = false;
+
+            targetInput.disabled = true;
+            startSearchBtn.disabled = true;
+            nextStepBtn.disabled = false;
+            resetBtn.disabled = false;
+
+            statusDiv.textContent = `Searching for ${target}...`;
+            highlightCurrentState();
+            // If array is empty, handle immediately
+            if (currentArray.length === 0) {
+                statusDiv.textContent = `Array is empty. ${target} not found.`;
+                nextStepBtn.disabled = true;
+                resetBtn.disabled = false;
+                searchActive = false;
+                document.querySelectorAll('.array-box').forEach(box => box.classList.add('highlight-not-found'));
+            } else if (low > high) { // Case for single element array or initial invalid state
+                 statusDiv.textContent = `${target} not found (initial range invalid).`;
+                 nextStepBtn.disabled = true;
+                 searchActive = false;
+                 document.querySelectorAll('.array-box').forEach(box => box.classList.add('highlight-not-found'));
+            }
+        }
+
+        function nextStep() {
+            if (!searchActive || low > high) {
+                if (!found) {
+                    statusDiv.textContent = `${target} not found!`;
+                    document.querySelectorAll('.array-box').forEach(box => {
+                        if (!box.classList.contains('highlight-found')) { // Don't overwrite found highlight
+                            box.classList.add('highlight-not-found');
+                        }
+                    });
+                }
+                nextStepBtn.disabled = true;
+                return;
+            }
+
+            mid = Math.floor((low + high) / 2);
+            statusDiv.textContent = `Current step: Low=${low}, High=${high}, Mid=${mid} (Value: ${currentArray[mid]})`;
+            highlightCurrentState();
+
+            // Perform binary search logic
+            if (currentArray[mid] === target) {
+                statusDiv.textContent = `Found ${target} at index ${mid}!`;
+                arrayContainer.querySelector(`[data-index="${mid}"]`).classList.add('highlight-found');
+                searchActive = false;
+                found = true;
+                nextStepBtn.disabled = true;
+            } else if (currentArray[mid] < target) {
+                low = mid + 1;
+                statusDiv.textContent += ` - Target is greater, searching right half. New Low=${low}`;
+            } else { // currentArray[mid] > target
+                high = mid - 1;
+                statusDiv.textContent += ` - Target is smaller, searching left half. New High=${high}`;
+            }
+
+            // After updating low/high, if low > high and not found, it means target isn't present
+            if (low > high && !found) {
+                statusDiv.textContent = `${target} not found!`;
+                searchActive = false;
+                nextStepBtn.disabled = true;
+                document.querySelectorAll('.array-box').forEach(box => {
+                    if (!box.classList.contains('highlight-found')) { // Don't overwrite found highlight
+                        box.classList.add('highlight-not-found');
+                    }
+                });
+            }
+        }
+
+        // Event Listeners
+        startSearchBtn.addEventListener('click', startSearch);
+        nextStepBtn.addEventListener('click', nextStep);
+        resetBtn.addEventListener('click', resetVisualization);
+        targetInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                startSearch();
+            }
+        });
+
+        // Initial render
+        document.addEventListener('DOMContentLoaded', resetVisualization);
+    </script>
+</body>
+</html>

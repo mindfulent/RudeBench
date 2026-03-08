@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to Table Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        button {
+            margin: 10px 0;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #output {
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternating row colors */
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1; /* Hover effect for better usability */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CSV to Table Converter</h1>
+        <p>Paste your CSV data into the textarea below and click "Parse". It handles quoted fields, escaped quotes, and varying column counts.</p>
+        
+        <textarea id="csvInput" placeholder='Example:
+"Name","Age","City"
+"John, Doe","30","New York"
+"Jane ""The Boss"" Smith","25","""San Francisco"""'></textarea>
+        
+        <button id="parseButton">Parse</button>
+        
+        <div id="output"></div>
+    </div>
+    
+    <script>
+        document.getElementById('parseButton').addEventListener('click', function() {
+            const csvText = document.getElementById('csvInput').value;
+            const parsedData = parseCSV(csvText);
+            const tableHTML = generateTable(parsedData);
+            document.getElementById('output').innerHTML = tableHTML;  // Output the table
+        });
+        
+        function parseCSV(csvString) {
+            const lines = csvString.trim().split('\n');  // Split into lines
+            const result = [];
+            const maxColumns = Math.max(...lines.map(line => countFieldsInLine(line)));  // Find max columns for padding
+            
+            lines.forEach(line => {
+                const fields = parseLine(line);  // Parse each line into fields
+                while (fields.length < maxColumns) {
+                    fields.push('');  // Pad shorter rows with empty strings
+                }
+                result.push(fields);
+            });
+            
+            return result;
+        }
+        
+        function parseLine(line) {
+            const fields = [];
+            let field = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    // Handle quotes
+                    if (inQuotes && line[i + 1] === '"') {  // Escaped quote
+                        field += '"';  // Add a single quote
+                        i++;  // Skip the next quote
+                    } else {
+                        inQuotes = !inQuotes;  // Toggle quote state
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    // End of field
+                    fields.push(field.trim());  // Add the field and trim whitespace
+                    field = '';
+                } else {
+                    field += char;  // Add character to field
+                }
+            }
+            
+            fields.push(field.trim());  // Add the last field
+            return fields;
+        }
+        
+        function countFieldsInLine(line) {
+            // Quick helper to count fields (approximate, for padding)
+            let count = 1;
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                if (line[i] === '"') inQuotes = !inQuotes;
+                if (line[i] === ',' && !inQuotes) count++;
+            }
+            return count;
+        }
+        
+        function generateTable(data) {
+            if (data.length === 0) return '<p>No data to display.</p>';
+            
+            let table = '<table>';
+            
+            // Add header (first row)
+            table += '<tr>';
+            data[0].forEach(cell => {
+                table += `<th>${escapeHTML(cell)}</th>`;
+            });
+            table += '</tr>';
+            
+            // Add data rows
+            for (let i = 1; i < data.length; i++) {  // Start from 1 to skip header
+                table += '<tr>';
+                data[i].forEach(cell => {
+                    table += `<td>${escapeHTML(cell)}</td>`;
+                });
+                table += '</tr>';
+            }
+            
+            table += '</table>';
+            return table;
+        }
+        
+        function escapeHTML(str) {
+            // Escape HTML special characters to prevent XSS
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>

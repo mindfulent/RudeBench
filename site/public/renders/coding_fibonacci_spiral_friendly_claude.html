@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fibonacci Spiral Debugger</title>
+    <title>Fibonacci Spiral - Bug Debugger</title>
     <style>
         * {
             margin: 0;
@@ -24,17 +24,17 @@
             color: #7eb8f7;
             font-size: 1.8rem;
             margin-bottom: 6px;
-            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(126,184,247,0.4);
         }
 
         .subtitle {
             text-align: center;
             color: #888;
             font-size: 0.85rem;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
 
-        .panels {
+        .canvas-row {
             display: flex;
             gap: 24px;
             justify-content: center;
@@ -42,168 +42,135 @@
             margin-bottom: 30px;
         }
 
-        .panel {
+        .canvas-panel {
             background: #1a1a2e;
             border-radius: 12px;
-            padding: 20px;
+            padding: 16px;
             border: 1px solid #2a2a4a;
             flex: 1;
-            min-width: 340px;
-            max-width: 520px;
+            min-width: 320px;
+            max-width: 500px;
         }
 
-        .panel.buggy {
-            border-color: #c0392b;
+        .canvas-panel.buggy {
+            border-color: #ff4f4f55;
+            box-shadow: 0 0 20px rgba(255,79,79,0.1);
         }
 
-        .panel.fixed {
-            border-color: #27ae60;
+        .canvas-panel.fixed {
+            border-color: #4fff9055;
+            box-shadow: 0 0 20px rgba(79,255,144,0.1);
         }
 
         .panel-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .panel.buggy .panel-title { color: #e74c3c; }
-        .panel.fixed  .panel-title { color: #2ecc71; }
+        .buggy .panel-title { color: #ff6b6b; }
+        .fixed  .panel-title { color: #4fff90; }
 
-        .panel-desc {
-            font-size: 0.78rem;
-            color: #888;
-            margin-bottom: 14px;
-            line-height: 1.5;
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: normal;
         }
+
+        .buggy  .badge { background: #ff4f4f33; color: #ff8080; border: 1px solid #ff4f4f55; }
+        .fixed  .badge { background: #4fff9033; color: #4fff90; border: 1px solid #4fff9055; }
 
         canvas {
             display: block;
             border-radius: 8px;
-            background: #12121f;
-            margin: 0 auto 16px;
-        }
-
-        .bug-box {
-            background: #2a1a1a;
-            border: 1px solid #c0392b;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-size: 0.78rem;
-            line-height: 1.7;
-        }
-
-        .fix-box {
-            background: #1a2a1a;
-            border: 1px solid #27ae60;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-size: 0.78rem;
-            line-height: 1.7;
-        }
-
-        .bug-box .label { color: #e74c3c; font-weight: bold; }
-        .fix-box .label { color: #2ecc71; font-weight: bold; }
-
-        code {
-            background: #0f0f1a;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #f39c12;
-            font-size: 0.82em;
-        }
-
-        /* ── Explanation section ── */
-        .explanation {
-            background: #1a1a2e;
-            border: 1px solid #2a2a4a;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 1080px;
-            margin: 0 auto 30px;
-        }
-
-        .explanation h2 {
-            color: #7eb8f7;
-            margin-bottom: 16px;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-        }
-
-        .bug-table {
+            background: #0d0d1a;
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.82rem;
+            height: auto;
         }
 
-        .bug-table th {
-            background: #12121f;
-            color: #7eb8f7;
-            padding: 10px 14px;
-            text-align: left;
-            border-bottom: 1px solid #2a2a4a;
+        .sequence-display {
+            margin-top: 10px;
+            font-size: 0.72rem;
+            color: #aaa;
+            background: #0d0d1a;
+            border-radius: 6px;
+            padding: 8px 10px;
+            min-height: 36px;
+            line-height: 1.6;
+            word-break: break-all;
         }
 
-        .bug-table td {
-            padding: 9px 14px;
-            border-bottom: 1px solid #1e1e38;
-            vertical-align: top;
+        .sequence-display span.highlight {
+            color: #ffd700;
+            font-weight: bold;
         }
 
-        .bug-table tr:last-child td { border-bottom: none; }
-
-        .tag-bug  { color: #e74c3c; }
-        .tag-fix  { color: #2ecc71; }
-        .tag-info { color: #f39c12; }
-
-        /* ── Sequence visualiser ── */
-        .seq-section {
+        /* ── Bug explanation panel ── */
+        .bug-panel {
             background: #1a1a2e;
-            border: 1px solid #2a2a4a;
             border-radius: 12px;
-            padding: 24px;
-            max-width: 1080px;
+            padding: 20px 24px;
+            border: 1px solid #2a2a4a;
+            max-width: 1024px;
             margin: 0 auto 30px;
         }
 
-        .seq-section h2 {
-            color: #7eb8f7;
-            margin-bottom: 16px;
+        .bug-panel h2 {
+            color: #ffd700;
             font-size: 1.1rem;
-            letter-spacing: 1px;
-        }
-
-        .seq-row {
+            margin-bottom: 14px;
             display: flex;
+            align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
         }
 
-        .seq-cell {
-            background: #12121f;
-            border: 1px solid #2a2a4a;
+        .bug-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .bug-grid { grid-template-columns: 1fr; }
+        }
+
+        .bug-card {
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 0.8rem;
+        }
+
+        .bug-card.bad  { background: #2a1a1a; border: 1px solid #ff4f4f44; }
+        .bug-card.good { background: #1a2a1a; border: 1px solid #4fff9044; }
+
+        .bug-card h3 {
+            font-size: 0.82rem;
+            margin-bottom: 8px;
+        }
+
+        .bad  h3 { color: #ff8080; }
+        .good h3 { color: #4fff90; }
+
+        pre {
+            background: #0d0d1a;
             border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            text-align: center;
-            min-width: 54px;
+            padding: 10px;
+            font-size: 0.75rem;
+            overflow-x: auto;
+            line-height: 1.5;
+            color: #ccc;
         }
 
-        .seq-cell .idx  { color: #888;    font-size: 0.68rem; }
-        .seq-cell .val  { color: #7eb8f7; font-weight: bold;  }
-        .seq-cell.wrong { border-color: #c0392b; }
-        .seq-cell.wrong .val { color: #e74c3c; }
-        .seq-cell.right { border-color: #27ae60; }
-        .seq-cell.right .val { color: #2ecc71; }
-
-        .seq-label {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 6px;
-        }
+        .kw  { color: #c792ea; }
+        .fn  { color: #82aaff; }
+        .num { color: #f78c6c; }
+        .cmt { color: #546e7a; font-style: italic; }
+        .err { color: #ff5370; background: #ff537022; border-radius: 3px; padding: 0 2px; }
+        .ok  { color: #c3e88d; background: #c3e88d22; border-radius: 3px; padding: 0 2px; }
 
         /* ── Controls ── */
         .controls {
@@ -211,38 +178,576 @@
             gap: 12px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
         }
 
         button {
-            background: #1a1a2e;
-            color: #7eb8f7;
+            background: #2a2a4a;
+            color: #ccc;
             border: 1px solid #3a3a6a;
+            padding: 8px 18px;
             border-radius: 8px;
-            padding: 10px 22px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
             cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82rem;
             transition: all 0.2s;
         }
 
-        button:hover {
-            background: #2a2a4e;
-            border-color: #7eb8f7;
-        }
+        button:hover { background: #3a3a6a; color: #fff; }
 
         button.active {
-            background: #2a3a5e;
-            border-color: #7eb8f7;
+            background: #4a4aaa;
             color: #fff;
+            border-color: #7eb8f7;
         }
 
-        .speed-label {
+        .step-info {
+            text-align: center;
+            font-size: 0.8rem;
             color: #888;
-            font-size: 0.82rem;
-            display: flex;
-            align-items: center;
+            margin-bottom: 20px;
+            min-height: 20px;
         }
 
-        footer {
-            
+        /* ── Log panel ── */
+        .log-panel {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #2a2a4a;
+            max-width: 1024px;
+            margin: 0 auto;
+        }
+
+        .log-panel h2 {
+            color: #7eb8f7;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .log-entries {
+            font-size: 0.74rem;
+            line-height: 1.8;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #aaa;
+        }
+
+        .log-entries .log-err  { color: #ff8080; }
+        .log-entries .log-ok   { color: #4fff90; }
+        .log-entries .log-info { color: #7eb8f7; }
+        .log-entries .log-warn { color: #ffd700; }
+    </style>
+</head>
+<body>
+
+<h1>🐛 Fibonacci Spiral — Bug Debugger</h1>
+<p class="subtitle">Interactive comparison: buggy base-cases vs. corrected implementation</p>
+
+<!-- Controls -->
+<div class="controls">
+    <button id="btnAnimate" class="active" onclick="toggleAnimation()">⏸ Pause Animation</button>
+    <button onclick="stepForward()">⏭ Step +1 Arc</button>
+    <button onclick="resetAll()">↺ Reset</button>
+    <button onclick="toggleGrid()">⊞ Toggle Grid</button>
+    <button onclick="toggleLabels()">🏷 Toggle Labels</button>
+</div>
+
+<div class="step-info" id="stepInfo">Drawing arc 1 of 10 …</div>
+
+<!-- Canvases -->
+<div class="canvas-row">
+    <div class="canvas-panel buggy">
+        <div class="panel-title">
+            🐛 Buggy Version
+            <span class="badge">BROKEN</span>
+        </div>
+        <canvas id="buggyCanvas" width="460" height="460"></canvas>
+        <div class="sequence-display" id="buggySeq">Sequence: loading…</div>
+    </div>
+
+    <div class="canvas-panel fixed">
+        <div class="panel-title">
+            ✅ Fixed Version
+            <span class="badge">CORRECT</span>
+        </div>
+        <canvas id="fixedCanvas" width="460" height="460"></canvas>
+        <div class="sequence-display" id="fixedSeq">Sequence: loading…</div>
+    </div>
+</div>
+
+<!-- Bug explanation -->
+<div class="bug-panel">
+    <h2>🔍 What Is the Bug?</h2>
+    <div class="bug-grid">
+
+        <div class="bug-card bad">
+            <h3>❌ Buggy — Wrong Base Cases</h3>
+            <pre><span class="cmt">// BUG 1: Both base cases return 0</span>
+<span class="kw">function</span> <span class="fn">fibBuggy</span>(n) {
+  <span class="kw">if</span> (n &lt;= <span class="num">0</span>) <span class="kw">return</span> <span class="err">0</span>;
+  <span class="kw">if</span> (n === <span class="num">1</span>) <span class="kw">return</span> <span class="err">0</span>; <span class="cmt">// ← should be 1</span>
+  <span class="kw">return</span> <span class="fn">fibBuggy</span>(n-<span class="num">1</span>) + <span class="fn">fibBuggy</span>(n-<span class="num">2</span>);
+}
+<span class="cmt">// Produces: 0,0,0,0,0,0,0,0 …</span>
+<span class="cmt">// All arcs have radius 0 → invisible!</span>
+
+<span class="cmt">// BUG 2: Arc pivot never advances</span>
+<span class="kw">let</span> x = centerX, y = centerY;
+arcs.<span class="fn">forEach</span>((r, i) =&gt; {
+  ctx.<span class="fn">arc</span>(x, y, r, ...);
+  <span class="cmt">// ← x, y never updated</span>
+  <span class="cmt">// Every arc drawn from same point</span>
+});</pre>
+        </div>
+
+        <div class="bug-card good">
+            <h3>✅ Fixed — Correct Base Cases</h3>
+            <pre><span class="cmt">// FIX 1: Proper Fibonacci base cases</span>
+<span class="kw">function</span> <span class="fn">fibFixed</span>(n) {
+  <span class="kw">if</span> (n &lt;= <span class="num">0</span>) <span class="kw">return</span> <span class="ok">0</span>;
+  <span class="kw">if</span> (n === <span class="num">1</span>) <span class="kw">return</span> <span class="ok">1</span>; <span class="cmt">// ← correct</span>
+  <span class="kw">return</span> <span class="fn">fibFixed</span>(n-<span class="num">1</span>) + <span class="fn">fibFixed</span>(n-<span class="num">2</span>);
+}
+<span class="cmt">// Produces: 1,1,2,3,5,8,13,21 …</span>
+
+<span class="cmt">// FIX 2: Pivot advances each quarter-turn</span>
+arcs.<span class="fn">forEach</span>((r, i) =&gt; {
+  ctx.<span class="fn">arc</span>(x, y, r, ...);
+  <span class="cmt">// advance pivot by direction × radius</span>
+  x += <span class="fn">dx</span>(i) * r;
+  y += <span class="fn">dy</span>(i) * r;
+});</pre>
+        </div>
+
+        <div class="bug-card bad">
+            <h3>❌ Effect on the Canvas</h3>
+            <pre><span class="cmt">Step 0 → fib(1)=0  radius=0  → dot</span>
+<span class="cmt">Step 1 → fib(2)=0  radius=0  → dot</span>
+<span class="cmt">Step 2 → fib(3)=0  radius=0  → dot</span>
+<span class="cmt">Step 3 → fib(4)=0  radius=0  → dot</span>
+<span class="cmt">…</span>
+<span class="cmt">All quarter-arcs collapse to the</span>
+<span class="cmt">center point. The spiral is</span>
+<span class="cmt">completely invisible.</span></pre>
+        </div>
+
+        <div class="bug-card good">
+            <h3>✅ Effect on the Canvas</h3>
+            <pre><span class="ok">Step 0 → fib(1)=1  radius=1  scale→18</span>
+<span class="ok">Step 1 → fib(2)=1  radius=1  scale→18</span>
+<span class="ok">Step 2 → fib(3)=2  radius=2  scale→36</span>
+<span class="ok">Step 3 → fib(4)=3  radius=3  scale→54</span>
+<span class="ok">Step 4 → fib(5)=5  radius=5  scale→90</span>
+<span class="ok">…</span>
+<span class="ok">Each arc is a true quarter-circle.</span>
+<span class="ok">Pivot advances → golden spiral!</span></pre>
+        </div>
+
+    </div>
+</div>
+
+<!-- Debug log -->
+<div class="log-panel">
+    <h2>📋 Debug Log</h2>
+    <div class="log-entries" id="logEntries"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════════════ */
+const SCALE       = 18;      // pixels per Fibonacci unit
+const MAX_ARCS    = 10;      // how many arcs to draw
+const ANIM_DELAY  = 700;     // ms between arcs
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+let animating    = true;
+let currentStep  = 0;
+let animTimer    = null;
+let showGrid     = false;
+let showLabels   = true;
+
+/* ═══════════════════════════════════════════════════════
+   FIBONACCI — BUGGY (base case n===1 returns 0)
+═══════════════════════════════════════════════════════ */
+function fibBuggy(n) {
+    if (n <= 0) return 0;
+    if (n === 1) return 0;          // ← THE BUG
+    return fibBuggy(n - 1) + fibBuggy(n - 2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FIBONACCI — FIXED
+═══════════════════════════════════════════════════════ */
+function fibFixed(n) {
+    if (n <= 0) return 0;
+    if (n === 1) return 1;          // ← THE FIX
+    return fibFixed(n - 1) + fibFixed(n - 2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUILD SEQUENCE ARRAYS
+═══════════════════════════════════════════════════════ */
+function buildSequence(fibFn, count) {
+    const seq = [];
+    for (let i = 1; i <= count; i++) seq.push(fibFn(i));
+    return seq;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PIVOT DIRECTION TABLE
+   Each quarter-arc turns 90° clockwise.
+   The pivot for arc[i+1] is offset from pivot[i] by
+   the current radius in the direction of travel.
+
+   Direction cycle (index % 4):
+     0 → right  (+x)
+     1 → down   (+y)
+     2 → left   (−x)
+     3 → up     (−y)
+
+   Arc start/end angles (canvas coords, 0=right):
+     0 → π   to  3π/2   (bottom-left quadrant)
+     1 → 3π/2 to 2π     (bottom-right quadrant)
+     2 → 0   to  π/2    (top-right quadrant)
+     3 → π/2 to  π      (top-left quadrant)
+═══════════════════════════════════════════════════════ */
+const ARC_ANGLES = [
+    { start: Math.PI,           end: 3 * Math.PI / 2 },
+    { start: 3 * Math.PI / 2,  end: 2 * Math.PI      },
+    { start: 0,                 end: Math.PI / 2      },
+    { start: Math.PI / 2,       end: Math.PI          },
+];
+
+// After drawing arc i, move pivot by:
+const PIVOT_DELTA = [
+    (r) => ({ dx:  r, dy:  0 }),   // 0: move right
+    (r) => ({ dx:  0, dy:  r }),   // 1: move down
+    (r) => ({ dx: -r, dy:  0 }),   // 2: move left
+    (r) => ({ dx:  0, dy: -r }),   // 3: move up
+];
+
+/* ═══════════════════════════════════════════════════════
+   COMPUTE ARC DATA  (pivot list + scaled radii)
+═══════════════════════════════════════════════════════ */
+function computeArcs(seq, canvasW, canvasH) {
+    // Find a good starting pivot so spiral is centred
+    // We'll centre it after computing all pivots
+    const pivots = [];
+    let px = 0, py = 0;
+    for (let i = 0; i < seq.length; i++) {
+        pivots.push({ x: px, y: py });
+        const r = seq[i] * SCALE;
+        const delta = PIVOT_DELTA[i % 4](r);
+        px += delta.dx;
+        py += delta.dy;
+    }
+
+    // Bounding box of all arcs
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    for (let i = 0; i < pivots.length; i++) {
+        const r = seq[i] * SCALE;
+        minX = Math.min(minX, pivots[i].x - r);
+        maxX = Math.max(maxX, pivots[i].x + r);
+        minY = Math.min(minY, pivots[i].y - r);
+        maxY = Math.max(maxY, pivots[i].y + r);
+    }
+
+    // Offset to centre
+    const offX = (canvasW - (maxX + minX)) / 2;
+    const offY = (canvasH - (maxY + minY)) / 2;
+
+    return pivots.map((p, i) => ({
+        x:     p.x + offX,
+        y:     p.y + offY,
+        r:     seq[i] * SCALE,
+        fib:   seq[i],
+        start: ARC_ANGLES[i % 4].start,
+        end:   ARC_ANGLES[i % 4].end,
+        index: i,
+    }));
+}
+
+/* ═══════════════════════════════════════════════════════
+   COLOUR PALETTE  (hue cycles through arcs)
+═══════════════════════════════════════════════════════ */
+function arcColor(index, alpha = 1) {
+    const hue = (index * 36) % 360;
+    return `hsla(${hue}, 80%, 65%, ${alpha})`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DRAW GRID
+═══════════════════════════════════════════════════════ */
+function drawGrid(ctx, w, h) {
+    ctx.save();
+    ctx.strokeStyle = '#ffffff08';
+    ctx.lineWidth   = 0.5;
+    const step = SCALE;
+    for (let x = 0; x < w; x += step) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y < h; y += step) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════
+   DRAW ONE VERSION  (buggy or fixed)
+═══════════════════════════════════════════════════════ */
+function drawSpiral(canvasId, arcs, stepCount, isBuggy) {
+    const canvas = document.getElementById(canvasId);
+    const ctx    = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    if (showGrid) drawGrid(ctx, W, H);
+
+    // Draw squares first (background)
+    for (let i = 0; i < Math.min(stepCount, arcs.length); i++) {
+        const a = arcs[i];
+        if (a.r <= 0) continue;
+
+        ctx.save();
+        ctx.fillStyle = arcColor(i, 0.06);
+        ctx.strokeStyle = arcColor(i, 0.25);
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(a.x - a.r, a.y - a.r, a.r * 2, a.r * 2);
+        ctx.restore();
+    }
+
+    // Draw arcs
+    for (let i = 0; i < Math.min(stepCount, arcs.length); i++) {
+        const a = arcs[i];
+        const isLast = (i === stepCount - 1);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, Math.max(a.r, 0.1), a.start, a.end);
+        ctx.strokeStyle = isLast
+            ? (isBuggy ? '#ff6b6b' : '#4fff90')
+            : arcColor(i, 0.85);
+        ctx.lineWidth   = isLast ? 3 : 1.5;
+        ctx.shadowColor = ctx.strokeStyle;
+        ctx.shadowBlur  = isLast ? 12 : 4;
+        ctx.stroke();
+        ctx.restore();
+
+        // Pivot dot
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, isLast ? 4 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = arcColor(i, isLast ? 1 : 0.6);
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur  = 6;
+        ctx.fill();
+        ctx.restore();
+
+        // Label
+        if (showLabels && a.r > 5) {
+            ctx.save();
+            ctx.font      = `${Math.min(11, Math.max(7, a.r * 0.22))}px Courier New`;
+            ctx.fillStyle = arcColor(i, 0.9);
+            ctx.textAlign = 'center';
+            ctx.fillText(`F${i + 1}=${a.fib}`, a.x, a.y - 5);
+            ctx.restore();
+        }
+    }
+
+    // "No spiral" overlay for buggy when all radii are 0
+    if (isBuggy && arcs.every(a => a.r === 0)) {
+        ctx.save();
+        ctx.font      = 'bold 14px Courier New';
+        ctx.fillStyle = '#ff6b6b88';
+        ctx.textAlign = 'center';
+        ctx.fillText('⚠ All radii = 0 (invisible spiral)', W / 2, H / 2 + 20);
+        ctx.restore();
+    }
+
+    // Buggy: show big warning if arcs are zero-size
+    if (isBuggy && stepCount > 0) {
+        const zeroCount = arcs.slice(0, stepCount).filter(a => a.r === 0).length;
+        if (zeroCount > 0) {
+            ctx.save();
+            ctx.font      = '11px Courier New';
+            ctx.fillStyle = '#ff6b6b99';
+            ctx.textAlign = 'left';
+            ctx.fillText(`⚠ ${zeroCount} arc(s) with radius 0`, 10, H - 12);
+            ctx.restore();
+        }
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UPDATE SEQUENCE LABELS
+═══════════════════════════════════════════════════════ */
+function updateSeqLabel(elId, seq, stepCount) {
+    const el = document.getElementById(elId);
+    const parts = seq.map((v, i) => {
+        const active = i < stepCount;
+        const cls    = active ? 'highlight' : '';
+        return `<span class="${cls}">F${i + 1}=${v}</span>`;
+    });
+    el.innerHTML = 'Sequence: ' + parts.join(', ');
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOGGING
+═══════════════════════════════════════════════════════ */
+function log(msg, type = 'info') {
+    const el   = document.getElementById('logEntries');
+    const line = document.createElement('div');
+    line.className = `log-${type}`;
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    el.prepend(line);
+    // Keep max 60 lines
+    while (el.children.length > 60) el.removeChild(el.lastChild);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN RENDER CALL
+═══════════════════════════════════════════════════════ */
+let buggyArcs = [];
+let fixedArcs = [];
+let buggySeq  = [];
+let fixedSeq  = [];
+
+function init() {
+    const W = 460, H = 460;
+
+    buggySeq  = buildSequence(fibBuggy, MAX_ARCS);
+    fixedSeq  = buildSequence(fibFixed,  MAX_ARCS);
+    buggyArcs = computeArcs(buggySeq, W, H);
+    fixedArcs = computeArcs(fixedSeq,  W, H);
+
+    log(`Buggy sequence: [${buggySeq.join(', ')}]`, 'err');
+    log(`Fixed sequence: [${fixedSeq.join(', ')}]`, 'ok');
+    log('Initialised both spirals.', 'info');
+}
+
+function render() {
+    const step = currentStep === 0 ? MAX_ARCS : currentStep;
+
+    drawSpiral('buggyCanvas', buggyArcs, step, true);
+    drawSpiral('fixedCanvas', fixedArcs, step, false);
+    updateSeqLabel('buggySeq', buggySeq, step);
+    updateSeqLabel('fixedSeq', fixedSeq, step);
+
+    const arcLabel = currentStep === 0
+        ? `Showing all ${MAX_ARCS} arcs`
+        : `Drawing arc ${currentStep} of ${MAX_ARCS}`;
+    document.getElementById('stepInfo').textContent = arcLabel;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION LOOP
+═══════════════════════════════════════════════════════ */
+function startAnimation() {
+    currentStep = 1;
+    animTimer = setInterval(() => {
+        render();
+        log(
+            `Arc ${currentStep}: buggy r=${buggyArcs[currentStep-1]?.r.toFixed(0)}px  ` +
+            `fixed r=${fixedArcs[currentStep-1]?.r.toFixed(0)}px`,
+            buggyArcs[currentStep-1]?.r === 0 ? 'warn' : 'info'
+        );
+        currentStep++;
+        if (currentStep > MAX_ARCS) {
+            clearInterval(animTimer);
+            animTimer = null;
+            animating = false;
+            currentStep = 0;
+            render();
+            document.getElementById('btnAnimate').textContent = '▶ Replay';
+            document.getElementById('btnAnimate').classList.remove('active');
+            log('Animation complete.', 'ok');
+        }
+    }, ANIM_DELAY);
+}
+
+function stopAnimation() {
+    clearInterval(animTimer);
+    animTimer = null;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONTROL HANDLERS
+═══════════════════════════════════════════════════════ */
+function toggleAnimation() {
+    const btn = document.getElementById('btnAnimate');
+    if (!animating) {
+        // Replay
+        animating = true;
+        btn.textContent = '⏸ Pause Animation';
+        btn.classList.add('active');
+        log('Animation started.', 'info');
+        startAnimation();
+    } else {
+        if (animTimer) {
+            stopAnimation();
+            btn.textContent = '▶ Resume';
+            btn.classList.remove('active');
+            log('Animation paused.', 'warn');
+        } else {
+            startAnimation();
+            btn.textContent = '⏸ Pause Animation';
+            btn.classList.add('active');
+            log('Animation resumed.', 'info');
+        }
+    }
+}
+
+function stepForward() {
+    stopAnimation();
+    animating = false;
+    document.getElementById('btnAnimate').textContent = '▶ Resume';
+    document.getElementById('btnAnimate').classList.remove('active');
+    if (currentStep === 0) currentStep = 1;
+    else currentStep = Math.min(currentStep + 1, MAX_ARCS);
+    log(
+        `Step ${currentStep}: buggy r=${buggyArcs[currentStep-1]?.r.toFixed(0)}px  ` +
+        `fixed r=${fixedArcs[currentStep-1]?.r.toFixed(0)}px`,
+        buggyArcs[currentStep-1]?.r === 0 ? 'warn' : 'ok'
+    );
+    render();
+}
+
+function resetAll() {
+    stopAnimation();
+    animating = true;
+    currentStep = 0;
+    const btn = document.getElementById('btnAnimate');
+    btn.textContent = '⏸ Pause Animation';
+    btn.classList.add('active');
+    log('Reset. Replaying…', 'info');
+    render();
+    startAnimation();
+}
+
+function toggleGrid() {
+    showGrid = !showGrid;
+    log(`Grid ${showGrid ? 'on' : 'off'}.`, 'info');
+    render();
+}
+
+function toggleLabels() {
+    showLabels = !showLabels;
+    log(`Labels ${showLabels ? 'on' : 'off'}.`, 'info');
+    render();
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════ */
+init();
+render();
+startAnimation();
+</script>
+</body>
+</html>

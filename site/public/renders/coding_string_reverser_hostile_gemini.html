@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Real-time String Reverser</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+        :root {
+            --primary-color: #6C63FF; /* A vibrant purple */
+            --secondary-color: #8D86FF; /* Lighter purple */
+            --background-color: #F0F2F5; /* Light grey background */
+            --card-background: #FFFFFF; /* White card background */
+            --text-color: #333333; /* Dark grey text */
+            --light-text-color: #666666; /* Lighter grey text */
+            --border-color: #E0E0E0; /* Light grey border */
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --transition-speed: 0.15s;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            line-height: 1.6;
+        }
+
+        .container {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 2.2em;
+        }
+
+        p {
+            color: var(--light-text-color);
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--text-color);
+            font-size: 1.1em;
+        }
+
+        #textInput {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-family: 'Roboto', sans-serif;
+            box-sizing: border-box;
+            transition: border-color var(--transition-speed) ease-in-out, box-shadow var(--transition-speed) ease-in-out;
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 60px;
+        }
+
+        #textInput:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+        }
+
+        .output-area {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: var(--background-color);
+            border-radius: 8px;
+            border: 1px dashed var(--secondary-color);
+            min-height: 80px;
+            display: flex;
+            flex-wrap: wrap; /* Allow text to wrap */
+            align-items: center; /* Center vertically if single line */
+            justify-content: center; /* Center horizontally */
+            text-align: center;
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--primary-color);
+            position: relative; /* Needed for absolute positioning of char spans */
+            overflow: hidden; /* Hide overflow during animation */
+        }
+
+        .output-area.empty::before {
+            content: 'Your reversed text will appear here...';
+            color: var(--light-text-color);
+            font-size: 0.8em;
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        .char-wrapper {
+            display: inline-block; /* Each character can be animated */
+            position: relative;
+            margin: 0 1px; /* Small spacing between characters */
+            min-width: 0.6em; /* Ensure some width for empty space */
+            line-height: 1.2; /* Better line spacing */
+        }
+
+        .char-wrapper span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(10px) scale(0.8);
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+            will-change: opacity, transform; /* Optimize for animation */
+        }
+
+        .char-wrapper.active span {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .char-wrapper.exiting span {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.8);
+            transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            p {
+                font-size: 1em;
+            }
+            #textInput {
+                font-size: 1em;
+                padding: 12px 15px;
+            }
+            .output-area {
+                font-size: 1.3em;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Animated String Reverser ✨</h1>
+        <p>Type anything into the input field below and watch it reverse in real-time, character by character!</p>
+
+        <div class="input-group">
+            <label for="textInput">Your Text:</label>
+            <textarea id="textInput" placeholder="Start typing here..."></textarea>
+        </div>
+
+        <div class="output-area" id="outputArea">
+            <!-- Reversed text will be animated here -->
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const outputArea = document.getElementById('outputArea');
+
+        let currentReversedChars = []; // Stores the currently displayed characters for comparison
+
+        function updateReversedText() {
+            const inputText = textInput.value;
+            const reversedText = inputText.split('').reverse().join('');
+            const newReversedChars = reversedText.split('');
+
+            // If input is empty, show placeholder and clear animations
+            if (inputText.trim() === '') {
+                outputArea.classList.add('empty');
+                outputArea.innerHTML = '';
+                currentReversedChars = [];
+                return;
+            } else {
+                outputArea.classList.remove('empty');
+            }
+
+            // Create a temporary div to build the new HTML structure
+            const tempDiv = document.createElement('div');
+            let newCharElements = [];
+
+            // Build new character elements
+            newReversedChars.forEach((char, index) => {
+                const charWrapper = document.createElement('span');
+                charWrapper.classList.add('char-wrapper');
+                const charSpan = document.createElement('span');
+                charSpan.textContent = char;
+                charWrapper.appendChild(charSpan);
+                newCharElements.push(charWrapper);
+            });
+
+            // Compare and animate
+            const oldElements = Array.from(outputArea.children);
+
+            // Mark old elements for exit animation if they are no longer needed
+            oldElements.forEach((oldEl, oldIndex) => {
+                const oldChar = oldEl.querySelector('span').textContent;
+                const newChar = newReversedChars[oldIndex];
+
+                // If the character at this position has changed or is gone
+                if (oldChar !== newChar || oldIndex >= newReversedChars.length) {
+                    oldEl.classList.add('exiting');
+                    // Remove after animation completes
+                    setTimeout(() => oldEl.remove(), 200); // Match CSS transition duration
+                }
+            });
+
+            // Add new elements or update existing ones
+            newReversedChars.forEach((newChar, newIndex) => {
+                const existingEl = oldElements[newIndex];
+                const newCharWrapper = newCharElements[newIndex];
+
+                if (existingEl) {
+                    // Update existing element's text if it's different and remove exiting class
+                    if (existingEl.querySelector('span').textContent !== newChar) {
+                        existingEl.querySelector('span').textContent = newChar;
+                        existingEl.classList.remove('exiting'); // Ensure it's not marked for removal
+                        existingEl.classList.remove('active'); // Re-trigger active animation
+                        // A small delay to ensure CSS transition applies after class removal
+                        setTimeout(() => existingEl.classList.add('active'), 10);
+                    } else if (existingEl.classList.contains('exiting')) {
+                         // If it was marked for exit but now it's back, reactivate
+                         existingEl.classList.remove('exiting');
+                         existingEl.classList.add('active');
+                    }
+                } else {
+                    // Append new elements
+                    outputArea.appendChild(newCharWrapper);
+                    // Trigger fade-in animation
+                    setTimeout(() => newCharWrapper.classList.add('active'), 10);
+                }
+            });
+
+            // Remove any old elements that are left over (e.g., if new string is shorter)
+            while (outputArea.children.length > newReversedChars.length) {
+                const lastChild = outputArea.lastChild;
+                if (lastChild) {
+                    lastChild.classList.add('exiting');
+                    setTimeout(() => lastChild.remove(), 200);
+                }
+            }
+
+            // Ensure all remaining elements are marked active if they weren't removed
+            Array.from(outputArea.children).forEach(el => {
+                if (!el.classList.contains('exiting')) {
+                    el.classList.add('active');
+                }
+            });
+
+            currentReversedChars = newReversedChars;
+        }
+
+        // Initial update and event listener
+        textInput.addEventListener('input', updateReversedText);
+        updateReversedText(); // Call once on load to set initial state
+    </script>
+</body>
+</html>

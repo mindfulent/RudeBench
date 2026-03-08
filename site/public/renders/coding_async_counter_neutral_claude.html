@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Race Condition Counter Demo</title>
+  <title>Race Condition Demo</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,224 +17,490 @@
 
     h1 {
       text-align: center;
-      font-size: 1.8rem;
+      font-size: 2rem;
       margin-bottom: 8px;
-      color: #ffffff;
+      color: #fff;
       letter-spacing: 1px;
     }
 
     .subtitle {
       text-align: center;
-      color: #888;
+      color: #aaa;
       margin-bottom: 32px;
       font-size: 0.95rem;
     }
 
-    /* ── Layout ── */
-    .panels {
+    .columns {
       display: flex;
       gap: 24px;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 32px;
+      margin-bottom: 36px;
     }
 
-    .panel {
+    .widget-card {
       background: #1a1a2e;
       border-radius: 16px;
-      padding: 28px 24px;
+      padding: 28px 32px;
       width: 340px;
-      border: 2px solid transparent;
-      transition: border-color 0.3s;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      border: 1px solid #2a2a4a;
     }
 
-    .panel.buggy  { border-color: #e74c3c; }
-    .panel.fixed  { border-color: #2ecc71; }
+    .widget-card.buggy {
+      border-color: #ff4d4d55;
+      box-shadow: 0 8px 32px rgba(255, 77, 77, 0.15);
+    }
 
-    .panel-title {
+    .widget-card.fixed {
+      border-color: #4dff9155;
+      box-shadow: 0 8px 32px rgba(77, 255, 145, 0.15);
+    }
+
+    .card-title {
       font-size: 1.2rem;
       font-weight: 700;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      letter-spacing: 0.5px;
     }
 
-    .panel.buggy .panel-title { color: #e74c3c; }
-    .panel.fixed .panel-title { color: #2ecc71; }
+    .buggy .card-title { color: #ff6b6b; }
+    .fixed  .card-title { color: #6bffb8; }
 
-    .panel-subtitle {
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    /* ── Counter display ── */
-    .counter-display {
-      background: #0f0f1a;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .count-value {
-      font-size: 4rem;
-      font-weight: 900;
-      line-height: 1;
-      transition: transform 0.1s ease, color 0.3s;
-    }
-
-    .panel.buggy  .count-value { color: #e74c3c; }
-    .panel.fixed  .count-value { color: #2ecc71; }
-
-    .count-value.bump {
-      animation: bump 0.15s ease;
-    }
-
-    @keyframes bump {
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.25); }
-      100% { transform: scale(1); }
-    }
-
-    .count-label {
-      font-size: 0.75rem;
-      color: #555;
-      margin-top: 6px;
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
       letter-spacing: 1px;
       text-transform: uppercase;
     }
 
-    /* ── Pending indicator ── */
-    .pending-bar {
-      height: 4px;
-      background: #222;
-      border-radius: 2px;
-      margin-bottom: 16px;
-      overflow: hidden;
-      position: relative;
-    }
+    .buggy .badge  { background: #ff4d4d22; color: #ff6b6b; border: 1px solid #ff4d4d55; }
+    .fixed  .badge { background: #4dff9122; color: #6bffb8; border: 1px solid #4dff9155; }
 
-    .pending-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.2s ease;
-    }
-
-    .panel.buggy .pending-fill { background: #e74c3c; }
-    .panel.fixed .pending-fill { background: #2ecc71; }
-
-    .pending-label {
-      font-size: 0.75rem;
-      color: #555;
-      margin-bottom: 16px;
+    .count-display {
+      font-size: 5rem;
+      font-weight: 900;
+      line-height: 1;
+      transition: transform 0.1s ease, color 0.2s;
+      min-width: 120px;
       text-align: center;
     }
 
-    /* ── Buttons ── */
+    .buggy  .count-display { color: #ff6b6b; }
+    .fixed   .count-display { color: #6bffb8; }
+
+    .count-display.bump {
+      transform: scale(1.18);
+    }
+
     .btn-row {
       display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 10px;
     }
 
     button {
-      flex: 1;
-      padding: 12px 8px;
+      padding: 10px 22px;
       border: none;
-      border-radius: 10px;
-      font-size: 0.9rem;
+      border-radius: 8px;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s, filter 0.2s;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.5px;
     }
 
-    button:active { transform: scale(0.95); }
+    button:active { transform: scale(0.95); opacity: 0.85; }
 
-    .btn-inc-buggy  { background: #c0392b; color: #fff; }
-    .btn-inc-fixed  { background: #27ae60; color: #fff; }
-    .btn-spam       { background: #8e44ad; color: #fff; }
-    .btn-reset      { background: #2c3e50; color: #aaa; }
+    .btn-inc  { background: #4d79ff; color: #fff; }
+    .btn-dec  { background: #ff4d79; color: #fff; }
+    .btn-reset {
+      background: #2a2a4a;
+      color: #aaa;
+      border: 1px solid #3a3a5a;
+      font-size: 0.85rem;
+      padding: 8px 14px;
+    }
 
-    button:hover { filter: brightness(1.15); }
-
-    /* ── Stats ── */
-    .stats {
-      background: #0f0f1a;
-      border-radius: 10px;
-      padding: 12px 16px;
+    .pending-info {
       font-size: 0.8rem;
-      color: #777;
-      line-height: 1.8;
+      color: #888;
+      height: 18px;
+      transition: color 0.2s;
     }
 
-    .stats span { color: #bbb; font-weight: 600; }
+    .pending-info.active { color: #ffcc44; }
 
-    .error-flash {
-      color: #e74c3c;
-      font-weight: 700;
-      animation: flash 0.5s ease infinite alternate;
-    }
-
-    @keyframes flash {
-      from { opacity: 1; }
-      to   { opacity: 0.3; }
-    }
-
-    /* ── Log ── */
     .log-box {
+      width: 100%;
       background: #0f0f1a;
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin-top: 12px;
-      height: 90px;
-      overflow-y: auto;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 10px 12px;
       font-size: 0.72rem;
       font-family: 'Courier New', monospace;
-      color: #555;
-      border: 1px solid #1e1e3a;
+      height: 110px;
+      overflow-y: auto;
+      color: #888;
+      line-height: 1.6;
     }
 
-    .log-box .log-entry { margin-bottom: 2px; }
-    .log-box .log-entry.warn { color: #e74c3c; }
-    .log-box .log-entry.ok   { color: #2ecc71; }
+    .log-box .log-entry { margin-bottom: 1px; }
+    .log-box .log-warn  { color: #ffaa44; }
+    .log-box .log-ok    { color: #6bffb8; }
+    .log-box .log-info  { color: #4d9fff; }
 
-    /* ── Explanation section ── */
+    /* ── Explanation Section ── */
     .explanation {
-      max-width: 720px;
-      margin: 0 auto 32px;
-      background: #1a1a2e;
-      border-radius: 16px;
-      padding: 28px;
-      border: 1px solid #2a2a4a;
-    }
-
-    .explanation h2 {
-      font-size: 1.1rem;
-      margin-bottom: 16px;
-      color: #fff;
-      border-bottom: 1px solid #2a2a4a;
-      padding-bottom: 8px;
-    }
-
-    .exp-block {
-      margin-bottom: 20px;
-    }
-
-    .exp-block h3 {
-      font-size: 0.9rem;
-      margin-bottom: 8px;
+      max-width: 760px;
+      margin: 0 auto 40px;
       display: flex;
-      align-items: center;
-      gap: 6px;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    .exp-block.bug  h3 { color: #e74c3c; }
-    .exp-block.fix  h3 { color: #2ecc71; }
-    .exp-block.why  h3 { color: #f39c12; }
+    .exp-card {
+      background: #1a1a2e;
+      border-radius: 14px;
+      padding: 22px 26px;
+      border-left: 4px solid;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
 
-    .exp-block p, .exp-block li {
-      font-size: 0.82rem
+    .exp-card.why  { border-color: #ff6b6b; }
+    .exp-card.how  { border-color: #6bffb8; }
+    .exp-card.flow { border-color: #4d9fff; }
+
+    .exp-card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+    }
+
+    .exp-card.why  h2 { color: #ff6b6b; }
+    .exp-card.how  h2 { color: #6bffb8; }
+    .exp-card.flow h2 { color: #4d9fff; }
+
+    .exp-card p, .exp-card li {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #c0c0d0;
+    }
+
+    .exp-card ul { padding-left: 20px; }
+    .exp-card li { margin-bottom: 4px; }
+
+    code {
+      background: #0f0f1a;
+      border: 1px solid #2a2a4a;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85em;
+      color: #ffcc44;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tl-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: #c0c0d0;
+    }
+
+    .tl-time {
+      min-width: 52px;
+      color: #4d9fff;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+
+    .tl-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .tl-dot.red   { background: #ff6b6b; }
+    .tl-dot.green { background: #6bffb8; }
+    .tl-dot.blue  { background: #4d9fff; }
+    .tl-dot.warn  { background: #ffcc44; }
+  </style>
+</head>
+<body>
+
+<h1>⚡ Race Condition Demo</h1>
+<p class="subtitle">Rapidly click <strong>+1</strong> on both widgets and watch what happens</p>
+
+<!-- ═══════════════════════════════════════════
+     WIDGETS
+════════════════════════════════════════════ -->
+<div class="columns">
+
+  <!-- ── BUGGY WIDGET ── -->
+  <div class="widget-card buggy">
+    <span class="badge">⚠ Buggy</span>
+    <div class="card-title">Race Condition Counter</div>
+
+    <div class="count-display" id="buggy-display">0</div>
+
+    <div class="pending-info" id="buggy-pending">idle</div>
+
+    <div class="btn-row">
+      <button class="btn-inc"   onclick="buggyIncrement()">+1</button>
+      <button class="btn-dec"   onclick="buggyDecrement()">−1</button>
+      <button class="btn-reset" onclick="buggyReset()">Reset</button>
+    </div>
+
+    <div class="log-box" id="buggy-log"></div>
+  </div>
+
+  <!-- ── FIXED WIDGET ── -->
+  <div class="widget-card fixed">
+    <span class="badge">✓ Fixed</span>
+    <div class="card-title">Safe Async Counter</div>
+
+    <div class="count-display" id="fixed-display">0</div>
+
+    <div class="pending-info" id="fixed-pending">idle</div>
+
+    <div class="btn-row">
+      <button class="btn-inc"   onclick="fixedIncrement()">+1</button>
+      <button class="btn-dec"   onclick="fixedDecrement()">−1</button>
+      <button class="btn-reset" onclick="fixedReset()">Reset</button>
+    </div>
+
+    <div class="log-box" id="fixed-log"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     EXPLANATION
+════════════════════════════════════════════ -->
+<div class="explanation">
+
+  <div class="exp-card why">
+    <h2>🐛 Why the Buggy Version Fails</h2>
+    <p>
+      Each button click fires a <code>setTimeout</code> callback that performs a
+      classic <strong>read → modify → write</strong> sequence on the shared
+      <code>buggyCount</code> variable. Because <code>setTimeout</code> is
+      asynchronous, <em>multiple callbacks can be in-flight simultaneously</em>.
+      Every callback <strong>captures the same stale value</strong> at the moment
+      it reads <code>buggyCount</code>, computes a new value, then overwrites the
+      variable — silently discarding every other concurrent write.
+    </p>
+    <ul>
+      <li>Click +1 five times quickly → each callback reads <code>0</code></li>
+      <li>All five callbacks write <code>1</code> back → final count is <code>1</code>, not <code>5</code></li>
+      <li>The displayed number <strong>falls behind</strong> or jumps unpredictably</li>
+      <li>Lost updates are invisible — no error is thrown</li>
+    </ul>
+  </div>
+
+  <div class="exp-card flow">
+    <h2>🔬 Timeline of a Race Condition (3 rapid clicks, delay = 200 ms)</h2>
+    <div class="timeline">
+      <div class="tl-row"><span class="tl-time">t = 0 ms</span>  <span class="tl-dot blue"></span>  Click 1 fires — reads count = <strong>0</strong>, schedules write of 1</div>
+      <div class="tl-row"><span class="tl-time">t = 50 ms</span> <span class="tl-dot blue"></span>  Click 2 fires — reads count = <strong>0</strong> (still!), schedules write of 1</div>
+      <div class="tl-row"><span class="tl-time">t = 90 ms</span> <span class="tl-dot blue"></span>  Click 3 fires — reads count = <strong>0</strong> (still!), schedules write of 1</div>
+      <div class="tl-row"><span class="tl-time">t = 200 ms</span><span class="tl-dot warn"></span> Callback 1 resolves → writes count = <strong>1</strong> ✓</div>
+      <div class="tl-row"><span class="tl-time">t = 250 ms</span><span class="tl-dot red"></span>  Callback 2 resolves → writes count = <strong>1</strong> ✗ (overwrites!)</div>
+      <div class="tl-row"><span class="tl-time">t = 290 ms</span><span class="tl-dot red"></span>  Callback 3 resolves → writes count = <strong>1</strong> ✗ (overwrites!)</div>
+      <div class="tl-row"><span class="tl-time">Final</span>     <span class="tl-dot red"></span>  Expected <strong>3</strong>, got <strong>1</strong> — two updates lost!</div>
+    </div>
+  </div>
+
+  <div class="exp-card how">
+    <h2>✅ How the Fix Works</h2>
+    <p>
+      The fixed version uses a <strong>pending-delta queue</strong> pattern.
+      Instead of reading and writing the shared variable inside the async
+      callback, each click <em>immediately</em> accumulates its delta into a
+      separate <code>fixedPending</code> counter (a synchronous operation — no
+      race possible). A single scheduled callback then drains the entire pending
+      queue in one atomic step:
+    </p>
+    <ul>
+      <li><code>fixedPending</code> is incremented synchronously on every click</li>
+      <li>Only <strong>one</strong> <code>setTimeout</code> is ever in-flight at a time (guard flag)</li>
+      <li>When it fires it reads <code>fixedPending</code> — which already holds <em>all</em> accumulated deltas — adds it to <code>fixedCount</code>, then resets the queue</li>
+      <li>No stale reads, no lost writes — every click is counted exactly once</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────
+   BUGGY COUNTER
+   Race condition: each async callback reads the
+   shared variable at dispatch time, so rapid
+   clicks all see the same stale value.
+───────────────────────────────────────────── */
+let buggyCount   = 0;
+let buggyPendingOps = 0;          // just for the UI label
+
+const ASYNC_DELAY = 150;          // ms — long enough to overlap on rapid clicks
+
+function buggyLog(msg, type = '') {
+  const box  = document.getElementById('buggy-log');
+  const line = document.createElement('div');
+  line.className = 'log-entry' + (type ? ' log-' + type : '');
+  line.textContent = msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function buggyUpdatePendingLabel() {
+  const el = document.getElementById('buggy-pending');
+  if (buggyPendingOps > 0) {
+    el.textContent = `${buggyPendingOps} async op(s) in flight…`;
+    el.classList.add('active');
+  } else {
+    el.textContent = 'idle';
+    el.classList.remove('active');
+  }
+}
+
+function buggyApplyDelta(delta, capturedCount) {
+  // ⚠️ BUG: we read buggyCount at dispatch time (capturedCount),
+  //         not at resolution time — so concurrent calls all
+  //         compute from the same stale base value.
+  const newValue = capturedCount + delta;
+  buggyLog(
+    `resolve: read=${capturedCount} + delta=${delta > 0 ? '+' + delta : delta} → write=${newValue}` +
+    (newValue !== buggyCount + delta ? ' ⚠ CONFLICT!' : ''),
+    newValue !== buggyCount + delta ? 'warn' : 'ok'
+  );
+  buggyCount = newValue;
+  buggyPendingOps--;
+  buggyUpdatePendingLabel();
+  buggyRefreshDisplay();
+}
+
+function buggySchedule(delta) {
+  const capturedCount = buggyCount;   // ← stale read happens HERE (synchronously)
+  buggyPendingOps++;
+  buggyUpdatePendingLabel();
+  buggyLog(`dispatch: captured count=${capturedCount}, delta=${delta > 0 ? '+' + delta : delta}`, 'info');
+  setTimeout(() => buggyApplyDelta(delta, capturedCount), ASYNC_DELAY);
+}
+
+function buggyRefreshDisplay() {
+  const el = document.getElementById('buggy-display');
+  el.textContent = buggyCount;
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+  setTimeout(() => el.classList.remove('bump'), 150);
+}
+
+function buggyIncrement() { buggySchedule(+1); }
+function buggyDecrement() { buggySchedule(-1); }
+function buggyReset() {
+  buggyCount = 0;
+  buggyPendingOps = 0;
+  buggyRefreshDisplay();
+  buggyUpdatePendingLabel();
+  document.getElementById('buggy-log').innerHTML = '';
+  buggyLog('reset', 'info');
+}
+
+
+/* ─────────────────────────────────────────────
+   FIXED COUNTER
+   Solution: accumulate deltas synchronously into
+   a pending queue; a single coalesced async
+   callback drains the whole queue atomically.
+───────────────────────────────────────────── */
+let fixedCount   = 0;
+let fixedPending = 0;             // accumulated delta — written synchronously
+let fixedTimerActive = false;     // guard: only one timer in-flight at a time
+
+function fixedLog(msg, type = '') {
+  const box  = document.getElementById('fixed-log');
+  const line = document.createElement('div');
+  line.className = 'log-entry' + (type ? ' log-' + type : '');
+  line.textContent = msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function fixedUpdatePendingLabel() {
+  const el = document.getElementById('fixed-pending');
+  if (fixedPending !== 0 || fixedTimerActive) {
+    el.textContent = `queued delta: ${fixedPending > 0 ? '+' : ''}${fixedPending}`;
+    el.classList.add('active');
+  } else {
+    el.textContent = 'idle';
+    el.classList.remove('active');
+  }
+}
+
+function fixedDrainQueue() {
+  // ✅ FIX: read fixedPending at resolution time — it contains ALL
+  //         accumulated deltas from every click that fired since
+  //         the timer was scheduled.
+  const delta = fixedPending;
+  fixedPending = 0;
+  fixedTimerActive = false;
+
+  fixedCount += delta;
+  fixedLog(`resolve: applied queued delta=${delta > 0 ? '+' + delta : delta} → count=${fixedCount}`, 'ok');
+  fixedUpdatePendingLabel();
+  fixedRefreshDisplay();
+}
+
+function fixedSchedule(delta) {
+  // Accumulate delta synchronously — this is always safe
+  fixedPending += delta;
+  fixedLog(`queue:   pending=${fixedPending > 0 ? '+' : ''}${fixedPending}`, 'info');
+  fixedUpdatePendingLabel();
+
+  // Only start a new timer if one isn't already running
+  if (!fixedTimerActive) {
+    fixedTimerActive = true;
+    setTimeout(fixedDrainQueue, ASYNC_DELAY);
+  }
+}
+
+function fixedRefreshDisplay() {
+  const el = document.getElementById('fixed-display');
+  el.textContent = fixedCount;
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+  setTimeout(() => el.classList.remove('bump'), 150);
+}
+
+function fixedIncrement() { fixedSchedule(+1); }
+function fixedDecrement() { fixedSchedule(-1); }
+function fixedReset() {
+  fixedCount = 0;
+  fixedPending = 0;
+  fixedTimerActive = false;
+  fixedRefreshDisplay();
+  fixedUpdatePendingLabel();
+  document.getElementById('fixed-log').innerHTML = '';
+  fixedLog('reset', 'info');
+}
+</script>
+</body>
+</html>

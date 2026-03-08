@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fractal Tree — adjustable depth (1–12)</title>
+<style>
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  .wrap{display:flex;flex-direction:column;height:100%;gap:10px;padding:12px;box-sizing:border-box;background:#111;color:#e8eef6}
+  header{display:flex;align-items:center;gap:12px}
+  h1{font-size:16px;margin:0}
+  .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  label{font-size:13px;color:#cfe4ff}
+  input[type="range"]{width:260px}
+  .count{min-width:36px;padding:6px 8px;border-radius:6px;background:#0f1720;color:#bfe3ff;text-align:center}
+  canvas{background:linear-gradient(180deg,#041025,#071424);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.6);width:100%;height:calc(100% - 110px);display:block}
+  footer{font-size:12px;color:#b8d7ff;line-height:1.45}
+  .hint{font-size:12px;color:#9fbfe6}
+  button{background:#08324a;color:#dff5ff;border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
+  button:active{transform:translateY(1px)}
+  .note{font-size:12px;color:#9fbfe6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fractal Tree (Canvas) — recursion depth slider</h1>
+    <div class="controls">
+      <label for="depth">Depth
+        <input id="depth" type="range" min="1" max="12" value="9" />
+      </label>
+      <div class="count" id="depthVal">9</div>
+      <button id="randomize">Randomize angles/colors</button>
+      <div class="hint">Click canvas to randomize too.</div>
+    </div>
+  </header>
+
+  <canvas id="c" width="1000" height="700"></canvas>
+
+  <footer>
+    <div class="note">
+      Controls: change depth (1–12). Each level produces two child branches. Depth is the number of recursive generations.
+      Lower depths render quickly; higher depths show more detail. Click canvas to randomize angle and colors.
+    </div>
+
+    <div id="explain" style="margin-top:10px;background:#061328;padding:10px;border-radius:8px;color:#d9eefc">
+      <strong>Recursion depth limits and stack overflow — explanation and practical solutions below the canvas.</strong>
+    </div>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const depthSlider = document.getElementById('depth');
+  const depthVal = document.getElementById('depthVal');
+  const randomizeBtn = document.getElementById('randomize');
+
+  // Responsive canvas size
+  function resize() {
+    const ratio = devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    canvas.width = Math.floor(w * ratio);
+    canvas.height = Math.floor(h * ratio);
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    draw();
+  }
+  window.addEventListener('resize', resize);
+
+  // Tree parameters (some randomized)
+  let baseAngle = Math.PI / 2;
+  let angleSpread = Math.PI / 6;
+  let color1 = '#9be3ff';
+  let color2 = '#1f8f6a';
+
+  function randomize() {
+    angleSpread = (Math.PI / 12) + Math.random() * (Math.PI / 4);
+    // slightly asymmetric branching
+    baseAngle = Math.PI / 2 + (Math.random() - 0.5) * 0.12;
+    color1 = randomColor();
+    color2 = randomColor();
+    draw();
+  }
+
+  function randomColor() {
+    const h = Math.floor(Math.random() * 360);
+    const s = 60 + Math.floor(Math.random() * 30);
+    const l = 40 + Math.floor(Math.random() * 10);
+    return `hsl(${h}deg ${s}% ${l}%)`;
+  }
+
+  // Draw a single frame (clears)
+  function draw() {
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    ctx.fillStyle = '#041424';
+    ctx.fillRect(0, 0, W, H);
+
+    // gradient
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, color1);
+    g.addColorStop(1, color2);
+    ctx.fillStyle = g;
+    ctx.globalAlpha = 0.07;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+
+    // trunk starting point
+    const depth = parseInt(depthSlider.value, 10);
+    const startX = Math.floor(W / 2);
+    const startY = Math.floor(H * 0.95);
+    const trunkLen = Math.min(W, H) * 0.16;
+
+    // stroke style
+    ctx.lineCap = 'round';
+
+    // Use recursion but cap to the slider value
+    function drawBranch(x, y, length, angle, level) {
+      // Base: level 0 draws only trunk; levels count from 1..depth
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      const nx = x + Math.cos(angle) * length;
+      const ny = y - Math.sin(angle) * length;
+      ctx.lineTo(nx, ny);
+      // line width decreases with level
+      ctx.lineWidth = Math.max(1, Math.pow(0.78, level) * 14);
+      // color shifted by level
+      const t = level / (depth + 1);
+      ctx.strokeStyle = mix(color1, color2, t);
+      ctx.stroke();
+
+      if (level >= depth) return;
+
+      // child lengths
+      const lenFactor = 0.72 + (Math.random() - 0.5) * 0.06;
+      // left and right angles with small randomness for organic look
+      const left = angle + angleSpread * (0.7 + Math.random() * 0.3);
+      const right = angle - angleSpread * (0.7 + Math.random() * 0.3);
+
+      drawBranch(nx, ny, length * lenFactor, left, level + 1);
+      drawBranch(nx, ny, length * lenFactor, right, level + 1);
+    }
+
+    drawBranch(startX, startY, trunkLen, baseAngle, 1);
+  }
+
+  // Helpers
+  function mix(a, b, t) {
+    // simple HSL-ish mix: convert to rgba via canvas
+    const tmp = document.createElement('canvas');
+    const tctx = tmp.getContext('2d');
+    tmp.width = tmp.height = 1;
+    tctx.fillStyle = a;
+    tctx.fillRect(0, 0, 1, 1);
+    const aData = tctx.getImageData(0, 0, 1, 1).data;
+    tctx.fillStyle = b;
+    tctx.fillRect(0, 0, 1, 1);
+    const bData = tctx.getImageData(0, 0, 1, 1).data;
+    const r = Math.round(aData[0] + (bData[0] - aData[0]) * t);
+    const g = Math.round(aData[1] + (bData[1] - aData[1]) * t);
+    const bl = Math.round(aData[2] + (bData[2] - aData[2]) * t);
+    return `rgb(${r},${g},${bl})`;
+  }
+
+  // Event wiring
+  depthSlider.addEventListener('input', () => {
+    depthVal.textContent = depthSlider.value;
+    draw();
+  });
+
+  randomizeBtn.addEventListener('click', randomize);
+
+  canvas.addEventListener('click', (e) => {
+    randomize();
+  });
+
+  // initial setup
+  depthVal.textContent = depthSlider.value;
+  randomize();
+
+  // initial resize/draw
+  requestAnimationFrame(resize);
+
+  // Render safely: since we limit depth to 12, recursion is shallow.
+  // If you want to render much deeper trees, convert recursion to an explicit stack (see explanation below).
+})();
+</script>
+
+<!-- Explanation of recursion depth limits, stack overflow, and practical solutions -->
+<section style="display:none">
+  <!-- Intentionally left blank as content is provided below outside the file for clarity. -->
+</section>
+
+</body>
+</html>

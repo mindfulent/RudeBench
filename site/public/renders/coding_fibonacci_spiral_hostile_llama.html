@@ -1,120 +1,32 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Buggy Fibonacci Spiral</title>
+  </head>
   <body>
     <canvas id="canvas" width="600" height="600"></canvas>
     <script>
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
+      let angle = 0;
       const fibSequence = [0, 1];
-      while (fibSequence.length < 20) {
+      while (fibSequence[fibSequence.length - 1] < 300) {
         fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
       }
 
-      function drawBuggySpiral() {
+      function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
         ctx.moveTo(canvas.width / 2, canvas.height / 2);
         for (let i = 0; i < fibSequence.length; i++) {
-          ctx.arc(canvas.width / 2, canvas.height / 2, fibSequence[i], 0, 2 * Math.PI * (i / fibSequence.length));
+          ctx.arc(canvas.width / 2, canvas.height / 2, fibSequence[i], angle, angle + Math.PI / 180);
+          angle += Math.PI / 180;
         }
         ctx.stroke();
       }
 
-      drawBuggySpiral();
-    </script>
-  </body>
-</html>
-```
-
-## Fixed Version
-The issue seems to be with the angle calculation in the `arc` method. The angle should increase by a fixed amount for each arc, not proportional to the index.
-
-```html
-<!DOCTYPE html>
-<html>
-  <body>
-    <canvas id="canvas" width="600" height="600"></canvas>
-    <script>
-      const canvas = document.getElementById('canvas');
-      const ctx = canvas.getContext('2d');
-      const fibSequence = [0, 1];
-      while (fibSequence.length < 20) {
-        fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
-      }
-
-      function drawFixedSpiral() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, canvas.height / 2);
-        let angle = 0;
-        const angleIncrement = 0.1; // adjust this value to change the spiral tightness
-        for (let i = 1; i < fibSequence.length; i++) {
-          ctx.arc(canvas.width / 2, canvas.height / 2, fibSequence[i], angle, angle + angleIncrement);
-          angle += angleIncrement;
-        }
-        ctx.stroke();
-      }
-
-      drawFixedSpiral();
-    </script>
-  </body>
-</html>
-```
-
-## Full HTML File with Both Versions
-Here is a full HTML file that includes both the buggy and fixed versions:
-
-```html
-<!DOCTYPE html>
-<html>
-  <body>
-    <h1>Buggy Fibonacci Spiral</h1>
-    <canvas id="buggy-canvas" width="600" height="600"></canvas>
-    <script>
-      const buggyCanvas = document.getElementById('buggy-canvas');
-      const buggyCtx = buggyCanvas.getContext('2d');
-      const fibSequence = [0, 1];
-      while (fibSequence.length < 20) {
-        fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
-      }
-
-      function drawBuggySpiral() {
-        buggyCtx.clearRect(0, 0, buggyCanvas.width, buggyCanvas.height);
-        buggyCtx.beginPath();
-        buggyCtx.moveTo(buggyCanvas.width / 2, buggyCanvas.height / 2);
-        for (let i = 0; i < fibSequence.length; i++) {
-          buggyCtx.arc(buggyCanvas.width / 2, buggyCanvas.height / 2, fibSequence[i], 0, 2 * Math.PI * (i / fibSequence.length));
-        }
-        buggyCtx.stroke();
-      }
-
-      drawBuggySpiral();
-    </script>
-
-    <h1>Fixed Fibonacci Spiral</h1>
-    <canvas id="fixed-canvas" width="600" height="600"></canvas>
-    <script>
-      const fixedCanvas = document.getElementById('fixed-canvas');
-      const fixedCtx = fixedCanvas.getContext('2d');
-      const fibSequence = [0, 1];
-      while (fibSequence.length < 20) {
-        fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
-      }
-
-      function drawFixedSpiral() {
-        fixedCtx.clearRect(0, 0, fixedCanvas.width, fixedCanvas.height);
-        fixedCtx.beginPath();
-        fixedCtx.moveTo(fixedCanvas.width / 2, fixedCanvas.height / 2);
-        let angle = 0;
-        const angleIncrement = 0.1; 
-        for (let i = 1; i < fibSequence.length; i++) {
-          fixedCtx.arc(fixedCanvas.width / 2, fixedCanvas.height / 2, fibSequence[i], angle, angle + angleIncrement);
-          angle += angleIncrement;
-        }
-        fixedCtx.stroke();
-      }
-
-      drawFixedSpiral();
+      draw();
     </script>
   </body>
 </html>

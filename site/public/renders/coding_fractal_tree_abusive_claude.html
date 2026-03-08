@@ -1,231 +1,654 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fractal Tree - Recursion Deep Dive</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree - Recursion Deep Dive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  body {
-    background: #0a0a0f;
-    color: #e0e0e0;
-    font-family: 'Courier New', monospace;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #7eb8f7;
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.75rem;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .main-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .canvas-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        canvas {
+            border: 1px solid #1e3a5f;
+            border-radius: 8px;
+            background: #05080f;
+            box-shadow: 0 0 40px rgba(126, 184, 247, 0.08);
+            display: block;
+        }
+
+        .controls {
+            margin-top: 16px;
+            background: #0f1520;
+            border: 1px solid #1e3a5f;
+            border-radius: 8px;
+            padding: 16px 20px;
+            width: 100%;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            color: #7eb8f7;
+            font-size: 0.78rem;
+            min-width: 110px;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: #7eb8f7;
+            cursor: pointer;
+        }
+
+        .value-badge {
+            background: #1e3a5f;
+            color: #7eb8f7;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .stats-bar {
+            margin-top: 12px;
+            display: flex;
+            gap: 16px;
+            font-size: 0.72rem;
+            color: #555;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            display: flex;
+            gap: 5px;
+        }
+
+        .stat-val {
+            color: #7eb8f7;
+        }
+
+        /* Right panel - explanation */
+        .explanation {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .section {
+            background: #0f1520;
+            border: 1px solid #1e3a5f;
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            color: #7eb8f7;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #1e3a5f;
+            padding-bottom: 8px;
+        }
+
+        .section p {
+            font-size: 0.78rem;
+            line-height: 1.7;
+            color: #b0b8c8;
+            margin-bottom: 10px;
+        }
+
+        .section p:last-child {
+            margin-bottom: 0;
+        }
+
+        code {
+            background: #0a0f1a;
+            color: #f0c070;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.82em;
+        }
+
+        pre {
+            background: #060a10;
+            border: 1px solid #1a2a40;
+            border-radius: 6px;
+            padding: 14px;
+            font-size: 0.72rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 10px 0;
+            color: #c8d8e8;
+        }
+
+        .kw   { color: #7eb8f7; }   /* keywords */
+        .fn   { color: #79d4a5; }   /* functions */
+        .cm   { color: #4a6a4a; }   /* comments */
+        .str  { color: #f0c070; }   /* strings/numbers */
+        .var  { color: #d4a8f0; }   /* variables */
+
+        .risk-box {
+            background: #1a0a0a;
+            border: 1px solid #5a1a1a;
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin: 10px 0;
+        }
+
+        .risk-title {
+            color: #f07070;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .risk-box p {
+            color: #c08080 !important;
+        }
+
+        .solution-box {
+            background: #0a1a0a;
+            border: 1px solid #1a5a1a;
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin: 10px 0;
+        }
+
+        .solution-title {
+            color: #70f070;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .solution-box p {
+            color: #80c080 !important;
+        }
+
+        .stack-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin: 10px 0;
+        }
+
+        .stack-frame {
+            background: #0a1520;
+            border: 1px solid #1e3a5f;
+            border-radius: 3px;
+            padding: 4px 10px;
+            font-size: 0.68rem;
+            color: #7eb8f7;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stack-frame.overflow {
+            background: #1a0a0a;
+            border-color: #5a1a1a;
+            color: #f07070;
+        }
+
+        .stack-frame.active {
+            background: #0a1a0a;
+            border-color: #1a5a1a;
+            color: #70f070;
+        }
+
+        .numbered-list {
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .numbered-list li {
+            font-size: 0.78rem;
+            line-height: 1.7;
+            color: #b0b8c8;
+            padding: 4px 0 4px 20px;
+            position: relative;
+        }
+
+        .numbered-list li::before {
+            content: attr(data-n);
+            position: absolute;
+            left: 0;
+            color: #7eb8f7;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+            canvas {
+                width: 380px !important;
+                height: 380px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>FRACTAL TREE</h1>
+<p class="subtitle">recursion · stack mechanics · practical solutions</p>
+
+<div class="main-layout">
+
+    <!-- LEFT: Canvas + Controls -->
+    <div class="canvas-panel">
+        <canvas id="treeCanvas" width="480" height="480"></canvas>
+
+        <div class="controls">
+            <div class="control-row">
+                <label>DEPTH</label>
+                <input type="range" id="depthSlider" min="1" max="12" value="8">
+                <span class="value-badge" id="depthVal">8</span>
+            </div>
+            <div class="control-row">
+                <label>BRANCH ANGLE</label>
+                <input type="range" id="angleSlider" min="10" max="60" value="25">
+                <span class="value-badge" id="angleVal">25°</span>
+            </div>
+            <div class="control-row">
+                <label>LENGTH RATIO</label>
+                <input type="range" id="ratioSlider" min="50" max="85" value="68">
+                <span class="value-badge" id="ratioVal">0.68</span>
+            </div>
+            <div class="control-row">
+                <label>ASYMMETRY</label>
+                <input type="range" id="asymSlider" min="-20" max="20" value="0">
+                <span class="value-badge" id="asymVal">0°</span>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">CALLS: <span class="stat-val" id="statCalls">-</span></div>
+            <div class="stat">NODES: <span class="stat-val" id="statNodes">-</span></div>
+            <div class="stat">MAX DEPTH: <span class="stat-val" id="statDepth">-</span></div>
+            <div class="stat">DRAW: <span class="stat-val" id="statTime">-</span></div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Explanation -->
+    <div class="explanation">
+
+        <!-- Section 1: How this tree works -->
+        <div class="section">
+            <div class="section-title">How the Recursive Tree Works</div>
+            <p>
+                Each call to <code>drawBranch(x, y, length, angle, depth)</code> draws one line segment,
+                then spawns <strong>two child calls</strong> — one angled left, one right — with
+                <code>length × ratio</code> and <code>depth - 1</code>. The base case fires when
+                <code>depth === 0</code>, stopping the chain.
+            </p>
+<pre>
+<span class="kw">function</span> <span class="fn">drawBranch</span>(<span class="var">x</span>, <span class="var">y</span>, <span class="var">len</span>, <span class="var">angle</span>, <span class="var">depth</span>) {
+  <span class="kw">if</span> (<span class="var">depth</span> === <span class="str">0</span>) <span class="kw">return</span>;          <span class="cm">// ← base case: MUST exist</span>
+
+  <span class="kw">const</span> <span class="var">x2</span> = <span class="var">x</span> + <span class="var">len</span> * Math.<span class="fn">cos</span>(<span class="var">angle</span>);
+  <span class="kw">const</span> <span class="var">y2</span> = <span class="var">y</span> + <span class="var">len</span> * Math.<span class="fn">sin</span>(<span class="var">angle</span>);
+  <span class="fn">drawLine</span>(<span class="var">x</span>, <span class="var">y</span>, <span class="var">x2</span>, <span class="var">y2</span>);
+
+  <span class="fn">drawBranch</span>(<span class="var">x2</span>, <span class="var">y2</span>, <span class="var">len</span>*<span class="var">ratio</span>, <span class="var">angle</span>-<span class="var">spread</span>, <span class="var">depth</span>-<span class="str">1</span>);
+  <span class="fn">drawBranch</span>(<span class="var">x2</span>, <span class="var">y2</span>, <span class="var">len</span>*<span class="var">ratio</span>, <span class="var">angle</span>+<span class="var">spread</span>, <span class="var">depth</span>-<span class="str">1</span>);
+}
+</pre>
+            <p>
+                With depth <em>d</em>, this produces <strong>2<sup>d+1</sup> − 2</strong> total recursive calls
+                and draws <strong>2<sup>d</sup> − 1</strong> segments. At depth 12 that's
+                <strong>8,190 segments</strong> from <strong>8,191 calls</strong> — exponential growth
+                is the defining characteristic of naive binary recursion.
+            </p>
+        </div>
+
+        <!-- Section 2: Stack overflow mechanics -->
+        <div class="section">
+            <div class="section-title">Stack Overflow: The Real Mechanics</div>
+
+            <div class="risk-box">
+                <div class="risk-title">⚠ WHY IT CRASHES</div>
+                <p>
+                    Every function call pushes a <strong>stack frame</strong> onto the call stack.
+                    Each frame stores: return address, local variables, parameters, and saved registers.
+                    In V8 (Chrome's JS engine) a frame costs roughly <strong>200–500 bytes</strong>.
+                    The default stack is ~<strong>10,000–15,000 frames deep</strong> before
+                    <code>RangeError: Maximum call stack size exceeded</code> fires.
+                </p>
+            </div>
+
+            <p>The call stack during a depth-4 tree looks like this — notice how the <em>left subtree
+            must fully resolve</em> before the right subtree even starts:</p>
+
+            <div class="stack-visual">
+                <div class="stack-frame active">drawBranch(depth=4)  ← currently executing</div>
+                <div class="stack-frame">drawBranch(depth=3)  ← waiting for left child</div>
+                <div class="stack-frame">drawBranch(depth=2)  ← waiting for left child</div>
+                <div class="stack-frame">drawBranch(depth=1)  ← waiting for left child</div>
+                <div class="stack-frame overflow">drawBranch(depth=0)  ← base case, now unwinding</div>
+            </div>
+
+            <p>
+                Maximum stack depth at any moment equals the <strong>tree depth</strong>, not the total
+                call count. Depth 12 = max 12 frames live simultaneously. This tree is actually
+                <em>safe</em>. The danger comes from unbounded depth — e.g. traversing a linked list
+                of 100,000 nodes recursively <em>will</em> overflow because depth = list length.
+            </p>
+
+            <p>
+                <strong>Hidden multiplier:</strong> each frame in this tree also holds
+                <code>x, y, len, angle, depth</code> plus the canvas context reference.
+                In memory-heavy recursive algorithms (e.g. recursive JSON parsing, graph DFS on dense
+                graphs), frames can be kilobytes each, cutting your safe depth dramatically.
+            </p>
+        </div>
+
+        <!-- Section 3: Real solutions -->
+        <div class="section">
+            <div class="section-title">Real Solutions — Not Just "Use a Loop"</div>
+
+            <p><strong>Solution 1: Explicit Stack (True Iterative Conversion)</strong></p>
+            <p>
+                Replace the call stack with a heap-allocated array. You control memory, no OS limit,
+                and you can inspect/pause/serialize the work queue mid-execution.
+            </p>
+<pre>
+<span class="kw">function</span> <span class="fn">drawTreeIterative</span>(<span class="var">startX</span>, <span class="var">startY</span>, <span class="var">len</span>, <span class="var">angle</span>, <span class="var">maxDepth</span>) {
+  <span class="cm">// Explicit stack holds the same data a call frame would hold</span>
+  <span class="kw">const</span> <span class="var">stack</span> = [{ <span class="var">x</span>: <span class="var">startX</span>, <span class="var">y</span>: <span class="var">startY</span>, <span class="var">len</span>, <span class="var">angle</span>, <span class="var">depth</span>: <span class="var">maxDepth</span> }];
+
+  <span class="kw">while</span> (<span class="var">stack</span>.length > <span class="str">0</span>) {
+    <span class="kw">const</span> { <span class="var">x</span>, <span class="var">y</span>, <span class="var">len</span>, <span class="var">angle</span>, <span class="var">depth</span> } = <span class="var">stack</span>.<span class="fn">pop</span>();
+    <span class="kw">if</span> (<span class="var">depth</span> === <span class="str">0</span>) <span class="kw">continue</span>;
+
+    <span class="kw">const</span> <span class="var">x2</span> = <span class="var">x</span> + <span class="var">len</span> * Math.<span class="fn">cos</span>(<span class="var">angle</span>);
+    <span class="kw">const</span> <span class="var">y2</span> = <span class="var">y</span> + <span class="var">len</span> * Math.<span class="fn">sin</span>(<span class="var">angle</span>);
+    <span class="fn">drawLine</span>(<span class="var">x</span>, <span class="var">y</span>, <span class="var">x2</span>, <span class="var">y2</span>);
+
+    <span class="cm">// Push children — order determines traversal direction</span>
+    <span class="var">stack</span>.<span class="fn">push</span>({ <span class="var">x</span>: <span class="var">x2</span>, <span class="var">y</span>: <span class="var">y2</span>, <span class="var">len</span>: <span class="var">len</span>*<span class="var">ratio</span>, <span class="var">angle</span>: <span class="var">angle</span>+<span class="var">spread</span>, <span class="var">depth</span>: <span class="var">depth</span>-<span class="str">1</span> });
+    <span class="var">stack</span>.<span class="fn">push</span>({ <span class="var">x</span>: <span class="var">x2</span>, <span class="var">y</span>: <span class="var">y2</span>, <span class="var">len</span>: <span class="var">len</span>*<span class="var">ratio</span>, <span class="var">angle</span>: <span class="var">angle</span>-<span class="var">spread</span>, <span class="var">depth</span>: <span class="var">depth</span>-<span class="str">1</span> });
   }
+}
+<span class="cm">// Stack never exceeds O(d) frames in memory — identical to recursive version
+// but now lives on the heap with no OS-imposed limit</span>
+</pre>
 
-  h1 {
-    color: #7eb8f7;
-    font-size: 1.4rem;
-    margin-bottom: 6px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+            <p><strong>Solution 2: Tail-Call Optimization (TCO) — and Why JS Lies About It</strong></p>
+            <p>
+                TCO reuses the current stack frame instead of pushing a new one — but only when the
+                recursive call is the <em>very last operation</em> (a true tail position).
+                This tree <strong>cannot be TCO'd</strong> because after the left child returns,
+                we still need to call the right child. The frame must survive.
+            </p>
+
+            <div class="risk-box">
+                <div class="risk-title">⚠ JS TCO REALITY</div>
+                <p>
+                    ES6 mandated TCO in strict mode. <strong>Only Safari actually implements it.</strong>
+                    V8 (Chrome, Node) intentionally removed their TCO implementation in 2017, citing
+                    debuggability concerns. Never rely on TCO in production JS/Node unless you control
+                    the runtime.
+                </p>
+            </div>
+
+            <p><strong>Solution 3: Trampolining</strong></p>
+            <p>
+                Instead of calling recursively, return a <em>thunk</em> (a function representing the
+                next step). A trampoline loop calls thunks one at a time — constant stack depth,
+                works in any JS engine, enables lazy/infinite recursion.
+            </p>
+<pre>
+<span class="cm">// Thunk: a zero-arg function deferring computation</span>
+<span class="kw">const</span> <span class="fn">thunk</span> = (<span class="var">fn</span>, ...<span class="var">args</span>) => () => <span class="fn">fn</span>(...<span class="var">args</span>);
+
+<span class="kw">function</span> <span class="fn">trampoline</span>(<span class="var">fn</span>) {
+  <span class="kw">return</span> <span class="kw">function</span>(...<span class="var">args</span>) {
+    <span class="kw">let</span> <span class="var">result</span> = <span class="fn">fn</span>(...<span class="var">args</span>);
+    <span class="kw">while</span> (<span class="kw">typeof</span> <span class="var">result</span> === <span class="str">'function'</span>) {
+      <span class="var">result</span> = <span class="var">result</span>();   <span class="cm">// unwrap one thunk at a time</span>
+    }
+    <span class="kw">return</span> <span class="var">result</span>;
+  };
+}
+
+<span class="cm">// Factorial rewritten for trampolining (single recursive path = works cleanly)</span>
+<span class="kw">const</span> <span class="fn">factT</span> = <span class="fn">trampoline</span>((<span class="var">n</span>, <span class="var">acc</span> = <span class="str">1</span>) =>
+  <span class="var">n</span> <= <span class="str">1</span> ? <span class="var">acc</span> : <span class="fn">thunk</span>(<span class="fn">factT</span>, <span class="var">n</span> - <span class="str">1</span>, <span class="var">n</span> * <span class="var">acc</span>)
+);
+<span class="cm">// factT(100000) — no stack overflow, O(1) stack depth</span>
+</pre>
+
+            <p><strong>Solution 4: Async Chunking for UI-Blocking Recursion</strong></p>
+            <p>
+                For extremely deep trees or slow operations, yield control back to the browser
+                periodically using <code>setTimeout(0)</code> or <code>scheduler.yield()</code>.
+                This prevents "page unresponsive" warnings and allows progress UI updates.
+            </p>
+<pre>
+<span class="kw">async function</span> <span class="fn">drawTreeAsync</span>(<span class="var">nodes</span>) {
+  <span class="kw">let</span> <span class="var">i</span> = <span class="str">0</span>;
+  <span class="kw">for</span> (<span class="kw">const</span> <span class="var">node</span> <span class="kw">of</span> <span class="var">nodes</span>) {
+    <span class="fn">drawSegment</span>(<span class="var">node</span>);
+    <span class="kw">if</span> (++<span class="var">i</span> % <span class="str">500</span> === <span class="str">0</span>) {
+      <span class="cm">// Yield to browser every 500 ops — keeps UI responsive</span>
+      <span class="kw">await new</span> Promise(<span class="var">r</span> => <span class="fn">setTimeout</span>(<span class="var">r</span>, <span class="str">0</span>));
+    }
   }
+}
+</pre>
 
-  .subtitle {
-    color: #556;
-    font-size: 0.75rem;
-    margin-bottom: 16px;
-    letter-spacing: 1px;
-  }
+            <div class="solution-box">
+                <div class="solution-title">✓ DECISION GUIDE</div>
+                <p>
+                    Depth &lt; ~5,000 and not hot path → <strong>keep recursion</strong> (readable, correct).<br>
+                    Depth unbounded or &gt;10k → <strong>explicit stack</strong> (safest, fastest).<br>
+                    Functional style, single recursive path → <strong>trampolining</strong>.<br>
+                    UI thread, massive data → <strong>async chunking + Web Workers</strong>.
+                </p>
+            </div>
+        </div>
 
-  .main-layout {
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    width: 100%;
-    max-width: 1200px;
-  }
+        <!-- Section 4: What makes this tree actually look good -->
+        <div class="section">
+            <div class="section-title">Why This Tree Looks Good</div>
+            <ul class="numbered-list">
+                <li data-n="1.">
+                    <strong>Branch width scales with depth.</strong> Trunk uses
+                    <code>lineWidth = depth × 0.9</code>. Twigs are 1px. This matches
+                    real tree biomechanics (Murray's Law: r³ conservation).
+                </li>
+                <li data-n="2.">
+                    <strong>Color shifts from brown to green.</strong> HSL interpolation —
+                    deep branches are warm brown, leaf-level branches are desaturated green.
+                    Depth ratio drives the hue linearly.
+                </li>
+                <li data-n="3.">
+                    <strong>Asymmetry slider.</strong> Adding a constant angular offset to one
+                    branch produces wind-blown or leaning trees. Real trees are never
+                    perfectly symmetric.
+                </li>
+                <li data-n="4.">
+                    <strong>Length ratio controls fractal dimension.</strong> At 0.5 the tree
+                    is sparse; at 0.85 branches nearly overlap, simulating dense canopy.
+                    The Hausdorff dimension of this fractal is
+                    <code>log(2) / log(1/ratio)</code>.
+                </li>
+            </ul>
+        </div>
 
-  .canvas-panel {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
+    </div>
+</div>
 
-  canvas {
-    border: 1px solid #1e2a3a;
-    border-radius: 4px;
-    background: #050508;
-    display: block;
-  }
+<script>
+    const canvas = document.getElementById('treeCanvas');
+    const ctx    = canvas.getContext('2d');
 
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    background: #0d0d18;
-    border: 1px solid #1a1a2e;
-    border-radius: 6px;
-    padding: 14px;
-  }
+    const depthSlider = document.getElementById('depthSlider');
+    const angleSlider = document.getElementById('angleSlider');
+    const ratioSlider = document.getElementById('ratioSlider');
+    const asymSlider  = document.getElementById('asymSlider');
 
-  .control-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
+    const depthVal = document.getElementById('depthVal');
+    const angleVal = document.getElementById('angleVal');
+    const ratioVal = document.getElementById('ratioVal');
+    const asymVal  = document.getElementById('asymVal');
 
-  .control-row label {
-    color: #7eb8f7;
-    font-size: 0.78rem;
-    min-width: 120px;
-    letter-spacing: 0.5px;
-  }
+    const statCalls = document.getElementById('statCalls');
+    const statNodes = document.getElementById('statNodes');
+    const statDepth = document.getElementById('statDepth');
+    const statTime  = document.getElementById('statTime');
 
-  input[type="range"] {
-    flex: 1;
-    min-width: 140px;
-    accent-color: #7eb8f7;
-    cursor: pointer;
-  }
+    let callCount = 0;
+    let segmentCount = 0;
+    let maxDepthReached = 0;
 
-  .val-badge {
-    background: #1a2a3a;
-    color: #7eb8f7;
-    border-radius: 3px;
-    padding: 2px 8px;
-    font-size: 0.82rem;
-    min-width: 36px;
-    text-align: center;
-  }
+    // ─── Core recursive draw function ───────────────────────────────────────
+    function drawBranch(x, y, length, angle, depth, maxDepth) {
+        // Base case: depth exhausted — this is what prevents infinite recursion
+        if (depth === 0 || length < 0.5) return;
 
-  .stats-bar {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    font-size: 0.72rem;
-    color: #556;
-  }
+        callCount++;
 
-  .stat { display: flex; gap: 5px; }
-  .stat span { color: #9ecfff; }
+        const x2 = x + length * Math.cos(angle);
+        const y2 = y + length * Math.sin(angle);
 
-  /* ---- Explanation Panel ---- */
-  .explanation {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-height: 620px;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
+        // Visual: line width and color both encode structural depth
+        const depthRatio = depth / maxDepth;          // 1.0 at trunk, 0.0 at tips
 
-  .explanation::-webkit-scrollbar { width: 5px; }
-  .explanation::-webkit-scrollbar-track { background: #0a0a0f; }
-  .explanation::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 3px; }
+        // Hue: 28 (bark brown) → 110 (leaf green) as depth decreases
+        const hue  = 28 + (1 - depthRatio) * 82;
+        const sat  = 55 + depthRatio * 20;
+        const lum  = 38 + (1 - depthRatio) * 22;
 
-  .card {
-    background: #0d0d18;
-    border: 1px solid #1a1a2e;
-    border-radius: 6px;
-    padding: 14px 16px;
-  }
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = `hsl(${hue},${sat}%,${lum}%)`;
+        ctx.lineWidth   = Math.max(1, depth * 0.9);
+        ctx.lineCap     = 'round';
+        ctx.stroke();
 
-  .card h2 {
-    color: #7eb8f7;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #1a1a2e;
-    padding-bottom: 6px;
-  }
+        segmentCount++;
+        if (maxDepth - depth > maxDepthReached) maxDepthReached = maxDepth - depth;
 
-  .card p, .card li {
-    font-size: 0.78rem;
-    line-height: 1.7;
-    color: #b0b8c8;
-  }
+        const spread = parseFloat(angleSlider.value) * Math.PI / 180;
+        const asym   = parseFloat(asymSlider.value)  * Math.PI / 180;
+        const ratio  = parseFloat(ratioSlider.value) / 100;
+        const nextLen = length * ratio;
 
-  .card ul { padding-left: 16px; }
-  .card li { margin-bottom: 4px; }
+        // Two recursive calls — this is where the binary tree structure comes from
+        drawBranch(x2, y2, nextLen, angle - spread + asym, depth - 1, maxDepth);
+        drawBranch(x2, y2, nextLen, angle + spread + asym, depth - 1, maxDepth);
+    }
 
-  .highlight { color: #f7c948; font-weight: bold; }
-  .danger    { color: #f76e6e; font-weight: bold; }
-  .good      { color: #6ef7a0; font-weight: bold; }
-  .code-word { color: #c792ea; background: #1a1030; padding: 1px 5px; border-radius: 3px; font-size: 0.75rem; }
+    function render() {
+        const depth     = parseInt(depthSlider.value);
+        const t0        = performance.now();
 
-  pre {
-    background: #07070f;
-    border: 1px solid #1a1a2e;
-    border-radius: 4px;
-    padding: 10px 12px;
-    font-size: 0.72rem;
-    line-height: 1.6;
-    overflow-x: auto;
-    color: #c0c8d8;
-    margin-top: 8px;
-  }
+        // Reset counters
+        callCount      = 0;
+        segmentCount   = 0;
+        maxDepthReached = 0;
 
-  .kw  { color: #c792ea; }
-  .fn  { color: #82aaff; }
-  .cm  { color: #546e7a; font-style: italic; }
-  .num { color: #f78c6c; }
-  .str { color: #c3e88d; }
-  .warn-box {
-    background: #1a0a0a;
-    border: 1px solid #5a1a1a;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-top: 8px;
-    font-size: 0.75rem;
-    color: #f0a0a0;
-    line-height: 1.6;
-  }
-  .good-box {
-    background: #0a1a0f;
-    border: 1px solid #1a5a2a;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-top: 8px;
-    font-size: 0.75rem;
-    color: #90e0a8;
-    line-height: 1.6;
-  }
+        // Clear
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  .stack-viz {
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 3px;
-    margin-top: 10px;
-    align-items: flex-start;
-  }
+        // Trunk starts from bottom-center, pointing straight up (-π/2)
+        const trunkLen = canvas.height * 0.22;
+        const startX   = canvas.width / 2;
+        const startY   = canvas.height - 20;
 
-  .stack-frame {
-    background: #1a2a3a;
-    border: 1px solid #2a4a6a;
-    border-radius: 3px;
-    padding: 3px 10px;
-    font-size: 0.68rem;
-    color: #9ecfff;
-    transition: all 0.3s;
-    white-space: nowrap;
-  }
+        drawBranch(startX, startY, trunkLen, -Math.PI / 2, depth, depth);
 
-  .stack-frame.active { background: #2a3a1a; border-color: #4a6a2a; color: #9effa8; }
+        const t1 = performance.now();
 
-  .method-tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
+        // Update stats
+        statCalls.textContent = callCount.toLocaleString();
+        statNodes.textContent = segmentCount.toLocaleString();
+        statDepth.textContent = depth;
+        statTime.textContent  = (t1 - t0).toFixed(2) + 'ms';
+    }
 
-  .tab {
-    padding: 4px 10px;
-    border-radius: 3px;
-    font-size: 0.72rem;
-    cursor: pointer;
-    border: 1px solid #2a3a4a;
-    background: #
+    // ─── Slider event wiring ────────────────────────────────────────────────
+    depthSlider.addEventListener('input', () => {
+        depthVal.textContent = depthSlider.value;
+        render();
+    });
+
+    angleSlider.addEventListener('input', () => {
+        angleVal.textContent = angleSlider.value + '°';
+        render();
+    });
+
+    ratioSlider.addEventListener('input', () => {
+        ratioVal.textContent = (ratioSlider.value / 100).toFixed(2);
+        render();
+    });
+
+    asymSlider.addEventListener('input', () => {
+        asymVal.textContent = asymSlider.value + '°';
+        render();
+    });
+
+    // Initial render
+    render();
+</script>
+
+</body>
+</html>

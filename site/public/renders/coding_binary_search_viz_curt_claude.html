@@ -24,233 +24,402 @@
     }
 
     h1 {
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 1.8rem;
       margin-bottom: 8px;
-      background: linear-gradient(135deg, #38bdf8, #818cf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #7dd3fc;
+      letter-spacing: 1px;
     }
 
     .subtitle {
+      font-size: 0.9rem;
       color: #94a3b8;
-      margin-bottom: 36px;
-      font-size: 0.95rem;
-    }
-
-    .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 32px;
-      width: 100%;
-      max-width: 860px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
-    }
-
-    /* Controls */
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: flex-end;
       margin-bottom: 32px;
-    }
-
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    label {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    input[type="number"] {
-      background: #0f172a;
-      border: 1px solid #475569;
-      border-radius: 8px;
-      color: #e2e8f0;
-      padding: 10px 14px;
-      font-size: 1rem;
-      width: 130px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input[type="number"]:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
-    }
-
-    .btn {
-      padding: 10px 22px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #38bdf8, #818cf8);
-      color: #0f172a;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      opacity: 0.9;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 15px rgba(56,189,248,0.35);
-    }
-
-    .btn-secondary {
-      background: #334155;
-      color: #e2e8f0;
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: #475569;
-      transform: translateY(-1px);
-    }
-
-    .btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    /* Array display */
-    .array-wrapper {
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 24px;
     }
 
     .array-container {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      align-items: flex-end;
-      min-width: max-content;
-      padding: 12px 4px;
-    }
-
-    .box-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .index-label {
-      font-size: 0.7rem;
-      color: #64748b;
-      font-weight: 600;
+      justify-content: center;
+      margin-bottom: 32px;
+      max-width: 900px;
     }
 
     .box {
       width: 56px;
       height: 56px;
-      border-radius: 10px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      border-radius: 8px;
+      border: 2px solid #334155;
+      background: #1e293b;
       font-size: 1rem;
-      font-weight: 700;
-      border: 2px solid transparent;
-      transition: all 0.35s ease;
+      font-weight: 600;
+      transition: all 0.3s ease;
       position: relative;
     }
 
-    /* States */
-    .box.inactive {
-      background: #1e293b;
-      border-color: #334155;
-      color: #475569;
+    .box .index-label {
+      position: absolute;
+      top: -20px;
+      font-size: 0.65rem;
+      color: #64748b;
+      font-weight: 400;
     }
 
-    .box.active {
+    .box.in-range {
+      border-color: #3b82f6;
       background: #1e3a5f;
-      border-color: #38bdf8;
-      color: #bae6fd;
+      color: #93c5fd;
     }
 
     .box.mid {
-      background: linear-gradient(135deg, #1d4ed8, #7c3aed);
-      border-color: #818cf8;
-      color: #fff;
-      transform: translateY(-6px) scale(1.08);
-      box-shadow: 0 8px 25px rgba(129,140,248,0.45);
+      border-color: #f59e0b;
+      background: #451a03;
+      color: #fcd34d;
+      transform: scale(1.15);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+      z-index: 1;
     }
 
     .box.found {
-      background: linear-gradient(135deg, #065f46, #047857);
-      border-color: #34d399;
-      color: #6ee7b7;
-      transform: translateY(-6px) scale(1.12);
-      box-shadow: 0 8px 25px rgba(52,211,153,0.45);
-      animation: pulse-found 0.6s ease;
+      border-color: #22c55e;
+      background: #052e16;
+      color: #86efac;
+      transform: scale(1.2);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.7);
+      z-index: 1;
     }
 
     .box.eliminated {
-      background: #1e293b;
+      opacity: 0.3;
       border-color: #1e293b;
-      color: #334155;
-      opacity: 0.45;
-    }
-
-    @keyframes pulse-found {
-      0%   { transform: translateY(-6px) scale(1.12); }
-      50%  { transform: translateY(-10px) scale(1.18); }
-      100% { transform: translateY(-6px) scale(1.12); }
-    }
-
-    /* Pointer labels */
-    .pointer-label {
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-top: 4px;
-      min-height: 14px;
-    }
-
-    .ptr-low  { color: #fb923c; }
-    .ptr-mid  { color: #818cf8; }
-    .ptr-high { color: #f472b6; }
-    .ptr-found { color: #34d399; }
-
-    /* Info panel */
-    .info-panel {
       background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 20px;
+      color: #475569;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .controls label {
       font-size: 0.9rem;
-      line-height: 1.7;
-      min-height: 72px;
+      color: #94a3b8;
     }
 
-    .info-panel .step-num {
-      color: #38bdf8;
-      font-weight: 700;
+    .controls input[type="number"] {
+      width: 90px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 2px solid #334155;
+      background: #1e293b;
+      color: #e2e8f0;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
     }
 
-    .info-panel .val {
-      color: #f8fafc;
-      font-weight: 700;
+    .controls input[type="number"]:focus {
+      border-color: #3b82f6;
     }
 
-    .result-found {
-      color: #34d399;
-      font-weight: 700;
+    button {
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #startBtn {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    #startBtn:hover {
+      background: #2563eb;
+    }
+
+    #stepBtn {
+      background: #f59e0b;
+      color: #1c1917;
+    }
+
+    #stepBtn:hover:not(:disabled) {
+      background: #d97706;
+    }
+
+    #stepBtn:disabled {
+      background: #374151;
+      color: #6b7280;
+      cursor: not-allowed;
+    }
+
+    #resetBtn {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    #resetBtn:hover {
+      background: #dc2626;
+    }
+
+    .status-panel {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px 28px;
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .status-message {
       font-size: 1.05rem;
+      color: #cbd5e1;
     }
 
-    .result
+    .status-message.result-found {
+      font-size: 1.2rem;
+      color: #22c55e;
+      font-weight: 700;
+    }
+
+    .status-message.result-not-found {
+      font-size: 1.2rem;
+      color: #ef4444;
+      font-weight: 700;
+    }
+
+    .pointers {
+      display: flex;
+      gap: 20px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+
+    .pointer-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .pointer-low  { background: #1e3a5f; color: #93c5fd; border: 1px solid #3b82f6; }
+    .pointer-high { background: #2d1b4e; color: #c4b5fd; border: 1px solid #8b5cf6; }
+    .pointer-mid  { background: #451a03; color: #fcd34d; border: 1px solid #f59e0b; }
+
+    .step-counter {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 24px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 2px solid;
+    }
+
+    .dot-range  { background: #1e3a5f; border-color: #3b82f6; }
+    .dot-mid    { background: #451a03; border-color: #f59e0b; }
+    .dot-found  { background: #052e16; border-color: #22c55e; }
+    .dot-elim   { background: #0f172a; border-color: #1e293b; opacity: 0.4; }
+  </style>
+</head>
+<body>
+
+  <h1>🔍 Binary Search Visualizer</h1>
+  <p class="subtitle">Step through the algorithm one iteration at a time</p>
+
+  <div class="array-container" id="arrayContainer"></div>
+
+  <div class="controls">
+    <label for="targetInput">Target value:</label>
+    <input type="number" id="targetInput" placeholder="e.g. 37" />
+    <button id="startBtn" onclick="startSearch()">Start</button>
+    <button id="stepBtn" onclick="step()" disabled>Step →</button>
+    <button id="resetBtn" onclick="resetAll()">Reset</button>
+  </div>
+
+  <div class="status-panel">
+    <div class="status-message" id="statusMsg">Enter a target value and press <strong>Start</strong>.</div>
+    <div class="pointers" id="pointersDisplay" style="display:none">
+      <span class="pointer-badge pointer-low"  id="lowLabel">Low: –</span>
+      <span class="pointer-badge pointer-mid"  id="midLabel">Mid: –</span>
+      <span class="pointer-badge pointer-high" id="highLabel">High: –</span>
+    </div>
+    <div class="step-counter" id="stepCounter"></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-range"></div> Active range</div>
+    <div class="legend-item"><div class="legend-dot dot-mid"></div> Mid element</div>
+    <div class="legend-item"><div class="legend-dot dot-found"></div> Found</div>
+    <div class="legend-item"><div class="legend-dot dot-elim"></div> Eliminated</div>
+  </div>
+
+  <script>
+    const DATA = [2, 5, 8, 12, 16, 23, 29, 34, 37, 41, 45, 50, 56, 63, 71, 78, 84, 90, 95, 99];
+
+    let low, high, mid, target, stepCount, done, foundIndex;
+
+    function buildArray() {
+      const container = document.getElementById('arrayContainer');
+      container.innerHTML = '';
+      DATA.forEach((val, idx) => {
+        const box = document.createElement('div');
+        box.classList.add('box');
+        box.id = `box-${idx}`;
+        box.innerHTML = `<span class="index-label">${idx}</span>${val}`;
+        container.appendChild(box);
+      });
+    }
+
+    function renderState() {
+      DATA.forEach((_, idx) => {
+        const box = document.getElementById(`box-${idx}`);
+        box.className = 'box';
+
+        if (done && foundIndex === idx) {
+          box.classList.add('found');
+        } else if (!done && idx === mid) {
+          box.classList.add('mid');
+        } else if (!done && idx >= low && idx <= high) {
+          box.classList.add('in-range');
+        } else {
+          box.classList.add('eliminated');
+        }
+      });
+    }
+
+    function updateStatus(msg, cls = '') {
+      const el = document.getElementById('statusMsg');
+      el.className = 'status-message' + (cls ? ' ' + cls : '');
+      el.innerHTML = msg;
+    }
+
+    function updatePointers(visible) {
+      const panel = document.getElementById('pointersDisplay');
+      panel.style.display = visible ? 'flex' : 'none';
+      if (visible) {
+        document.getElementById('lowLabel').textContent  = `Low: ${low} (${DATA[low]})`;
+        document.getElementById('midLabel').textContent  = `Mid: ${mid} (${DATA[mid]})`;
+        document.getElementById('highLabel').textContent = `High: ${high} (${DATA[high]})`;
+      }
+    }
+
+    function startSearch() {
+      const input = document.getElementById('targetInput').value.trim();
+      if (input === '') {
+        updateStatus('⚠️ Please enter a target value first.');
+        return;
+      }
+      target = parseInt(input, 10);
+      if (isNaN(target)) {
+        updateStatus('⚠️ Please enter a valid integer.');
+        return;
+      }
+
+      low       = 0;
+      high      = DATA.length - 1;
+      stepCount = 0;
+      done      = false;
+      foundIndex = -1;
+      mid       = Math.floor((low + high) / 2);
+
+      document.getElementById('stepBtn').disabled = false;
+      document.getElementById('stepCounter').textContent = '';
+
+      renderState();
+      updatePointers(true);
+      updateStatus(`Searching for <strong>${target}</strong>. Press <strong>Step</strong> to begin.`);
+    }
+
+    function step() {
+      if (done) return;
+
+      stepCount++;
+      mid = Math.floor((low + high) / 2);
+
+      document.getElementById('stepCounter').textContent = `Step ${stepCount}`;
+
+      if (DATA[mid] === target) {
+        done       = true;
+        foundIndex = mid;
+        renderState();
+        updatePointers(false);
+        updateStatus(`🎉 Found <strong>${target}</strong> at index <strong>${mid}</strong> in ${stepCount} step${stepCount > 1 ? 's' : ''}!`, 'result-found');
+        document.getElementById('stepBtn').disabled = true;
+        return;
+      }
+
+      renderState();
+      updatePointers(true);
+
+      if (DATA[mid] < target) {
+        updateStatus(`Step ${stepCount}: <strong>${DATA[mid]}</strong> (index ${mid}) &lt; <strong>${target}</strong> → search <span style="color:#93c5fd">right half</span>`);
+        low = mid + 1;
+      } else {
+        updateStatus(`Step ${stepCount}: <strong>${DATA[mid]}</strong> (index ${mid}) &gt; <strong>${target}</strong> → search <span style="color:#c4b5fd">left half</span>`);
+        high = mid - 1;
+      }
+
+      if (low > high) {
+        done = true;
+        DATA.forEach((_, idx) => {
+          document.getElementById(`box-${idx}`).className = 'box eliminated';
+        });
+        updatePointers(false);
+        updateStatus(`❌ <strong>${target}</strong> not found in the array after ${stepCount} step${stepCount > 1 ? 's' : ''}.`, 'result-not-found');
+        document.getElementById('stepBtn').disabled = true;
+      }
+    }
+
+    function resetAll() {
+      done       = false;
+      foundIndex = -1;
+      stepCount  = 0;
+      document.getElementById('stepBtn').disabled = true;
+      document.getElementById('stepCounter').textContent = '';
+      document.getElementById('targetInput').value = '';
+      updatePointers(false);
+      updateStatus('Enter a target value and press <strong>Start</strong>.');
+      buildArray();
+    }
+
+    // Init
+    buildArray();
+  </script>
+</body>
+</html>

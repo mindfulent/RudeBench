@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bubble Sort vs Faster Algorithms — Visual Comparison</title>
+<style>
+  :root{
+    --bg:#111;
+    --panel:#0f1720;
+    --card:#0b1220;
+    --text:#e6eef8;
+    --muted:#9fb0c7;
+    --accent:#4fd1c5;
+    --danger:#ff6b6b;
+    --ok:#90ee90;
+    --gap:12px;
+    --font:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071223,#071823);font-family:var(--font);color:var(--text)}
+  .wrap{max-width:1100px;margin:28px auto;padding:18px}
+  header{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+  h1{font-size:20px;margin:0}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:8px;align-items:center;margin:12px 0 16px}
+  .btn{
+    background:linear-gradient(180deg,#1b2b36,#0f1b24);
+    color:var(--text);border:1px solid rgba(255,255,255,0.04);
+    padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;
+  }
+  .btn:active{transform:translateY(1px)}
+  .row{display:flex;gap:12px}
+  .panel{background:linear-gradient(180deg,#071a26,#07121a);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);flex:1;min-width:0}
+  .title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .viz{height:260px;background:linear-gradient(180deg,#06141b,#041017);border-radius:8px;padding:8px;display:flex;align-items:flex-end;gap:2px;position:relative;overflow:hidden}
+  .bars{display:flex;align-items:flex-end;height:100%;gap:2px;width:100%}
+  .bar{
+    background:linear-gradient(180deg,#2e8f9a,#1b6d73);width:100%;border-radius:3px 3px 0 0;opacity:0.98;transition:background 150ms;
+  }
+  .bar.compare{background:linear-gradient(180deg,#ffd86b,#ffb347);box-shadow:0 0 8px rgba(255,180,70,0.25)}
+  .bar.swap{background:linear-gradient(180deg,#ff6b6b,#ff3b3b);box-shadow:0 0 10px rgba(255,80,80,0.3)}
+  .stats{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+  .stat{background:linear-gradient(180deg,#071726,#071219);padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);color:var(--muted)}
+  .controls label{color:var(--muted);font-size:13px}
+  input[type=range]{width:200px}
+  footer{margin-top:16px;padding:12px;border-radius:8px;background:linear-gradient(180deg,#08161b,#061114);color:var(--muted);font-size:13px}
+  .explain{display:flex;gap:10px;flex-wrap:wrap}
+  .complexity{background:#08141a;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);min-width:220px}
+  .small{font-size:12px;color:var(--muted)}
+  .controls .control-group{display:flex;gap:8px;align-items:center}
+  .legend{display:flex;gap:8px;align-items:center}
+  .chip{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-size:12px;color:var(--muted)}
+  .reset-btn{background:#06282a;border:1px solid rgba(255,255,255,0.03)}
+  .note{color:var(--muted);font-size:13px;margin-top:8px}
+  @media (max-width:880px){
+    .row{flex-direction:column}
+    .viz{height:200px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Bubble Sort vs Quick Sort vs Merge Sort — Visual Comparison</h1>
+      <p class="lead">Same randomized data fed to three algorithms running side-by-side. Watch comparisons and swaps/assignments to see why bubble sort is not the best for general use.</p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="control-group">
+      <button id="shuffleBtn" class="btn">Shuffle / New Data</button>
+      <button id="startBtn" class="btn">Start</button>
+      <button id="pauseBtn" class="btn" disabled>Pause</button>
+      <button id="resetBtn" class="btn reset-btn">Reset</button>
+    </div>
+    <div class="control-group">
+      <label class="small">Array size</label>
+      <input id="sizeRange" type="range" min="8" max="160" value="48">
+      <span id="sizeLabel" class="chip">48</span>
+    </div>
+    <div class="control-group">
+      <label class="small">Speed</label>
+      <input id="speedRange" type="range" min="1" max="100" value="40">
+      <span id="speedLabel" class="chip">Normal</span>
+    </div>
+    <div class="legend" style="margin-left:auto">
+      <span class="chip">Yellow = comparing</span>
+      <span class="chip">Red = swapping/placing</span>
+    </div>
+  </div>
+
+  <div class="row" id="panelsRow">
+    <div class="panel" id="bubblePanel">
+      <div class="title-row">
+        <div>
+          <strong>Bubble Sort</strong>
+          <div class="small" style="color:var(--muted)">Simple, but inefficient for large arrays</div>
+        </div>
+        <div class="stats">
+          <div class="stat">Comparisons: <span id="b_comp">0</span></div>
+          <div class="stat">Swaps: <span id="b_swap">0</span></div>
+        </div>
+      </div>
+      <div class="viz" id="bubbleViz"><div class="bars" id="bubbleBars"></div></div>
+    </div>
+
+    <div class="panel" id="quickPanel">
+      <div class="title-row">
+        <div>
+          <strong>Quick Sort (Lomuto)</strong>
+          <div class="small" style="color:var(--muted)">Average O(n log n). Fast in practice.</div>
+        </div>
+        <div class="stats">
+          <div class="stat">Comparisons: <span id="q_comp">0</span></div>
+          <div class="stat">Swaps: <span id="q_swap">0</span></div>
+        </div>
+      </div>
+      <div class="viz" id="quickViz"><div class="bars" id="quickBars"></div></div>
+    </div>
+
+    <div class="panel" id="mergePanel">
+      <div class="title-row">
+        <div>
+          <strong>Merge Sort</strong>
+          <div class="small" style="color:var(--muted)">Stable O(n log n), uses extra memory.</div>
+        </div>
+        <div class="stats">
+          <div class="stat">Comparisons: <span id="m_comp">0</span></div>
+          <div class="stat">Assignments: <span id="m_assign">0</span></div>
+        </div>
+      </div>
+      <div class="viz" id="mergeViz"><div class="bars" id="mergeBars"></div></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="explain">
+      <div class="complexity">
+        <strong>Complexities</strong>
+        <div class="small" style="margin-top:6px">
+          Bubble sort: Worst/average O(n^2), Best O(n) when already sorted; in-place; simple but slow for medium/large n.<br><br>
+          Quick sort: Average O(n log n), Worst O(n^2) (rare with random pivot or good pivot selection); in-place (usually); very fast practically.<br><br>
+          Merge sort: Worst/average/best O(n log n); stable; requires O(n) extra space for merging.
+        </div>
+      </div>
+
+      <div style="flex:1">
+        <strong>What to watch for</strong>
+        <ul style="margin:6px 0 0 18px;color:var(--muted);font-size:13px">
+          <li>Bubble sort performs many more comparisons and swaps, especially as array size grows.</li>
+          <li>Quick sort and merge sort complete much faster for randomized data; merges focus on assignments while quicksort swaps.</li>
+          <li>Step counters show operations performed; use them to compare algorithmic cost experimentally.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">This visualization uses simple instrumented algorithm implementations to count comparisons and swaps/assignments. It is intended for teaching and demonstration; exact operation counts depend on implementation details and small optimizations.</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  // Utility and state
+  const sizeRange = document.getElementById('sizeRange');
+  const sizeLabel = document.getElementById('sizeLabel');
+  const speedRange = document.getElementById('speedRange');
+  const speedLabel = document.getElementById('speedLabel');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const bubbleBars = document.getElementById('bubbleBars');
+  const quickBars = document.getElementById('quickBars');
+  const mergeBars = document.getElementById('mergeBars');
+
+  const b_comp = document.getElementById('b_comp');
+  const b_swap = document.getElementById('b_swap');
+  const q_comp = document.getElementById('q_comp');
+  const q_swap = document.getElementById('q_swap');
+  const m_comp = document.getElementById('m_comp');
+  const m_assign = document.getElementById('m_assign');
+
+  let baseArray = [];
+  let size = parseInt(sizeRange.value,10);
+  let running = false;
+  let paused = false;
+  let speed = parseInt(speedRange.value,10); // 1..100
+  let delayBase = 700 - (speed*6); // smaller is faster
+  const minDelay = 2;
+
+  function speedToLabel(v){
+    if(v<25) return 'Slow';
+    if(v<60) return 'Normal';
+    if(v<85) return 'Fast';
+    return 'Very Fast';
+  }
+
+  function randArray(n){
+    const arr = [];
+    for(let i=0;i<n;i++) arr.push(i+1);
+    // shuffle
+    for(let i=n-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  function renderBars(container, arr){
+    container.innerHTML = '';
+    const n = arr.length;
+    for(let i=0;i<n;i++){
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = (arr[i]/n*100) + '%';
+      // set flex-basis so bars fit
+      bar.style.flex = '1 1 ' + (100/n) + '%';
+      container.appendChild(bar);
+    }
+  }
+
+  function setSize(v){
+    size = v;
+    sizeLabel.textContent = size;
+    baseArray = randArray(size);
+    resetAllDisplays();
+  }
+
+  function resetAllDisplays(){
+    renderBars(bubbleBars, baseArray);
+    renderBars(quickBars, baseArray);
+    renderBars(mergeBars, baseArray);
+    b_comp.textContent = '0';
+    b_swap.textContent = '0';
+    q_comp.textContent = '0';
+    q_swap.textContent = '0';
+    m_comp.textContent = '0';
+    m_assign.textContent = '0';
+    stopRunning();
+  }
+
+  // Controls
+  sizeRange.addEventListener('input', e => setSize(parseInt(e.target.value,10)));
+  speedRange.addEventListener('input', e => {
+    speed = parseInt(e.target.value,10);
+    speedLabel.textContent = speedToLabel(speed);
+    delayBase = 700 - (speed*6);
+  });
+
+  shuffleBtn.addEventListener('click', () => { setSize(size); });
+  resetBtn.addEventListener('click', () => { baseArray = randArray(size); resetAllDisplays(); });
+  pauseBtn.addEventListener('click', () => {
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  });
+
+  startBtn.addEventListener('click', () => {
+    if(running) return;
+    startAll();
+  });
+
+  function stopRunning(){
+    running = false;
+    paused = false;
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = 'Pause';
+    startBtn.disabled = false;
+  }
+
+  // Animation helpers
+  function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve, Math.max(minDelay, ms)));
+  }
+
+  function highlightBars(container, indices, cls){
+    const bars = container.children;
+    for(let i=0;i<bars.length;i++){
+      bars[i].classList.remove('compare','swap');
+    }
+    indices.forEach(i => {
+      if(bars[i]) bars[i].classList.add(cls);
+    });
+  }
+
+  function updateHeights(container, arr){
+    const n = arr.length;
+    const bars = container.children;
+    for(let i=0;i<n;i++){
+      const h = (arr[i]/n*100) + '%';
+      bars[i].style.height = h;
+    }
+  }
+
+  // Instrumented algorithm implementations that yield actions
+  function* bubbleSortGen(arr){
+    // operate on a copy
+    const a = arr.slice();
+    const n = a.length;
+    let comps = 0, swaps = 0;
+    for(let i=0;i<n;i++){
+      let swapped = false;
+      for(let j=0;j<n-1-i;j++){
+        comps++;
+        yield {type:'compare',i:j,j:j+1,counts:{comp:comps,swap:swaps},array:a.slice()};
+        if(a[j] > a[j+1]){
+          swaps++;
+          [a[j],a[j+1]] = [a[j+1],a[j]];
+          swapped = true;
+          yield {type:'swap',i:j,j:j+1,counts:{comp:comps,swap:swaps},array:a.slice()};
+        }
+      }
+      if(!swapped) break;
+    }
+    yield {type:'done',counts:{comp:comps,swap:swaps},array:a.slice()};
+  }
+
+  function* quickSortGen(arr){
+    const a = arr.slice();
+    const n = a.length;
+    let comps = 0, swaps = 0;
+
+    // iterative using stack to yield intermediate steps
+    const stack = [{lo:0,hi:n-1}];
+
+    function partition(lo,hi){
+      // lomuto: pivot = a[hi]
+      const pivot = a[hi];
+      let i = lo;
+      for(let j=lo;j<hi;j++){
+        comps++;
+        // compare a[j] <= pivot
+        // yield compare with pivot index hi and j
+        // We will mark j and hi as comparing
+        // (Return value handled by generator outside)
+        // We'll perform comparison here but we want to yield before decision.
+        // To allow yielding, we return an object and let the generator manage steps.
+        // But since this is non-generator function, we simulate by performing operations below.
+        // Simpler approach: inline partition as part of generator below.
+      }
+      return null;
+    }
+
+    // Implement recursive generator
+    function* qs(lo,hi){
+      if(lo >= hi) return;
+      const pivot = a[hi];
+      let i = lo;
+      for(let j=lo;j<hi;j++){
+        comps++;
+        yield {type:'compare',i:j,j:hi,counts:{comp:comps,swap:swaps},array:a.slice()};
+        if(a[j] <= pivot){
+          if(i !== j){
+            swaps++;
+            [a[i],a[j]] = [a[j],a[i]];
+            yield {type:'swap',i:i,j:j,counts:{comp:comps,swap:swaps},array:a.slice()};
+          }
+          i++;
+        }
+      }
+      // place pivot
+      if(i !== hi){
+        swaps++;
+        [a[i],a[hi]] = [a[hi],a[i]];
+        yield {type:'swap',i:i,j:hi,counts:{comp:comps,swap:swaps},array:a.slice()};
+      }
+      yield* qs(lo,i-1);
+      yield* qs(i+1,hi);
+    }
+
+    yield* qs(0,n-1);
+    yield {type:'done',counts:{comp:comps,swap:swaps},array:a.slice()};
+  }
+
+  function* mergeSortGen(arr){
+    const a = arr.slice();
+    const n = a.length;
+    let comps = 0, assigns = 0;
+
+    function* merge(lo,mid,hi){
+      const left = a.slice(lo,mid+1);
+      const right = a.slice(mid+1,hi+1);
+      let i=0,j=0,k=lo;
+      while(i<left.length && j<right.length){
+        comps++;
+        yield {type:'compare',i:lo+i,j:mid+1+j,counts:{comp:comps,assign:assigns},array:a.slice()};
+        if(left[i] <= right[j]){
+          a[k] = left[i++];
+          assigns++;
+          yield {type:'assign',index:k,value:a[k],counts:{comp:comps,assign:assigns},array:a.slice()};
+        } else {
+          a[k] = right[j++];
+          assigns++;
+          yield {type:'assign',index:k,value:a[k],counts:{comp:comps,assign:assigns},array:a.slice()};
+        }
+        k++;
+      }
+      while(i<left.length){
+        a[k] = left[i++];
+        assigns++;
+        yield {type:'assign',index:k,value:a[k],counts:{comp:comps,assign:assigns},array:a.slice()};
+        k++;
+      }
+      while(j<right.length){
+        a[k] = right[j++];
+        assigns++;
+        yield {type:'assign',index:k,value:a[k],counts:{comp:comps,assign:assigns},array:a.slice()};
+        k++;
+      }
+    }
+
+    function* ms(lo,hi){
+      if(lo>=hi) return;
+      const mid = Math.floor((lo+hi)/2);
+      yield* ms(lo,mid);
+      yield* ms(mid+1,hi);
+      yield* merge(lo,mid,hi);
+    }
+
+    yield* ms(0,n-1);
+    yield {type:'done',counts:{comp:comps,assign:assigns},array:a.slice()};
+  }
+
+  // Runner that steps through generators and animates
+  async function runGenerator(gen, container, updateCounts){
+    for(const step of gen){
+      // pause support
+      while(paused){
+        await sleep(80);
+      }
+      // compute delay depending on step type
+      const base = delayBase;
+      let extra = 0;
+      if(step.type === 'compare') extra = Math.max(0, base*0.25);
+      if(step.type === 'swap' || step.type === 'assign') extra = Math.max(0, base*0.2);
+      const delay = Math.max(minDelay, base + extra);
+
+      // Visual actions
+      if(step.type === 'compare'){
+        highlightBars(container,[step.i,step.j],'compare');
+        updateCounts(step.counts);
+        await sleep(delay);
+        highlightBars(container,[],null);
+      } else if(step.type === 'swap'){
+        highlightBars(container,[step.i,step.j],'swap');
+        updateHeights(container, step.array);
+        updateCounts(step.counts);
+        await sleep(delay);
+        highlightBars(container,[],null);
+      } else if(step.type === 'assign'){
+        // highlight single index being assigned
+        highlightBars(container,[step.index],'swap');
+        updateHeights(container, step.array);
+        updateCounts(step.counts);
+        await sleep(delay);
+        highlightBars(container,[],null);
+      } else if(step.type === 'done'){
+        updateHeights(container, step.array);
+        updateCounts(step.counts);
+        // mark all bars as done briefly
+        const bars = container.children;
+        for(let i=0;i<bars.length;i++) bars[i].classList.add('compare');
+        await sleep(200);
+        for(let i=0;i<bars.length;i++) bars[i].classList.remove('compare');
+      }
+      // allow next tick
+      await sleep(0);
+      if(!running) break;
+    }
+  }
+
+  // Coordinated start running three algorithms on the same initial array snapshot
+  async function startAll(){
+    running = true;
+    paused = false;
+    pauseBtn.disabled = false;
+    startBtn.disabled = true;
+
+    // snapshot the base array so each algorithm sees identical initial data
+    const arrSnap = baseArray.slice();
+
+    // create generators
+    const bGen = bubbleSortGen(arrSnap);
+    const qGen = quickSortGen(arrSnap);
+    const mGen = mergeSortGen(arrSnap);
+
+    // updater functions for counts
+    function updateBubbleCounts(c){ b_comp.textContent = c.comp; b_swap.textContent = c.swap; }
+    function updateQuickCounts(c){ q_comp.textContent = c.comp; q_swap.textContent = c.swap; }
+    function updateMergeCounts(c){ m_comp.textContent = c.comp; m_assign.textContent = c.assign || c.assign; }
+
+    // run all three in parallel (not strictly synchronous, but they progress with their own delays).
+    // We await all to finish or until running becomes false.
+    await Promise.all([
+      (async ()=>{
+        await runGenerator(bGen, bubbleBars, updateBubbleCounts);
+      })(),
+      (async ()=>{
+        await runGenerator(qGen, quickBars, updateQuickCounts);
+      })(),
+      (async ()=>{
+        await runGenerator(mGen, mergeBars, updateMergeCounts);
+      })()
+    ]).catch(()=>{});
+
+    stopRunning();
+  }
+
+  // Initialize
+  setSize(size);
+  speedLabel.textContent = speedToLabel(speed);
+
+})();
+</script>
+</body>
+</html>

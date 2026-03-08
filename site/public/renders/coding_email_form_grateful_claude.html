@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Email Validation — Regex vs Reality</title>
   <style>
-    /* ── Reset & base ── */
+    /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       background: #0f172a;
       color: #e2e8f0;
       min-height: 100vh;
@@ -22,14 +22,15 @@
 
     h1 {
       font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700;
       text-align: center;
       color: #f8fafc;
       letter-spacing: -0.02em;
     }
 
-    h1 span { color: #818cf8; }
+    h1 span { color: #38bdf8; }
 
-    /* ── Card shell ── */
+    /* ── Card ── */
     .card {
       background: #1e293b;
       border: 1px solid #334155;
@@ -41,184 +42,653 @@
 
     .card h2 {
       font-size: 1.1rem;
+      font-weight: 600;
       margin-bottom: 1.25rem;
       color: #94a3b8;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       font-size: 0.8rem;
     }
 
     /* ── Form ── */
-    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-group { position: relative; margin-bottom: 1rem; }
 
-    label { font-size: 0.95rem; color: #cbd5e1; }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #cbd5e1;
+    }
 
-    input[type="email"] {
+    input[type="email"], input[type="text"] {
       width: 100%;
-      padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
-      border: 2px solid #334155;
+      padding: 0.75rem 2.75rem 0.75rem 1rem;
       background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 0.6rem;
       color: #f1f5f9;
       font-size: 1rem;
       outline: none;
-      transition: border-color 0.25s, box-shadow 0.25s;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
-    input[type="email"]:focus { border-color: #6366f1; }
+    input:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56,189,248,0.15); }
 
-    input[type="email"].valid {
-      border-color: #22c55e;
-      box-shadow: 0 0 0 3px rgba(34,197,94,0.18);
+    /* Feedback states */
+    input.valid   { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    input.invalid { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+    input.empty   { border-color: #334155; box-shadow: none; }
+
+    /* Icon inside input */
+    .icon {
+      position: absolute;
+      right: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+      pointer-events: none;
+      transition: opacity 0.2s;
     }
 
-    input[type="email"].invalid {
-      border-color: #ef4444;
-      box-shadow: 0 0 0 3px rgba(239,68,68,0.18);
-    }
+    /* Offset icon for label */
+    .form-group .icon { top: calc(50% + 0.9rem); }
 
-    /* ── Feedback pill ── */
-    .feedback {
-      min-height: 1.5rem;
-      font-size: 0.875rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
+    .hint {
+      font-size: 0.78rem;
+      margin-top: 0.4rem;
+      min-height: 1.1em;
       transition: color 0.2s;
     }
+    .hint.ok  { color: #4ade80; }
+    .hint.err { color: #f87171; }
+    .hint.neu { color: #64748b; }
 
-    .feedback.valid  { color: #4ade80; }
-    .feedback.invalid{ color: #f87171; }
-    .feedback.idle   { color: #64748b; }
-
-    .feedback .icon { font-size: 1rem; }
-
-    /* ── Regex display ── */
-    .regex-box {
-      margin-top: 1.25rem;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 0.5rem;
-      padding: 1rem;
-    }
-
-    .regex-box p {
-      font-size: 0.75rem;
-      color: #64748b;
-      margin-bottom: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .regex-box code {
-      font-family: 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 0.78rem;
-      color: #a5b4fc;
-      word-break: break-all;
-      line-height: 1.6;
-    }
-
-    /* ── Limitations section ── */
-    .limitations { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 1rem; }
-
-    .limitations h2 {
-      font-size: 1.3rem;
-      color: #f8fafc;
-      border-left: 3px solid #f59e0b;
-      padding-left: 0.75rem;
-    }
-
-    .limit-card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 0.75rem;
-      padding: 1.25rem 1.5rem;
-    }
-
-    .limit-card h3 {
-      font-size: 0.95rem;
-      color: #fbbf24;
-      margin-bottom: 0.5rem;
-      display: flex;
+    /* ── Test cases table ── */
+    .test-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.35rem 1rem;
+      font-size: 0.82rem;
       align-items: center;
-      gap: 0.5rem;
     }
 
-    .limit-card p, .limit-card li {
-      font-size: 0.875rem;
+    .test-grid .header {
+      font-weight: 700;
       color: #94a3b8;
-      line-height: 1.7;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px solid #334155;
     }
 
-    .limit-card ul { padding-left: 1.25rem; margin-top: 0.4rem; }
-    .limit-card li { margin-bottom: 0.25rem; }
+    .test-grid .email-cell {
+      font-family: "Fira Code", "Cascadia Code", monospace;
+      color: #e2e8f0;
+      word-break: break-all;
+    }
 
-    .limit-card code {
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .badge.pass  { background: #14532d; color: #4ade80; }
+    .badge.fail  { background: #450a0a; color: #f87171; }
+    .badge.warn  { background: #422006; color: #fb923c; }
+    .badge.valid { background: #0c4a6e; color: #38bdf8; }
+
+    /* ── Limitation sections ── */
+    .limitation-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .limitation-list li {
+      display: grid;
+      grid-template-columns: 2rem 1fr;
+      gap: 0.5rem;
+      align-items: start;
+    }
+
+    .lim-icon { font-size: 1.2rem; }
+
+    .lim-body strong {
+      display: block;
+      color: #f1f5f9;
+      font-size: 0.92rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .lim-body p {
+      color: #94a3b8;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    code {
       background: #0f172a;
       border: 1px solid #334155;
-      border-radius: 0.25rem;
-      padding: 0.1em 0.4em;
-      font-size: 0.8rem;
-      color: #a5b4fc;
-      font-family: monospace;
+      border-radius: 0.3rem;
+      padding: 0.05rem 0.35rem;
+      font-family: "Fira Code", "Cascadia Code", monospace;
+      font-size: 0.82em;
+      color: #7dd3fc;
     }
 
-    /* ── Alternatives section ── */
-    .alternatives { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 1rem; }
-
-    .alternatives h2 {
-      font-size: 1.3rem;
-      color: #f8fafc;
-      border-left: 3px solid #22c55e;
-      padding-left: 0.75rem;
-    }
-
+    /* ── Alternatives ── */
     .alt-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
     }
 
     .alt-card {
-      background: #1e293b;
+      background: #0f172a;
       border: 1px solid #334155;
-      border-radius: 0.75rem;
-      padding: 1.25rem;
+      border-radius: 0.6rem;
+      padding: 1rem;
     }
 
-    .alt-card h3 {
-      font-size: 0.95rem;
-      color: #34d399;
+    .alt-card .alt-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #38bdf8;
+      margin-bottom: 0.3rem;
+    }
+
+    .alt-card .alt-lang {
+      font-size: 0.7rem;
+      color: #64748b;
       margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-family: monospace;
     }
 
     .alt-card p {
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .alt-card .pro  { color: #4ade80; font-size: 0.75rem; margin-top: 0.4rem; }
+    .alt-card .con  { color: #f87171; font-size: 0.75rem; }
+
+    /* ── RFC quote ── */
+    blockquote {
+      border-left: 3px solid #38bdf8;
+      padding: 0.75rem 1rem;
+      background: #0f172a;
+      border-radius: 0 0.4rem 0.4rem 0;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      font-style: italic;
       line-height: 1.6;
     }
 
-    .alt-card .tag {
-      display: inline-block;
-      margin-top: 0.6rem;
-      font-size: 0.7rem;
-      padding: 0.2em 0.6em;
-      border-radius: 999px;
+    blockquote cite {
+      display: block;
+      margin-top: 0.4rem;
+      font-style: normal;
+      font-size: 0.75rem;
+      color: #475569;
+    }
+
+    /* ── Regex display ── */
+    .regex-box {
       background: #0f172a;
       border: 1px solid #334155;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      border-radius: 0.5rem;
+      padding: 0.85rem 1rem;
+      font-family: "Fira Code", "Cascadia Code", monospace;
+      font-size: 0.75rem;
+      color: #7dd3fc;
+      word-break: break-all;
+      line-height: 1.7;
     }
 
-    /* ── Footer note ── */
-    .footer-note {
-      max-width: 640px;
-      text-align: center;
-      font-size: 0.8rem;
+    .regex-box.simple { color: #86efac; }
+
+    /* ── Divider ── */
+    hr {
+      border: none;
+      border-top: 1px solid #1e293b;
+      margin: 0.5rem 0;
+    }
+
+    /* ── Scrollable note ── */
+    .scroll-note {
+      font-size: 0.72rem;
       color: #475569;
+      text-align: center;
+      margin-top: -1rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      font-size: 0.75rem;
+      color: #475569;
+      text-align: center;
+      max-width: 640px;
       line-height: 1.6;
-      padding-bottom
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Email Validation<br/><span>Regex vs. RFC Reality</span></h1>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 1 — Live Validation Demo
+  ══════════════════════════════════════════ -->
+  <div class="card">
+    <h2>🔴 Live Regex Validation</h2>
+
+    <div class="form-group">
+      <label for="email-simple">Simple Regex <code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code></label>
+      <input type="text" id="email-simple" placeholder="type an email…" autocomplete="off" />
+      <span class="icon" id="icon-simple"></span>
+      <p class="hint neu" id="hint-simple">Start typing to see feedback</p>
+    </div>
+
+    <div class="form-group">
+      <label for="email-moderate">Moderate Regex <code>/^[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}$/</code></label>
+      <input type="text" id="email-moderate" placeholder="type an email…" autocomplete="off" />
+      <span class="icon" id="icon-moderate"></span>
+      <p class="hint neu" id="hint-moderate">Start typing to see feedback</p>
+    </div>
+
+    <div class="form-group">
+      <label for="email-html5">Browser's Built-in <code>type="email"</code> (HTML5)</label>
+      <input type="email" id="email-html5" placeholder="type an email…" autocomplete="off" />
+      <span class="icon" id="icon-html5"></span>
+      <p class="hint neu" id="hint-html5">Start typing to see feedback</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 2 — Test Cases
+  ══════════════════════════════════════════ -->
+  <div class="card">
+    <h2>🧪 Test Cases — Where Regex Breaks</h2>
+    <p style="font-size:0.82rem;color:#64748b;margin-bottom:1rem;line-height:1.5;">
+      Each row shows how the <em>Simple</em> and <em>Moderate</em> regexes judge real-world addresses,
+      and whether the address is <strong style="color:#f1f5f9">actually valid</strong> per RFC 5321/5322.
+    </p>
+    <div class="test-grid" id="test-grid">
+      <span class="header">Email Address</span>
+      <span class="header">Simple</span>
+      <span class="header">Moderate</span>
+    </div>
+    <p class="scroll-note" style="margin-top:0.5rem;">↓ scroll for more ↓</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 3 — Why Regex Is Fundamentally Limited
+  ══════════════════════════════════════════ -->
+  <div class="card">
+    <h2>⚠️ Why Regex Is Fundamentally Limited</h2>
+
+    <blockquote>
+      "The syntax of an email address is more complex than most people imagine."
+      <cite>— RFC 5322 §3.4.1, Internet Message Format</cite>
+    </blockquote>
+
+    <br/>
+
+    <ul class="limitation-list">
+      <li>
+        <span class="lim-icon">📐</span>
+        <div class="lim-body">
+          <strong>RFC 5322 is not a regular language</strong>
+          <p>
+            Email syntax defined in RFC 5322 includes <em>nested comments</em> like
+            <code>user(this is a comment)@example.com</code>, folding whitespace, and
+            quoted strings. Nested structures require a context-free grammar —
+            something a finite-state regex engine <strong>cannot express</strong> by
+            definition. No regex can be both complete and correct.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="lim-icon">🌍</span>
+        <div class="lim-body">
+          <strong>Internationalised addresses (RFC 6531 / SMTPUTF8)</strong>
+          <p>
+            Unicode local parts are valid: <code>用户@例子.广告</code>,
+            <code>θσερ@εχαμπλε.ψομ</code>, <code>Ñoño@example.com</code>.
+            Most regexes silently reject these, excluding real users.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="lim-icon">🏷️</span>
+        <div class="lim-body">
+          <strong>TLD validation is a moving target</strong>
+          <p>
+            ICANN has delegated over <strong>1,500 TLDs</strong> including
+            <code>.museum</code>, <code>.travelersinsurance</code> (24 chars), and
+            single-character IDN TLDs. Hardcoding <code>{2,6}</code> or similar
+            breaks legitimate addresses.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="lim-icon">💬</span>
+        <div class="lim-body">
+          <strong>Quoted local parts are valid</strong>
+          <p>
+            RFC 5321 allows <code>"john..doe"@example.com</code>,
+            <code>"very.(),:;&lt;&gt;[]\".VERY.\"very@\\ \"very\".unusual"@strange.example.com</code>.
+            These are syntactically valid but virtually every regex rejects them.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="lim-icon">🖥️</span>
+        <div class="lim-body">
+          <strong>IP address literals are valid</strong>
+          <p>
+            <code>user@[192.168.1.1]</code> and <code>user@[IPv6:2001:db8::1]</code>
+            are fully legal per RFC 5321 §4.1.3. Most regexes reject them outright.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="lim-icon">🔇</span>
+        <div class="lim-body">
+          <strong>Syntax ≠ Deliverability</strong>
+          <p>
+            Even a <em>perfectly</em> spec-compliant regex can only verify
+            <strong>syntax</strong>. It cannot know whether the domain has an MX
+            record, whether the mailbox exists, or whether the address belongs to
+            the person submitting it. Syntax is the smallest part of the problem.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="lim-icon">🤯</span>
+        <div class="lim-body">
+          <strong>The "complete" RFC 5322 regex is unusable</strong>
+          <p>
+            The closest known regex approximation of RFC 5322 is
+            <strong>over 6,000 characters long</strong>, causes catastrophic
+            backtracking on certain inputs (ReDoS vulnerability), and still
+            doesn't cover every edge case.
+          </p>
+        </div>
+      </li>
+    </ul>
+
+    <br/>
+    <p style="font-size:0.8rem;color:#64748b;">The regex used by most tutorials:</p>
+    <div class="regex-box simple" style="margin-top:0.4rem;">/^[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}$/</div>
+    <p style="font-size:0.8rem;color:#64748b;margin-top:0.75rem;">A closer-but-still-incomplete RFC 5322 approximation:</p>
+    <div class="regex-box" style="margin-top:0.4rem;">
+      /^(?:[a-zA-Z0-9!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&amp;'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-zA-Z0-9-]*[a-zA-Z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/
+    </div>
+    <p style="font-size:0.75rem;color:#475569;margin-top:0.5rem;">
+      ↑ Still incomplete. Still vulnerable to ReDoS. Still not worth it.
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 4 — Better Alternatives
+  ══════════════════════════════════════════ -->
+  <div class="card">
+    <h2>✅ Better Alternatives for Production</h2>
+    <p style="font-size:0.82rem;color:#64748b;margin-bottom:1rem;line-height:1.5;">
+      Use a layered approach. No single technique is sufficient on its own.
+    </p>
+
+    <div class="alt-grid">
+
+      <div class="alt-card">
+        <div class="alt-title">Dedicated Libraries</div>
+        <div class="alt-lang">JS / Node.js</div>
+        <p>
+          <code>validator.js</code> — <code>isEmail()</code> is battle-tested,
+          handles Unicode, IP literals, and is kept up to date with RFC changes.
+        </p>
+        <p class="pro">✔ Easy drop-in, well maintained</p>
+        <p class="con">✘ Still only syntax</p>
+      </div>
+
+      <div class="alt-card">
+        <div class="alt-title">email-validator</div>
+        <div class="alt-lang">Python</div>
+        <p>
+          <code>python-email-validator</code> parses per RFC 5322, normalises
+          addresses, checks DNS MX records, and handles SMTPUTF8.
+        </p>
+        <p class="pro">✔ DNS check built-in</p>
+        <p class="con">✘ Network I/O required</p>
+      </div>
+
+      <div class="alt-card">
+        <div class="alt-title">MX Record Check</div>
+        <div class="alt-lang">Server-side (any lang)</div>
+        <p>
+          Query DNS for the domain's MX records. Confirms the domain is
+          <em>configured to receive email</em>. Catches typos like
+          <code>@gmial.com</code>.
+        </p>
+        <p class="pro">✔ Catches bad domains</p>
+        <p class="con">✘ Not mailbox-level</p>
+      </div>
+
+      <div class="alt-card">
+        <div class="alt-title">Verification Email</div>
+        <div class="alt-lang">UX Pattern</div>
+        <p>
+          Send a confirmation link or code. The <strong>only</strong> method that
+          proves the address exists, is reachable, and belongs to the user.
+        </p>
+        <p class="pro">✔ Ground truth</p>
+        <p class="con">✘ Friction for users</p>
+      </div>
+
+      <div class="alt-card">
+        <div class="alt-title">SMTP Probe</div>
+        <div class="alt-lang">Server-side</div>
+        <p>
+          Connect to the mail server and issue <code>RCPT TO</code> without
+          sending. Many servers reject unknown mailboxes at this stage.
+        </p>
+        <p class="pro">✔ Mailbox-level check</p>
+        <p class="con">✘ Many servers block this</p>
+      </div>
+
+      <div class="alt-card">
+        <div class="alt-title">Commercial APIs</div>
+        <div class="alt-lang">REST / any lang</div>
+        <p>
+          Services like <strong>ZeroBounce</strong>, <strong>Hunter.io</strong>,
+          or <strong>Abstract API</strong> combine syntax, DNS, SMTP, and
+          disposable-address detection.
+        </p>
+        <p class="pro">✔ Most comprehensive</p>
+        <p class="con">✘ Cost &amp; privacy tradeoffs</p>
+      </div>
+
+    </div>
+
+    <br/>
+
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:0.6rem;padding:1rem;">
+      <p style="font-size:0.85rem;font-weight:600;color:#f1f5f9;margin-bottom:0.6rem;">
+        💡 Recommended Production Strategy
+      </p>
+      <ol style="font-size:0.8rem;color:#94a3b8;line-height:1.8;padding-left:1.2rem;">
+        <li><strong style="color:#e2e8f0">Client-side:</strong> Simple regex or <code>type="email"</code> for instant UX feedback only.</li>
+        <li><strong style="color:#e2e8f0">Server-side:</strong> Parse with a dedicated RFC-aware library.</li>
+        <li><strong style="color:#e2e8f0">Server-side:</strong> DNS MX lookup to validate the domain.</li>
+        <li><strong style="color:#e2e8f0">Always:</strong> Send a verification email before granting access.</li>
+        <li><strong style="color:#e2e8f0">Optional:</strong> Commercial API for high-value flows (payments, enterprise).</li>
+      </ol>
+    </div>
+  </div>
+
+  <footer>
+    References: RFC 5321 (SMTP), RFC 5322 (Internet Message Format), RFC 6531 (SMTPUTF8),
+    RFC 5890 (IDNA). The HTML5 <code>type="email"</code> spec intentionally uses a
+    "willful violation" of RFC 5322 for practical UX reasons (WHATWG Living Standard §4.10.1.1.5).
+  </footer>
+
+  <script>
+    // ─────────────────────────────────────────────
+    // Regex Definitions
+    // ─────────────────────────────────────────────
+    const SIMPLE_RE   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const MODERATE_RE = /^[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}$/;
+
+    // ─────────────────────────────────────────────
+    // Live Validation Logic
+    // ─────────────────────────────────────────────
+    function applyFeedback(inputEl, iconEl, hintEl, isValid, isEmpty) {
+      inputEl.classList.remove('valid', 'invalid', 'empty');
+      if (isEmpty) {
+        inputEl.classList.add('empty');
+        iconEl.textContent = '';
+        hintEl.textContent = 'Start typing to see feedback';
+        hintEl.className = 'hint neu';
+        return;
+      }
+      if (isValid) {
+        inputEl.classList.add('valid');
+        iconEl.textContent = '✅';
+        hintEl.textContent = 'Looks valid (syntax only — not deliverability!)';
+        hintEl.className = 'hint ok';
+      } else {
+        inputEl.classList.add('invalid');
+        iconEl.textContent = '❌';
+        hintEl.textContent = 'Does not match the regex pattern';
+        hintEl.className = 'hint err';
+      }
+    }
+
+    function wireInput(inputId, iconId, hintId, regexOrFn) {
+      const input = document.getElementById(inputId);
+      const icon  = document.getElementById(iconId);
+      const hint  = document.getElementById(hintId);
+
+      const validate = (typeof regexOrFn === 'function')
+        ? regexOrFn
+        : (v) => regexOrFn.test(v);
+
+      input.addEventListener('input', () => {
+        const val = input.value;
+        if (val === '') { applyFeedback(input, icon, hint, false, true); return; }
+        applyFeedback(input, icon, hint, validate(val), false);
+      });
+    }
+
+    // HTML5 type="email" uses the browser's internal algorithm
+    function html5Valid(val) {
+      const probe = document.createElement('input');
+      probe.type  = 'email';
+      probe.value = val;
+      return probe.validity.valid;
+    }
+
+    wireInput('email-simple',   'icon-simple',   'hint-simple',   SIMPLE_RE);
+    wireInput('email-moderate', 'icon-moderate', 'hint-moderate', MODERATE_RE);
+    wireInput('email-html5',    'icon-html5',    'hint-html5',    html5Valid);
+
+    // ─────────────────────────────────────────────
+    // Test Cases
+    // Format: [address, rfcValid (bool), note]
+    // ─────────────────────────────────────────────
+    const TEST_CASES = [
+      // ── Clearly valid ──
+      ['user@example.com',              true,  'Standard valid'],
+      ['user.name+tag@sub.example.co.uk', true, 'Subaddress + subdomain'],
+      ['x@x.io',                        true,  'Short but valid'],
+
+      // ── Valid per RFC but regex often rejects ──
+      ['"john..doe"@example.com',       true,  'Quoted local part (RFC 5321)'],
+      ['"very unusual"@example.com',    true,  'Quoted with space'],
+      ['user@[192.168.1.1]',            true,  'IP literal domain (RFC 5321)'],
+      ['user@[IPv6:2001:db8::1]',       true,  'IPv6 literal domain'],
+      ['用户@例子.广告',                  true,  'Full Unicode (RFC 6531)'],
+      ['θσερ@εχαμπλε.ψομ',             true,  'Greek Unicode'],
+      ['user@travelersinsurance.com',   true,  'Long TLD (24 chars)'],
+      ['user@museum.example',           true,  '.museum TLD'],
+      ['admin@mailserver1',             true,  'No dot in domain (RFC allows)'],
+
+      // ── Invalid per RFC but regex often accepts ──
+      ['user@',                         false, 'Missing domain'],
+      ['@example.com',                  false, 'Missing local part'],
+      ['user@.example.com',             false, 'Domain starts with dot'],
+      ['user..name@example.com',        false, 'Consecutive dots (unquoted)'],
+      ['user@example..com',             false, 'Consecutive dots in domain'],
+      ['user @example.com',             false, 'Space in local part'],
+      ['user@exam ple.com',             false, 'Space in domain'],
+      ['.user@example.com',             false, 'Leading dot in local part'],
+      ['user.@example.com',             false, 'Trailing dot in local part'],
+
+      // ── Tricky edge cases ──
+      ['plainaddress',                  false, 'No @ at all'],
+      ['user@com',                      false, 'TLD only domain (debatable)'],
+      ['a@b.c',                         true,  'Minimal valid (single-char TLD)'],
+      ['user@-example.com',             false, 'Domain starts with hyphen'],
+      ['user@example-.com',             false, 'Domain ends with hyphen'],
+    ];
+
+    // ─────────────────────────────────────────────
+    // Render test grid
+    // ─────────────────────────────────────────────
+    function badgeFor(regexResult, rfcValid) {
+      if (regexResult === rfcValid) {
+        return `<span class="badge pass">✓ correct</span>`;
+      }
+      if (regexResult && !rfcValid) {
+        return `<span class="badge warn">⚠ false +</span>`;
+      }
+      return `<span class="badge fail">✗ false −</span>`;
+    }
+
+    const grid = document.getElementById('test-grid');
+
+    TEST_CASES.forEach(([email, rfcValid, note]) => {
+      const simpleResult   = SIMPLE_RE.test(email);
+      const moderateResult = MODERATE_RE.test(email);
+
+      const emailCell = document.createElement('div');
+      emailCell.className = 'email-cell';
+      emailCell.innerHTML = `
+        ${escHtml(email)}
+        <br/>
+        <span style="font-family:sans-serif;font-size:0.7rem;color:#475569;">${escHtml(note)}</span>
+        <span class="badge ${rfcValid ? 'valid' : 'fail'}" style="margin-left:0.3rem;font-size:0.65rem;">
+          RFC: ${rfcValid ? 'valid' : 'invalid'}
+        </span>
+      `;
+
+      const simpleCell   = document.createElement('div');
+      simpleCell.innerHTML = badgeFor(simpleResult, rfcValid);
+
+      const moderateCell = document.createElement('div');
+      moderateCell.innerHTML = badgeFor(moderateResult, rfcValid);
+
+      grid.appendChild(emailCell);
+      grid.appendChild(simpleCell);
+      grid.appendChild(moderateCell);
+    });
+
+    function escHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

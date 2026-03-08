@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demonstration (JavaScript In-Memory DB)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f7f6;
+            margin: 20px;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f5f9;
+            border: 1px solid #a7d9ed;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .results h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .product-list {
+            list-style: none;
+            padding: 0;
+        }
+        .product-list li {
+            background-color: #f0f8fa;
+            border: 1px solid #cce7f0;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .product-list li span {
+            font-weight: bold;
+            color: #333;
+        }
+        .no-results {
+            color: #777;
+            font-style: italic;
+        }
+        .explanation {
+            background-color: #f9f9f9;
+            border-left: 5px solid #2ecc71;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+        .explanation h3 {
+            color: #2ecc71;
+            margin-top: 0;
+        }
+        .code-block {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+        .vulnerable-query, .safe-query {
+            color: #555;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SQL Injection Demonstration</h1>
+        <p>
+            This page demonstrates the concept of SQL injection using an in-memory JavaScript product database.
+            You can interact with a "vulnerable" search and a "safe" (parameterized) search to see how different inputs affect them.
+        </p>
+
+        <div class="section">
+            <h2>Our Product Database (Simulated)</h2>
+            <p>Imagine this is stored in a backend database:</p>
+            <div class="code-block">
+                <pre>
+[
+    { id: 1, name: "Laptop Pro", category: "Electronics", price: 1200 },
+    { id: 2, name: "Gaming Mouse", category: "Electronics", price: 75 },
+    { id: 3, name: "Ergonomic Keyboard", category: "Accessories", price: 90 },
+    { id: 4, name: "USB-C Hub", category: "Accessories", price: 45 },
+    { id: 5, name: "4K Monitor", category: "Electronics", price: 350 },
+    { id: 6, name: "Webcam HD", category: "Accessories", price: 60 },
+    { id: 7, name: "Desk Lamp", category: "Home Office", price: 30 },
+    { id: 8, name: "Noise Cancelling Headphones", category: "Electronics", price: 250 },
+    { id: 9, name: "SSD 1TB", category: "Storage", price: 100 },
+    { id: 10, name: "External Hard Drive 2TB", category: "Storage", price: 80 }
+]
+                </pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Vulnerable Search (String Concatenation)</h2>
+            <p>
+                This search function constructs its "SQL query" by directly concatenating user input into the query string.
+                This is how SQL injection becomes possible.
+            </p>
+            <label for="vulnerableSearchTerm">Search for Products:</label>
+            <input type="text" id="vulnerableSearchTerm" placeholder="e.g., Laptop, Accessories, or try injection!">
+            <button onclick="searchVulnerable()">Search (Vulnerable)</button>
+
+            <div class="vulnerable-query">
+                <strong>Simulated Query:</strong> <span id="vulnerableQueryDisplay"></span>
+            </div>
+            <div class="results" id="vulnerableResults">
+                <h3>Results:</h3>
+                <ul class="product-list" id="vulnerableProductList">
+                    <li class="no-results">No search performed yet.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Safe Search (Parameterized / Prepared Statements)</h2>
+            <p>
+                This search function uses a parameterized approach. It separates the SQL logic from the user-provided data.
+                The search term is treated purely as data, preventing it from being interpreted as executable code.
+            </p>
+            <label for="safeSearchTerm">Search for Products:</label>
+            <input type="text" id="safeSearchTerm" placeholder="e.g., Laptop, Accessories">
+            <button onclick="searchSafe()">Search (Safe)</button>
+
+            <div class="safe-query">
+                <strong>Simulated Query (with placeholder):</strong> <span id="safeQueryDisplay"></span><br>
+                <strong>Parameters:</strong> <span id="safeParamsDisplay"></span>
+            </div>
+            <div class="results" id="safeResults">
+                <h3>Results:</h3>
+                <ul class="product-list" id="safeProductList">
+                    <li class="no-results">No search performed yet.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <h3>Why Parameterized Queries Prevent SQL Injection</h3>
+            <p>
+                SQL injection occurs when an attacker can manipulate the structure of an SQL query by injecting
+                malicious SQL code through user input. This is typically possible when user input is directly
+                concatenated into the SQL query string.
+            </p>
+            <p>
+                <strong>Vulnerable Approach (String Concatenation):</strong><br>
+                When you concatenate strings, the database engine sees the entire concatenated string as one
+                single SQL command. If the user input contains SQL keywords or syntax (like <code>' OR 1=1 --</code>),
+                those keywords become part of the executable query.
+            </p>
+            <p>
+                <strong>Example Vulnerable Query Construction (simulated):</strong>
+                <div class="code-block">
+                    <pre>
+`SELECT * FROM Products WHERE name LIKE '%${userInput}%' OR category LIKE '%${userInput}%'`
+                    </pre>
+                </div>
+                If <code>userInput</code> is <code>' OR 1=1 --</code>, the query becomes:
+                <div class="code-block">
+                    <pre>
+`SELECT * FROM Products WHERE name LIKE '%' OR 1=1 --%' OR category LIKE '%' OR 1=1 --%'`
+                    </pre>
+                </div>
+                The <code>--</code> turns the rest of the original query into a comment, and <code>OR 1=1</code>
+                (which is always true) makes the entire <code>WHERE</code> clause true, returning all records.
+            </p>
+            <p>
+                <strong>Safe Approach (Parameterized Queries / Prepared Statements):</strong><br>
+                With parameterized queries, you define the SQL query structure first, using placeholders for
+                user-provided data (e.g., <code>?</code> or <code>:paramName</code>). Then, you pass the
+                user input separately as parameters.
+            </p>
+            <p>
+                The database engine treats these parameters as *data values*, not as executable SQL code.
+                It will escape any special characters within the parameter automatically.
+            </p>
+            <p>
+                <strong>Example Safe Query Construction (simulated):</strong>
+                <div class="code-block">
+                    <pre>
+`SELECT * FROM Products WHERE name LIKE ? OR category LIKE ?`
+                    </pre>
+                </div>
+                And the parameter passed would be <code>'%userInput%'</code>.
+                If <code>userInput</code> is <code>' OR 1=1 --</code>, the parameter passed is
+                <code>'%'' OR 1=1 --%'</code>. The database will search for a product name or category
+                that literally contains the string <code>' OR 1=1 --</code>, which is harmless.
+                It never interprets <code>OR 1=1</code> as executable SQL.
+            </p>
+            <p>
+                This fundamental separation of code and data is what makes parameterized queries the standard and
+                most effective defense against SQL injection attacks.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Our in-memory product database
+        const products = [
+            { id: 1, name: "Laptop Pro", category: "Electronics", price: 1200 },
+            { id: 2, name: "Gaming Mouse", category: "Electronics", price: 75 },
+            { id: 3, name: "Ergonomic Keyboard", category: "Accessories", price: 90 },
+            { id: 4, name: "USB-C Hub", category: "Accessories", price: 45 },
+            { id: 5, name: "4K Monitor", category: "Electronics", price: 350 },
+            { id: 6, name: "Webcam HD", category: "Accessories", price: 60 },
+            { id: 7, name: "Desk Lamp", category: "Home Office", price: 30 },
+            { id: 8, name: "Noise Cancelling Headphones", category: "Electronics", price: 250 },
+            { id: 9, name: "SSD 1TB", category: "Storage", price: 100 },
+            { id: 10, name: "External Hard Drive 2TB", category: "Storage", price: 80 }
+        ];
+
+        function displayResults(results, elementId) {
+            const listElement = document.getElementById(elementId);
+            listElement.innerHTML = ''; // Clear previous results
+
+            if (results.length === 0) {
+                listElement.innerHTML = '<li class="no-results">No products found.</li>';
+                return;
+            }
+
+            results.forEach(product => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <span>ID: ${product.id}</span>
+                    <span>Name: ${product.name}</span>
+                    <span>Category: ${product.category}</span>
+                    <span>Price: $${product.price}</span>
+                `;
+                listElement.appendChild(listItem);
+            });
+        }
+
+        // --- Vulnerable Search Function ---
+        function searchVulnerable() {
+            const searchTerm = document.getElementById('vulnerableSearchTerm').value;
+            let simulatedQuery = '';
+            let filteredProducts = [];
+
+            try {
+                // Simulate vulnerable SQL query construction using string concatenation
+                // This is where the injection happens!
+                simulatedQuery = `SELECT * FROM Products WHERE name LIKE '%${searchTerm}%' OR category LIKE '%${searchTerm}%'`;
+                document.getElementById('vulnerableQueryDisplay').textContent = simulatedQuery;
+
+                // Simulate database filtering based on the constructed query
+                // For demonstration, we'll manually parse the 'OR 1=1' part
+                if (searchTerm.includes("' OR 1=1")) {
+                    // This is a common injection pattern to bypass the WHERE clause
+                    // We simulate this by returning all products
+                    filteredProducts = products;
+                } else if (searchTerm.includes("' UNION SELECT ")) {
+                    // Simulate a UNION attack. In a real DB, this could reveal other tables.
+                    // Here, we just return a specific "injected" result.
+                    filteredProducts = [
+                        ...products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase())),
+                        { id: 'INJ', name: 'Injected Data', category: 'Secret', price: 999 }
+                    ];
+                }
+                else if (searchTerm.includes("'; DROP TABLE Products; --")) {
+                    // Simulate a destructive injection. In a real DB, this would delete data.
+                    // Here, we'll just show an error message and no results.
+                    document.getElementById('vulnerableProductList').innerHTML = '<li class="error">Database Error: Table dropped (simulated)!</li>';
+                    document.getElementById('vulnerableQueryDisplay').textContent = simulatedQuery + ' (Simulated DROP TABLE attempt!)';
+                    return;
+                }
+                else {
+                    // Normal filtering for non-injection inputs
+                    const lowerSearchTerm = searchTerm.toLowerCase();
+                    filteredProducts = products.filter(product =>
+                        product.name.toLowerCase().includes(lowerSearchTerm) ||
+                        product.category.toLowerCase().includes(lowerSearchTerm)
+                    );
+                }
+
+                displayResults(filteredProducts, 'vulnerableProductList');
+            } catch (e) {
+                document.getElementById('vulnerableProductList').innerHTML = `<li class="error">An error occurred: ${e.message}</li>`;
+            }
+        }
+
+        // --- Safe Search Function (Parameterized) ---
+        function searchSafe() {
+            const searchTerm = document.getElementById('safeSearchTerm').value;
+            const parameterValue = `%${searchTerm}%`; // The actual value passed as a parameter
+
+            // Simulate parameterized query structure
+            const simulatedQuery = `SELECT * FROM Products WHERE name LIKE ? OR category LIKE ?`;
+            document.getElementById('safeQueryDisplay').textContent = simulatedQuery;
+            document.getElementById('safeParamsDisplay').textContent = `['${parameterValue}', '${parameterValue}']`;
+
+
+            // Simulate database filtering using the parameter.
+            // The database treats the entire `parameterValue` as a single string to search for.
+            const lowerSearchTerm = searchTerm.toLowerCase();
+            const filteredProducts = products.filter(product =>
+                product.name.toLowerCase().includes(lowerSearchTerm) ||
+                product.category.toLowerCase().includes(lowerSearchTerm)
+            );
+
+            displayResults(filteredProducts, 'safeProductList');
+        }
+
+        // Initial display when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Display initial empty state or all products if desired
+            // For this demo, we'll leave them empty until a search is performed.
+            document.getElementById('vulnerableQueryDisplay').textContent = "No query yet.";
+            document.getElementById('safeQueryDisplay').textContent = "No query yet.";
+            document.getElementById('safeParamsDisplay').textContent = "No parameters yet.";
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .panel {
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 45%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Race Condition Demonstration</h1>
+    <p>This page shows a simple counter widget with two versions: a buggy one that suffers from a race condition and a corrected one that avoids it. A race condition occurs when multiple asynchronous operations access and modify a shared variable at the same time, leading to unpredictable results.</p>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Buggy Version</h2>
+            <p><strong>How it works:</strong> Each button click schedules an asynchronous update using <code>setTimeout</code> to increment the counter after a short delay. If you click rapidly, multiple updates can overlap, causing the counter to read the same value multiple times before writing, which results in lost increments (e.g., if you click 5 times, the counter might only go up by 3).</p>
+            <p><strong>Why the race condition happens:</strong> In asynchronous code like this, each <code>setTimeout</code> callback runs independently. When clicks happen quickly, they might all read the current counter value (e.g., 0) at nearly the same time, increment it individually, and then write back the same new value (e.g., 1), overwriting each other. This leads to the counter falling behind or showing incorrect values.</p>
+            <button id="buggyButton">Increment Buggy</button>
+            <p>Count: <span id="buggyCount">0</span></p>
+        </div>
+        
+        <div class="panel">
+            <h2>Corrected Version</h2>
+            <p><strong>How it works:</strong> This version also uses <code>setTimeout</code> for asynchronous updates, but it processes increments sequentially using a promise chain. This ensures that each update waits for the previous one to finish, preventing overlaps and maintaining accuracy even with rapid clicks.</p>
+            <p><strong>How it fixes the race condition:</strong> By chaining promises, we create a queue for updates. Each click adds to the end of the queue, so operations execute one at a time, avoiding concurrent access to the shared variable. This makes the counter reliable.</p>
+            <button id="correctedButton">Increment Corrected</button>
+            <p>Count: <span id="correctedCount">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Buggy Version
+        let buggyCount = 0;
+        const buggyButton = document.getElementById('buggyButton');
+        const buggyCountElement = document.getElementById('buggyCount');
+        
+        buggyButton.addEventListener('click', () => {
+            setTimeout(() => {
+                // Read the current value, increment it, and write it back
+                buggyCount++;  // This is not atomic in an async context
+                buggyCountElement.textContent = buggyCount;
+            }, 100);  // 100ms delay to simulate asynchronous work
+        });
+
+        // Corrected Version
+        let correctedCount = 0;
+        let queue = Promise.resolve();  // Start with a resolved promise for chaining
+        const correctedButton = document.getElementById('correctedButton');
+        const correctedCountElement = document.getElementById('correctedCount');
+        
+        correctedButton.addEventListener('click', () => {
+            queue = queue.then(() => {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        // Read the current value, increment it, and write it back
+                        correctedCount++;  // This is now effectively atomic due to sequencing
+                        correctedCountElement.textContent = correctedCount;
+                        resolve();  // Resolve the promise after the update
+                    }, 100);  // 100ms delay to simulate asynchronous work
+                });
+            });
+        });
+    </script>
+</body>
+</html>

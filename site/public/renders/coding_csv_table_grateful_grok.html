@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Parser</title>
+    <style>
+        /* Table styling */
+        table {
+            border-collapse: collapse; /* Merge borders for a clean look */
+            width: 100%; /* Make the table full width */
+            margin-top: 20px; /* Add some space above the table */
+        }
+        
+        th, td {
+            border: 1px solid #000; /* Clear black borders */
+            padding: 8px; /* Padding for readability */
+            text-align: left; /* Left-align text */
+        }
+        
+        tr:nth-child(even) { /* Alternating row colors */
+            background-color: #f2f2f2; /* Light gray for even rows */
+        }
+        
+        tr:nth-child(odd) {
+            background-color: #ffffff; /* White for odd rows */
+        }
+        
+        /* General styling for the page */
+        body {
+            font-family: Arial, sans-serif; /* Clean font */
+            margin: 20px; /* Margin around the body */
+        }
+        
+        textarea {
+            width: 100%; /* Full width */
+            height: 200px; /* Fixed height for better usability */
+            margin-bottom: 10px; /* Space below textarea */
+        }
+        
+        button {
+            padding: 10px 15px; /* Padding for button */
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none; /* No border */
+            cursor: pointer; /* Pointer cursor on hover */
+        }
+        
+        button:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>CSV Parser</h1>
+    <p>Paste your CSV data into the textarea below and click the button to parse it into a table.</p>
+    
+    <textarea id="csvInput" placeholder='Example:
+"Name","Age","City"
+"John, Doe",30,"New York"
+"Jane ""The Great"" Smith",25,"San Francisco"
+Another,Row,With,Extra,Columns
+A,Row,With,Fewer'></textarea>
+    
+    <button id="parseButton">Parse CSV</button>
+    
+    <div id="tableOutput"></div> <!-- This is where the table will be inserted -->
+    
+    <script>
+        // Function to escape HTML to prevent XSS
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        
+        // Function to parse CSV string
+        function parseCSV(csvString) {
+            const lines = csvString.trim().split('\n'); // Split into rows
+            const result = [];
+            
+            for (const line of lines) {
+                const fields = [];
+                let field = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        // Handle quotes
+                        if (inQuotes && line[i + 1] === '"') {
+                            // Escaped quote (e.g., "")
+                            field += '"'; // Add a single quote
+                            i++; // Skip the next quote
+                        } else {
+                            // Toggle inQuotes
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        // End of field
+                        fields.push(field.trim()); // Add the field and trim whitespace
+                        field = '';
+                    } else {
+                        // Add the character to the current field
+                        field += char;
+                    }
+                }
+                
+                // Add the last field
+                if (field.trim() !== '') {
+                    fields.push(field.trim());
+                }
+                
+                result.push(fields); // Add the row to the result
+            }
+            
+            return result; // Return the parsed data as an array of arrays
+        }
+        
+        // Function to generate HTML table from parsed data
+        function generateTable(data) {
+            if (data.length === 0) return '<p>No data to display.</p>'; // Handle empty input
+            
+            let tableHTML = '<table>';
+            
+            for (let i = 0; i < data.length; i++) {
+                tableHTML += '<tr>'; // Start a new row
+                
+                for (let j = 0; j < data[i].length; j++) {
+                    const cellContent = escapeHTML(data[i][j]); // Escape for safety
+                    if (i === 0) {
+                        // Treat the first row as headers
+                        tableHTML += `<th>${cellContent}</th>`;
+                    } else {
+                        tableHTML += `<td>${cellContent}</td>`;
+                    }
+                }
+                
+                tableHTML += '</tr>'; // End the row
+            }
+            
+            tableHTML += '</table>';
+            return tableHTML;
+        }
+        
+        // Add event listener to the button
+        document.getElementById('parseButton').addEventListener('click', function() {
+            const csvText = document.getElementById('csvInput').value; // Get textarea value
+            const parsedData = parseCSV(csvText); // Parse the CSV
+            const tableHTML = generateTable(parsedData); // Generate the table HTML
+            document.getElementById('tableOutput').innerHTML = tableHTML; // Insert into the page
+        });
+    </script>
+</body>
+</html>

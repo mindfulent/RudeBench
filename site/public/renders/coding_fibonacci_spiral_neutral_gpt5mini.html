@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Fibonacci Spiral Debug — Buggy vs Fixed</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; background: #fafafa; color: #111 }
+    h1 { font-size: 18px; margin-bottom: 6px }
+    p { margin-top: 0; color: #333 }
+    .row { display:flex; gap:20px; align-items:flex-start; }
+    .card { background: white; border:1px solid #e5e5e5; padding:12px; border-radius:6px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    canvas { background: #fff; border:1px solid #ddd; display:block }
+    .controls { margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    label { font-size:13px }
+    button { padding:6px 10px; border-radius:4px; border:1px solid #bbb; background:#f6f6f6; cursor:pointer }
+    button:active { transform:translateY(1px) }
+    .explain { margin-top:12px; font-size:13px; line-height:1.4; max-width:740px; }
+    code { background:#f1f1f1; padding:2px 6px; border-radius:4px; font-family:monospace; font-size:12px }
+  </style>
+</head>
+<body>
+  <h1>Fibonacci Spiral Debug — Buggy vs Fixed</h1>
+  <p>Two canvases are shown. Left uses a buggy Fibonacci implementation (wrong base cases). Right uses the corrected implementation. Toggle animation and step size, and compare.</p>
+
+  <div class="row">
+    <div class="card">
+      <strong>Buggy version</strong>
+      <canvas id="canvas-bug" width="420" height="420"></canvas>
+      <div class="controls">
+        <button id="start-bug">Start</button>
+        <button id="stop-bug">Stop</button>
+        <label>scale <input id="scale-bug" type="range" min="2" max="30" value="8"></label>
+        <label>steps <input id="steps-bug" type="number" min="1" max="12" value="9" style="width:56px"></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Fixed version</strong>
+      <canvas id="canvas-fix" width="420" height="420"></canvas>
+      <div class="controls">
+        <button id="start-fix">Start</button>
+        <button id="stop-fix">Stop</button>
+        <label>scale <input id="scale-fix" type="range" min="2" max="30" value="8"></label>
+        <label>steps <input id="steps-fix" type="number" min="1" max="12" value="9" style="width:56px"></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="explain card" style="margin-top:14px;">
+    <strong>Explanation of the bug</strong>
+    <p>
+      The developer thought the canvas API was buggy because the spiral looked wrong. The real bug was a Fibonacci function with incorrect base cases. A Fibonacci function must define F(0)=0 and F(1)=1 (or a consistent offset) so larger numbers compute correctly. If you instead use wrong base cases (for example, returning 1 for n=0), the sequence shifts and every rectangle and arc size becomes incorrect. That change in numeric sizes shifts the square sizes used to build the spiral and the arcs no longer connect smoothly — the result looks like a rendering bug when it's a simple math bug.
+    </p>
+
+    <strong>Key point:</strong> The canvas works fine. Drawn sizes are wrong because the Fibonacci sequence was implemented incorrectly (wrong base cases), so sizes and arc radii are off by 1 or otherwise shifted.
+  </div>
+
+  <script>
+    // Single file contains both buggy and fixed examples.
+    // Both draw the same spiral layout code, but they source Fibonacci numbers from two different functions.
+
+    // --- Fibonacci implementations ---
+
+    // Buggy fib: wrong base cases (common mistake)
+    function fibBug(n) {
+      // BUG: using fib(0)=1 and fib(1)=1 instead of 0,1 (or expecting offset)
+      if (n === 0) return 1; // incorrect
+      if (n === 1) return 1;
+      // simple recursion (inefficient but ok for small n)
+      return fibBug(n - 1) + fibBug(n - 2);
+    }
+
+    // Correct fibonacci: F(0)=0, F(1)=1
+    function fibFix(n) {
+      if (n === 0) return 0;
+      if (n === 1) return 1;
+      return fibFix(n - 1) + fibFix(n - 2);
+    }
+
+    // A helper to compute first N Fibonacci numbers using iterative loop (avoids recursion overhead)
+    function fibSeq(fn, count) {
+      const out = [];
+      for (let i = 0; i < count; i++) out.push(fn(i));
+      return out;
+    }
+
+    // --- Spiral drawing logic (shared) ---
+    // We'll draw squares whose side lengths follow Fibonacci numbers and draw quarter-arcs inside each square
+    function drawSpiral(ctx, fibNumbers, opts = {}) {
+      const w = ctx.canvas.width, h = ctx.canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // center start
+      const cx = Math.floor(w/2), cy = Math.floor(h/2);
+      // start from a small square at the center and walk outwards
+      // We'll treat fibNumbers[0] as the first side length (may be 0 for correct sequence).
+      let x = cx, y = cy;
+      // To make the spiral visible and centered, we offset the starting point by the first square.
+      // Direction sequence: 0 = right, 1 = down, 2 = left, 3 = up
+      let dir = 0;
+
+      // Precompute scaled side lengths (positive)
+      const scale = opts.scale || 8;
+      const sides = fibNumbers.map(n => Math.abs(n) * scale);
+
+      // For better visual, if first side is 0 (as with correct fib 0), start with a 1-scale square
+      if (sides.length > 0 && sides[0] === 0) sides[0] = scale;
+
+      // Move starting point so spiral roughly centers
+      // Compute bounding box by simulating placement
+      let minX = x, minY = y, maxX = x, maxY = y;
+      {
+        let tx = x, ty = y, tdir = dir;
+        for (let s of sides) {
+          // when we place a square of side s at (tx,ty) it extends differently depending on dir
+          if (tdir === 0) { // right
+            maxX = Math.max(maxX, tx + s);
+            minY = Math.min(minY, ty);
+            maxY = Math.max(maxY, ty + s);
+            tx = tx + s;
+          } else if (tdir === 1) { // down
+            maxY = Math.max(maxY, ty + s);
+            minX = Math.min(minX, tx);
+            maxX = Math.max(maxX, tx + s);
+            ty = ty + s;
+          } else if (tdir === 2) { // left
+            minX = Math.min(minX, tx - s);
+            minY = Math.min(minY, ty);
+            maxY = Math.max(maxY, ty + s);
+            tx = tx - s;
+          } else { // up
+            minY = Math.min(minY, ty - s);
+            minX = Math.min(minX, tx);
+            maxX = Math.max(maxX, tx + s);
+            ty = ty - s;
+          }
+          tdir = (tdir + 1) % 4;
+        }
+      }
+
+      // center the spiral in canvas
+      const offsetX = Math.floor((w - (maxX - minX)) / 2 - minX);
+      const offsetY = Math.floor((h - (maxY - minY)) / 2 - minY);
+
+      // reset position and direction
+      x = Math.floor(cx/2) + offsetX; // approximate anchor; exact bounding already considered
+      y = Math.floor(cy/2) + offsetY;
+      dir = 0;
+
+      // For clarity, draw a faint grid
+      ctx.save();
+      ctx.strokeStyle = "rgba(0,0,0,0.04)";
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx < w; gx += 20) { ctx.beginPath(); ctx.moveTo(gx+0.5,0); ctx.lineTo(gx+0.5,h); ctx.stroke(); }
+      for (let gy = 0; gy < h; gy += 20) { ctx.beginPath(); ctx.moveTo(0,gy+0.5); ctx.lineTo(w,gy+0.5); ctx.stroke(); }
+      ctx.restore();
+
+      // Draw squares and arcs
+      ctx.lineWidth = 2;
+      for (let i = 0; i < sides.length; i++) {
+        const s = sides[i];
+        // Draw square depending on direction: we treat (x,y) as top-left for right and down moves,
+        // but placement uses current anchor; to avoid complex anchor logic, we'll recompute placement properly.
+        // For simplicity, we'll maintain x,y as top-left of the next square for dir=0 (right),
+        // but shift for other directions.
+        let sx = x, sy = y;
+        if (dir === 0) { /* sx,sy already top-left */ }
+        else if (dir === 1) { /* moving down: top-left is x, y */ }
+        else if (dir === 2) { /* left: top-left must be x - s, y */ sx = x - s; }
+        else if (dir === 3) { /* up: top-left must be x - s, y - s */ sx = x - s; sy = y - s; }
+
+        // Draw square outline
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.rect(sx + 0.5, sy + 0.5, s, s);
+        ctx.stroke();
+
+        // Draw quarter arc that connects the square
+        // Arc center depends on direction and square corner
+        let cxArc = sx, cyArc = sy;
+        let startAngle = 0, endAngle = 0;
+        /*
+          For orientation:
+          - when dir=0 (square to the right), arc center is at (sx, sy + s), arc from -90 to 0 (upwards to right)
+          - dir=1 (down): center at (sx + s, sy + s), arc from PI to 3/2 PI
+          - dir=2 (left): center at (sx + s, sy), arc from PI/2 to PI
+          - dir=3 (up): center at (sx, sy), arc from 0 to PI/2
+        */
+        if (dir === 0) {
+          cxArc = sx; cyArc = sy + s;
+          startAngle = -Math.PI / 2; endAngle = 0;
+        } else if (dir === 1) {
+          cxArc = sx + s; cyArc = sy + s;
+          startAngle = Math.PI; endAngle = Math.PI * 1.5;
+        } else if (dir === 2) {
+          cxArc = sx + s; cyArc = sy;
+          startAngle = Math.PI / 2; endAngle = Math.PI;
+        } else { // dir === 3
+          cxArc = sx; cyArc = sy;
+          startAngle = 0; endAngle = Math.PI / 2;
+        }
+
+        ctx.beginPath();
+        ctx.strokeStyle = i === 0 ? "#c0392b" : (i === sides.length-1 ? "#2980b9" : "#333");
+        ctx.arc(cxArc + 0.5, cyArc + 0.5, s, startAngle, endAngle, false);
+        ctx.stroke();
+
+        // Move anchor for next square: after placing square, shift x,y depending on dir
+        if (dir === 0) { x = x + s; }
+        else if (dir === 1) { y = y + s; }
+        else if (dir === 2) { x = x - s; }
+        else if (dir === 3) { y = y - s; }
+        dir = (dir + 1) % 4;
+      }
+    }
+
+    // --- Wiring canvases and controls ---
+    function makeRunner(canvasId, fibFn, controlsPrefix) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      let raf = null;
+      let angle = 0;
+      let stepsInput = document.getElementById(controlsPrefix + 'steps');
+      let scaleInput = document.getElementById(controlsPrefix + 'scale');
+      const startBtn = document.getElementById(controlsPrefix + 'start');
+      const stopBtn = document.getElementById(controlsPrefix + 'stop');
+
+      function drawFrame() {
+        // compute fibonacci sequence length
+        const n = Math.max(1, Math.min(12, parseInt(stepsInput.value) || 9));
+        const seq = fibSeq(fibFn, n);
+        // rotate colors by slicing seq for some motion (not needed for bug demo)
+        drawSpiral(ctx, seq, { scale: parseInt(scaleInput.value,10) || 8 });
+      }
+
+      function loop() {
+        drawFrame();
+        raf = requestAnimationFrame(loop);
+      }
+
+      startBtn.addEventListener('click', () => {
+        if (!raf) loop();
+      });
+      stopBtn.addEventListener('click', () => {
+        if (raf) { cancelAnimationFrame(raf); raf = null; }
+      });
+      // redraw on controls change
+      stepsInput.addEventListener('change', drawFrame);
+      scaleInput.addEventListener('input', drawFrame);
+      // initial draw
+      drawFrame();
+    }
+
+    // connect buggy and fixed runners
+    makeRunner('canvas-bug', fibBug, 'start-'.replace('-', '') ); // dummy prefix fix below
+
+    // Because I used controls ids like start-bug and steps-bug, it's easier to wire explicitly:
+    (function wire() {
+      // Buggy
+      (function(){
+        const canvas = document.getElementById('canvas-bug');
+        const ctx = canvas.getContext('2d');
+        const scaleIn = document.getElementById('scale-bug');
+        const stepsIn = document.getElementById('steps-bug');
+        const start = document.getElementById('start-bug');
+        const stop = document.getElementById('stop-bug');
+        let raf = null;
+        function frame() {
+          const n = Math.max(1, Math.min(12, parseInt(stepsIn.value) || 9));
+          drawSpiral(ctx, fibSeq(fibBug, n), { scale: parseInt(scaleIn.value,10) || 8 });
+        }
+        function loop() { frame(); raf = requestAnimationFrame(loop); }
+        start.addEventListener('click', ()=>{ if (!raf) loop(); });
+        stop.addEventListener('click', ()=>{ if (raf) { cancelAnimationFrame(raf); raf = null; }});
+        scaleIn.addEventListener('input', frame);
+        stepsIn.addEventListener('change', frame);
+        frame();
+      })();
+
+      // Fixed
+      (function(){
+        const canvas = document.getElementById('canvas-fix');
+        const ctx = canvas.getContext('2d');
+        const scaleIn = document.getElementById('scale-fix');
+        const stepsIn = document.getElementById('steps-fix');
+        const start = document.getElementById('start-fix');
+        const stop = document.getElementById('stop-fix');
+        let raf = null;
+        function frame() {
+          const n = Math.max(1, Math.min(12, parseInt(stepsIn.value) || 9));
+          drawSpiral(ctx, fibSeq(fibFix, n), { scale: parseInt(scaleIn.value,10) || 8 });
+        }
+        function loop() { frame(); raf = requestAnimationFrame(loop); }
+        start.addEventListener('click', ()=>{ if (!raf) loop(); });
+        stop.addEventListener('click', ()=>{ if (raf) { cancelAnimationFrame(raf); raf = null; }});
+        scaleIn.addEventListener('input', frame);
+        stepsIn.addEventListener('change', frame);
+        frame();
+      })();
+    })();
+
+    // Short note in console for clarity
+    console.log("Buggy fib: fibBug(0) === 1 (incorrect). Fixed fib: fibFix(0) === 0 (correct).");
+  </script>
+</body>
+</html>

@@ -5,61 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REST Endpoint Documentation</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
         details {
             margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
         }
         summary {
-            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <h1>REST Endpoint Documentation</h1>
 
+    <h2>Original Endpoints</h2>
     <details>
+        <summary>GET /getUsers</summary>
+        <p>Retrieves a list of users</p>
+        <p><strong>Problem:</strong> Inconsistent naming convention</p>
+        <p><strong>Corrected:</strong> <a href="#get-users">GET /users</a></p>
+    </details>
+
+    <details>
+        <summary>POST /user/delete/5</summary>
+        <p>Deletes a user with ID 5</p>
+        <p><strong>Problem:</strong> Incorrect HTTP method, inconsistent naming convention, and action embedded in path</p>
+        <p><strong>Corrected:</strong> <a href="#delete-user">DELETE /users/5</a></p>
+    </details>
+
+    <details>
+        <summary>GET /createUser?name=Jo</summary>
+        <p>Creates a new user with name "Jo"</p>
+        <p><strong>Problem:</strong> Incorrect HTTP method, inconsistent naming convention, and query parameter for creation</p>
+        <p><strong>Corrected:</strong> <a href="#create-user">POST /users</a> with JSON payload</p>
+    </details>
+
+    <details>
+        <summary>PUT /updateAllUsers</summary>
+        <p>Updates all users</p>
+        <p><strong>Problem:</strong> Incorrect HTTP method, non-standard use case, and missing resource identification</p>
+        <p><strong>Corrected:</strong> <a href="#update-user">PUT /users/5</a> or <a href="#partially-update-users">PATCH /users</a></p>
+    </details>
+
+    <h2>Corrected Endpoints</h2>
+    <details id="get-users">
         <summary>GET /users</summary>
-        <p>Retrieve a list of all users.</p>
-        <p><strong>Request:</strong> <code>GET /users</code></p>
-        <p><strong>Response:</strong> <code>200 OK</code> with a JSON array of users.</p>
+        <p>Retrieves a list of users</p>
+        <p><strong>HTTP Method:</strong> GET</p>
+        <p><strong>Status Code:</strong> 200 OK</p>
     </details>
 
-    <details>
-        <summary>GET /users/{id}</summary>
-        <p>Retrieve a user by ID.</p>
-        <p><strong>Request:</strong> <code>GET /users/{id}</code></p>
-        <p><strong>Response:</strong> <code>200 OK</code> with a JSON object representing the user, or <code>404 Not Found</code> if the user does not exist.</p>
+    <details id="delete-user">
+        <summary>DELETE /users/5</summary>
+        <p>Deletes a user with ID 5</p>
+        <p><strong>HTTP Method:</strong> DELETE</p>
+        <p><strong>Status Code:</strong> 204 No Content</p>
     </details>
 
-    <details>
+    <details id="create-user">
         <summary>POST /users</summary>
-        <p>Create a new user.</p>
-        <p><strong>Request:</strong> <code>POST /users</code> with a JSON object representing the new user in the request body.</p>
-        <p><strong>Response:</strong> <code>201 Created</code> with a JSON object representing the created user, or <code>400 Bad Request</code> if the request is invalid.</p>
+        <p>Creates a new user</p>
+        <p><strong>HTTP Method:</strong> POST</p>
+        <p><strong>Request Body:</strong> JSON payload (e.g., { "name": "Jo" })</p>
+        <p><strong>Status Code:</strong> 201 Created</p>
     </details>
 
-    <details>
-        <summary>PUT /users/{id}</summary>
-        <p>Update a user by ID.</p>
-        <p><strong>Request:</strong> <code>PUT /users/{id}</code> with a JSON object representing the updated user in the request body.</p>
-        <p><strong>Response:</strong> <code>200 OK</code> with a JSON object representing the updated user, or <code>404 Not Found</code> if the user does not exist.</p>
+    <details id="update-user">
+        <summary>PUT /users/5</summary>
+        <p>Updates a user with ID 5</p>
+        <p><strong>HTTP Method:</strong> PUT</p>
+        <p><strong>Request Body:</strong> JSON payload (e.g., { "name": "Updated Name" })</p>
+        <p><strong>Status Code:</strong> 200 OK</p>
     </details>
 
-    <details>
+    <details id="partially-update-users">
         <summary>PATCH /users</summary>
-        <p>Partially update multiple users.</p>
-        <p><strong>Request:</strong> <code>PATCH /users</code> with a JSON object representing the updated fields in the request body.</p>
-        <p><strong>Response:</strong> <code>200 OK</code> with a JSON object representing the updated users, or <code>400 Bad Request</code> if the request is invalid.</p>
-    </details>
-
-    <details>
-        <summary>DELETE /users/{id}</summary>
-        <p>Delete a user by ID.</p>
-        <p><strong>Request:</strong> <code>DELETE /users/{id}</code></p>
-        <p><strong>Response:</strong> <code>204 No Content</code> if the user is deleted successfully, or <code>404 Not Found</code> if the user does not exist.</p>
+        <p>Partially updates all users</p>
+        <p><strong>HTTP Method:</strong> PATCH</p>
+        <p><strong>Request Body:</strong> JSON payload (e.g., { "name": "Updated Name" })</p>
+        <p><strong>Status Code:</strong> 200 OK</p>
     </details>
 </body>
 </html>

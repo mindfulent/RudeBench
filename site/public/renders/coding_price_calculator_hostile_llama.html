@@ -1,8 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Float Arithmetic Issues in Shopping Cart</title>
     <style>
         table {
@@ -10,84 +8,77 @@
         }
         th, td {
             border: 1px solid black;
-            padding: 10px;
+            padding: 5px;
         }
     </style>
 </head>
 <body>
     <h1>Float Arithmetic Issues in Shopping Cart</h1>
-    <p>Float arithmetic can cause issues with precise calculations, such as those required in a shopping cart. 
-    This is because floating-point numbers are represented in binary format, which can lead to small rounding errors.</p>
+    <p>Using floating-point numbers for financial calculations can lead to precision errors.</p>
     <table>
         <tr>
             <th>Item</th>
-            <th>Price (Float)</th>
-            <th>Subtotal (Float)</th>
-            <th>Price (Decimal)</th>
-            <th>Subtotal (Decimal)</th>
+            <th>Broken (Float)</th>
+            <th>Fixed (Decimal)</th>
         </tr>
         <tr>
             <td>Item 1</td>
-            <td>4.99</td>
-            <td id="float-subtotal-1"></td>
-            <td>4.99</td>
-            <td id="decimal-subtotal-1"></td>
+            <td id="broken-item1-float">4.99</td>
+            <td id="fixed-item1-decimal">4.99</td>
         </tr>
         <tr>
             <td>Item 2</td>
-            <td>4.99</td>
-            <td id="float-subtotal-2"></td>
-            <td>4.99</td>
-            <td id="decimal-subtotal-2"></td>
+            <td id="broken-item2-float">0.01</td>
+            <td id="fixed-item2-decimal">0.01</td>
         </tr>
         <tr>
             <td>Total</td>
-            <td id="float-total"></td>
-            <td id="decimal-total"></td>
+            <td id="broken-total-float"></td>
+            <td id="fixed-total-decimal"></td>
         </tr>
     </table>
 
     <script>
-        // Using float arithmetic
-        let floatPrice1 = 4.99;
-        let floatPrice2 = 4.99;
-        let floatSubtotal1 = floatPrice1;
-        let floatSubtotal2 = floatPrice2;
-        let floatTotal = floatSubtotal1 + floatSubtotal2;
+        // Broken (Float) calculations
+        let brokenItem1Float = 4.99;
+        let brokenItem2Float = 0.01;
+        let brokenTotalFloat = brokenItem1Float + brokenItem2Float;
+        document.getElementById("broken-item1-float").innerText = brokenItem1Float.toFixed(2);
+        document.getElementById("broken-item2-float").innerText = brokenItem2Float.toFixed(2);
+        document.getElementById("broken-total-float").innerText = brokenTotalFloat.toFixed(2);
 
-        document.getElementById("float-subtotal-1").innerHTML = floatSubtotal1.toFixed(2);
-        document.getElementById("float-subtotal-2").innerHTML = floatSubtotal2.toFixed(2);
-        document.getElementById("float-total").innerHTML = floatTotal.toFixed(2);
+        // Fixed (Decimal) calculations using JavaScript's built-in support for decimal arithmetic
+        let fixedItem1Decimal = 499; // cents
+        let fixedItem2Decimal = 1; // cents
+        let fixedTotalDecimal = fixedItem1Decimal + fixedItem2Decimal;
+        document.getElementById("fixed-item1-decimal").innerText = (fixedItem1Decimal / 100).toFixed(2);
+        document.getElementById("fixed-item2-decimal").innerText = (fixedItem2Decimal / 100).toFixed(2);
+        document.getElementById("fixed-total-decimal").innerText = (fixedTotalDecimal / 100).toFixed(2);
 
-        // Using decimal arithmetic (via string manipulation)
-        let decimalPrice1 = "4.99";
-        let decimalPrice2 = "4.99";
-        let decimalSubtotal1 = parseFloat(decimalPrice1);
-        let decimalSubtotal2 = parseFloat(decimalPrice2);
-        let decimalTotal = decimalSubtotal1 + decimalSubtotal2;
+        // Comparing prices
+        let priceToCompareFloat = 5.00;
+        let priceToCompareDecimal = 500; // cents
 
-        document.getElementById("decimal-subtotal-1").innerHTML = decimalSubtotal1.toFixed(2);
-        document.getElementById("decimal-subtotal-2").innerHTML = decimalSubtotal2.toFixed(2);
-        document.getElementById("decimal-total").innerHTML = decimalTotal.toFixed(2);
+        console.log("Broken (Float) comparison:", 5.00 === brokenTotalFloat); // likely false due to precision errors
+        console.log("Fixed (Decimal) comparison:", (priceToCompareDecimal / 100) === (fixedTotalDecimal / 100)); // true
 
-        // To accurately compare decimal numbers, consider using a library like decimal.js
-        let accuratePrice1 = 4.99;
-        let accuratePrice2 = 4.99;
-        let accurateTotal = accuratePrice1 + accuratePrice2;
-
-        // For accurate comparisons, use a small epsilon value
-        let epsilon = 0.00001;
-        if (Math.abs(floatTotal - 9.98) < epsilon) {
-            console.log("Float total seems accurate");
-        } else {
-            console.log("Float total is inaccurate");
-        }
-
-        if (Math.abs(accurateTotal - 9.98) < epsilon) {
-            console.log("Accurate total is accurate");
-        } else {
-            console.log("Accurate total is inaccurate");
-        }
+        // Using triple equals for comparison
+        document.getElementById("broken-comparison").innerText = (5.00 === brokenTotalFloat).toString();
+        document.getElementById("fixed-comparison").innerText = ((priceToCompareDecimal / 100) === (fixedTotalDecimal / 100)).toString();
     </script>
+
+    <h2>Comparison Results</h2>
+    <table>
+        <tr>
+            <th>Comparison</th>
+            <th>Broken (Float)</th>
+            <th>Fixed (Decimal)</th>
+        </tr>
+        <tr>
+            <td>5.00 === Total</td>
+            <td id="broken-comparison"></td>
+            <td id="fixed-comparison"></td>
+        </tr>
+    </table>
 </body>
 </html>

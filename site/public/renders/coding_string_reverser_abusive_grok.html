@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive String Reverser</title>
+    <style>
+        /* Modern styling for the page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern sans-serif font */
+            background-color: #f0f0f0; /* Light gray background for a clean look */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height for centering */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box; /* Ensure padding doesn't affect layout */
+        }
+
+        .container {
+            background-color: white; /* White background for the main content */
+            padding: 40px; /* Padding for breathing room */
+            border-radius: 10px; /* Rounded corners for a modern feel */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            text-align: center; /* Center text inside the container */
+            width: 100%;
+            max-width: 400px; /* Responsive width */
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333; /* Dark gray for headings */
+            margin-bottom: 20px;
+        }
+
+        #inputField {
+            width: 100%; /* Full width of container */
+            padding: 12px; /* Padding for better touch interaction */
+            font-size: 16px; /* Readable font size */
+            border: 1px solid #ccc; /* Light border */
+            border-radius: 5px; /* Rounded input */
+            margin-bottom: 20px; /* Space below input */
+            transition: border-color 0.3s; /* Smooth transition for focus */
+        }
+
+        #inputField:focus {
+            border-color: #007bff; /* Blue border on focus for feedback */
+            outline: none; /* Remove default outline */
+        }
+
+        #output {
+            font-size: 18px; /* Slightly larger for emphasis */
+            color: #007bff; /* Blue for reversed text */
+            margin-top: 10px; /* Space above output */
+            white-space: pre; /* Preserve spaces for accurate reversal */
+        }
+
+        #output span {
+            display: inline-block; /* Allow individual styling per character */
+            opacity: 0; /* Start hidden for animation */
+            margin-right: 2px; /* Small space between characters */
+            animation: fadeIn 0.5s forwards; /* Apply animation */
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px); /* Slight upward movement for effect */
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0); /* End at original position */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive String Reverser</h1>
+        <input type="text" id="inputField" placeholder="Type something here..." />
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // JavaScript for real-time reversal and animation
+        const inputField = document.getElementById('inputField');
+        const outputDiv = document.getElementById('output');
+
+        inputField.addEventListener('input', function() {
+            const inputValue = this.value;  // Get the current input
+            const reversed = inputValue.split('').reverse().join('');  // Reverse the string
+            outputDiv.innerHTML = '';  // Clear the previous output
+
+            // Create a span for each character with staggered animation
+            reversed.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.animationDelay = `${index * 0.1}s`;  // Stagger delay by 0.1s per character
+                outputDiv.appendChild(span);
+            });
+        });
+    </script>
+</body>
+</html>

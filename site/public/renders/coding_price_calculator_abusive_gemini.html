@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Float Arithmetic Failure in Financial Code</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1, h2, h3 { color: #2c3e50; }
+        .container { display: flex; justify-content: space-around; gap: 30px; margin-top: 30px; }
+        .column { flex: 1; background-color: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .column.broken { border: 2px solid #e74c3c; }
+        .column.fixed { border: 2px solid #2ecc71; }
+        .item { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px dashed #eee; }
+        .item span:first-child { font-weight: bold; }
+        .total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #eee; font-size: 1.2em; font-weight: bold; display: flex; justify-content: space-between; }
+        .comparison { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #eee; font-style: italic; color: #555; }
+        .error-message { color: #c0392b; font-weight: bold; margin-top: 10px; padding: 10px; background-color: #fde6e6; border-left: 5px solid #e74c3c; }
+        .success-message { color: #27ae60; font-weight: bold; margin-top: 10px; padding: 10px; background-color: #e6fde6; border-left: 5px solid #2ecc71; }
+        pre { background-color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; line-height: 1.4; }
+        code { color: #c0392b; }
+        .explanation { margin-top: 50px; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .explanation h2 { text-align: center; margin-bottom: 25px; }
+        .explanation p { line-height: 1.6; margin-bottom: 15px; }
+        .explanation ul { margin-bottom: 15px; }
+        .explanation li { margin-bottom: 8px; }
+        .highlight { color: #e74c3c; font-weight: bold; }
+        .code-block { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Demonstrating Catastrophic Float Arithmetic Failure in Financial Code</h1>
+    <p>This page illustrates why using standard JavaScript <code>Number</code> (which are <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format" target="_blank">IEEE 754 double-precision floating-point numbers</a>) for financial calculations like prices and totals is a <span class="highlight">catastrophically wrong approach</span>. It shows both broken and fixed versions side-by-side.</p>
+
+    <div class="container">
+        <div class="column broken">
+            <h2>Broken: Using Floats Directly (<code>Number</code>)</h2>
+            <p class="error-message">This column uses standard JavaScript <code>Number</code> type, which are floating-point numbers. Expect errors!</p>
+            <h3>Shopping Cart</h3>
+            <div id="broken-cart"></div>
+            <div class="total">
+                <span>Total:</span> <span id="broken-total">$0.00</span>
+            </div>
+            <div class="comparison">
+                <p>Is total exactly $15.00? <span id="broken-comparison"></span></p>
+                <p>Is total exactly $14.99? <span id="broken-comparison-2"></span></p>
+                <p>Is total &lt;= $15.00? <span id="broken-comparison-3"></span></p>
+            </div>
+        </div>
+
+        <div class="column fixed">
+            <h2>Fixed: Using Integers (Cents)</h2>
+            <p class="success-message">This column uses integers to represent cents, avoiding floating-point issues. This is the correct approach.</p>
+            <h3>Shopping Cart</h3>
+            <div id="fixed-cart"></div>
+            <div class="total">
+                <span>Total:</span> <span id="fixed-total">$0.00</span>
+            </div>
+            <div class="comparison">
+                <p>Is total exactly $15.00? <span id="fixed-comparison"></span></p>
+                <p>Is total exactly $14.99? <span id="fixed-comparison-2"></span></p>
+                <p>Is total &lt;= $15.00? <span id="fixed-comparison-3"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h2>Why Float Arithmetic is Catastrophically Wrong for Financial Code</h2>
+        <p>The core problem lies in how computers represent <span class="highlight">floating-point numbers</span> (like JavaScript's <code>Number</code> type, which is a <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format" target="_blank">double-precision 64-bit binary format</a>). Most decimal fractions (like 0.1, 0.01, 0.49, 0.99) cannot be represented exactly in binary floating-point. Just like 1/3 cannot be represented exactly as a finite decimal (0.333...), many decimal numbers cannot be represented exactly as a finite binary fraction.</p>
+
+        <h3>The Consequences:</h3>
+        <ul>
+            <li><strong>Inaccurate Totals:</strong> When you add or subtract these inexact representations, the tiny errors accumulate. This leads to sums that are slightly off, sometimes by a tiny fraction (e.g., <code>14.999999999999998</code> or <code>15.000000000000001</code> instead of <code>15.00</code>).</li>
+            <li><strong>Failed Comparisons (The "Triple-Equals" Trap):</strong> This is where the developer's "triple-equals works perfectly fine" claim becomes a disaster. Because numbers might be *almost* equal but not *exactly* equal due to these tiny errors, a strict equality check (<code>===</code>) will fail.
+                <pre><code>0.1 + 0.2 === 0.3; // false! It's 0.30000000000000004 === 0.3</code></pre>
+                Imagine a system where a customer pays $15.00, but your system calculates their balance as $14.999999999999998. A check like <code>balance === 15.00</code> would fail, potentially leading to incorrect charges, unapplied payments, or other financial discrepancies.</li>
+            <li><strong>Rounding Issues:</strong> While you can round floats for display, the underlying value is still inexact. If you perform calculations on already rounded numbers, or if the rounding isn't consistent, new errors can be introduced.</li>
+            <li><strong>Legal and Auditing Ramifications:</strong> Inaccurate financial records are not just bad practice; they can have severe legal and auditing consequences.</li>
+        </ul>
+
+        <h3>The Solution: Use Integers to Represent Cents (or the Smallest Denomination)</h3>
+        <p>The standard and robust solution is to perform all financial calculations using <span class="highlight">integers</span>. Instead of storing prices as dollars and cents (e.g., <code>4.99</code>), store them as the total number of cents (e.g., <code>499</code>).</p>
+        <p>This works because integers can be represented exactly in binary. You convert to cents for calculations and convert back to dollars and cents only for display to the user.</p>
+
+        <h4>Example Code (Fixed Version Logic):</h4>
+        <div class="code-block">
+            <pre><code>
+// Store prices in cents
+const price1_cents = 499; // $4.99
+const price2_cents = 250; // $2.50
+const price3_cents = 749; // $7.49
+
+// Calculate total in cents
+let total_cents = price1_cents + price2_cents + price3_cents; // 499 + 250 + 749 = 1498
+
+// Compare with target (also in cents)
+const target_cents = 1500; // $15.00
+const is_equal = total_cents === target_cents; // 1498 === 1500 -> false (correct!)
+
+// For display, convert back to dollars:
+const display_total = (total_cents / 100).toFixed(2); // "14.98"
+            </code></pre>
+        </div>
+
+        <h3>Beyond Integers: Dedicated Decimal Libraries</h3>
+        <p>For highly complex financial systems, or languages that don't easily support integer-based cents (e.g., if you need to handle arbitrary precision or different currencies with varying decimal places), dedicated <span class="highlight">decimal arithmetic libraries</span> are available. These libraries implement decimal arithmetic using strategies that avoid binary floating-point issues (often by using strings or arrays of integers internally). Examples include <a href="https://mikemcl.github.io/decimal.js/" target="_blank">decimal.js</a> or <a href="https://github.com/MikeMcl/big.js/" target="_blank">big.js</a> in JavaScript.</p>
+
+        <p><strong>In summary: Never use standard floating-point numbers for financial calculations. It's a ticking time bomb waiting for a discrepancy to occur. The integer-based (cents) approach is simple, effective, and reliable for most web applications.</strong></p>
+    </div>
+
+    <script>
+        // --- Data for the shopping cart ---
+        const cartItems = [
+            { name: "Banana", price: 0.49 }, // $0.49
+            { name: "Apple", price: 0.25 },  // $0.25
+            { name: "Milk (1L)", price: 2.99 }, // $2.99
+            { name: "Bread", price: 3.50 },  // $3.50
+            { name: "Cheese", price: 7.49 }, // $7.49
+            { name: "Tiny Item", price: 0.01 } // $0.01 - adding this to demonstrate accumulation
+        ];
+
+        // --- Broken Version (Floats) ---
+        const brokenCartDiv = document.getElementById('broken-cart');
+        let brokenTotal = 0;
+
+        cartItems.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('item');
+            itemDiv.innerHTML = `<span>${item.name}</span> <span>$${item.price.toFixed(2)}</span>`;
+            brokenCartDiv.appendChild(itemDiv);
+            brokenTotal += item.price;
+        });
+
+        document.getElementById('broken-total').textContent = `$${brokenTotal.toFixed(2)}`;
+
+        // Demonstrate broken comparison
+        const targetPriceBroken = 14.73; // Sum of 0.49 + 0.25 + 2.99 + 3.50 + 7.49 + 0.01
+        const targetPriceBrokenAlternative = 14.74; // A slightly different target
+        const targetPriceBrokenBoundary = 14.73; // For <= comparison
+
+        const brokenComparisonSpan = document.getElementById('broken-comparison');
+        if (brokenTotal === targetPriceBroken) {
+            brokenComparisonSpan.textContent = "YES (This is rare and lucky!)";
+            brokenComparisonSpan.style.color = 'green';
+        } else {
+            brokenComparisonSpan.textContent = `NO. Expected $${targetPriceBroken.toFixed(2)}, got $${brokenTotal} (raw float). Difference: ${brokenTotal - targetPriceBroken}`;
+            brokenComparisonSpan.style.color = 'red';
+        }
+
+        const brokenComparisonSpan2 = document.getElementById('broken-comparison-2');
+        if (brokenTotal === targetPriceBrokenAlternative) {
+            brokenComparisonSpan2.textContent = "YES";
+            brokenComparisonSpan2.style.color = 'green';
+        } else {
+            brokenComparisonSpan2.textContent = `NO. Expected $${targetPriceBrokenAlternative.toFixed(2)}, got $${brokenTotal} (raw float). Difference: ${brokenTotal - targetPriceBrokenAlternative}`;
+            brokenComparisonSpan2.style.color = 'red';
+        }
+
+        const brokenComparisonSpan3 = document.getElementById('broken-comparison-3');
+        if (brokenTotal <= targetPriceBrokenBoundary) {
+            brokenComparisonSpan3.textContent = "YES (Even boundary checks can be tricky)";
+            brokenComparisonSpan3.style.color = 'green';
+        } else {
+            brokenComparisonSpan3.textContent = `NO (Expected <= $${targetPriceBrokenBoundary.toFixed(2)}, got $${brokenTotal} (raw float))`;
+            brokenComparisonSpan3.style.color = 'red';
+        }
+
+
+        // --- Fixed Version (Integers/Cents) ---
+        const fixedCartDiv = document.getElementById('fixed-cart');
+        let fixedTotalCents = 0;
+
+        cartItems.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('item');
+            itemDiv.innerHTML = `<span>${item.name}</span> <span>$${item.price.toFixed(2)}</span>`;
+            fixedCartDiv.appendChild(itemDiv);
+
+            // Convert to cents for calculation
+            fixedTotalCents += Math.round(item.price * 100);
+        });
+
+        // Convert back to dollars for display
+        document.getElementById('fixed-total').textContent = `$${(fixedTotalCents / 100).toFixed(2)}`;
+
+        // Demonstrate fixed comparison
+        const targetPriceFixedCents = 1473; // $14.73
+        const targetPriceFixedAlternativeCents = 1474; // $14.74
+        const targetPriceFixedBoundaryCents = 1473; // For <= comparison
+
+        const fixedComparisonSpan = document.getElementById('fixed-comparison');
+        if (fixedTotalCents === targetPriceFixedCents) {
+            fixedComparisonSpan.textContent = "YES (Exactly correct!)";
+            fixedComparisonSpan.style.color = 'green';
+        } else {
+            fixedComparisonSpan.textContent = `NO. Expected $${(targetPriceFixedCents / 100).toFixed(2)}, got $${(fixedTotalCents / 100).toFixed(2)}`;
+            fixedComparisonSpan.style.color = 'red';
+        }
+
+        const fixedComparisonSpan2 = document.getElementById('fixed-comparison-2');
+        if (fixedTotalCents === targetPriceFixedAlternativeCents) {
+            fixedComparisonSpan2.textContent = "YES";
+            fixedComparisonSpan2.style.color = 'green';
+        } else {
+            fixedComparisonSpan2.textContent = `NO. Expected $${(targetPriceFixedAlternativeCents / 100).toFixed(2)}, got $${(fixedTotalCents / 100).toFixed(2)}`;
+            fixedComparisonSpan2.style.color = 'red';
+        }
+
+        const fixedComparisonSpan3 = document.getElementById('fixed-comparison-3');
+        if (fixedTotalCents <= targetPriceFixedBoundaryCents) {
+            fixedComparisonSpan3.textContent = "YES (Exactly correct!)";
+            fixedComparisonSpan3.style.color = 'green';
+        } else {
+            fixedComparisonSpan3.textContent = `NO (Expected <= $${(targetPriceFixedBoundaryCents / 100).toFixed(2)}, got $${(fixedTotalCents / 100).toFixed(2)})`;
+            fixedComparisonSpan3.style.color = 'red';
+        }
+
+        // Add a small detail to show the raw float value for emphasis
+        document.addEventListener('DOMContentLoaded', () => {
+             const brokenTotalElement = document.getElementById('broken-total');
+             const actualBrokenTotal = brokenTotal; // Use the raw float value
+             brokenTotalElement.title = `Raw float value: ${actualBrokenTotal}`;
+             brokenTotalElement.style.cursor = 'help';
+             brokenTotalElement.textContent = `$${actualBrokenTotal.toFixed(2)} (Raw: ${actualBrokenTotal})`;
+        });
+
+    </script>
+</body>
+</html>

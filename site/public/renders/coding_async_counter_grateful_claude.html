@@ -5,239 +5,829 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Race Condition Demo</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0f0f1a;
-      color: #e0e0f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
       min-height: 100vh;
-      padding: 24px 16px;
+      padding: 24px 16px 48px;
     }
 
     h1 {
       text-align: center;
-      font-size: 1.8rem;
-      margin-bottom: 8px;
-      color: #c9b8ff;
-      letter-spacing: 1px;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      margin-bottom: 6px;
+      background: linear-gradient(90deg, #f97316, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .subtitle {
       text-align: center;
-      color: #888aaa;
-      font-size: 0.95rem;
+      color: #94a3b8;
+      font-size: 0.92rem;
       margin-bottom: 32px;
     }
 
+    /* ── Layout ── */
     .panels {
       display: flex;
       gap: 24px;
-      justify-content: center;
+      max-width: 980px;
+      margin: 0 auto 36px;
       flex-wrap: wrap;
-      max-width: 1100px;
-      margin: 0 auto 40px auto;
     }
 
     .panel {
-      background: #1a1a2e;
+      flex: 1 1 320px;
       border-radius: 16px;
       padding: 28px 24px;
-      flex: 1 1 340px;
-      max-width: 480px;
-      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
       position: relative;
-      transition: border-color 0.3s;
+      overflow: hidden;
     }
 
-    .panel.buggy {
-      border-color: #ff4d6d44;
+    .panel-buggy {
+      background: #1e1218;
+      border: 1.5px solid #7f1d1d;
+      box-shadow: 0 0 32px #7f1d1d44;
     }
 
-    .panel.fixed {
-      border-color: #4dffb044;
+    .panel-fixed {
+      background: #111e18;
+      border: 1.5px solid #14532d;
+      box-shadow: 0 0 32px #14532d44;
     }
 
-    .panel-title {
-      font-size: 1.2rem;
+    .panel-label {
+      font-size: 0.72rem;
       font-weight: 700;
-      margin-bottom: 6px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .panel-buggy .panel-label {
+      background: #7f1d1d;
+      color: #fca5a5;
+    }
+
+    .panel-fixed .panel-label {
+      background: #14532d;
+      color: #86efac;
+    }
+
+    .panel h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* ── Counter Display ── */
+    .counter-wrap {
+      position: relative;
+      width: 140px;
+      height: 140px;
+    }
+
+    .counter-ring {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      font-size: 2.8rem;
+      font-weight: 800;
+      transition: transform 0.1s ease;
     }
 
-    .panel.buggy .panel-title { color: #ff4d6d; }
-    .panel.fixed  .panel-title { color: #4dffb0; }
-
-    .badge {
-      font-size: 0.7rem;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+    .panel-buggy .counter-ring {
+      background: radial-gradient(circle, #3b0a0a, #1e1218);
+      border: 3px solid #ef4444;
+      color: #fca5a5;
+      box-shadow: 0 0 20px #ef444466;
     }
 
-    .panel.buggy .badge { background: #ff4d6d33; color: #ff4d6d; }
-    .panel.fixed  .badge { background: #4dffb033; color: #4dffb0; }
+    .panel-fixed .counter-ring {
+      background: radial-gradient(circle, #052e16, #111e18);
+      border: 3px solid #22c55e;
+      color: #86efac;
+      box-shadow: 0 0 20px #22c55e66;
+    }
 
-    .counter-display {
-      background: #0f0f1a;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px 0;
+    .counter-ring.bump {
+      transform: scale(1.18);
+    }
+
+    /* ── Expected vs Actual ── */
+    .stats {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: #ffffff08;
+      border-radius: 10px;
+      padding: 10px 8px;
       text-align: center;
-      position: relative;
+      border: 1px solid #ffffff12;
     }
 
-    .count-label {
-      font-size: 0.75rem;
+    .stat-label {
+      font-size: 0.68rem;
+      color: #94a3b8;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #666888;
+      letter-spacing: 0.1em;
       margin-bottom: 4px;
     }
 
-    .count-value {
-      font-size: 3.5rem;
-      font-weight: 800;
-      line-height: 1;
-      transition: color 0.2s;
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
     }
 
-    .panel.buggy .count-value { color: #ff4d6d; }
-    .panel.fixed  .count-value { color: #4dffb0; }
+    .stat-expected { color: #93c5fd; }
+    .stat-actual-buggy { color: #fca5a5; }
+    .stat-actual-fixed { color: #86efac; }
 
-    .count-expected {
-      font-size: 0.8rem;
-      color: #666888;
-      margin-top: 8px;
-    }
-
-    .count-expected span {
-      color: #aaa;
+    .lost-label {
+      font-size: 0.78rem;
+      color: #f87171;
       font-weight: 600;
+      min-height: 20px;
+      text-align: center;
     }
 
-    .discrepancy {
-      font-size: 0.8rem;
-      margin-top: 6px;
-      font-weight: 600;
-      min-height: 18px;
+    .panel-fixed .lost-label {
+      color: #4ade80;
     }
 
-    .panel.buggy .discrepancy { color: #ffaa00; }
-    .panel.fixed  .discrepancy { color: #4dffb0; }
-
+    /* ── Buttons ── */
     .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
+      padding: 12px 28px;
       font-size: 1rem;
       font-weight: 700;
+      border: none;
+      border-radius: 10px;
       cursor: pointer;
-      letter-spacing: 0.5px;
-      transition: transform 0.1s, opacity 0.2s;
-      margin-bottom: 10px;
+      transition: transform 0.08s, box-shadow 0.08s;
+      letter-spacing: 0.04em;
+      width: 100%;
+      max-width: 220px;
     }
 
-    .btn:active { transform: scale(0.97); }
+    .btn:active { transform: scale(0.95); }
 
-    .panel.buggy .btn-increment { background: #ff4d6d; color: #fff; }
-    .panel.fixed  .btn-increment { background: #4dffb0; color: #0f1a14; }
+    .btn-buggy {
+      background: linear-gradient(135deg, #dc2626, #7f1d1d);
+      color: #fff;
+      box-shadow: 0 4px 18px #dc262666;
+    }
+
+    .btn-buggy:hover { box-shadow: 0 4px 28px #dc262699; }
+
+    .btn-fixed {
+      background: linear-gradient(135deg, #16a34a, #14532d);
+      color: #fff;
+      box-shadow: 0 4px 18px #16a34a66;
+    }
+
+    .btn-fixed:hover { box-shadow: 0 4px 28px #16a34a99; }
 
     .btn-reset {
-      background: #2a2a3e;
-      color: #888aaa;
-      font-size: 0.85rem;
-      padding: 10px;
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 8px 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      width: 100%;
+      max-width: 220px;
     }
 
-    .btn-reset:hover { background: #33334a; color: #bbb; }
+    .btn-reset:hover { background: #334155; color: #e2e8f0; }
 
-    .pending-indicator {
-      font-size: 0.78rem;
-      color: #666888;
-      text-align: center;
-      min-height: 18px;
-      margin-bottom: 8px;
+    /* ── Log ── */
+    .log-wrap {
+      width: 100%;
     }
 
-    .pending-indicator.active { color: #ffaa00; }
-
-    /* Timeline / log */
     .log-title {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
+      color: #64748b;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #555770;
+      letter-spacing: 0.1em;
       margin-bottom: 6px;
     }
 
     .log {
-      background: #0f0f1a;
+      background: #0a0c10;
+      border: 1px solid #1e293b;
       border-radius: 8px;
-      padding: 10px 12px;
-      height: 110px;
+      height: 90px;
       overflow-y: auto;
+      padding: 8px 10px;
       font-size: 0.72rem;
       font-family: 'Courier New', monospace;
-      color: #666888;
-      scrollbar-width: thin;
-      scrollbar-color: #333 transparent;
+      color: #64748b;
+      line-height: 1.6;
     }
 
-    .log-entry { margin-bottom: 3px; line-height: 1.4; }
-    .log-entry.warn  { color: #ffaa00; }
-    .log-entry.ok    { color: #4dffb0; }
-    .log-entry.info  { color: #7788ff; }
+    .log-entry-bug  { color: #f87171; }
+    .log-entry-ok   { color: #4ade80; }
+    .log-entry-info { color: #94a3b8; }
 
-    /* Explanation section */
+    /* ── Explanation ── */
     .explanation {
-      max-width: 1100px;
-      margin: 0 auto 40px auto;
+      max-width: 980px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
-    .explain-card {
-      background: #1a1a2e;
-      border-radius: 16px;
+    .exp-card {
+      background: #13161f;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
       padding: 24px 28px;
     }
 
-    .explain-card h2 {
-      font-size: 1.1rem;
+    .exp-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
       margin-bottom: 14px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .explain-card.how h2  { color: #ff4d6d; }
-    .explain-card.fix h2  { color: #4dffb0; }
-    .explain-card.tip h2  { color: #c9b8ff; }
-
-    .explain-card p, .explain-card li {
-      color: #9999bb;
-      line-height: 1.7;
-      font-size: 0.92rem;
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
     }
 
-    .explain-card ul {
-      padding-left: 20px;
-      margin-top: 8px;
+    .badge-bug   { background: #7f1d1d; color: #fca5a5; }
+    .badge-fix   { background: #14532d; color: #86efac; }
+    .badge-info  { background: #1e3a5f; color: #93c5fd; }
+
+    .exp-card p {
+      color: #94a3b8;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      margin-bottom: 12px;
     }
 
-    .explain-card li { margin-bottom: 6px; }
+    .exp-card p:last-child { margin-bottom: 0; }
+
+    /* ── Code Blocks ── */
+    .code-compare {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
 
     .code-block {
-      background: #0f0f1a;
+      flex: 1 1 280px;
+      background: #090b0f;
       border-radius: 10px;
-      padding: 16px 18px
+      overflow: hidden;
+      border: 1px solid #1e293b;
+    }
+
+    .code-header {
+      padding: 8px 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .code-header-bug  { background: #7f1d1d44; color: #fca5a5; border-bottom: 1px solid #7f1d1d; }
+    .code-header-fix  { background: #14532d44; color: #86efac; border-bottom: 1px solid #14532d; }
+
+    pre {
+      padding: 14px 16px;
+      font-size: 0.78rem;
+      font-family: 'Courier New', monospace;
+      color: #cbd5e1;
+      line-height: 1.7;
+      overflow-x: auto;
+      margin: 0;
+    }
+
+    .hl-keyword  { color: #c084fc; }
+    .hl-fn       { color: #60a5fa; }
+    .hl-string   { color: #86efac; }
+    .hl-comment  { color: #4b5563; font-style: italic; }
+    .hl-number   { color: #fb923c; }
+    .hl-var      { color: #fde68a; }
+    .hl-bad      { color: #f87171; background: #7f1d1d33; border-radius: 3px; padding: 0 2px; }
+    .hl-good     { color: #4ade80; background: #14532d33; border-radius: 3px; padding: 0 2px; }
+
+    /* ── Timeline ── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 4px;
+    }
+
+    .tl-row {
+      display: flex;
+      align-items: stretch;
+      font-size: 0.78rem;
+      min-height: 36px;
+    }
+
+    .tl-time {
+      width: 56px;
+      flex-shrink: 0;
+      color: #475569;
+      font-family: monospace;
+      padding-top: 10px;
+      text-align: right;
+      padding-right: 12px;
+    }
+
+    .tl-line-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 20px;
+      flex-shrink: 0;
+    }
+
+    .tl-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 13px;
+      flex-shrink: 0;
+    }
+
+    .tl-vert {
+      width: 2px;
+      flex: 1;
+      margin-top: 2px;
+    }
+
+    .tl-content {
+      flex: 1;
+      padding: 8px 0 8px 12px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .tl-content strong { color: #e2e8f0; }
+    .tl-content .bad   { color: #f87171; }
+    .tl-content .good  { color: #4ade80; }
+
+    .dot-red    { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+    .dot-orange { background: #f97316; box-shadow: 0 0 6px #f97316; }
+    .dot-green  { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .dot-blue   { background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+    .line-red    { background: #ef444433; }
+    .line-orange { background: #f9731633; }
+    .line-green  { background: #22c55e33; }
+    .line-blue   { background: #3b82f633; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .panels { flex-direction: column; }
+      .code-compare { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>⚡ Race Condition Demo</h1>
+  <p class="subtitle">Rapidly click the buttons to trigger the race condition &mdash; watch the counts diverge!</p>
+
+  <!-- ══════════════════════════════════════════
+       INTERACTIVE PANELS
+  ═══════════════════════════════════════════ -->
+  <div class="panels">
+
+    <!-- BUGGY PANEL -->
+    <div class="panel panel-buggy">
+      <span class="panel-label">🐛 Buggy Version</span>
+      <h2>Async Counter (Race Bug)</h2>
+
+      <div class="counter-wrap">
+        <div class="counter-ring" id="buggy-display">0</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-label">Clicks</div>
+          <div class="stat-value stat-expected" id="buggy-clicks">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Displayed</div>
+          <div class="stat-value stat-actual-buggy" id="buggy-shown">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Lost</div>
+          <div class="stat-value stat-actual-buggy" id="buggy-lost">0</div>
+        </div>
+      </div>
+
+      <div class="lost-label" id="buggy-msg">&nbsp;</div>
+
+      <button class="btn btn-buggy" id="btn-buggy">+1 (Async, Buggy)</button>
+      <button class="btn btn-reset" onclick="resetBuggy()">↺ Reset</button>
+
+      <div class="log-wrap">
+        <div class="log-title">Event Log</div>
+        <div class="log" id="buggy-log"></div>
+      </div>
+    </div>
+
+    <!-- FIXED PANEL -->
+    <div class="panel panel-fixed">
+      <span class="panel-label">✅ Fixed Version</span>
+      <h2>Async Counter (Fixed)</h2>
+
+      <div class="counter-wrap">
+        <div class="counter-ring" id="fixed-display">0</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-label">Clicks</div>
+          <div class="stat-value stat-expected" id="fixed-clicks">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Displayed</div>
+          <div class="stat-value stat-actual-fixed" id="fixed-shown">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Lost</div>
+          <div class="stat-value stat-actual-fixed" id="fixed-lost">0</div>
+        </div>
+      </div>
+
+      <div class="lost-label" id="fixed-msg">&nbsp;</div>
+
+      <button class="btn btn-fixed" id="btn-fixed">+1 (Async, Fixed)</button>
+      <button class="btn btn-reset" onclick="resetFixed()">↺ Reset</button>
+
+      <div class="log-wrap">
+        <div class="log-title">Event Log</div>
+        <div class="log" id="fixed-log"></div>
+      </div>
+    </div>
+
+  </div><!-- /panels -->
+
+
+  <!-- ══════════════════════════════════════════
+       EXPLANATION CARDS
+  ═══════════════════════════════════════════ -->
+  <div class="explanation">
+
+    <!-- What is a race condition -->
+    <div class="exp-card">
+      <h3><span class="badge badge-info">📖 Concept</span> What Is a Race Condition?</h3>
+      <p>
+        A <strong>race condition</strong> occurs when two or more operations read and write
+        a shared resource concurrently, and the final result depends on the unpredictable
+        <em>timing</em> of those operations — not on your intended logic.
+      </p>
+      <p>
+        Even though JavaScript is single-threaded, <strong>asynchronous callbacks</strong>
+        (setTimeout, fetch, Promises) can all <em>capture</em> the same variable value
+        at the same moment, then each write back their own stale copy, silently
+        discarding every other update.
+      </p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="exp-card">
+      <h3><span class="badge badge-bug">🐛 Bug</span> Step-by-Step Race Condition Timeline</h3>
+      <p>
+        Imagine you click the button <strong>three times very quickly</strong> before any
+        setTimeout fires. Here is exactly what happens:
+      </p>
+
+      <div class="timeline">
+
+        <div class="tl-row">
+          <div class="tl-time">t=0ms</div>
+          <div class="tl-line-wrap">
+            <div class="tl-dot dot-blue"></div>
+            <div class="tl-vert line-blue"></div>
+          </div>
+          <div class="tl-content">
+            <strong>Click #1</strong> — reads <code>count = 0</code>, schedules
+            <code>setTimeout(fn, 50)</code>. The callback has captured
+            <span class="bad">count = 0</span>.
+          </div>
+        </div>
+
+        <div class="tl-row">
+          <div class="tl-time">t=10ms</div>
+          <div class="tl-line-wrap">
+            <div class="tl-dot dot-blue"></div>
+            <div class="tl-vert line-blue"></div>
+          </div>
+          <div class="tl-content">
+            <strong>Click #2</strong> — reads <code>count = 0</code> (still 0!),
+            schedules another callback. It also captured <span class="bad">count = 0</span>.
+          </div>
+        </div>
+
+        <div class="tl-row">
+          <div class="tl-time">t=20ms</div>
+          <div class="tl-line-wrap">
+            <div class="tl-dot dot-blue"></div>
+            <div class="tl-vert line-blue"></div>
+          </div>
+          <div class="tl-content">
+            <strong>Click #3</strong> — reads <code>count = 0</code> again.
+            Third callback captures <span class="bad">count = 0</span>.
+          </div>
+        </div>
+
+        <div class="tl-row">
+          <div class="tl-time">t=50ms</div>
+          <div class="tl-line-wrap">
+            <div class="tl-dot dot-orange"></div>
+            <div class="tl-vert line-orange"></div>
+          </div>
+          <div class="tl-content">
+            <strong>Callback #1 fires</strong> — computes <code>0 + 1 = 1</code>,
+            writes <code>count = 1</code>. ✓ Correct so far.
+          </div>
+        </div>
+
+        <div class="tl-row">
+          <div class="tl-time">t=60ms</div>
+          <div class="tl-line-wrap">
+            <div class="tl-dot dot-orange"></div>
+            <div class="tl-vert line-orange"></div>
+          </div>
+          <div class="tl-content">
+            <strong>Callback #2 fires</strong> — computes <span class="bad">0 + 1 = 1</span>,
+            writes <code>count = 1</code>. ✗ Overwrites the correct value!
+          </div>
+        </div>
+
+        <div class="tl-row">
+          <div class="tl-time">t=70ms</div>
+          <div class="tl-line-wrap">
+            <div class="tl-dot dot-red"></div>
+            <div class="tl-vert" style="background:transparent"></div>
+          </div>
+          <div class="tl-content">
+            <strong>Callback #3 fires</strong> — computes <span class="bad">0 + 1 = 1</span>,
+            writes <code>count = 1</code>. ✗ Three clicks, but count shows
+            <span class="bad">1</span> instead of <span class="good">3</span>.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Code Comparison -->
+    <div class="exp-card">
+      <h3><span class="badge badge-info">💻 Code</span> Buggy vs Fixed — Side by Side</h3>
+
+      <div class="code-compare">
+
+        <div class="code-block">
+          <div class="code-header code-header-bug">🐛 Buggy — stale closure capture</div>
+          <pre><span class="hl-comment">// Shared mutable state</span>
+<span class="hl-keyword">let</span> <span class="hl-var">count</span> = <span class="hl-number">0</span>;
+
+button.<span class="hl-fn">addEventListener</span>(<span class="hl-string">'click'</span>, () => {
+  <span class="hl-comment">// ❌ Read happens NOW (sync)</span>
+  <span class="hl-keyword">const</span> <span class="hl-bad">snapshot</span> = <span class="hl-var">count</span>;
+
+  <span class="hl-fn">setTimeout</span>(() => {
+    <span class="hl-comment">// ❌ Write uses stale snapshot</span>
+    <span class="hl-var">count</span> = <span class="hl-bad">snapshot</span> + <span class="hl-number">1</span>;
+    display.<span class="hl-var">textContent</span> = <span class="hl-var">count</span>;
+  }, <span class="hl-number">50</span>);
+});</pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header code-header-fix">✅ Fixed — read inside the callback</div>
+          <pre><span class="hl-comment">// Shared mutable state</span>
+<span class="hl-keyword">let</span> <span class="hl-var">count</span> = <span class="hl-number">0</span>;
+
+button.<span class="hl-fn">addEventListener</span>(<span class="hl-string">'click'</span>, () => {
+  <span class="hl-comment">// ✅ No read yet — just queue</span>
+  <span class="hl-fn">setTimeout</span>(() => {
+    <span class="hl-comment">// ✅ Read + write both happen
+    //    atomically inside callback</span>
+    <span class="hl-var">count</span> = <span class="hl-good">count</span> + <span class="hl-number">1</span>;
+    display.<span class="hl-var">textContent</span> = <span class="hl-var">count</span>;
+  }, <span class="hl-number">50</span>);
+});</pre>
+        </div>
+
+      </div>
+
+      <p style="margin-top:16px">
+        The key insight: in the buggy version the <strong>read</strong> of
+        <code>count</code> happens <em>synchronously</em> at click time, so every
+        rapid click captures the <em>same</em> stale value. In the fixed version the
+        read is deferred <em>into</em> the callback, so by the time it executes,
+        it sees the value that the previous callback already wrote.
+      </p>
+    </div>
+
+    <!-- Real-world patterns -->
+    <div class="exp-card">
+      <h3><span class="badge badge-fix">✅ Patterns</span> Real-World Solutions</h3>
+      <p>
+        <strong>1. Functional updater (React setState):</strong>
+        <code>setCount(prev => prev + 1)</code> — React guarantees the callback
+        receives the latest state, not a closure-captured snapshot.
+      </p>
+      <p>
+        <strong>2. Queue / serialise:</strong> Use a Promise chain or an
+        async queue so only one update runs at a time.
+      </p>
+      <p>
+        <strong>3. Debounce / throttle:</strong> Collapse many rapid events
+        into one, eliminating the race entirely.
+      </p>
+      <p>
+        <strong>4. Immutable event sourcing:</strong> Never mutate shared state —
+        append events to a log and derive current state by replaying them.
+      </p>
+      <p>
+        <strong>5. Atomic operations:</strong> In environments with shared memory
+        (SharedArrayBuffer + Web Workers), use <code>Atomics.add()</code> for
+        true atomic read-modify-write.
+      </p>
+    </div>
+
+  </div><!-- /explanation -->
+
+
+  <!-- ══════════════════════════════════════════
+       JAVASCRIPT
+  ═══════════════════════════════════════════ -->
+  <script>
+    /* ─────────────────────────────────────────
+       BUGGY COUNTER
+       The read of `buggyCount` happens OUTSIDE
+       the setTimeout callback (stale capture).
+    ───────────────────────────────────────── */
+    let buggyCount  = 0;
+    let buggyClicks = 0;
+
+    const buggyDisplay = document.getElementById('buggy-display');
+    const buggyShown   = document.getElementById('buggy-shown');
+    const buggyClicksEl= document.getElementById('buggy-clicks');
+    const buggyLostEl  = document.getElementById('buggy-lost');
+    const buggyMsg     = document.getElementById('buggy-msg');
+    const buggyLog     = document.getElementById('buggy-log');
+
+    function logBuggy(msg, cls = 'log-entry-info') {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = `[${new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${msg}`;
+      buggyLog.prepend(el);
+      // keep log tidy
+      while (buggyLog.children.length > 40) buggyLog.removeChild(buggyLog.lastChild);
+    }
+
+    function bump(el) {
+      el.classList.remove('bump');
+      void el.offsetWidth; // reflow
+      el.classList.add('bump');
+      setTimeout(() => el.classList.remove('bump'), 150);
+    }
+
+    document.getElementById('btn-buggy').addEventListener('click', () => {
+      buggyClicks++;
+      buggyClicksEl.textContent = buggyClicks;
+
+      // ❌ THE BUG: snapshot is captured synchronously right now.
+      //    If you click 5 times before any timeout fires, all 5
+      //    callbacks will have snapshot = same old value.
+      const snapshot = buggyCount;
+
+      logBuggy(`Click #${buggyClicks} — read count=${snapshot} (stale snapshot)`, 'log-entry-info');
+
+      setTimeout(() => {
+        buggyCount = snapshot + 1;          // ❌ stale write
+        bump(buggyDisplay);
+        buggyDisplay.textContent = buggyCount;
+        buggyShown.textContent   = buggyCount;
+
+        const lost = buggyClicks - buggyCount;
+        buggyLostEl.textContent = lost;
+        buggyMsg.textContent = lost > 0
+          ? `⚠️ ${lost} update${lost===1?'':'s'} lost!`
+          : '✓ No lost updates yet';
+
+        logBuggy(
+          `Callback fired → wrote ${snapshot}+1=${buggyCount} | expected=${buggyClicks} | lost=${lost}`,
+          lost > 0 ? 'log-entry-bug' : 'log-entry-ok'
+        );
+      }, 50);
+    });
+
+    function resetBuggy() {
+      buggyCount = buggyClicks = 0;
+      buggyDisplay.textContent = buggyShown.textContent =
+        buggyClicksEl.textContent = buggyLostEl.textContent = '0';
+      buggyMsg.textContent = '\u00a0';
+      buggyLog.innerHTML = '';
+      logBuggy('Reset', 'log-entry-info');
+    }
+
+
+    /* ─────────────────────────────────────────
+       FIXED COUNTER
+       The read of `fixedCount` happens INSIDE
+       the setTimeout callback — always fresh.
+    ───────────────────────────────────────── */
+    let fixedCount  = 0;
+    let fixedClicks = 0;
+
+    const fixedDisplay  = document.getElementById('fixed-display');
+    const fixedShown    = document.getElementById('fixed-shown');
+    const fixedClicksEl = document.getElementById('fixed-clicks');
+    const fixedLostEl   = document.getElementById('fixed-lost');
+    const fixedMsg      = document.getElementById('fixed-msg');
+    const fixedLog      = document.getElementById('fixed-log');
+
+    function logFixed(msg, cls = 'log-entry-info') {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = `[${new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${msg}`;
+      fixedLog.prepend(el);
+      while (fixedLog.children.length > 40) fixedLog.removeChild(fixedLog.lastChild);
+    }
+
+    document.getElementById('btn-fixed').addEventListener('click', () => {
+      fixedClicks++;
+      fixedClicksEl.textContent = fixedClicks;
+
+      logFixed(`Click #${fixedClicks} — queued (no read yet)`, 'log-entry-info');
+
+      setTimeout(() => {
+        // ✅ THE FIX: read + write both happen here, sequentially.
+        //    JS event loop ensures callbacks run one at a time,
+        //    so each one sees the result of the previous write.
+        fixedCount = fixedCount + 1;       // ✅ fresh read inside callback
+        bump(fixedDisplay);
+        fixedDisplay.textContent = fixedCount;
+        fixedShown.textContent   = fixedCount;
+
+        const lost = fixedClicks - fixedCount;
+        fixedLostEl.textContent = lost;
+        fixedMsg.textContent = lost === 0
+          ? '✓ All updates preserved!'
+          : `⚠️ ${lost} lost`;
+
+        logFixed(
+          `Callback fired → read+wrote ${fixedCount} | expected=${fixedClicks} | lost=${lost}`,
+          lost === 0 ? 'log-entry-ok' : 'log-entry-bug'
+        );
+      }, 50);
+    });
+
+    function resetFixed() {
+      fixedCount = fixedClicks = 0;
+      fixedDisplay.textContent = fixedShown.textContent =
+        fixedClicksEl.textContent = fixedLostEl.textContent = '0';
+      fixedMsg.textContent = '\u00a0';
+      fixedLog.innerHTML = '';
+      logFixed('Reset', 'log-entry-info');
+    }
+  </script>
+
+</body>
+</html>

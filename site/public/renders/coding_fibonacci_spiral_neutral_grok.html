@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { border: 1px solid black; margin: 10px; display: block; }
+        #explanation { margin-top: 20px; padding: 10px; border: 1px solid #ddd; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>Debugging Fibonacci Spiral on Canvas</h1>
+    
+    <h2>Buggy Fibonacci Spiral (Incorrect Base Cases)</h2>
+    <canvas id="buggyCanvas" width="400" height="400"></canvas>
+    
+    <h2>Correct Fibonacci Spiral (Proper Base Cases)</h2>
+    <canvas id="correctCanvas" width="400" height="400"></canvas>
+    
+    <div id="explanation">
+        <h3>Explanation of the Bug</h3>
+        <p>
+            The bug occurs in the Fibonacci function due to incorrect base cases. In the buggy version, the function is defined as:<br>
+            <code>buggyFib(0) = 1</code> (should be 0) and <code>buggyFib(1) = 2</code> (should be 1). This leads to an incorrect sequence for the spiral's arc sizes: [2, 3, 5, 8, 13, 21, 34, 55] instead of the correct [1, 1, 2, 3, 5, 8, 13, 21].<br><br>
+            
+            As a result, the arcs in the buggy spiral are larger and more spaced out, causing the overall shape to appear distorted and not proportional. In contrast, the correct version uses the proper Fibonacci sequence, ensuring the arcs are sized accurately for a balanced spiral.<br><br>
+            
+            This issue highlights the importance of correct base cases in recursive functions like Fibonacci, as even a small error at the start propagates through the entire sequence and affects the rendering.
+        </p>
+    </div>
+
+    <script>
+        // Standard Fibonacci function with correct base cases
+        function fib(n) {
+            if (n === 0) return 0;  // Correct base case
+            if (n === 1) return 1;  // Correct base case
+            return fib(n - 1) + fib(n - 2);
+        }
+
+        // Buggy Fibonacci function with incorrect base cases
+        function buggyFib(n) {
+            if (n === 0) return 1;  // Incorrect: Should be 0
+            if (n === 1) return 2;  // Incorrect: Should be 1
+            return buggyFib(n - 1) + buggyFib(n - 2);
+        }
+
+        // Function to generate a sequence of Fibonacci numbers (starting from n=1)
+        function getFibonacciSequence(fn, length) {
+            let sequence = [];
+            for (let i = 1; i <= length; i++) {
+                sequence.push(fn(i));  // Use the provided Fibonacci function
+            }
+            return sequence;
+        }
+
+        // Function to draw the spiral on a canvas
+        function drawSpiral(canvasId, sequence) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            let angle = 0;  // Start angle for the arcs
+            ctx.strokeStyle = 'blue';  // Color for the spiral
+            ctx.lineWidth = 2;  // Line thickness
+            
+            for (let radius of sequence) {
+                const scaledRadius = radius * 10;  // Scale up for visibility (e.g., multiply by 10)
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, scaledRadius, angle, angle + Math.PI / 2);  // Draw a quarter-circle
+                ctx.stroke();  // Render the arc
+                angle += Math.PI / 2;  // Move to the next quadrant
+            }
+        }
+
+        // Generate sequences and draw spirals
+        const correctSequence = getFibonacciSequence(fib, 8);  // Correct: [1, 1, 2, 3, 5, 8, 13, 21]
+        const buggySequence = getFibonacciSequence(buggyFib, 8);  // Buggy: [2, 3, 5, 8, 13, 21, 34, 55]
+        
+        drawSpiral('correctCanvas', correctSequence);  // Draw the correct spiral
+        drawSpiral('buggyCanvas', buggySequence);     // Draw the buggy spiral
+    </script>
+</body>
+</html>

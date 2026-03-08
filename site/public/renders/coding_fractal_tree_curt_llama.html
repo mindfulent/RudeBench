@@ -1,68 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fractal Tree with Recursion</title>
-<style>
-  body { font-family: Arial, sans-serif; }
-  #canvas { border: 1px solid black; }
-  #slider { margin-top: 10px; }
-  #explanation { margin-top: 20px; }
-</style>
+    <meta charset="UTF-8">
+    <title>Fractal Tree with Recursion</title>
+    <style>
+        /* Simple styling for explanation section */
+        #explanation {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
 <canvas id="canvas" width="600" height="600"></canvas>
-<input type="range" id="slider" min="1" max="12" value="6">
-<label for="slider">Recursion Depth: <span id="depth">6</span></label>
+<input type="range" id="depthSlider" min="1" max="12" value="6">
+<label for="depthSlider">Recursion Depth: <span id="depthValue">6</span></label>
 
 <div id="explanation">
-  <h2>Explanation</h2>
-  <p>The recursion depth of a function refers to how many times the function calls itself. In the case of the fractal tree, the recursion depth determines how many levels of branches are drawn.</p>
-  <p>Most programming languages have a limit on how deep recursion can go. This is because each recursive call adds a layer to the system's call stack, and if the recursion is too deep, the stack can overflow, causing a program to crash.</p>
-  <p>Deep recursion, like that used in this fractal tree example, can cause stack overflow errors because each recursive call consumes stack space. For example, a recursion depth of 1000 might work on one system but cause an error on another.</p>
-  <p>Practical solutions to avoid stack overflow errors include:</p>
-  <ul>
-    <li><strong>Iterative approaches:</strong> Convert recursive algorithms into iterative ones, which use loops instead of function calls. This method does not consume stack space.</li>
-    <li><strong>Tail call optimization:</strong> Some languages optimize for tail calls, where the last operation of a function is the recursive call. This allows deep recursion without stack overflow.</li>
-    <li><strong>Increase stack size:</strong> Some environments allow increasing the stack size, but this is not a reliable or scalable solution.</li>
-  </ul>
+    <h2>Recursion Depth Limits and Stack Overflow Errors</h2>
+    <p>Recursion is a powerful technique in programming where a function calls itself as a subroutine. However, each recursive call adds a layer to the system's call stack. When the recursion is too deep, it can exceed the maximum size of the call stack, leading to a stack overflow error.</p>
+    <p>Stack overflow errors occur because the call stack has a limited size. Every time a function is called, a block of memory is allocated on the stack to store the function's local variables, parameters, and return address. If a function calls itself too many times without returning, these blocks of memory can quickly fill up the stack, causing an overflow.</p>
+    <p>Practical solutions to avoid stack overflow errors due to deep recursion include:</p>
+    <ul>
+        <li><strong>Iterative Approaches:</strong> Converting recursive algorithms into iterative ones can eliminate the risk of stack overflow errors. Iterative solutions typically use loops instead of recursive calls.</li>
+        <li><strong>Tail Call Optimization:</strong> Some programming languages optimize tail calls, which are calls where the recursive call is the last statement in the function. This allows the function call to reuse the current stack frame for the recursive call, effectively reducing the stack usage.</li>
+    </ul>
 </div>
 
 <script>
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  const slider = document.getElementById('slider');
-  const depthSpan = document.getElementById('depth');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const depthSlider = document.getElementById('depthSlider');
+    const depthValue = document.getElementById('depthValue');
 
-  slider.addEventListener('input', () => {
-    depthSpan.textContent = slider.value;
-    drawTree(parseInt(slider.value));
-  });
+    // Update depth value display
+    depthSlider.addEventListener('input', () => {
+        depthValue.textContent = depthSlider.value;
+        drawTree(parseInt(depthSlider.value));
+    });
 
-  function drawTree(depth) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.translate(canvas.width / 2, canvas.height);
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 2;
-    drawBranch(100, -Math.PI / 2, depth);
-  }
+    function drawTree(depth) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(canvas.width / 2, canvas.height);
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        drawBranch(100, -Math.PI / 2, depth);
+    }
 
-  function drawBranch(length, angle, depth) {
-    if (depth === 0) return;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(length * Math.cos(angle), length * Math.sin(angle));
-    ctx.stroke();
-    ctx.save();
-    ctx.translate(length * Math.cos(angle), length * Math.sin(angle));
-    drawBranch(length * 0.67, angle - Math.PI / 6, depth - 1);
-    drawBranch(length * 0.67, angle + Math.PI / 6, depth - 1);
-    ctx.restore();
-  }
+    function drawBranch(length, angle, depth) {
+        if (depth === 0) return;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(length * Math.cos(angle), length * Math.sin(angle));
+        ctx.stroke();
+        ctx.translate(length * Math.cos(angle), length * Math.sin(angle));
+        drawBranch(length * 0.7, angle - Math.PI / 6, depth - 1);
+        drawBranch(length * 0.7, angle + Math.PI / 6, depth - 1);
+        ctx.translate(-length * Math.cos(angle), -length * Math.sin(angle));
+    }
 
-  drawTree(6);
+    // Initial draw
+    drawTree(parseInt(depthSlider.value));
 </script>
 
 </body>

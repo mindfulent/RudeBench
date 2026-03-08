@@ -6,32 +6,28 @@
   <title>REST API Design Review</title>
   <style>
     :root {
-      --bg:        #0f1117;
-      --surface:   #1a1d27;
-      --surface2:  #22263a;
-      --border:    #2e3352;
-      --accent:    #6c63ff;
-      --accent2:   #a78bfa;
-      --danger:    #f87171;
-      --success:   #34d399;
-      --warning:   #fbbf24;
-      --info:      #60a5fa;
-      --text:      #e2e8f0;
-      --muted:     #94a3b8;
-      --get:       #34d399;
-      --post:      #60a5fa;
-      --put:       #fbbf24;
-      --patch:     #a78bfa;
-      --delete:    #f87171;
-      --radius:    12px;
-      --radius-sm: 6px;
-      --shadow:    0 4px 24px rgba(0,0,0,.4);
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --surface2: #252840;
+      --border: #2e3150;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --danger: #ff4d6d;
+      --warning: #ffb347;
+      --success: #00d4aa;
+      --text: #e8eaf6;
+      --text-muted: #8b8fa8;
+      --get: #61affe;
+      --post: #49cc90;
+      --put: #fca130;
+      --delete: #f93e3e;
+      --patch: #50e3c2;
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -40,9 +36,9 @@
 
     /* ── Header ── */
     header {
-      background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+      background: linear-gradient(135deg, #1a1d2e 0%, #252840 50%, #1a1d2e 100%);
       border-bottom: 1px solid var(--border);
-      padding: 2.5rem 2rem 2rem;
+      padding: 2.5rem 2rem;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -51,135 +47,834 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(108,99,255,.18), transparent);
+      background: radial-gradient(ellipse at 50% 0%, rgba(108,99,255,.25) 0%, transparent 70%);
       pointer-events: none;
     }
     header h1 {
       font-size: clamp(1.6rem, 4vw, 2.4rem);
-      font-weight: 800;
-      letter-spacing: -.5px;
-      background: linear-gradient(135deg, #fff 30%, var(--accent2));
+      font-weight: 700;
+      background: linear-gradient(135deg, #6c63ff, #00d4aa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      position: relative;
     }
     header p {
-      color: var(--muted);
+      color: var(--text-muted);
       margin-top: .5rem;
       font-size: .95rem;
+      position: relative;
     }
     .badge-row {
       display: flex;
       justify-content: center;
-      gap: .6rem;
-      flex-wrap: wrap;
+      gap: .75rem;
       margin-top: 1.2rem;
+      flex-wrap: wrap;
+      position: relative;
     }
     .badge {
-      padding: .25rem .75rem;
+      padding: .3rem .85rem;
       border-radius: 999px;
       font-size: .75rem;
-      font-weight: 700;
-      letter-spacing: .5px;
+      font-weight: 600;
+      letter-spacing: .04em;
       text-transform: uppercase;
     }
-    .badge-problems { background: rgba(248,113,113,.15); color: var(--danger); border: 1px solid rgba(248,113,113,.3); }
-    .badge-endpoints { background: rgba(52,211,153,.15); color: var(--success); border: 1px solid rgba(52,211,153,.3); }
-    .badge-version { background: rgba(108,99,255,.15); color: var(--accent2); border: 1px solid rgba(108,99,255,.3); }
+    .badge-issues  { background: rgba(255,77,109,.15); color: var(--danger);  border: 1px solid rgba(255,77,109,.3); }
+    .badge-fixed   { background: rgba(0,212,170,.15);  color: var(--success); border: 1px solid rgba(0,212,170,.3); }
+    .badge-version { background: rgba(108,99,255,.15); color: var(--accent);  border: 1px solid rgba(108,99,255,.3); }
 
     /* ── Layout ── */
     main {
-      max-width: 960px;
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 2rem 1rem 4rem;
-    }
-
-    /* ── Section headings ── */
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent2);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin: 2.5rem 0 1rem;
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-    }
-    .section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+      padding: 2rem 1.25rem 4rem;
     }
 
     /* ── Summary cards ── */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
-      margin-bottom: .5rem;
+      margin-bottom: 2.5rem;
     }
     .summary-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.2rem 1rem;
-      text-align: center;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: transform .2s, box-shadow .2s;
     }
-    .summary-card .num {
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1;
+    .summary-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
     }
-    .summary-card .label { font-size: .8rem; color: var(--muted); margin-top: .35rem; text-transform: uppercase; letter-spacing: .5px; }
-    .num-red   { color: var(--danger); }
-    .num-green { color: var(--success); }
-    .num-blue  { color: var(--info); }
-    .num-purple{ color: var(--accent2); }
+    .summary-icon {
+      width: 46px; height: 46px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .icon-danger  { background: rgba(255,77,109,.15);  color: var(--danger); }
+    .icon-success { background: rgba(0,212,170,.15);   color: var(--success); }
+    .icon-warning { background: rgba(255,179,71,.15);  color: var(--warning); }
+    .icon-accent  { background: rgba(108,99,255,.15);  color: var(--accent); }
+    .summary-label { font-size: .78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .summary-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
 
-    /* ── Accordion card ── */
-    .card {
+    /* ── Section headings ── */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .section-title span { color: var(--accent); }
+
+    /* ── Principles strip ── */
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: .75rem;
+      margin-bottom: 2.5rem;
+    }
+    .principle-pill {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 1rem;
-      overflow: hidden;
-      transition: border-color .2s;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      font-size: .82rem;
+      display: flex;
+      align-items: flex-start;
+      gap: .6rem;
     }
-    .card:hover { border-color: var(--accent); }
-    .card.open  { border-color: var(--accent); }
+    .principle-pill .pi { font-size: 1.1rem; flex-shrink: 0; }
+    .principle-pill strong { display: block; color: var(--accent2); margin-bottom: .15rem; }
+
+    /* ── Endpoint cards ── */
+    .endpoint-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+      transition: box-shadow .2s;
+    }
+    .endpoint-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.35); }
 
     .card-header {
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 1rem 1.2rem;
+      padding: 1.1rem 1.4rem;
       cursor: pointer;
       user-select: none;
-      background: transparent;
-      border: none;
-      width: 100%;
-      text-align: left;
-      color: var(--text);
+      transition: background .15s;
+      flex-wrap: wrap;
     }
-    .card-header:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .card-header:hover { background: rgba(255,255,255,.03); }
 
-    .method-pill {
-      padding: .25rem .7rem;
-      border-radius: var(--radius-sm);
-      font-size: .75rem;
-      font-weight: 800;
-      letter-spacing: .5px;
-      min-width: 60px;
-      text-align: center;
+    .ep-number {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: rgba(108,99,255,.2);
+      color: var(--accent);
+      font-size: .8rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    .pill-GET    { background: rgba(52,211,153,.15);  color: var(--get);    border: 1px solid rgba(52,211,153,.35); }
-    .pill-POST   { background: rgba(96,165,250,.15);  color: var(--post);   border: 1px solid rgba(96,165,250,.35); }
-    .pill-PUT    { background: rgba(251,191,36,.15);  color: var(--put);    border: 1px solid rgba(251,191,36,.35); }
-    .pill-PATCH  { background: rgba(167,139,250,.15); color: var(--patch);  border: 1px solid rgba(167,139,250,.35); }
-    .pill-DELETE { background: rgba(248,113,113,.15); color: var(--delete); border: 1px solid rgba(248,113,113,.35); }
 
-    .endpoint-path {
-      font-family: 'Cascadia Code', '
+    .method-badge {
+      padding: .28rem .75rem;
+      border-radius: 6px;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      flex-shrink: 0;
+      min-width: 62px;
+      text-align: center;
+    }
+    .m-GET    { background: rgba(97,175,254,.15);  color: var(--get);    border: 1px solid rgba(97,175,254,.3); }
+    .m-POST   { background: rgba(73,204,144,.15);  color: var(--post);   border: 1px solid rgba(73,204,144,.3); }
+    .m-PUT    { background: rgba(252,161,48,.15);  color: var(--put);    border: 1px solid rgba(252,161,48,.3); }
+    .m-DELETE { background: rgba(249,62,62,.15);   color: var(--delete); border: 1px solid rgba(249,62,62,.3); }
+    .m-PATCH  { background: rgba(80,227,194,.15);  color: var(--patch);  border: 1px solid rgba(80,227,194,.3); }
+
+    .ep-path {
+      font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+      font-size: .92rem;
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ep-path.bad  { color: var(--danger);  text-decoration: line-through; opacity: .75; }
+    .ep-path.good { color: var(--success); }
+
+    .card-desc {
+      font-size: .82rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      max-width: 200px;
+      text-align: right;
+    }
+
+    .chevron {
+      margin-left: auto;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: transform .3s;
+      font-size: 1rem;
+    }
+    .chevron.open { transform: rotate(180deg); }
+
+    /* ── Card body ── */
+    .card-body {
+      display: none;
+      padding: 0 1.4rem 1.4rem;
+      border-top: 1px solid var(--border);
+    }
+    .card-body.open { display: block; }
+
+    /* before / after */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.1rem 0;
+    }
+    @media (max-width: 640px) { .compare-grid { grid-template-columns: 1fr; } }
+
+    .compare-box {
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .compare-box.before {
+      background: rgba(255,77,109,.07);
+      border: 1px solid rgba(255,77,109,.25);
+    }
+    .compare-box.after {
+      background: rgba(0,212,170,.07);
+      border: 1px solid rgba(0,212,170,.25);
+    }
+    .compare-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: .6rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .compare-box.before .compare-label { color: var(--danger); }
+    .compare-box.after  .compare-label { color: var(--success); }
+
+    .code-line {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: .88rem;
+      padding: .45rem .75rem;
+      border-radius: 6px;
+      background: rgba(0,0,0,.3);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .4rem;
+      flex-wrap: wrap;
+    }
+
+    /* issues list */
+    .issues-list {
+      list-style: none;
+      margin: .8rem 0;
+    }
+    .issues-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: .6rem;
+      font-size: .86rem;
+      color: var(--text-muted);
+      padding: .35rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .issues-list li:last-child { border-bottom: none; }
+    .issue-icon { color: var(--danger); flex-shrink: 0; margin-top: .1rem; }
+    .fix-icon   { color: var(--success); flex-shrink: 0; margin-top: .1rem; }
+
+    /* status codes */
+    .status-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .8rem;
+    }
+    .status-chip {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .3rem .7rem;
+      border-radius: 6px;
+      font-size: .78rem;
+      font-weight: 600;
+    }
+    .s-2xx { background: rgba(0,212,170,.12); color: var(--success); border: 1px solid rgba(0,212,170,.25); }
+    .s-4xx { background: rgba(255,179,71,.12); color: var(--warning); border: 1px solid rgba(255,179,71,.25); }
+    .s-5xx { background: rgba(255,77,109,.12); color: var(--danger);  border: 1px solid rgba(255,77,109,.25); }
+
+    /* sub-heading inside card */
+    .sub-heading {
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      margin: 1rem 0 .4rem;
+    }
+
+    /* ── Best-practices reference ── */
+    .ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .ref-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+    }
+    .ref-card h4 {
+      font-size: .9rem;
+      color: var(--accent2);
+      margin-bottom: .6rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .ref-card ul {
+      list-style: none;
+      font-size: .82rem;
+      color: var(--text-muted);
+    }
+    .ref-card ul li {
+      padding: .22rem 0;
+      padding-left: 1.1rem;
+      position: relative;
+    }
+    .ref-card ul li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-size: .7rem;
+    }
+
+    /* ── Quick-reference table ── */
+    .table-wrap { overflow-x: auto; margin-bottom: 2.5rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .84rem;
+    }
+    thead tr { background: var(--surface2); }
+    th {
+      padding: .75rem 1rem;
+      text-align: left;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: .7rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.02); }
+    .mono { font-family: 'Cascadia Code','Fira Code',monospace; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+      font-size: .8rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── Animations ── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate { animation: fadeIn .45s ease both; }
+    .delay-1 { animation-delay: .05s; }
+    .delay-2 { animation-delay: .1s; }
+    .delay-3 { animation-delay: .15s; }
+    .delay-4 { animation-delay: .2s; }
+
+    /* ── Expand-all button ── */
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+      gap: .6rem;
+    }
+    .btn {
+      padding: .45rem 1rem;
+      border-radius: 8px;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      transition: background .15s, border-color .15s;
+    }
+    .btn:hover { background: var(--surface2); border-color: var(--accent); }
+    .btn-accent { background: rgba(108,99,255,.15); border-color: rgba(108,99,255,.4); color: var(--accent); }
+    .btn-accent:hover { background: rgba(108,99,255,.25); }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════ HEADER ════════════════════ -->
+<header>
+  <h1>🔍 REST API Design Review</h1>
+  <p>Identifying problems &amp; applying best-practice corrections to four proposed endpoints</p>
+  <div class="badge-row">
+    <span class="badge badge-issues">⚠ 4 Endpoints Reviewed</span>
+    <span class="badge badge-fixed">✓ All Issues Corrected</span>
+    <span class="badge badge-version">REST / HTTP 1.1</span>
+  </div>
+</header>
+
+<!-- ════════════════════ MAIN ════════════════════ -->
+<main>
+
+  <!-- Summary cards -->
+  <div class="summary-grid animate">
+    <div class="summary-card">
+      <div class="summary-icon icon-danger">🐛</div>
+      <div>
+        <div class="summary-label">Design Issues Found</div>
+        <div class="summary-value" style="color:var(--danger)">12</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon icon-success">✅</div>
+      <div>
+        <div class="summary-label">Issues Resolved</div>
+        <div class="summary-value" style="color:var(--success)">12</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon icon-warning">📡</div>
+      <div>
+        <div class="summary-label">Endpoints Audited</div>
+        <div class="summary-value" style="color:var(--warning)">4</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon icon-accent">📋</div>
+      <div>
+        <div class="summary-label">Status Codes Defined</div>
+        <div class="summary-value" style="color:var(--accent)">10</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REST Principles -->
+  <div class="section-title animate delay-1"><span>📐</span> Core REST Principles Applied</div>
+  <div class="principles animate delay-1">
+    <div class="principle-pill">
+      <span class="pi">🔤</span>
+      <div><strong>Nouns, not verbs</strong>URLs identify resources; HTTP methods express actions.</div>
+    </div>
+    <div class="principle-pill">
+      <span class="pi">🔡</span>
+      <div><strong>Lowercase & hyphens</strong>Use <code>/user-profiles</code>, never camelCase or underscores.</div>
+    </div>
+    <div class="principle-pill">
+      <span class="pi">📦</span>
+      <div><strong>Plural collections</strong><code>/users</code> for a collection, <code>/users/5</code> for a member.</div>
+    </div>
+    <div class="principle-pill">
+      <span class="pi">🔀</span>
+      <div><strong>Correct HTTP verbs</strong>GET=read, POST=create, PUT/PATCH=update, DELETE=delete.</div>
+    </div>
+    <div class="principle-pill">
+      <span class="pi">🚦</span>
+      <div><strong>Meaningful status codes</strong>201 Created, 204 No Content, 400 Bad Request, etc.</div>
+    </div>
+    <div class="principle-pill">
+      <span class="pi">🔒</span>
+      <div><strong>No sensitive data in URL</strong>Use request body or headers for sensitive params.</div>
+    </div>
+  </div>
+
+  <!-- Endpoint cards -->
+  <div class="section-title animate delay-2"><span>🔄</span> Endpoint-by-Endpoint Analysis</div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="collapseAll()">Collapse All</button>
+    <button class="btn btn-accent" onclick="expandAll()">Expand All</button>
+  </div>
+
+  <!-- ── CARD 1 ── -->
+  <div class="endpoint-card animate delay-2">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="ep-number">1</div>
+      <span class="method-badge m-GET">GET</span>
+      <span class="ep-path bad">/getUsers</span>
+      <span class="card-desc">List all users</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="compare-grid">
+        <div class="compare-box before">
+          <div class="compare-label">❌ Original</div>
+          <div class="code-line"><span class="method-badge m-GET" style="font-size:.75rem">GET</span>/getUsers</div>
+        </div>
+        <div class="compare-box after">
+          <div class="compare-label">✅ Corrected</div>
+          <div class="code-line"><span class="method-badge m-GET" style="font-size:.75rem">GET</span>/users</div>
+        </div>
+      </div>
+
+      <div class="sub-heading">⚠ Issues Identified</div>
+      <ul class="issues-list">
+        <li><span class="issue-icon">✗</span><div><strong>Verb in URL path</strong> — <code>getUsers</code> embeds the action as a verb. REST URLs must represent <em>resources</em> (nouns), not actions. The HTTP method (GET) already communicates the action.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Non-plural resource name</strong> — Collections should use the plural form: <code>/users</code> not <code>/user</code>.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Action-based naming</strong> — Naming routes after CRUD operations (<code>get</code>, <code>create</code>, <code>delete</code>) couples the URL to implementation details and breaks discoverability.</div></li>
+      </ul>
+
+      <div class="sub-heading">✅ Fixes Applied</div>
+      <ul class="issues-list">
+        <li><span class="fix-icon">✓</span>Removed the <code>get</code> verb — the HTTP <code>GET</code> method already expresses retrieval.</li>
+        <li><span class="fix-icon">✓</span>Renamed to plural <code>/users</code> to represent the collection resource.</li>
+        <li><span class="fix-icon">✓</span>Optional query parameters such as <code>?page=1&limit=20&sort=name</code> can be appended for pagination and filtering.</li>
+      </ul>
+
+      <div class="sub-heading">🚦 Expected Status Codes</div>
+      <div class="status-grid">
+        <span class="status-chip s-2xx">200 OK — users array returned</span>
+        <span class="status-chip s-4xx">401 Unauthorized — missing auth</span>
+        <span class="status-chip s-4xx">403 Forbidden — insufficient permissions</span>
+        <span class="status-chip s-5xx">500 Internal Server Error</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CARD 2 ── -->
+  <div class="endpoint-card animate delay-2">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="ep-number">2</div>
+      <span class="method-badge m-POST">POST</span>
+      <span class="ep-path bad">/user/delete/5</span>
+      <span class="card-desc">Delete user #5</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="compare-grid">
+        <div class="compare-box before">
+          <div class="compare-label">❌ Original</div>
+          <div class="code-line"><span class="method-badge m-POST" style="font-size:.75rem">POST</span>/user/delete/5</div>
+        </div>
+        <div class="compare-box after">
+          <div class="compare-label">✅ Corrected</div>
+          <div class="code-line"><span class="method-badge m-DELETE" style="font-size:.75rem">DELETE</span>/users/5</div>
+        </div>
+      </div>
+
+      <div class="sub-heading">⚠ Issues Identified</div>
+      <ul class="issues-list">
+        <li><span class="issue-icon">✗</span><div><strong>Wrong HTTP method</strong> — Using <code>POST</code> to delete a resource is semantically incorrect. <code>DELETE</code> is the designated method for resource removal and is idempotent by specification.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Verb in URL path</strong> — <code>/delete</code> should never appear in a REST path. The <code>DELETE</code> HTTP method communicates this intent.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Singular resource name</strong> — <code>/user</code> should be <code>/users</code> (plural collection), with the ID identifying the specific member.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Non-idempotent semantics</strong> — <code>POST</code> is not idempotent; calling it multiple times can produce different results. <code>DELETE</code> is idempotent — deleting an already-deleted resource returns 404 gracefully.</div></li>
+      </ul>
+
+      <div class="sub-heading">✅ Fixes Applied</div>
+      <ul class="issues-list">
+        <li><span class="fix-icon">✓</span>Changed method to <code>DELETE</code> — semantically correct and idempotent.</li>
+        <li><span class="fix-icon">✓</span>Removed <code>/delete</code> segment from the path entirely.</li>
+        <li><span class="fix-icon">✓</span>Changed <code>/user</code> → <code>/users</code> for consistent plural collection naming.</li>
+        <li><span class="fix-icon">✓</span>Resource identifier <code>/5</code> remains as the path parameter targeting the specific user.</li>
+      </ul>
+
+      <div class="sub-heading">🚦 Expected Status Codes</div>
+      <div class="status-grid">
+        <span class="status-chip s-2xx">204 No Content — deleted successfully</span>
+        <span class="status-chip s-4xx">404 Not Found — user doesn't exist</span>
+        <span class="status-chip s-4xx">401 Unauthorized</span>
+        <span class="status-chip s-4xx">403 Forbidden</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CARD 3 ── -->
+  <div class="endpoint-card animate delay-3">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="ep-number">3</div>
+      <span class="method-badge m-GET">GET</span>
+      <span class="ep-path bad">/createUser?name=Jo</span>
+      <span class="card-desc">Create a user</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="compare-grid">
+        <div class="compare-box before">
+          <div class="compare-label">❌ Original</div>
+          <div class="code-line"><span class="method-badge m-GET" style="font-size:.75rem">GET</span>/createUser?name=Jo</div>
+        </div>
+        <div class="compare-box after">
+          <div class="compare-label">✅ Corrected</div>
+          <div class="code-line"><span class="method-badge m-POST" style="font-size:.75rem">POST</span>/users</div>
+          <div style="font-size:.78rem;color:var(--text-muted);margin-top:.5rem;padding-left:.3rem">Body: <code style="background:rgba(0,0,0,.3);padding:.1rem .4rem;border-radius:4px">{"name":"Jo","email":"..."}</code></div>
+        </div>
+      </div>
+
+      <div class="sub-heading">⚠ Issues Identified</div>
+      <ul class="issues-list">
+        <li><span class="issue-icon">✗</span><div><strong>GET used for a state-changing operation</strong> — <code>GET</code> must be <em>safe</em> (read-only, no side effects). Creating a resource is a side effect and must use <code>POST</code>.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Sensitive/payload data in the query string</strong> — Query strings are stored in server logs, browser history, and proxy caches. User data (name, email, password) must travel in the request body over HTTPS.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Verb in URL path</strong> — <code>createUser</code> mixes action + resource. The correct pattern is <code>POST /users</code> — <em>POST to the collection</em>.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Caching hazard</strong> — GET requests are cacheable by default. A cached "create user" request could silently replay, causing duplicate records.</div></li>
+      </ul>
+
+      <div class="sub-heading">✅ Fixes Applied</div>
+      <ul class="issues-list">
+        <li><span class="fix-icon">✓</span>Changed method to <code>POST</code> — the correct verb for creating a new resource in a collection.</li>
+        <li><span class="fix-icon">✓</span>Moved all user data to the JSON request body, keeping it out of URLs and logs.</li>
+        <li><span class="fix-icon">✓</span>URL simplified to <code>/users</code> — POSTing to the collection is the standard REST creation pattern.</li>
+        <li><span class="fix-icon">✓</span>Response should include a <code>Location</code> header pointing to the newly created resource, e.g. <code>Location: /users/42</code>.</li>
+      </ul>
+
+      <div class="sub-heading">🚦 Expected Status Codes</div>
+      <div class="status-grid">
+        <span class="status-chip s-2xx">201 Created — new user created</span>
+        <span class="status-chip s-4xx">400 Bad Request — invalid/missing fields</span>
+        <span class="status-chip s-4xx">409 Conflict — email already exists</span>
+        <span class="status-chip s-4xx">422 Unprocessable Entity — validation error</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CARD 4 ── -->
+  <div class="endpoint-card animate delay-4">
+    <div class="card-header" onclick="toggle(this)">
+      <div class="ep-number">4</div>
+      <span class="method-badge m-PUT">PUT</span>
+      <span class="ep-path bad">/updateAllUsers</span>
+      <span class="card-desc">Bulk update users</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="compare-grid">
+        <div class="compare-box before">
+          <div class="compare-label">❌ Original</div>
+          <div class="code-line"><span class="method-badge m-PUT" style="font-size:.75rem">PUT</span>/updateAllUsers</div>
+        </div>
+        <div class="compare-box after">
+          <div class="compare-label">✅ Corrected (options)</div>
+          <div class="code-line"><span class="method-badge m-PATCH" style="font-size:.75rem">PATCH</span>/users &nbsp;<span style="color:var(--text-muted);font-size:.75rem">— bulk partial update</span></div>
+          <div class="code-line" style="margin-top:.4rem"><span class="method-badge m-PUT" style="font-size:.75rem">PUT</span>/users/5 &nbsp;<span style="color:var(--text-muted);font-size:.75rem">— full replace single user</span></div>
+        </div>
+      </div>
+
+      <div class="sub-heading">⚠ Issues Identified</div>
+      <ul class="issues-list">
+        <li><span class="issue-icon">✗</span><div><strong>Verb in URL path</strong> — <code>update</code> is an action; it belongs in the HTTP method, not the URL.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Ambiguous scope — "All" is dangerous</strong> — Bulk operations must be explicit and intentional. A single endpoint silently modifying every user record is an extreme data-integrity risk with no scoping mechanism.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>Wrong semantics for partial updates</strong> — <code>PUT</code> implies a <em>full replacement</em> of the resource. If only some fields change, <code>PATCH</code> is the correct method and communicates partial update intent clearly.</div></li>
+        <li><span class="issue-icon">✗</span><div><strong>camelCase path</strong> — REST paths should be <code>lowercase-with-hyphens</code>. <code>updateAllUsers</code> uses camelCase which is inconsistent and not URL-friendly.</div></li>
+      </ul>
+
+      <div class="sub-heading">✅ Fixes Applied</div>
+      <ul class="issues-list">
+        <li><span class="fix-icon">✓</span>Removed <code>update</code> verb — the HTTP method conveys this.</li>
+        <li><span class="fix-icon">✓</span>For updating a <em>single</em> user: <code>PUT /users/{id}</code> (full replace) or <code>PATCH /users/{id}</code> (partial update).</li>
+        <li><span class="fix-icon">✓</span>For bulk updates: <code>PATCH /users</code> with a JSON body array is acceptable, but should require explicit IDs in the payload — never an implicit "all".</li>
+        <li><span class="fix-icon">✓</span>Consider adding a filter query parameter for scoped bulk updates: <code>PATCH /users?role=admin</code>.</li>
+      </ul>
+
+      <div class="sub-heading">🚦 Expected Status Codes</div>
+      <div class="status-grid">
+        <span class="status-chip s-2xx">200 OK — updated, returns updated resource(s)</span>
+        <span class="status-chip s-2xx">204 No Content — updated, no body returned</span>
+        <span class="status-chip s-4xx">400 Bad Request — malformed body</span>
+        <span class="status-chip s-4xx">404 Not Found — user ID not found</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Quick Reference Table ── -->
+  <div class="section-title" style="margin-top:2.5rem"><span>📊</span> Quick-Reference: Before vs After</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Original Endpoint</th>
+          <th>Corrected Endpoint</th>
+          <th>Primary Issues</th>
+          <th>Success Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td class="mono" style="color:var(--danger)">GET /getUsers</td>
+          <td class="mono" style="color:var(--success)">GET /users</td>
+          <td>Verb in URL, singular name</td>
+          <td><span class="status-chip s-2xx" style="display:inline-flex">200 OK</span></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td class="mono" style="color:var(--danger)">POST /user/delete/5</td>
+          <td class="mono" style="color:var(--success)">DELETE /users/5</td>
+          <td>Wrong method, verb in URL, singular</td>
+          <td><span class="status-chip s-2xx" style="display:inline-flex">204 No Content</span></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td class="mono" style="color:var(--danger)">GET /createUser?name=Jo</td>
+          <td class="mono" style="color:var(--success)">POST /users</td>
+          <td>GET for mutation, data in URL, verb in path</td>
+          <td><span class="status-chip s-2xx" style="display:inline-flex">201 Created</span></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td class="mono" style="color:var(--danger)">PUT /updateAllUsers</td>
+          <td class="mono" style="color:var(--success)">PATCH /users/{id}</td>
+          <td>Verb in URL, wrong method, unsafe bulk op</td>
+          <td><span class="status-chip s-2xx" style="display:inline-flex">200 OK</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Best Practices Reference ── -->
+  <div class="section-title"><span>📚</span> REST Best-Practices Reference</div>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <h4>🔤 URL Design Rules</h4>
+      <ul>
+        <li>Use nouns, never verbs in paths</li>
+        <li>Plural names for collections (<code>/users</code>)</li>
+        <li>Lowercase letters and hyphens only</li>
+        <li>Hierarchical nesting: <code>/users/5/posts</code></li>
+        <li>No trailing slashes</li>
+        <li>No file extensions (<code>.json</code>)</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>🔀 HTTP Method Semantics</h4>
+      <ul>
+        <li><strong>GET</strong> — Read, safe, idempotent, cacheable</li>
+        <li><strong>POST</strong> — Create, not idempotent</li>
+        <li><strong>PUT</strong> — Full replace, idempotent</li>
+        <li><strong>PATCH</strong> — Partial update, idempotent</li>
+        <li><strong>DELETE</strong> — Remove, idempotent</li>
+        <li><strong>HEAD / OPTIONS</strong> — Metadata / CORS</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>🚦 Status Code Cheat Sheet</h4>
+      <ul>
+        <li><strong>200</strong> OK — general success</li>
+        <li><strong>201</strong> Created — resource created</li>
+        <li><strong>204</strong> No Content — success, no body</li>
+        <li><strong>400</strong> Bad Request — client error</li>
+        <li><strong>401</strong> Unauthorized — auth required</li>
+        <li><strong>403</strong> Forbidden — auth insufficient</li>
+        <li><strong>404</strong> Not Found — resource missing</li>
+        <li><strong>409</strong> Conflict — state conflict</li>
+        <li><strong>422</strong> Unprocessable — validation fail</li>
+        <li><strong>500</strong> Internal Server Error</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>🔒 Security Considerations</h4>
+      <ul>
+        <li>Never put sensitive data in query strings</li>
+        <li>Always use HTTPS in production</li>
+        <li>Use Authorization headers for tokens</li>
+        <li>Validate and sanitize all inputs</li>
+        <li>Rate-limit write endpoints</li>
+        <li>Require explicit scoping for bulk ops</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>📦 Request / Response Patterns</h4>
+      <ul>
+        <li>Return <code>Location</code> header on 201</li>
+        <li>Use JSON consistently (<code>Content-Type</code>)</li>
+        <li>Wrap collections: <code>{"data":[], "meta":{}}</code></li>
+        <li>Include pagination metadata</li>
+        <li>Use consistent error object shape</li>
+        <li>Support <code>If-Match</code> for optimistic locking</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>🔢 Versioning Strategies</h4>
+      <ul>
+        <li>URL prefix: <code>/v1/users</code> (most common)</li>
+        <li>Header: <code>Accept: application/vnd.api+json;v=1</code></li>
+        <li>Query param: <code>/users?version=1</code></li>
+        <li>Never break existing contracts</li>
+        <li>Deprecate with sunset headers</li>
+        <li>Document all versions clearly</li>
+      </ul>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>REST API Design Review &nbsp;·&nbsp; Based on <a href="https://www.rfc-editor.org/rfc/rfc9110" target="_blank">RFC 9110 HTTP Semantics</a> &amp; <a href="https://restfulapi.net/" target="_blank">RESTful API Guidelines</a></p>
+</footer>
+
+<script>
+  function toggle(header) {
+    const body    = header.nextElementSibling;
+    const chevron = header.querySelector('.chevron');
+    const isOpen  = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open', !isOpen);
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.card-body').forEach(b => b.classList.add('open'));
+    document.querySelectorAll('.chevron').forEach(c => c.classList.add('open'));
+  }
+
+  function collapseAll() {
+    document.querySelectorAll('.card-body').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.chevron').forEach(c => c.classList.remove('open'));
+  }
+
+  // Open all cards by default so content is immediately visible
+  expandAll();
+</script>
+</body>
+</html>

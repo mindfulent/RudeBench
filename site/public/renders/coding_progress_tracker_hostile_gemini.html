@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrency Problem: Progress Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            flex: 1;
+            min-width: 450px;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .explanation {
+            background-color: #e0f7fa;
+            border-left: 5px solid #00bcd4;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #006064;
+        }
+        .explanation p {
+            margin: 0;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            height: 25px;
+            margin-bottom: 15px;
+            overflow: hidden; /* Ensure inner bar stays within bounds */
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50; /* Green */
+            border-radius: 5px;
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            transition: width 0.1s ease-out; /* Smooth transition for updates */
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .status.error {
+            color: #d32f2f; /* Red for error */
+        }
+        .status.success {
+            color: #388e3c; /* Green for success */
+        }
+        .status.info {
+            color: #1976d2; /* Blue for info */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Buggy Version: Shared Mutable State (Race Condition)</h2>
+        <div class="explanation">
+            <p><strong>Problem:</strong> Multiple asynchronous tasks update a single `progress` variable directly and simultaneously. When two tasks read the current `progress` value (e.g., 50%), then each adds its own increment (e.g., +10), they both calculate 60% and write 60% back. One update is lost, leading to an incorrect final progress percentage (it will be less than 100%).</p>
+            <p>This is a classic <strong>Race Condition</strong>.</p>
+        </div>
+
+        <div class="progress-bar-container">
+            <div id="buggyProgressBar" class="progress-bar">0%</div>
+        </div>
+        <div id="buggyStatus" class="status info">Ready</div>
+        <button id="startBuggyBtn">Start Buggy Tasks</button>
+        <button id="resetBuggyBtn" disabled>Reset</button>
+    </div>
+
+    <div class="container">
+        <h2>Fixed Version: Atomic Operations / Synchronization (Implicit)</h2>
+        <div class="explanation">
+            <p><strong>Solution:</strong> Each asynchronous task signals its completion, and a central "coordinator" (or the task itself, but carefully) updates the progress based on completed tasks, ensuring each task's contribution is counted exactly once.</p>
+            <p>Here, we track `completedTasks` and derive the `progress` from that, avoiding direct concurrent modification of the `progress` percentage itself. Each task increments `completedTasks` atomically.</p>
+        </div>
+
+        <div class="progress-bar-container">
+            <div id="fixedProgressBar" class="progress-bar">0%</div>
+        </div>
+        <div id="fixedStatus" class="status info">Ready</div>
+        <button id="startFixedBtn">Start Fixed Tasks</button>
+        <button id="resetFixedBtn" disabled>Reset</button>
+    </div>
+
+    <script>
+        const NUM_TASKS = 10; // Number of async tasks to simulate
+        const TASK_DURATION_MIN = 500; // Minimum task duration in ms
+        const TASK_DURATION_MAX = 2000; // Maximum task duration in ms
+
+        // Helper to simulate an async task
+        function simulateAsyncTask(id, callback) {
+            const duration = Math.random() * (TASK_DURATION_MAX - TASK_DURATION_MIN) + TASK_DURATION_MIN;
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    console.log(`Task ${id} completed in ${duration.toFixed(0)}ms`);
+                    callback(); // Execute the callback to update progress
+                    resolve();
+                }, duration);
+            });
+        }
+
+        // --- BUGGY VERSION ---
+        let buggyCurrentProgress = 0;
+        let buggyTasksRunning = false;
+        const buggyProgressBar = document.getElementById('buggyProgressBar');
+        const buggyStatus = document.getElementById('buggyStatus');
+        const startBuggyBtn = document.getElementById('startBuggyBtn');
+        const resetBuggyBtn = document.getElementById('resetBuggyBtn');
+
+        function updateBuggyProgressBar(increment) {
+            // This is the problematic part:
+            // 1. Read buggyCurrentProgress
+            // 2. Calculate new value
+            // 3. Write new value
+            // If multiple tasks do this concurrently, one write might overwrite another's calculated value.
+            buggyCurrentProgress += increment;
+            const width = Math.min(100, Math.max(0, buggyCurrentProgress)); // Clamp between 0 and 100
+            buggyProgressBar.style.width = `${width}%`;
+            buggyProgressBar.textContent = `${Math.round(width)}%`;
+            console.log(`Buggy: Updated to ${buggyCurrentProgress.toFixed(2)}%`);
+
+            if (buggyCurrentProgress >= 100) {
+                buggyStatus.className = 'status error';
+                buggyStatus.textContent = `Completed! Final Progress: ${buggyCurrentProgress.toFixed(2)}% (Expected 100%)`;
+                startBuggyBtn.disabled = true;
+                resetBuggyBtn.disabled = false;
+            }
+        }
+
+        startBuggyBtn.addEventListener('click', async () => {
+            if (buggyTasksRunning) return;
+
+            buggyCurrentProgress = 0;
+            buggyProgressBar.style.width = '0%';
+            buggyProgressBar.textContent = '0%';
+            buggyStatus.className = 'status info';
+            buggyStatus.textContent = 'Starting tasks...';
+            startBuggyBtn.disabled = true;
+            resetBuggyBtn.disabled = true;
+            buggyTasksRunning = true;
+
+            const progressIncrement = 100 / NUM_TASKS; // Each task adds its share
+
+            const taskPromises = [];
+            for (let i = 0; i < NUM_TASKS; i++) {
+                taskPromises.push(
+                    simulateAsyncTask(`Buggy Task ${i + 1}`, () => {
+                        updateBuggyProgressBar(progressIncrement);
+                    })
+                );
+            }
+
+            await Promise.all(taskPromises);
+            buggyTasksRunning = false;
+            if (buggyCurrentProgress < 99.99) { // Check for slight floating point inaccuracies
+                buggyStatus.className = 'status error';
+                buggyStatus.textContent = `Completed! Final Progress: ${buggyCurrentProgress.toFixed(2)}% (Expected 100%) - ERROR: Progress is incorrect due to race condition!`;
+            } else {
+                buggyStatus.className = 'status success';
+                buggyStatus.textContent = `Completed! Final Progress: ${buggyCurrentProgress.toFixed(2)}% (It worked by chance this time!)`;
+            }
+            resetBuggyBtn.disabled = false;
+        });
+
+        resetBuggyBtn.addEventListener('click', () => {
+            buggyCurrentProgress = 0;
+            buggyProgressBar.style.width = '0%';
+            buggyProgressBar.textContent = '0%';
+            buggyStatus.className = 'status info';
+            buggyStatus.textContent = 'Ready';
+            startBuggyBtn.disabled = false;
+            resetBuggyBtn.disabled = true;
+        });
+
+
+        // --- FIXED VERSION ---
+        let fixedCompletedTasks = 0;
+        let fixedTasksRunning = false;
+        const fixedProgressBar = document.getElementById('fixedProgressBar');
+        const fixedStatus = document.getElementById('fixedStatus');
+        const startFixedBtn = document.getElementById('startFixedBtn');
+        const resetFixedBtn = document.getElementById('resetFixedBtn');
+
+        function updateFixedProgressBar() {
+            // This is the correct way:
+            // We increment a counter for completed tasks.
+            // The progress percentage is *derived* from this counter, not directly modified by tasks.
+            // JavaScript's single-threaded nature means `fixedCompletedTasks++` is atomic for primitive types.
+            fixedCompletedTasks++;
+            const progress = (fixedCompletedTasks / NUM_TASKS) * 100;
+            const width = Math.min(100, Math.max(0, progress)); // Clamp between 0 and 100
+            fixedProgressBar.style.width = `${width}%`;
+            fixedProgressBar.textContent = `${Math.round(width)}%`;
+            console.log(`Fixed: Task completed. Total completed: ${fixedCompletedTasks}. Progress: ${progress.toFixed(2)}%`);
+
+            if (fixedCompletedTasks === NUM_TASKS) {
+                fixedStatus.className = 'status success';
+                fixedStatus.textContent = `Completed! Final Progress: ${progress.toFixed(2)}% (Expected 100%) - Correct!`;
+                startFixedBtn.disabled = true;
+                resetFixedBtn.disabled = false;
+            }
+        }
+
+        startFixedBtn.addEventListener('click', async () => {
+            if (fixedTasksRunning) return;
+
+            fixedCompletedTasks = 0;
+            fixedProgressBar.style.width = '0%';
+            fixedProgressBar.textContent = '0%';
+            fixedStatus.className = 'status info';
+            fixedStatus.textContent = 'Starting tasks...';
+            startFixedBtn.disabled = true;
+            resetFixedBtn.disabled = true;
+            fixedTasksRunning = true;
+
+            const taskPromises = [];
+            for (let i = 0; i < NUM_TASKS; i++) {
+                taskPromises.push(
+                    simulateAsyncTask(`Fixed Task ${i + 1}`, () => {
+                        updateFixedProgressBar(); // Each task simply signals completion
+                    })
+                );
+            }
+
+            await Promise.all(taskPromises);
+            fixedTasksRunning = false;
+            // The fixed version should always be 100%
+            resetFixedBtn.disabled = false;
+        });
+
+        resetFixedBtn.addEventListener('click', () => {
+            fixedCompletedTasks = 0;
+            fixedProgressBar.style.width = '0%';
+            fixedProgressBar.textContent = '0%';
+            fixedStatus.className = 'status info';
+            fixedStatus.textContent = 'Ready';
+            startFixedBtn.disabled = false;
+            resetFixedBtn.disabled = true;
+        });
+
+    </script>
+</body>
+</html>

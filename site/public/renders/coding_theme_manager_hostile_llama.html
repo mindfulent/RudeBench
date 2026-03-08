@@ -6,30 +6,34 @@
     <title>Singleton Theme Toggle</title>
     <style>
         body {
-            transition: background-color 0.3s ease-in-out;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .light-theme {
+            background-color: #f0f0f0;
+            color: #333;
         }
         .dark-theme {
             background-color: #333;
-            color: #fff;
-        }
-        .light-theme {
-            background-color: #fff;
-            color: #000;
+            color: #f0f0f0;
         }
         .theme-toggle {
             position: fixed;
             top: 10px;
             right: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body class="light-theme">
-    <button class="theme-toggle" onclick="ThemeManager.toggleTheme()">Toggle Theme</button>
-    <h1>Singleton Theme Toggle Example</h1>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-    <div style="background-color: #f0f0f0; padding: 10px; margin-top: 20px;">
-        <h2>Nested Element</h2>
-        <p>This element has a different background color.</p>
+    <button class="theme-toggle" onclick="ThemeManager.getInstance().toggleTheme()">Toggle Theme</button>
+    <h1>Singleton Theme Toggle</h1>
+    <p>This is a paragraph with some text.</p>
+    <div style="padding: 20px; background-color: #ccc; border: 1px solid #ddd; margin-top: 20px;">
+        <p>This is a div with some text.</p>
     </div>
 
     <script>
@@ -39,29 +43,38 @@
 
             constructor() {
                 if (ThemeManager.instance) {
-                    return ThemeManager.instance;
+                    throw new Error("ThemeManager is a singleton. Use getInstance() to get the instance.");
                 }
                 ThemeManager.instance = this;
-                this.theme = 'light-theme';
+                this.theme = 'light';
                 this.init();
             }
 
+            static getInstance() {
+                if (!ThemeManager.instance) {
+                    ThemeManager.instance = new ThemeManager();
+                }
+                return ThemeManager.instance;
+            }
+
             init() {
-                document.body.classList.add(this.theme);
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.applyTheme();
+                });
             }
 
             toggleTheme() {
-                document.body.classList.toggle('dark-theme');
-                document.body.classList.toggle('light-theme');
-                this.theme = document.body.classList.contains('dark-theme') ? 'dark-theme' : 'light-theme';
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                this.applyTheme();
+            }
+
+            applyTheme() {
+                document.body.className = this.theme === 'light' ? 'light-theme' : 'dark-theme';
             }
         }
 
-        // Create a single instance of the ThemeManager
-        const themeManager = new ThemeManager();
-
-        // Use the theme manager to toggle the theme
-        // (already done in the button's onclick event)
+        // Get the ThemeManager instance
+        ThemeManager.getInstance();
     </script>
 </body>
 </html>

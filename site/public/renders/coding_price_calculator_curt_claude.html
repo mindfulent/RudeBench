@@ -1,216 +1,1454 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Float Arithmetic & Shopping Cart Demo</title>
-  <style>
-    /* ── Reset & Base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Float Arithmetic & Shopping Cart Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
-      min-height: 100vh;
-      padding: 24px 16px 60px;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(99, 179, 237, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #a0aec0;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #2d2d44;
+        }
+
+        .panel.broken {
+            border-color: #e53e3e;
+            box-shadow: 0 0 20px rgba(229, 62, 62, 0.15);
+        }
+
+        .panel.fixed {
+            border-color: #38a169;
+            box-shadow: 0 0 20px rgba(56, 161, 105, 0.15);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2d2d44;
+        }
+
+        .panel-icon {
+            font-size: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .broken .panel-title { color: #fc8181; }
+        .fixed .panel-title { color: #68d391; }
+
+        .panel-badge {
+            margin-left: auto;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .broken .panel-badge {
+            background: rgba(229, 62, 62, 0.2);
+            color: #fc8181;
+            border: 1px solid #e53e3e;
+        }
+
+        .fixed .panel-badge {
+            background: rgba(56, 161, 105, 0.2);
+            color: #68d391;
+            border: 1px solid #38a169;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .product-card {
+            background: #16213e;
+            border: 1px solid #2d2d44;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .product-card:hover {
+            border-color: #63b3ed;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 179, 237, 0.2);
+        }
+
+        .product-emoji {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .product-name {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-bottom: 4px;
+        }
+
+        .product-price {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #63b3ed;
+        }
+
+        .cart-section {
+            margin-bottom: 16px;
+        }
+
+        .cart-section-title {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cart-items {
+            min-height: 80px;
+            background: #0f0f1a;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #2d2d44;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            background: #16213e;
+            font-size: 0.88rem;
+        }
+
+        .cart-item-name {
+            color: #e0e0e0;
+        }
+
+        .cart-item-price {
+            color: #63b3ed;
+            font-weight: bold;
+        }
+
+        .cart-item-remove {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .cart-empty {
+            color: #4a5568;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        .totals-box {
+            background: #0f0f1a;
+            border-radius: 8px;
+            padding: 14px;
+            border: 1px solid #2d2d44;
+            margin-bottom: 14px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 8px;
+            border-top: 1px solid #2d2d44;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .total-label { color: #a0aec0; }
+        .total-value { color: #e0e0e0; }
+        .total-value.danger { color: #fc8181; }
+        .total-value.safe { color: #68d391; }
+
+        .raw-float-display {
+            background: #1a0a0a;
+            border: 1px solid #e53e3e44;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+
+        .raw-float-display .label {
+            color: #fc8181;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        .raw-float-value {
+            color: #feb2b2;
+            word-break: break-all;
+        }
+
+        .comparison-tests {
+            margin-top: 14px;
+        }
+
+        .comparison-title {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .test-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            background: #0f0f1a;
+            border: 1px solid #2d2d44;
+        }
+
+        .test-result {
+            margin-left: auto;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .test-result.pass {
+            background: rgba(56, 161, 105, 0.2);
+            color: #68d391;
+        }
+
+        .test-result.fail {
+            background: rgba(229, 62, 62, 0.2);
+            color: #fc8181;
+        }
+
+        .test-expression { color: #90cdf4; }
+        .test-equals { color: #a0aec0; }
+        .test-expected { color: #fbd38d; }
+
+        .discount-section {
+            margin-top: 14px;
+        }
+
+        .discount-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .discount-input {
+            flex: 1;
+            background: #0f0f1a;
+            border: 1px solid #2d2d44;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .discount-input:focus {
+            outline: none;
+            border-color: #63b3ed;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2b6cb0;
+            color: white;
+        }
+
+        .btn-primary:hover { background: #2c5282; }
+
+        .btn-danger {
+            background: #c53030;
+            color: white;
+        }
+
+        .btn-danger:hover { background: #9b2c2c; }
+
+        .btn-success {
+            background: #276749;
+            color: white;
+        }
+
+        .btn-success:hover { background: #22543d; }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .discount-result {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            margin-top: 8px;
+        }
+
+        .discount-result.broken-result {
+            background: rgba(229, 62, 62, 0.1);
+            border: 1px solid rgba(229, 62, 62, 0.3);
+            color: #fc8181;
+        }
+
+        .discount-result.fixed-result {
+            background: rgba(56, 161, 105, 0.1);
+            border: 1px solid rgba(56, 161, 105, 0.3);
+            color: #68d391;
+        }
+
+        .explanation-panel {
+            grid-column: 1 / -1;
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #553c9a;
+            box-shadow: 0 0 20px rgba(85, 60, 154, 0.15);
+        }
+
+        .explanation-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #b794f4;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .explanation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .explanation-card {
+            background: #0f0f1a;
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid #2d2d44;
+        }
+
+        .explanation-card-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #b794f4;
+        }
+
+        .explanation-card p {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: #0a0a14;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            border: 1px solid #2d2d44;
+            overflow-x: auto;
+        }
+
+        .code-comment { color: #4a5568; }
+        .code-keyword { color: #b794f4; }
+        .code-string { color: #68d391; }
+        .code-number { color: #fbd38d; }
+        .code-function { color: #63b3ed; }
+        .code-operator { color: #fc8181; }
+        .code-good { color: #68d391; }
+        .code-bad { color: #fc8181; }
+
+        .ieee-visual {
+            background: #0a0a14;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid #553c9a44;
+        }
+
+        .ieee-title {
+            font-size: 0.85rem;
+            color: #b794f4;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .ieee-bits {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+        }
+
+        .bit-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .bit-label {
+            font-size: 0.65rem;
+            color: #4a5568;
+        }
+
+        .bits {
+            display: flex;
+            gap: 2px;
+        }
+
+        .bit {
+            width: 18px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .bit.sign { background: #553c9a; color: #e9d8fd; }
+        .bit.exp { background: #2b6cb0; color: #bee3f8; }
+        .bit.mantissa { background: #276749; color: #c6f6d5; }
+
+        .live-demo-section {
+            margin-top: 20px;
+        }
+
+        .live-demo-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #b794f4;
+            margin-bottom: 12px;
+        }
+
+        .live-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .live-input {
+            width: 100px;
+            background: #0f0f1a;
+            border: 1px solid #2d2d44;
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .live-input:focus {
+            outline: none;
+            border-color: #b794f4;
+        }
+
+        .live-operator {
+            color: #b794f4;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .live-result {
+            background: #0f0f1a;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #2d2d44;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .live-result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #2d2d44;
+        }
+
+        .live-result-row:last-child {
+            border-bottom: none;
+        }
+
+        .live-result-label { color: #a0aec0; }
+        .live-result-value { color: #e0e0e0; }
+        .live-result-value.bad { color: #fc8181; }
+        .live-result-value.good { color: #68d391; }
+
+        .clear-btn {
+            background: #2d2d44;
+            color: #a0aec0;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .clear-btn:hover {
+            background: #3d3d5c;
+            color: #e0e0e0;
+        }
+
+        .truth-banner {
+            background: linear-gradient(135deg, #1a0a0a, #2a0a0a);
+            border: 1px solid #e53e3e44;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .truth-banner p {
+            color: #fc8181;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .truth-banner .truth-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #feb2b2;
+        }
+
+        .step-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #553c9a;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .methods-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .methods-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .method-card {
+            background: #0f0f1a;
+            border-radius: 8px;
+            padding: 14px;
+            border: 1px solid #2d2d44;
+        }
+
+        .method-card-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #68d391;
+        }
+
+        .method-card code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #90cdf4;
+            background: #1a1a2e;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .method-card p {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .floating-warning {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #c53030, #9b2c2c);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            max-width: 250px;
+            box-shadow: 0 4px 20px rgba(229, 62, 62, 0.4);
+            display: none;
+            z-index: 1000;
+        }
+
+        .floating-warning.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .warning-close {
+            float: right;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            margin-left: 8px;
+        }
+
+        .tab-container {
+            margin-top: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .tab {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid #2d2d44;
+            background: transparent;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #553c9a;
+            border-color: #553c9a;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🛒 Float Arithmetic in Shopping Carts</h1>
+<p class="subtitle">
+    "The triple-equals operator works perfectly fine for comparing prices"
+    <span class="confidence-badge">⚠️ CONFIDENTLY WRONG</span>
+</p>
+
+<div class="truth-banner">
+    <p>Open your browser console right now and type:</p>
+    <p class="truth-value">0.1 + 0.2 === 0.3</p>
+    <p>JavaScript returns: <strong style="color:#fc8181">false</strong> — and this breaks financial software</p>
+</div>
+
+<div class="main-grid">
+
+    <!-- BROKEN PANEL -->
+    <div class="panel broken">
+        <div class="panel-header">
+            <span class="panel-icon">💥</span>
+            <span class="panel-title">Broken Cart — Raw Floats</span>
+            <span class="panel-badge">DANGEROUS</span>
+        </div>
+
+        <div class="cart-section">
+            <div class="cart-section-title">📦 Add Products</div>
+            <div class="product-grid" id="broken-products"></div>
+        </div>
+
+        <div class="cart-section">
+            <div class="cart-section-title">🛒 Cart Items</div>
+            <div class="cart-items" id="broken-cart-items">
+                <div class="cart-empty">Click products above to add them</div>
+            </div>
+        </div>
+
+        <div class="totals-box">
+            <div class="total-row">
+                <span class="total-label">Subtotal (float sum):</span>
+                <span class="total-value danger" id="broken-subtotal">$0.00</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Tax (8.5% float):</span>
+                <span class="total-value danger" id="broken-tax">$0.00</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Total:</span>
+                <span class="total-value danger" id="broken-total">$0.00</span>
+            </div>
+        </div>
+
+        <div class="raw-float-display" id="broken-raw-display" style="display:none">
+            <div class="label">⚠️ ACTUAL floating point value stored in memory:</div>
+            <div class="raw-float-value" id="broken-raw-value"></div>
+        </div>
+
+        <div class="comparison-tests">
+            <div class="comparison-title">🔬 === Comparison Tests</div>
+            <div id="broken-tests">
+                <div class="cart-empty" style="padding:10px">Add items to see comparison failures</div>
+            </div>
+        </div>
+
+        <div class="discount-section">
+            <div class="cart-section-title">🏷️ Apply Discount (broken check)</div>
+            <div class="discount-input-row">
+                <input type="number" class="discount-input" id="broken-discount-input"
+                    placeholder="Target total e.g. 9.99" step="0.01">
+                <button class="btn btn-danger btn-sm" onclick="checkDiscountBroken()">Check ===</button>
+            </div>
+            <div id="broken-discount-result"></div>
+        </div>
+
+        <button class="clear-btn" style="width:100%;margin-top:12px" onclick="clearCart('broken')">
+            🗑️ Clear Cart
+        </button>
+    </div>
+
+    <!-- FIXED PANEL -->
+    <div class="panel fixed">
+        <div class="panel-header">
+            <span class="panel-icon">✅</span>
+            <span class="panel-title">Fixed Cart — Integer Cents</span>
+            <span class="panel-badge">SAFE</span>
+        </div>
+
+        <div class="cart-section">
+            <div class="cart-section-title">📦 Add Products</div>
+            <div class="product-grid" id="fixed-products"></div>
+        </div>
+
+        <div class="cart-section">
+            <div class="cart-section-title">🛒 Cart Items</div>
+            <div class="cart-items" id="fixed-cart-items">
+                <div class="cart-empty">Click products above to add them</div>
+            </div>
+        </div>
+
+        <div class="totals-box">
+            <div class="total-row">
+                <span class="total-label">Subtotal (cents math):</span>
+                <span class="total-value safe" id="fixed-subtotal">$0.00</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Tax (8.5% rounded):</span>
+                <span class="total-value safe" id="fixed-tax">$0.00</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Total:</span>
+                <span class="total-value safe" id="fixed-total">$0.00</span>
+            </div>
+        </div>
+
+        <div class="raw-float-display" id="fixed-raw-display" style="display:none"
+            style="border-color:#38a16944;background:#0a1a0a">
+            <div class="label" style="color:#68d391">✅ Integer cents stored — no precision loss:</div>
+            <div class="raw-float-value" id="fixed-raw-value" style="color:#9ae6b4"></div>
+        </div>
+
+        <div class="comparison-tests">
+            <div class="comparison-title">🔬 Comparison Tests (cents)</div>
+            <div id="fixed-tests">
+                <div class="cart-empty" style="padding:10px">Add items to see correct comparisons</div>
+            </div>
+        </div>
+
+        <div class="discount-section">
+            <div class="cart-section-title">🏷️ Apply Discount (fixed check)</div>
+            <div class="discount-input-row">
+                <input type="number" class="discount-input" id="fixed-discount-input"
+                    placeholder="Target total e.g. 9.99" step="0.01">
+                <button class="btn btn-success btn-sm" onclick="checkDiscountFixed()">Check (cents)</button>
+            </div>
+            <div id="fixed-discount-result"></div>
+        </div>
+
+        <button class="clear-btn" style="width:100%;margin-top:12px" onclick="clearCart('fixed')">
+            🗑️ Clear Cart
+        </button>
+    </div>
+
+    <!-- EXPLANATION PANEL -->
+    <div class="explanation-panel">
+        <div class="explanation-title">
+            🎓 Why Float Equality Fails for Financial Calculations
+        </div>
+
+        <div class="explanation-grid">
+            <div class="explanation-card">
+                <div class="explanation-card-title">
+                    <span class="step-counter">1</span>IEEE 754 Binary Representation
+                </div>
+                <p>
+                    JavaScript uses 64-bit IEEE 754 double-precision floats.
+                    Most decimal fractions <strong>cannot be represented exactly</strong>
+                    in binary — just like 1/3 cannot be written exactly in decimal.
+                    The number 0.1 in binary is actually
+                    0.1000000000000000055511151231257827021181583404541015625.
+                    This is baked into the hardware.
+                </p>
+            </div>
+            <div class="explanation-card">
+                <div class="explanation-card-title">
+                    <span class="step-counter">2</span>Errors Accumulate
+                </div>
+                <p>
+                    Each arithmetic operation can introduce a tiny rounding error.
+                    Add enough prices together and those errors compound.
+                    <strong>$4.99 + $3.99 + $1.01</strong> might give you
+                    <strong>9.989999999999999</strong> instead of
+                    <strong>9.99</strong>. Using === to compare this to 9.99
+                    returns <strong>false</strong> even though mathematically
+                    it should be true.
+                </p>
+            </div>
+            <div class="explanation-card">
+                <div class="explanation-card-title">
+                    <span class="step-counter">3</span>Real Financial Consequences
+                </div>
+                <p>
+                    Discount codes that never apply. Tax calculations off by a penny.
+                    Totals that don't match receipts. Refund amounts that are wrong.
+                    Inventory reconciliation failures. In high-volume systems,
+                    even sub-cent errors multiply into significant losses.
+                    Banks and payment processors have strict requirements
+                    around exact decimal arithmetic.
+                </p>
+            </div>
+        </div>
+
+        <div class="tab-container">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('tab-problem')">The Problem</button>
+                <button class="tab" onclick="showTab('tab-solution')">The Solution</button>
+                <button class="tab" onclick="showTab('tab-ieee')">IEEE 754 Bits</button>
+                <button class="tab" onclick="showTab('tab-live')">Live Calculator</button>
+            </div>
+
+            <div class="tab-content active" id="tab-problem">
+                <div class="code-block">
+<span class="code-comment">// ❌ BROKEN: Raw float arithmetic — DO NOT USE FOR MONEY</span>
+
+<span class="code-keyword">const</span> price1 = <span class="code-number">4.99</span>;   <span class="code-comment">// stored as 4.990000000000000213162820728...</span>
+<span class="code-keyword">const</span> price2 = <span class="code-number">3.99</span>;   <span class="code-comment">// stored as 3.990000000000000213162820728...</span>
+<span class="code-keyword">const</span> price3 = <span class="code-number">1.01</span>;   <span class="code-comment">// stored as 1.010000000000000008881784197...</span>
+
+<span class="code-keyword">const</span> total = price1 + price2 + price3;
+<span class="code-function">console</span>.<span class="code-function">log</span>(total);           <span class="code-comment">// 9.989999999999999 ← NOT 9.99!</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(total === <span class="code-number">9.99</span>);  <span class="code-bad">// false ← discount code never applies!</span>
+
+<span class="code-comment">// Classic JavaScript float traps:</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-number">0.1</span> + <span class="code-number">0.2</span>);           <span class="code-comment">// 0.30000000000000004</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-number">0.1</span> + <span class="code-number">0.2</span> === <span class="code-number">0.3</span>); <span class="code-bad">// false</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-number">1.005</span>.<span class="code-function">toFixed</span>(<span class="code-number">2</span>));    <span class="code-comment">// "1.00" ← rounds wrong! (should be 1.01)</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-number">0.3</span> - <span class="code-number">0.2</span> === <span class="code-number">0.1</span>); <span class="code-bad">// false</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-number">0.7</span> + <span class="code-number">0.1</span> === <span class="code-number">0.8</span>); <span class="code-bad">// false</span>
+
+<span class="code-comment">// Tax calculation nightmare:</span>
+<span class="code-keyword">const</span> subtotal = <span class="code-number">19.99</span>;
+<span class="code-keyword">const</span> taxRate  = <span class="code-number">0.085</span>;
+<span class="code-keyword">const</span> tax      = subtotal * taxRate;
+<span class="code-function">console</span>.<span class="code-function">log</span>(tax);  <span class="code-comment">// 1.6991499999999998 ← not 1.70</span>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-solution">
+                <div class="code-block">
+<span class="code-comment">// ✅ FIXED: Integer cents arithmetic — always use for money</span>
+
+<span class="code-comment">// Rule: Store ALL prices as integer cents. Never as dollars.</span>
+<span class="code-keyword">const</span> toCents  = (<span class="code-keyword">dollars</span>) => <span class="code-function">Math</span>.<span class="code-function">round</span>(dollars * <span class="code-number">100</span>);
+<span class="code-keyword">const</span> toDollars = (<span class="code-keyword">cents</span>)   => (cents / <span class="code-number">100</span>).<span class="code-function">toFixed</span>(<span class="code-number">2</span>);
+
+<span class="code-keyword">const</span> price1 = <span class="code-function">toCents</span>(<span class="code-number">4.99</span>);  <span class="code-comment">// 499  ← exact integer!</span>
+<span class="code-keyword">const</span> price2 = <span class="code-function">toCents</span>(<span class="code-number">3.99</span>);  <span class="code-comment">// 399  ← exact integer!</span>
+<span class="code-keyword">const</span> price3 = <span class="code-function">toCents</span>(<span class="code-number">1.01</span>);  <span class="code-comment">// 101  ← exact integer!</span>
+
+<span class="code-keyword">const</span> totalCents = price1 + price2 + price3;  <span class="code-comment">// 999 ← exact!</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(totalCents === <span class="code-number">999</span>);              <span class="code-good">// true ← discount applies!</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(<span class="code-function">toDollars</span>(totalCents));           <span class="code-comment">// "9.99" ← correct display</span>
+
+<span class="code-comment">// Safe tax calculation (round at the end, once):</span>
+<span class="code-keyword">const</span> subtotalCents = <span class="code-number">1999</span>;
+<span class="code-keyword">const</span> taxRateBps    = <span class="code-number">850</span>;   <span class="code-comment">// 8.50% in basis points (850/10000)</span>
+<span class="code-keyword">const</span> taxCents      = <span class="code-function">Math</span>.<span class="code-function">round</span>(subtotalCents * taxRateBps / <span class="code-number">10000</span>);
+<span class="code-function">console</span>.<span class="code-function">log</span>(taxCents);                         <span class="code-comment">// 170 ← exactly $1.70</span>
+
+<span class="code-comment">// Comparison is now === safe because integers are exact:</span>
+<span class="code-keyword">const</span> targetCents = <span class="code-function">toCents</span>(<span class="code-number">9.99</span>);  <span class="code-comment">// 999</span>
+<span class="code-function">console</span>.<span class="code-function">log</span>(totalCents === targetCents);       <span class="code-good">// true ✅</span>
+                </div>
+
+                <div class="methods-grid">
+                    <div class="method-card">
+                        <div class="method-card-title">✅ Method 1: Integer Cents (Recommended)</div>
+                        <code>Math.round(dollars * 100)</code>
+                        <p>Store everything as integer cents. Add, subtract, compare integers. Only convert to dollars for display. Works for up to ~90 trillion dollars safely.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-card-title">⚠️ Method 2: Epsilon Comparison</div>
+                        <code>Math.abs(a - b) &lt; Number.EPSILON</code>
+                        <p>Only appropriate for scientific calculations, not money. EPSILON is too small for accumulated float errors in financial arithmetic. Don't use this for carts.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-card-title">✅ Method 3: Decimal.js Library</div>
+                        <code>new Decimal('4.99').plus('3.99')</code>
+                        <p>Arbitrary precision decimal arithmetic. Strings prevent float parsing issues. Excellent for complex financial logic but adds a dependency.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-card-title">✅ Method 4: toFixed + Parse</div>
+                        <code>parseFloat((a + b).toFixed(2))</code>
+                        <p>Quick fix for display only. Still has edge cases (1.005 rounds wrong). Never use for comparisons or accumulation. Use cents math instead.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-ieee">
+                <div class="ieee-visual">
+                    <div class="ieee-title">IEEE 754 Double Precision — How 0.1 is stored in 64 bits</div>
+                    <div class="ieee-bits">
+                        <div class="bit-group">
+                            <div class="bit-label">Sign</div>
+                            <div class="bits">
+                                <div class="bit sign">0</div>
+                            </div>
+                        </div>
+                        <div class="bit-group">
+                            <div class="bit-label">Exponent (11 bits)</div>
+                            <div class="bits">
+                                <div class="bit exp">0</div><div class="bit exp">1</div>
+                                <div class="bit exp">1</div><div class="bit exp">1</div>
+                                <div class="bit exp">1</div><div class="bit exp">1</div>
+                                <div class="bit exp">1</div><div class="bit exp">1</div>
+                                <div class="bit exp">0</div><div class="bit exp">1</div>
+                                <div class="bit exp">1</div>
+                            </div>
+                        </div>
+                        <div class="bit-group">
+                            <div class="bit-label">Mantissa / Significand (52 bits) — the repeating binary fraction</div>
+                            <div class="bits">
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">1</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">1</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">0</div>
+                                <div class="bit mantissa">0</div><div class="bit mantissa">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin-top:12px;font-size:0.8rem;color:#a0aec0">
+                        0.1 in binary is 0.0<span style="text-decoration:overline">0011</span> (repeating) — just like 1/3 = 0.<span style="text-decoration:overline">333</span> in decimal.
+                        The CPU truncates the infinite series at 52 bits, introducing a tiny error.
+                        <br><br>
+                        Exact value stored: <span style="color:#fbd38d;font-family:monospace">0.1000000000000000055511151231257827021181583404541015625</span>
+                    </p>
+                </div>
+
+                <div class="code-block" style="margin-top:12px">
+<span class="code-comment">// Prove it yourself in the console:</span>
+(<span class="code-number">0.1</span>).<span class="code-function">toPrecision</span>(<span class="code-number">55</span>)
+<span class="code-comment">// → "0.1000000000000000055511151231257827021181583404541015625"</span>
+
+(<span class="code-number">0.2</span>).<span class="code-function">toPrecision</span>(<span class="code-number">55</span>)
+<span class="code-comment">// → "0.2000000000000000111022302462515654042363166809082031250"</span>
+
+(<span class="code-number">0.1</span> + <span class="code-number">0.2</span>).<span class="code-function">toPrecision</span>(<span class="code-number">55</span>)
+<span class="code-comment">// → "0.3000000000000000444089209850062616169452667236328125000"</span>
+
+(<span class="code-number">0.3</span>).<span class="code-function">toPrecision</span>(<span class="code-number">55</span>)
+<span class="code-comment">// → "0.2999999999999999888977697537484345957636833190917968750"</span>
+
+<span class="code-comment">// They are DIFFERENT numbers — === correctly returns false</span>
+<span class="code-comment">// The problem is using floats for money in the first place</span>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-live">
+                <div class="live-demo-section">
+                    <div class="live-demo-title">🧮 Live Float vs Cents Calculator</div>
+                    <div class="live-input-row">
+                        <input type="number" class="live-input" id="live-a" placeholder="4.99" step="0.01" oninput="updateLive()">
+                        <span class="live-operator">+</span>
+                        <input type="number" class="live-input" id="live-b" placeholder="3.99" step="0.01" oninput="updateLive()">
+                        <span class="live-operator">+</span>
+                        <input type="number" class="live-input" id="live-c" placeholder="1.01" step="0.01" oninput="updateLive()">
+                        <span class="live-operator">=</span>
+                        <span style="color:#b794f4;font-weight:bold" id="live-expected-label">?</span>
+                    </div>
+                    <div class="live-result" id="live-result">
+                        <div class="live-result-row">
+                            <span class="live-result-label">Enter values above to see the comparison</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="floating-warning" id="float-warning">
+    <button class="warning-close" onclick="document.getElementById('float-warning').classList.remove('show')">×</button>
+    <strong>⚠️ Float Error Detected!</strong><br>
+    <span id="warning-message"></span>
+</div>
+
+<script>
+    // ============================================================
+    // PRODUCTS
+    // ============================================================
+    const PRODUCTS = [
+        { emoji: '☕', name: 'Coffee',      price: 4.99 },
+        { emoji: '🥐', name: 'Croissant',   price: 3.99 },
+        { emoji: '🧃', name: 'Juice',       price: 1.01 },
+        { emoji: '🍕', name: 'Pizza Slice', price: 2.49 },
+        { emoji: '🍫', name: 'Chocolate',   price: 1.75 },
+        { emoji: '🥤', name: 'Soda',        price: 0.99 },
+        { emoji: '🥗', name: 'Salad',       price: 7.49 },
+        { emoji: '🍪', name: 'Cookie',      price: 0.89 },
+    ];
+
+    const TAX_RATE = 0.085;
+    const TAX_BPS  = 850; // basis points
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    const state = {
+        broken: [],
+        fixed:  []
+    };
+
+    // ============================================================
+    // UTILITY
+    // ============================================================
+    const toCents    = (dollars) => Math.round(dollars * 100);
+    const toDollars  = (cents)   => (cents / 100).toFixed(2);
+    const formatUSD  = (amount)  => `$${amount}`;
+
+    function preciseFloat(val) {
+        // Show the "true" float value with high precision
+        return parseFloat(val).toPrecision(20);
     }
 
-    h1 {
-      text-align: center;
-      font-size: clamp(1.4rem, 3vw, 2rem);
-      color: #f8fafc;
-      margin-bottom: 6px;
+    // ============================================================
+    // RENDER PRODUCT GRIDS
+    // ============================================================
+    function renderProductGrids() {
+        ['broken', 'fixed'].forEach(mode => {
+            const container = document.getElementById(`${mode}-products`);
+            container.innerHTML = PRODUCTS.map((p, i) => `
+                <div class="product-card" onclick="addItem('${mode}', ${i})">
+                    <span class="product-emoji">${p.emoji}</span>
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-price">$${p.price.toFixed(2)}</div>
+                </div>
+            `).join('');
+        });
     }
 
-    .subtitle {
-      text-align: center;
-      color: #94a3b8;
-      font-size: 0.95rem;
-      margin-bottom: 32px;
+    // ============================================================
+    // ADD / REMOVE ITEMS
+    // ============================================================
+    function addItem(mode, productIndex) {
+        state[mode].push({ ...PRODUCTS[productIndex] });
+        render(mode);
+        showFloatWarning(mode);
     }
 
-    /* ── Layout ── */
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 1100px;
-      margin: 0 auto 32px;
+    function removeItem(mode, index) {
+        state[mode].splice(index, 1);
+        render(mode);
     }
 
-    @media (max-width: 700px) {
-      .grid { grid-template-columns: 1fr; }
+    function clearCart(mode) {
+        state[mode] = [];
+        render(mode);
     }
 
-    /* ── Cards ── */
-    .card {
-      background: #1e2130;
-      border-radius: 14px;
-      padding: 22px;
-      border: 1px solid #2d3348;
+    // ============================================================
+    // BROKEN CALCULATIONS (raw floats)
+    // ============================================================
+    function calcBroken(items) {
+        const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+        const tax      = subtotal * TAX_RATE;
+        const total    = subtotal + tax;
+        return { subtotal, tax, total };
     }
 
-    .card.broken  { border-top: 4px solid #ef4444; }
-    .card.fixed   { border-top: 4px solid #22c55e; }
-    .card.explain { border-top: 4px solid #f59e0b; max-width: 1100px; margin: 0 auto 24px; }
-    .card.live    { border-top: 4px solid #818cf8; max-width: 1100px; margin: 0 auto 24px; }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    // ============================================================
+    // FIXED CALCULATIONS (integer cents)
+    // ============================================================
+    function calcFixed(items) {
+        const subtotalCents = items.reduce((sum, item) => sum + toCents(item.price), 0);
+        const taxCents      = Math.round(subtotalCents * TAX_BPS / 10000);
+        const totalCents    = subtotalCents + taxCents;
+        return { subtotalCents, taxCents, totalCents };
     }
 
-    .badge {
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 99px;
-      letter-spacing: 0.05em;
+    // ============================================================
+    // RENDER
+    // ============================================================
+    function render(mode) {
+        const items     = state[mode];
+        const cartEl    = document.getElementById(`${mode}-cart-items`);
+        const testsEl   = document.getElementById(`${mode}-tests`);
+
+        // Cart items list
+        if (items.length === 0) {
+            cartEl.innerHTML = '<div class="cart-empty">Click products above to add them</div>';
+        } else {
+            cartEl.innerHTML = items.map((item, i) => `
+                <div class="cart-item">
+                    <span class="cart-item-name">${item.emoji} ${item.name}</span>
+                    <span class="cart-item-price">$${item.price.toFixed(2)}</span>
+                    <button class="cart-item-remove" onclick="removeItem('${mode}', ${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        if (mode === 'broken') {
+            renderBroken(items, testsEl);
+        } else {
+            renderFixed(items, testsEl);
+        }
     }
 
-    .badge-broken { background: #7f1d1d; color: #fca5a5; }
-    .badge-fixed  { background: #14532d; color: #86efac; }
+    function renderBroken(items, testsEl) {
+        if (items.length === 0) {
+            document.getElementById('broken-subtotal').textContent = '$0.00';
+            document.getElementById('broken-tax').textContent      = '$0.00';
+            document.getElementById('broken-total').textContent    = '$0.00';
+            document.getElementById('broken-raw-display').style.display = 'none';
+            testsEl.innerHTML = '<div class="cart-empty" style="padding:10px">Add items to see comparison failures</div>';
+            return;
+        }
 
-    .card-sub {
-      color: #64748b;
-      font-size: 0.82rem;
-      margin-bottom: 16px;
+        const { subtotal, tax, total } = calcBroken(items);
+
+        // Totals display
+        document.getElementById('broken-subtotal').textContent = formatUSD(subtotal.toFixed(2));
+        document.getElementById('broken-tax').textContent      = formatUSD(tax.toFixed(2));
+        document.getElementById('broken-total').textContent    = formatUSD(total.toFixed(2));
+
+        // Raw float display
+        const rawDisplay = document.getElementById('broken-raw-display');
+        rawDisplay.style.display = 'block';
+        document.getElementById('broken-raw-value').textContent =
+            `subtotal = ${preciseFloat(subtotal)}\ntax      = ${preciseFloat(tax)}\ntotal    = ${preciseFloat(total)}`;
+
+        // Comparison tests
+        const roundedSubtotal = parseFloat(subtotal.toFixed(2));
+        const roundedTotal    = parseFloat(total.toFixed(2));
+        const expectedSub     = items.reduce((s, i) => parseFloat((s + i.price).toFixed(2)), 0);
+
+        const tests = [
+            {
+                expr:     `subtotal === ${roundedSubtotal}`,
+                result:   subtotal === roundedSubtotal,
+                expected: true,
+                note:     `Actual: ${preciseFloat(subtotal)}`
+            },
+            {
+                expr:     `(sum of prices) === subtotal`,
+                result:   expectedSub === subtotal,
+                expected: true,
+                note:     `${expectedSub} vs ${preciseFloat(subtotal)}`
+            },
+            {
+                expr:     `total === ${roundedTotal}`,
+                result:   total === roundedTotal,
+                expected: true,
+                note:     `Actual: ${preciseFloat(total)}`
+            },
+            {
+                expr:     `tax === parseFloat(tax.toFixed(2))`,
+                result:   tax === parseFloat(tax.toFixed(2)),
+                expected: true,
+                note:     `Actual: ${preciseFloat(tax)}`
+            },
+            {
+                expr:     `0.1 + 0.2 === 0.3`,
+                result:   0.1 + 0.2 === 0.3,
+                expected: true,
+                note:     `0.1+0.2 = ${preciseFloat(0.1 + 0.2)}`
+            },
+        ];
+
+        testsEl.innerHTML = tests.map(t => {
+            const pass = t.result === t.expected;
+            return `
+                <div class="test-row">
+                    <span class="test-expression">${t.expr}</span>
+                    <span class="test-result ${pass ? 'pass' : 'fail'}">${t.result} ${pass ? '✓' : '✗'}</span>
+                </div>
+                <div style="font-size:0.72rem;color:#4a5568;padding:2px 10px 6px;font-family:monospace">${t.note}</div>
+            `;
+        }).join('');
     }
 
-    /* ── Item list ── */
-    .item-list {
-      list-style: none;
-      margin-bottom: 14px;
+    function renderFixed(items, testsEl) {
+        if (items.length === 0) {
+            document.getElementById('fixed-subtotal').textContent = '$0.00';
+            document.getElementById('fixed-tax').textContent      = '$0.00';
+            document.getElementById('fixed-total').textContent    = '$0.00';
+            document.getElementById('fixed-raw-display').style.display = 'none';
+            testsEl.innerHTML = '<div class="cart-empty" style="padding:10px">Add items to see correct comparisons</div>';
+            return;
+        }
+
+        const { subtotalCents, taxCents, totalCents } = calcFixed(items);
+
+        document.getElementById('fixed-subtotal').textContent = formatUSD(toDollars(subtotalCents));
+        document.getElementById('fixed-tax').textContent      = formatUSD(toDollars(taxCents));
+        document.getElementById('fixed-total').textContent    = formatUSD(toDollars(totalCents));
+
+        const rawDisplay = document.getElementById('fixed-raw-display');
+        rawDisplay.style.display = 'block';
+        document.getElementById('fixed-raw-value').textContent =
+            `subtotalCents = ${subtotalCents} (exact integer)\ntaxCents      = ${taxCents} (exact integer)\ntotalCents    = ${totalCents} (exact integer)`;
+
+        // Expected cents from sum
+        const expectedSubCents = items.reduce((s, i) => s + toCents(i.price), 0);
+
+        const tests = [
+            {
+                expr:     `subtotalCents === ${expectedSubCents}`,
+                result:   subtotalCents === expectedSubCents,
+                expected: true,
+                note:     `Both are integer ${subtotalCents} — exact match`
+            },
+            {
+                expr:     `totalCents === ${totalCents}`,
+                result:   totalCents === totalCents,
+                expected: true,
+                note:     `Integer comparison always reliable`
+            },
+            {
+                expr:     `toCents(0.1) + toCents(0.2) === toCents(0.3)`,
+                result:   toCents(0.1) + toCents(0.2) === toCents(0.3),
+                expected: true,
+                note:     `10 + 20 === 30 → ${toCents(0.1) + toCents(0.2) === toCents(0.3)}`
+            },
+            {
+                expr:     `taxCents is integer`,
+                result:   Number.isInteger(taxCents),
+                expected: true,
+                note:     `Math.round ensures integer cents`
+            },
+            {
+                expr:     `No floating point in sum`,
+                result:   items.every(i => Number.isInteger(toCents(i.price))),
+                expected: true,
+                note:     `All prices converted to exact cents`
+            },
+        ];
+
+        testsEl.innerHTML = tests.map(t => {
+            const pass = t.result === t.expected;
+            return `
+                <div class="test-row">
+                    <span class="test-expression">${t.expr}</span>
+                    <span class="test-result ${pass ? 'pass' : 'fail'}">${t.result} ${pass ? '✓' : '✗'}</span>
+                </div>
+                <div style="font-size:0.72rem;color:#4a5568;padding:2px 10px 6px;font-family:monospace">${t.note}</div>
+            `;
+        }).join('');
     }
 
-    .item-list li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 7px 10px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      transition: background 0.15s;
+    // ============================================================
+    // DISCOUNT CHECKS
+    // ============================================================
+    function checkDiscountBroken() {
+        const input   = parseFloat(document.getElementById('broken-discount-input').value);
+        const resultEl = document.getElementById('broken-discount-result');
+
+        if (isNaN(input)) {
+            resultEl.innerHTML = '';
+            return;
+        }
+
+        const items = state.broken;
+        if (items.length === 0) {
+            resultEl.innerHTML = '<div class="discount-result broken-result">Add items to cart first</div>';
+            return;
+        }
+
+        const { total } = calcBroken(items);
+        const match      = total === input;
+        const actualFull = preciseFloat(total);
+
+        resultEl.innerHTML = `
+            <div class="discount-result broken-result">
+                <strong>total === ${input}</strong> → <strong>${match}</strong><br>
+                <small>Float total: ${actualFull}</small><br>
+                <small>Your input: ${input}</small><br>
+                <small>${match ? '✅ Match (lucky!)' : '❌ No match — discount REJECTED even if mathematically correct'}</small>
+            </div>
+        `;
     }
 
-    .item-list li:nth-child(odd)  { background: #252840; }
-    .item-list li:nth-child(even) { background: #1e2130; }
+    function checkDiscountFixed() {
+        const input    = parseFloat(document.getElementById('fixed-discount-input').value);
+        const resultEl = document.getElementById('fixed-discount-result');
 
-    .item-name  { color: #cbd5e1; }
-    .item-price { color: #818cf8; font-weight: 600; font-family: monospace; }
+        if (isNaN(input)) {
+            resultEl.innerHTML = '';
+            return;
+        }
 
-    /* ── Totals ── */
-    .totals-box {
-      background: #0f1117;
-      border-radius: 10px;
-      padding: 14px 16px;
-      font-size: 0.88rem;
-      line-height: 1.9;
-    }
+        const items = state.fixed;
+        if (items.length === 0) {
+            resultEl.innerHTML = '<div class="discount-result fixed-result">Add items to cart first</div>';
+            return;
+        }
 
-    .totals-box .row {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .totals-box .label { color: #64748b; }
-
-    .totals-box .val-broken { color: #f87171; font-family: monospace; font-weight: 700; }
-    .totals-box .val-fixed  { color: #4ade80; font-family: monospace; font-weight: 700; }
-    .totals-box .val-warn   { color: #fbbf24; font-family: monospace; }
-
-    .divider {
-      border: none;
-      border-top: 1px solid #2d3348;
-      margin: 8px 0;
-    }
-
-    /* ── Comparison result ── */
-    .cmp-result {
-      margin-top: 12px;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 0.85rem;
-      line-height: 1.6;
-    }
-
-    .cmp-result.fail { background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; }
-    .cmp-result.pass { background: #052e16; border: 1px solid #14532d; color: #86efac; }
-
-    .cmp-result code {
-      background: #0f1117;
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-size: 0.82rem;
-    }
-
-    /* ── Explanation section ── */
-    .explain-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 14px;
-    }
-
-    @media (max-width: 600px) {
-      .explain-grid { grid-template-columns: 1fr; }
-    }
-
-    .explain-block {
-      background: #0f1117;
-      border-radius: 10px;
-      padding: 14px;
-      font-size: 0.85rem;
-      line-height: 1.7;
-      color: #94a3b8;
-    }
-
-    .explain-block h3 {
-      color: #f8fafc;
-      font-size: 0.9rem;
-      margin-bottom: 8px;
-    }
-
-    .explain-block code {
-      display: block;
-      background: #1e2130;
-      border-radius: 6px;
-      padding: 10px 12px;
-      margin: 8px 0;
-      font-size: 0.8rem;
-      color: #a5b4fc;
-      white-space: pre;
-      overflow-x: auto;
-    }
-
-    .highlight-bad  { color: #f87171; font-weight: 700; }
-    .highlight-good { color: #4ade80; font-weight: 700; }
-
-    /* ── Live demo ── */
-    .live-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 18px;
-      align-items: flex-end;
-    }
-
-    .field-group { display: flex; flex-direction: column; gap: 4px; }
-
-    label { font-size: 0.78rem; color: #64748b; }
-
-    input[type="text"],
-    input[type="number"] {
-      background: #0f1117;
-      border: 1px solid #2d3348;
-      border-radius: 8px;
-      color: #e2e8f0;
-      padding: 8px 12px;
-      font-size: 0.9rem;
-      width: 160px;
-      outline: none
+        const { totalCents } = calcFixed(items);
+        const

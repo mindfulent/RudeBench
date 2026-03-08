@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Reverser Tool</title>
+    <style>
+        /* Modern and clean styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px 60px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #2980b9;
+        }
+
+        #output {
+            margin-top: 20px;
+            font-size: 18px;
+            line-height: 1.6;
+            min-height: 40px; /* Ensures space for output */
+        }
+
+        .character {
+            display: inline-block; /* Allows individual animations */
+            opacity: 0; /* Start hidden for fade-in effect */
+            animation: fadeIn 0.5s forwards; /* Apply animation */
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px); /* Slight upward slide for effect */
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>String Reverser</h1>
+        <input type="text" id="userInput" placeholder="Type something to reverse it..." />
+        <div id="output"></div>
+    </div>
+
+    <script>
+        // JavaScript for real-time string reversal and animation
+        const inputField = document.getElementById('userInput');
+        const outputDiv = document.getElementById('output');
+
+        inputField.addEventListener('input', function() {
+            const inputText = this.value;  // Get the current input
+            const reversedText = reverseString(inputText);  // Reverse the string
+            updateOutput(reversedText);  // Update the output with animation
+        });
+
+        function reverseString(str) {
+            return str.split('').reverse().join('');  // Simple string reversal
+        }
+
+        function updateOutput(str) {
+            outputDiv.innerHTML = '';  // Clear the previous output
+            const characters = str.split('');  // Split into individual characters
+
+            characters.forEach((char, index) => {
+                const span = document.createElement('span');  // Create a span for each character
+                span.textContent = char;  // Set the character text
+                span.className = 'character';  // Apply the animation class
+                span.style.animationDelay = `${index * 0.1}s`;  // Stagger the animation (0.1s per character)
+                outputDiv.appendChild(span);  // Add to the output div
+            });
+        }
+    </script>
+</body>
+</html>

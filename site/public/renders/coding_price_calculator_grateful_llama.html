@@ -24,9 +24,22 @@
             <th>Quantity</th>
             <th>Total</th>
         </tr>
-        <tbody id="broken-cart-body"></tbody>
+        <tbody id="broken-cart-body">
+            <!-- Broken cart items will be generated here -->
+        </tbody>
+        <tr>
+            <td colspan="3">Subtotal:</td>
+            <td id="broken-subtotal">$0.00</td>
+        </tr>
+        <tr>
+            <td colspan="3">Tax (8%):</td>
+            <td id="broken-tax">$0.00</td>
+        </tr>
+        <tr>
+            <td colspan="3">Total:</td>
+            <td id="broken-total">$0.00</td>
+        </tr>
     </table>
-    <p id="broken-total"></p>
 
     <h2>Corrected Version (Proper Decimal Handling)</h2>
     <table>
@@ -36,75 +49,75 @@
             <th>Quantity</th>
             <th>Total</th>
         </tr>
-        <tbody id="corrected-cart-body"></tbody>
+        <tbody id="corrected-cart-body">
+            <!-- Corrected cart items will be generated here -->
+        </tbody>
+        <tr>
+            <td colspan="3">Subtotal:</td>
+            <td id="corrected-subtotal">$0.00</td>
+        </tr>
+        <tr>
+            <td colspan="3">Tax (8%):</td>
+            <td id="corrected-tax">$0.00</td>
+        </tr>
+        <tr>
+            <td colspan="3">Total:</td>
+            <td id="corrected-total">$0.00</td>
+        </tr>
     </table>
-    <p id="corrected-total"></p>
 
     <script>
-        // Function to add item to cart
-        function addItem(cartBody, totalElement, useDecimal) {
-            const itemName = prompt("Enter item name:");
-            const price = parseFloat(prompt("Enter item price (e.g., 4.99):"));
-            const quantity = parseInt(prompt("Enter quantity:"));
+        // Function to generate cart items
+        function generateCartItems(cartBody, subtotalElement, taxElement, totalElement) {
+            // Sample cart items
+            const cartItems = [
+                { item: 'Apple', price: 0.99, quantity: 2 },
+                { item: 'Banana', price: 0.59, quantity: 3 },
+                { item: 'Orange', price: 1.49, quantity: 1 }
+            ];
 
-            // Create row for item
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${itemName}</td>
-                <td>$${price.toFixed(2)}</td>
-                <td>${quantity}</td>
-                <td>$${(useDecimal ? (price * quantity).toFixed(2) : price * quantity).toFixed(2)}</td>
-            `;
+            let subtotal = 0;
+            cartItems.forEach((item) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.item}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                `;
+                cartBody.appendChild(row);
 
-            // Add row to cart body
-            cartBody.appendChild(row);
-
-            // Update total
-            const total = useDecimal ? calculateTotalDecimal(cartBody) : calculateTotalFloat(cartBody);
-            totalElement.textContent = `Total: $${total.toFixed(2)}`;
-        }
-
-        // Function to calculate total using float
-        function calculateTotalFloat(cartBody) {
-            let total = 0;
-            for (const row of cartBody.children) {
-                const price = parseFloat(row.cells[1].textContent.slice(1));
-                const quantity = parseInt(row.cells[2].textContent);
-                total += price * quantity;
-            }
-            return total;
-        }
-
-        // Function to calculate total using decimal.js library (not used here, but recommended)
-        // For simplicity, we'll use toFixed(2) to simulate decimal handling
-        function calculateTotalDecimal(cartBody) {
-            let total = 0;
-            for (const row of cartBody.children) {
-                const price = parseFloat(row.cells[1].textContent.slice(1));
-                const quantity = parseInt(row.cells[2].textContent);
-                total += price * quantity;
-            }
-            return parseFloat(total.toFixed(2));
-        }
-
-        // Add event listeners
-        document.addEventListener("DOMContentLoaded", () => {
-            const brokenCartBody = document.getElementById("broken-cart-body");
-            const brokenTotalElement = document.getElementById("broken-total");
-            const correctedCartBody = document.getElementById("corrected-cart-body");
-            const correctedTotalElement = document.getElementById("corrected-total");
-
-            document.getElementById("broken-cart-body").addEventListener("click", () => {
-                addItem(brokenCartBody, brokenTotalElement, false);
+                // Accumulate subtotal using decimal.js library (not used here for broken version)
+                subtotal += item.price * item.quantity;
             });
 
-            document.getElementById("corrected-cart-body").addEventListener("click", () => {
-                addItem(correctedCartBody, correctedTotalElement, true);
-            });
-        });
+            // Update subtotal
+            subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+
+            // Calculate tax and total
+            const taxRate = 0.08;
+            const tax = subtotal * taxRate;
+            const total = subtotal + tax;
+
+            taxElement.textContent = `$${tax.toFixed(2)}`;
+            totalElement.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Broken version using naive float comparison
+        const brokenCartBody = document.getElementById('broken-cart-body');
+        const brokenSubtotalElement = document.getElementById('broken-subtotal');
+        const brokenTaxElement = document.getElementById('broken-tax');
+        const brokenTotalElement = document.getElementById('broken-total');
+        generateCartItems(brokenCartBody, brokenSubtotalElement, brokenTaxElement, brokenTotalElement);
+
+        // Corrected version using proper decimal handling
+        // Note: For simplicity, we will use toFixed(2) for decimal handling here.
+        // In a real-world application, consider using a decimal library like decimal.js.
+        const correctedCartBody = document.getElementById('corrected-cart-body');
+        const correctedSubtotalElement = document.getElementById('corrected-subtotal');
+        const correctedTaxElement = document.getElementById('corrected-tax');
+        const correctedTotalElement = document.getElementById('corrected-total');
+        generateCartItems(correctedCartBody, correctedSubtotalElement, correctedTaxElement, correctedTotalElement);
     </script>
-
-    <button onclick="addItem(document.getElementById('broken-cart-body'), document.getElementById('broken-total'), false)">Add to Broken Cart</button>
-    <button onclick="addItem(document.getElementById('corrected-cart-body'), document.getElementById('corrected-total'), true)">Add to Corrected Cart</button>
 </body>
 </html>

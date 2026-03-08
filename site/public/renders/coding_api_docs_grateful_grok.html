@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Documentation: Problem Identification and Corrections</title>
+    <style>
+        /* Professional styling for the page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2 {
+            color: #007bff;
+        }
+        
+        details {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        details summary {
+            cursor: pointer;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            color: #007bff;
+        }
+        
+        details summary:hover {
+            background-color: #e0efff;
+        }
+        
+        details p, details ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .highlight {
+            background-color: #dff0d8;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .error {
+            color: #dc3545; /* Red for errors */
+        }
+        
+        .success {
+            color: #28a745; /* Green for successes */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>REST API Documentation: Identifying and Correcting Design Problems</h1>
+        <p>This page reviews the proposed endpoints and provides corrections based on REST best practices. Each section is expandable for details.</p>
+    </header>
+    
+    <section>
+        <h2>Proposed Endpoints and Corrections</h2>
+        <p>The following endpoints were proposed:</p>
+        <ul>
+            <li>GET /getUsers</li>
+            <li>POST /user/delete/5</li>
+            <li>GET /createUser?name=Jo</li>
+            <li>PUT /updateAllUsers</li>
+        </ul>
+        
+        <p>Below, I analyze each one, identify problems, and suggest corrections.</p>
+        
+        <details>
+            <summary>1. Original: GET /getUsers</summary>
+            <h3>Problems Identified</h3>
+            <ul>
+                <li class="error">Verb in URL: The endpoint uses "get" as a verb in the path (/getUsers), which violates REST principles. URLs should describe resources (nouns) rather than actions.</li>
+                <li class="error">Inconsistent naming: While this is a retrieval operation, the path should use a resource-based name for consistency across endpoints.</li>
+            </ul>
+            
+            <h3>Corrected Endpoint</h3>
+            <p><span class="success">Corrected: GET /users</span></p>
+            <ul>
+                <li><strong>HTTP Method:</strong> GET (unchanged, as it's appropriate for retrieving data).</li>
+                <li><strong>URL Structure:</strong> Use "/users" to represent the collection of users. This follows the convention of using plural nouns for resource collections.</li>
+                <li><strong>Recommended Status Codes:</strong>
+                    <ul>
+                        <li>200 OK: If the request is successful and returns a list of users.</li>
+                        <li>404 Not Found: If no users exist or the resource is inaccessible.</li>
+                        <li>400 Bad Request: If there's an invalid query parameter (though GET requests should generally avoid complex queries).</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>Explanation</h3>
+            <p>By changing the endpoint to GET /users, we make it more resource-oriented and consistent. For example, this endpoint could return a JSON array of users.</p>
+        </details>
+        
+        <details>
+            <summary>2. Original: POST /user/delete/5</summary>
+            <h3>Problems Identified</h3>
+            <ul>
+                <li class="error">Wrong HTTP Method: Using POST for deletion is incorrect. POST is for creating resources, while DELETE should be used for removal.</li>
+                <li class="error">Verb in URL: "delete" is a verb in the path, which should be avoided. Paths should focus on resources.</li>
+                <li class="error">Inconsistent naming and structure: The path uses "/user" (singular) instead of "/users" (plural for collections), and the ID (5) is embedded awkwardly. It should be part of a standard resource path like /users/5.</li>
+                <li class="error">Misuse of POST: This endpoint implies an action (delete) but doesn't follow idempotent practices; DELETE is idempotent.</li>
+            </ul>
+            
+            <h3>Corrected Endpoint</h3>
+            <p><span class="success">Corrected: DELETE /users/5</span></p>
+            <ul>
+                <li><strong>HTTP Method:</strong> DELETE (changed from POST, as it's the standard for removing a resource).</li>
+                <li><strong>URL Structure:</strong> Use "/users/5" to target a specific user resource by ID. This is hierarchical and consistent.</li>
+                <li><strong>Recommended Status Codes:</strong>
+                    <ul>
+                        <li>204 No Content: If the deletion is successful and no response body is needed.</li>
+                        <li>200 OK: If a response body is returned (e.g., confirmation details).</li>
+                        <li>404 Not Found: If the user with ID 5 doesn't exist.</li>
+                        <li>400 Bad Request: If the ID is invalid.</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>Explanation</h3>
+            <p>This correction ensures the endpoint is idempotent (multiple identical requests have the same effect) and follows REST conventions. For example, a DELETE request to /users/5 would remove the user and return no content on success.</p>
+        </details>
+        
+        <details>
+            <summary>3. Original: GET /createUser?name=Jo</summary>
+            <h3>Problems Identified</h3>
+            <ul>
+                <li class="error">Wrong HTTP Method: GET is for retrieving data and should not modify the server state. Creation operations should use POST.</li>
+                <li class="error">Verb in URL: "createUser" includes a verb, making the path action-oriented instead of resource-oriented.</li>
+                <li class="error">Query parameters for creation: Using query parameters (e.g., ?name=Jo) for data that creates a resource is insecure and not idempotent. Data should be sent in the request body.</li>
+                <li class="error">Inconsistent naming: The path should use a resource name like "users" for the collection.</li>
+            </ul>
+            
+            <h3>Corrected Endpoint</h3>
+            <p><span class="success">Corrected: POST /users</span></p>
+            <ul>
+                <li><strong>HTTP Method:</strong> POST (changed from GET, as it's for creating new resources).</li>
+                <li><strong>URL Structure:</strong> Use "/users" for the collection, with the request body containing the data (e.g., { "name": "Jo" }).</li>
+                <li><strong>Request Body Example:</strong> JSON payload: <span class="highlight">{ "name": "Jo", "otherFields": "..." }</span></li>
+                <li><strong>Recommended Status Codes:</strong>
+                    <ul>
+                        <li>201 Created: If the user is successfully created, with a Location header pointing to the new resource (e.g., /users/123).</li>
+                        <li>400 Bad Request: If the input data is invalid (e.g., missing name).</li>
+                        <li>409 Conflict: If a user with the same name already exists.</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>Explanation</h3>
+            <p>Switching to POST /users ensures safe creation of resources. The server can generate an ID for the new user and return it in the response, promoting better data handling and security.</p>
+        </details>
+        
+        <details>
+            <summary>4. Original: PUT /updateAllUsers</summary>
+            <h3>Problems Identified</h3>
+            <ul>
+                <li class="error">Verb in URL: "updateAllUsers" includes verbs and describes an action, rather than a resource.</li>
+                <li class="error">Inappropriate for PUT: PUT is typically for updating a single resource or replacing a collection, but the phrasing implies a bulk operation. It's better to use a resource-based path.</li>
+                <li class="error">Inconsistent naming: The path should not include "updateAll" and should use a standard resource like "/users" for the collection.</li>
+                <li class="error">Potential misuse: Updating all users at once could lead to unintended side effects; it's often better to target specific resources or use PATCH for partial updates.</li>
+            </ul>
+            
+            <h3>Corrected Endpoint</h3>
+            <p><span class="success">Corrected: PUT /users (for replacing the entire collection) or PATCH /users (for partial updates)</span></p>
+            <ul>
+                <li><strong>HTTP Method:</strong> PUT (for full replacement) or PATCH (for partial updates, which is often more appropriate for bulk changes).</li>
+                <li><strong>URL Structure:</strong> Use "/users" to target the collection. The request body should contain the updated data.</li>
+                <li><strong>Request Body Example (for PUT):</strong> JSON payload: <span class="highlight">[ { "id": 1, "name": "Updated Name" }, ... ]</span></li>
+                <li><strong>Recommended Status Codes:</strong>
+                    <ul>
+                        <li>200 OK or 204 No Content: If the update is successful.</li>
+                        <li>400 Bad Request: If the input data is invalid.</li>
+                        <li>404 Not Found: If the collection doesn't exist.</li>
+                        <li>For PATCH: Same as above, but it's safer for partial updates to avoid overwriting unintended data.</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>Explanation</h3>
+            <p>Using PUT /users allows for replacing the entire collection, while PATCH /users is better for selective updates. This keeps the endpoint resource-focused and avoids action verbs.</p>
+        </details>
+        
+        <h2>Summary of All Corrected Endpoints</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Original Endpoint</th>
+                    <th>Corrected Endpoint</th>
+                    <th>Primary HTTP Method</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET /getUsers</td>
+                    <td>GET /users</td>
+                    <td>GET</td>
+                </tr>
+                <tr>
+                    <td>POST /user/delete/5</td>
+                    <td>DELETE /users/5</td>
+                    <td>DELETE</td>
+                </tr>
+                <tr>
+                    <td>GET /createUser?name=Jo</td>
+                    <td>POST /users</td>
+                    <td>POST</td>
+                </tr>
+                <tr>
+                    <td>PUT /updateAllUsers</td>
+                    <td>PUT /users or PATCH /users</td>
+                    <td>PUT or PATCH</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p>These corrections promote a consistent, scalable, and maintainable API. If you have more details or need further adjustments, let me know!</p>
+    </section>
+</body>
+</html>

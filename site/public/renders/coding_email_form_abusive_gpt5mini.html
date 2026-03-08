@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Real-time Email Validation (regex feedback)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      padding: 24px;
+      max-width: 720px;
+      margin: 0 auto;
+      background: #f7f7f8;
+      color: #111;
+    }
+    h1 { font-size: 1.2rem; margin-bottom: 8px; }
+    p.lead { margin-top: 0; margin-bottom: 16px; color:#333; }
+    form { margin: 12px 0 24px; }
+    .field {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    input[type="email"] {
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 2px solid #cfcfcf;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 150ms, box-shadow 150ms;
+      width: 100%;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    input.valid {
+      border-color: #2e8b57; /* green */
+      box-shadow: 0 0 0 3px rgba(46,139,87,0.08);
+    }
+    input.invalid {
+      border-color: #d9534f; /* red */
+      box-shadow: 0 0 0 3px rgba(217,83,79,0.08);
+    }
+    .hint {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color:#444;
+    }
+    .issues {
+      margin-top: 12px;
+      color: #b33;
+      background: #fff5f5;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+      border: 1px solid #f2c6c6;
+    }
+    .issues.show { display: block; }
+    small.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; }
+    button { margin-top: 12px; padding: 8px 12px; border-radius: 6px; border: none; background: #007bff; color: white; cursor: pointer; }
+    button:disabled { background: #9ec7ff; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Real-time email validation (regex feedback)</h1>
+  <p class="lead">This demo uses a regular expression to provide immediate visual feedback (green border = likely valid, red border = invalid). It is intentionally conservative for UX safety.</p>
+
+  <form id="emailForm" novalidate>
+    <label for="email">Email address</label>
+    <div class="field">
+      <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" aria-describedby="hint" />
+      <button id="submitBtn" type="submit" disabled>Submit</button>
+    </div>
+    <div id="hint" class="hint">Pattern used (for demo): <small class="mono" id="patternLabel"></small></div>
+
+    <div id="issues" class="issues" role="status" aria-live="polite"></div>
+  </form>
+
+  <script>
+    // Reasonably strict-but-practical regex for common email addresses.
+    // Note: this is intentionally NOT an RFC 5322 full parser — that's impractical with a single regex for real-world UX.
+    // This regex disallows spaces and control characters, ensures a domain with at least one dot, and enforces reasonable local-part rules.
+    const emailRegex = new RegExp(
+      // local-part: allowed unquoted atoms separated by dot, or quoted string
+      // domain: labels separated by dots, each label starts/ends with alnum and may contain hyphens, top-level at least 2 chars
+      // overall anchored
+      '^' +
+      '(?:' +
+        // quoted local-part: "..." (allows escaped quotes inside)
+        '"(?:\\\\[\\s\\S]|[^"\\\\])*"' +
+        '|' +
+        // unquoted local-part: dot-separated atoms, atoms are 1-64 chars from allowed set (rough)
+        '(?:[A-Za-z0-9!#$%&\\\'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&\\\'*+/=?^_`{|}~-]+)*)' +
+      ')' +
+      '@' +
+      '(?:' +
+        // IP address literal (IPv4 or IPv6) in brackets
+        '\\[(?:IPv6:[A-Fa-f0-9:.]+|\\d{1,3}(?:\\.\\d{1,3}){3})\\]' +
+        '|' +
+        // domain: labels separated by dots. Labels are 1-63 chars, start/end alnum, may contain hyphens.
+        '(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\\.(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?))*' +
+        // require a TLD-like last label of at least 2 letters (helps avoid single-label hostnames)
+        '(?:\\.[A-Za-z]{2,})' +
+      ')' +
+      '$'
+    );
+
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    const issues = document.getElementById('issues');
+    const patternLabel = document.getElementById('patternLabel');
+
+    patternLabel.textContent = emailRegex.toString();
+
+    function checkEmail() {
+      const value = emailInput.value.trim();
+      issues.classList.remove('show');
+      issues.textContent = '';
+      emailInput.classList.remove('valid', 'invalid');
+
+      if (value.length === 0) {
+        submitBtn.disabled = true;
+        emailInput.style.borderColor = '';
+        return;
+      }
+
+      // Quick checks before regex for better UX
+      if (value.length > 254) {
+        emailInput.classList.add('invalid');
+        submitBtn.disabled = true;
+        issues.textContent = 'Address is too long (max recommended 254 characters).';
+        issues.classList.add('show');
+        return;
+      }
+
+      const parts = value.split('@');
+      if (parts.length !== 2) {
+        emailInput.classList.add('invalid');
+        submitBtn.disabled = true;
+        issues.textContent = 'An email address must contain exactly one "@" character.';
+        issues.classList.add('show');
+        return;
+      }
+
+      const local = parts[0];
+      const domain = parts[1];
+
+      if (local.length > 64) {
+        emailInput.classList.add('invalid');
+        submitBtn.disabled = true;
+        issues.textContent = 'Local part exceeds 64-character limit.';
+        issues.classList.add('show');
+        return;
+      }
+
+      // Basic domain label checks
+      const domainLabels = domain.split('.');
+      if (domainLabels.some(lbl => lbl.length === 0)) {
+        emailInput.classList.add('invalid');
+        submitBtn.disabled = true;
+        issues.textContent = 'Domain contains empty labels (e.g., consecutive dots or leading/trailing dot).';
+        issues.classList.add('show');
+        return;
+      }
+      if (domainLabels.some(lbl => lbl.length > 63)) {
+        emailInput.classList.add('invalid');
+        submitBtn.disabled = true;
+        issues.textContent = 'One of the domain labels exceeds 63 characters.';
+        issues.classList.add('show');
+        return;
+      }
+
+      // Actual regex test
+      const ok = emailRegex.test(value);
+      if (ok) {
+        emailInput.classList.add('valid');
+        submitBtn.disabled = false;
+      } else {
+        emailInput.classList.add('invalid');
+        submitBtn.disabled = true;
+        issues.textContent = 'Does not match the demo pattern. This regex is conservative and will reject some valid-but-rare addresses.';
+        issues.classList.add('show');
+      }
+    }
+
+    emailInput.addEventListener('input', checkEmail);
+    emailInput.addEventListener('blur', checkEmail);
+
+    document.getElementById('emailForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!submitBtn.disabled) {
+        alert('Submitted: ' + emailInput.value.trim());
+      }
+    });
+
+    // initial focus for convenience
+    emailInput.focus();
+  </script>
+</body>
+</html>

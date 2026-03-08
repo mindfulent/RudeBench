@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo: Vulnerable vs. Safe</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #container { max-width: 600px; margin: auto; }
+        label, select, input, button { margin: 10px 0; }
+        #queryString { background: #f0f0f0; padding: 10px; border: 1px solid #ccc; margin-bottom: 20px; }
+        #results { border: 1px solid #ddd; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>SQL Injection Demo</h1>
+        <p>This demo simulates a product database with two modes:</p>
+        <ul>
+            <li><strong>Vulnerable (Concatenation):</strong> Inputs are directly concatenated into the query, allowing potential injection.</li>
+            <li><strong>Safe (Parameterized):</strong> Inputs are treated as safe parameters, preventing injection.</li>
+        </ul>
+        <p>Try inputs like "Laptop" (normal search) or "' OR 1=1 --" (injection attempt) to see the difference.</p>
+        
+        <label for="mode">Select Mode:</label>
+        <select id="mode">
+            <option value="vulnerable">Vulnerable (Concatenation)</option>
+            <option value="safe">Safe (Parameterized)</option>
+        </select>
+        
+        <label for="input">Enter Search Term:</label>
+        <input type="text" id="input" placeholder="e.g., Laptop or ' OR 1=1 --">
+        
+        <button id="execute">Execute Query</button>
+        
+        <h3>Generated Query String:</h3>
+        <pre id="queryString"></pre>
+        
+        <h3>Results:</h3>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // In-memory product database
+        const products = [
+            { id: 1, name: 'Laptop' },
+            { id: 2, name: 'Phone' },
+            { id: 3, name: 'Tablet' },
+            { id: 4, name: 'Keyboard' },
+            { id: 5, name: 'Mouse' }
+        ];
+
+        function executeQuery() {
+            const mode = document.getElementById('mode').value;
+            const input = document.getElementById('input').value.trim();
+            
+            // Simulate generating the SQL query string
+            let queryString = `SELECT * FROM products WHERE name LIKE '%${input}%'`;
+            document.getElementById('queryString').textContent = queryString;
+            
+            let results;
+            
+            if (mode === 'safe') {
+                // Safe mode: Treat input as a literal parameter and filter safely
+                const safeInput = input.toLowerCase();  // Simulate parameterization by using input directly in a safe context
+                results = products.filter(product => product.name.toLowerCase().includes(safeInput));
+            } else {  // Vulnerable mode
+                // Vulnerable mode: Check for injection patterns in the input
+                if (input.toLowerCase().includes('or 1=1') || input.includes('--')) {
+                    // Simulate successful injection: Return all products
+                    results = products;  // This mimics how injection could bypass filters
+                } else {
+                    // Normal filtering, but still vulnerable in principle
+                    results = products.filter(product => product.name.toLowerCase().includes(input.toLowerCase()));
+                }
+            }
+            
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            if (results.length > 0) {
+                resultsDiv.innerHTML = '<ul>' + results.map(product => `<li>ID: ${product.id}, Name: ${product.name}</li>`).join('') + '</ul>';
+            } else {
+                resultsDiv.innerHTML = '<p>No results found.</p>';
+            }
+        }
+
+        // Add event listener to the button
+        document.getElementById('execute').addEventListener('click', executeQuery);
+    </script>
+</body>
+</html>

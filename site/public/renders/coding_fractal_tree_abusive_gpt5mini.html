@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fractal Tree — Recursive and Iterative</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial; margin: 12px; color:#111 }
+  #controls { display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap }
+  label { font-size:14px }
+  canvas { border:1px solid #ccc; display:block; background:linear-gradient(#fff,#eef); max-width:100%; height:480px; }
+  .small { font-size:13px; color:#333 }
+  footer { margin-top:12px; font-size:13px; color:#444; }
+  .hint { color:#666; font-size:13px }
+  .btn { padding:6px 10px; font-size:14px; cursor:pointer }
+</style>
+</head>
+<body>
+<h2>Fractal Tree (recursive vs iterative)</h2>
+
+<div id="controls">
+  <label>Depth: <input id="depth" type="range" min="1" max="12" value="9" /></label>
+  <span id="depthVal" class="small">9</span>
+
+  <label>Angle (deg): <input id="angle" type="range" min="5" max="60" value="25" /></label>
+  <span id="angleVal" class="small">25°</span>
+
+  <label>Shrink factor: <input id="shrink" type="range" min="50" max="85" value="67" /></label>
+  <span id="shrinkVal" class="small">0.67</span>
+
+  <label><input id="iterative" type="checkbox" /> Use iterative (explicit stack)</label>
+
+  <label><input id="auto" type="checkbox" checked/> Auto redraw</label>
+
+  <button id="drawBtn" class="btn">Draw</button>
+  <button id="saveBtn" class="btn">Save PNG</button>
+</div>
+
+<canvas id="c" width="900" height="480"></canvas>
+
+<div class="hint">
+  Drag sliders or click Draw. Depth controls recursion depth (levels). Iterative mode uses an explicit stack instead of JS call stack.
+</div>
+
+<hr/>
+
+<h3>Stack-overflow risks, practical solutions, and explanation</h3>
+<ul>
+<li>Stack-overflow risk: each recursive call consumes a stack frame. Deep recursion can exhaust the language runtime's call stack and throw an error (in browsers this is typically a RangeError: Maximum call stack size exceeded).</li>
+<li>Practical solutions demonstrated in this page:
+  <ul>
+    <li>Convert recursion to iteration using an explicit stack (LIFO data structure). This avoids using the language call stack and prevents stack overflow for the same logical depth.</li>
+    <li>Use smaller recursion depth (limit problem size) or redesign algorithm to be tail-recursive where supported. JavaScript engines do not reliably implement tail-call elimination, so tail recursion is not a dependable solution in browsers.</li>
+    <li>Use trampolining (break recursive work into repeated loop steps) to avoid deep call chains; this effectively converts recursion to iteration at the application level.</li>
+    <li>Use continuation-passing or asynchronous chunking (setTimeout / requestAnimationFrame) to split work into smaller call chains to avoid long blocking stacks and keep UI responsive.</li>
+  </ul>
+</li>
+<li>Trade-offs: iterative solutions require manual stack/state management but are robust. Tail-call elimination is ideal but not portable in JS. Chunking helps responsiveness but adds complexity.</li>
+</ul>
+
+<h4>Concise proof of understanding of recursion</h4>
+<p>
+Recursion defines a function in terms of itself and requires:
+(1) a base case that terminates recursion, and
+(2) a rule that reduces the problem toward the base case.
+By induction: if the function is correct for n=1 (base) and if correctness at n-1 implies correctness at n via the recursive step, the function is correct for all finite n. Practically, each recursive call uses a stack frame storing local variables and the return address; unbounded recursion can exhaust available stack memory.
+</p>
+
+<footer>
+  Written to illustrate recursion safely. You can compare the visual output and CPU characteristics between recursive and iterative implementations using the checkbox.
+</footer>
+
+<script>
+(function(){
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  const depthSlider = document.getElementById('depth');
+  const depthVal = document.getElementById('depthVal');
+  const angleSlider = document.getElementById('angle');
+  const angleVal = document.getElementById('angleVal');
+  const shrinkSlider = document.getElementById('shrink');
+  const shrinkVal = document.getElementById('shrinkVal');
+  const drawBtn = document.getElementById('drawBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const autoCb = document.getElementById('auto');
+  const iterativeCb = document.getElementById('iterative');
+
+  function fitDPI() {
+    const ratio = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth || canvas.width;
+    const h = canvas.clientHeight || canvas.height;
+    canvas.width = Math.floor(w * ratio);
+    canvas.height = Math.floor(h * ratio);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+  }
+  window.addEventListener('resize', fitDPI);
+  fitDPI();
+
+  function clear() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  function drawBackground() {
+    const gw = canvas.width / (window.devicePixelRatio || 1);
+    const gh = canvas.height / (window.devicePixelRatio || 1);
+    const g = ctx.createLinearGradient(0,0,0,gh);
+    g.addColorStop(0, '#f8fdfb');
+    g.addColorStop(1, '#e9f1ff');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,gw,gh);
+  }
+
+  function drawLine(x1,y1,x2,y2, width, color) {
+    ctx.strokeStyle = color || '#3b2';
+    ctx.lineWidth = Math.max(0.5, width || 1);
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+  }
+
+  // Recursive implementation: draw branch from (x,y) in direction 'angle' radians with given length and depth.
+  function drawBranchRecursive(x, y, angleRad, length, depth, maxDepth, shrink, branchWidth) {
+    // base case
+    if (depth > maxDepth) return;
+    // compute endpoint
+    const x2 = x + Math.cos(angleRad) * length;
+    const y2 = y + Math.sin(angleRad) * length;
+    // color and width depend on depth
+    const t = depth / maxDepth;
+    const color = depth > maxDepth*0.6 ? '#2b542b' : '#7b4225';
+    drawLine(x, y, x2, y2, branchWidth, color);
+
+    // reduce length and width for children
+    const nextLength = length * shrink;
+    const nextWidth = Math.max(0.5, branchWidth * 0.72);
+
+    // recursive step: two children at +/- angle
+    const a = angleRad;
+    const spread = angleRad._spread || 0; // not used; angle is passed directly
+    // left child
+    drawBranchRecursive(x2, y2, a - angleForChildren, nextLength, depth + 1, maxDepth, shrink, nextWidth);
+    // right child
+    drawBranchRecursive(x2, y2, a + angleForChildren, nextLength, depth + 1, maxDepth, shrink, nextWidth);
+  }
+
+  // Iterative implementation using an explicit stack (objects)
+  function drawBranchIterative(x, y, angleRad, length, maxDepth, shrink, branchWidth) {
+    // stack holds frames: {x, y, angle, length, depth, width}
+    const stack = [{ x, y, angle: angleRad, length, depth: 1, width: branchWidth }];
+    while (stack.length) {
+      const frame = stack.pop();
+      const { x: fx, y: fy, angle, length: flen, depth, width } = frame;
+      if (depth > maxDepth) continue;
+      const x2 = fx + Math.cos(angle) * flen;
+      const y2 = fy + Math.sin(angle) * flen;
+      const color = depth > maxDepth*0.6 ? '#2b542b' : '#7b4225';
+      drawLine(fx, fy, x2, y2, width, color);
+
+      const nextLength = flen * shrink;
+      const nextWidth = Math.max(0.5, width * 0.72);
+      // push right then left so left is processed first (LIFO)
+      stack.push({ x: x2, y: y2, angle: angle + angleForChildren, length: nextLength, depth: depth + 1, width: nextWidth });
+      stack.push({ x: x2, y: y2, angle: angle - angleForChildren, length: nextLength, depth: depth + 1, width: nextWidth });
+    }
+  }
+
+  // We'll use a closure variable for angleForChildren, updated on slider change.
+  let angleForChildren = (+angleSlider.value) * Math.PI / 180;
+
+  function render() {
+    fitDPI();
+    clear();
+    drawBackground();
+
+    const maxDepth = Math.max(1, parseInt(depthSlider.value,10));
+    const shrink = Math.max(0.1, parseInt(shrinkSlider.value,10) / 100);
+    const angleDeg = parseFloat(angleSlider.value);
+    angleForChildren = angleDeg * Math.PI / 180;
+
+    // starting trunk
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const startX = w / 2;
+    const startY = h - 6;
+    const trunkLength = Math.min(w, h) * 0.18;
+    const trunkWidth = Math.max(1.2, 8 * (1 - (maxDepth - 1) / 12));
+
+    const useIter = iterativeCb.checked;
+
+    if (useIter) {
+      drawBranchIterative(startX, startY, -Math.PI/2, trunkLength, maxDepth, shrink, trunkWidth);
+    } else {
+      // recursive call
+      // IMPORTANT: recursive version uses straightforward recursion and may hit the JS call stack limit if maxDepth is very large.
+      // Here depth is limited to 12 by the slider, so it's safe.
+      drawBranchRecursive(startX, startY, -Math.PI/2, trunkLength, 1, maxDepth, shrink, trunkWidth);
+    }
+  }
+
+  // UI wiring
+  depthSlider.addEventListener('input', function(){
+    depthVal.textContent = depthSlider.value;
+    if (autoCb.checked) render();
+  });
+  angleSlider.addEventListener('input', function(){
+    angleVal.textContent = angleSlider.value + '°';
+    if (autoCb.checked) render();
+  });
+  shrinkSlider.addEventListener('input', function(){
+    shrinkVal.textContent = (parseInt(shrinkSlider.value,10)/100).toFixed(2);
+    if (autoCb.checked) render();
+  });
+
+  drawBtn.addEventListener('click', render);
+  saveBtn.addEventListener('click', function(){
+    const link = document.createElement('a');
+    link.download = 'fractal-tree.png';
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+
+  // Initialize labels and draw
+  depthVal.textContent = depthSlider.value;
+  angleVal.textContent = angleSlider.value + '°';
+  shrinkVal.textContent = (parseInt(shrinkSlider.value,10)/100).toFixed(2);
+  render();
+
+  // Expose render for console testing
+  window.fractalRender = render;
+
+  // Note: we reference angleForChildren inside drawBranchRecursive via closure variable.
+  // To be explicit: drawBranchRecursive uses angleForChildren that is updated prior to drawing.
+})();
+</script>
+</body>
+</html>

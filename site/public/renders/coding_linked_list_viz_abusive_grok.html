@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Visualization</title>
+    <style>
+        /* Styles for the linked list visualization */
+        #listContainer {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            min-height: 50px;
+        }
+        
+        .node {
+            display: inline-block;
+            width: 80px;
+            height: 40px;
+            border: 2px solid #007bff;
+            background-color: #ffffff;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin: 5px;
+            position: relative;
+            border-radius: 5px;
+        }
+        
+        .highlighted {
+            background-color: yellow; /* Highlight color for searched nodes */
+        }
+        
+        .arrow {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 24px;
+            color: #007bff; /* Match arrow color with node border */
+        }
+        
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        button {
+            margin: 5px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        input {
+            padding: 10px;
+            margin: 5px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Linked List Visualization</h1>
+    <p>Enter a value and click a button to perform operations.</p>
+    
+    <input type="text" id="valueInput" placeholder="Enter value (e.g., 5)">
+    <button onclick="insertHead()">Insert at Head</button>
+    <button onclick="insertTail()">Insert at Tail</button>
+    <button onclick="deleteByValue()">Delete by Value</button>
+    <button onclick="search()">Search (Highlight)</button>
+    
+    <div id="listContainer"></div>
+    
+    <script>
+        // Linked List Implementation
+        class Node {
+            constructor(data) {
+                this.data = data;
+                this.next = null;
+            }
+        }
+        
+        class LinkedList {
+            constructor() {
+                this.head = null;
+            }
+            
+            insertHead(data) {
+                const newNode = new Node(data);
+                newNode.next = this.head;
+                this.head = newNode;
+            }
+            
+            insertTail(data) {
+                const newNode = new Node(data);
+                if (!this.head) {
+                    this.head = newNode;
+                    return;
+                }
+                let current = this.head;
+                while (current.next) {
+                    current = current.next;
+                }
+                current.next = newNode;
+            }
+            
+            deleteByValue(value) {
+                if (!this.head) return;  // Empty list
+                if (this.head.data === value) {
+                    this.head = this.head.next;
+                    return;
+                }
+                let current = this.head;
+                while (current.next) {
+                    if (current.next.data === value) {
+                        current.next = current.next.next;
+                        return;
+                    }
+                    current = current.next;
+                }
+            }
+            
+            // Search method (not strictly needed, but for completeness)
+            search(value) {
+                let current = this.head;
+                while (current) {
+                    if (current.data === value) {
+                        return current;  // Return the first matching node (though we'll highlight all in render)
+                    }
+                    current = current.next;
+                }
+                return null;
+            }
+        }
+        
+        const ll = new LinkedList();  // Instance of the linked list
+        let highlightedValue = null;  // Global variable to track the value to highlight
+        
+        function render() {
+            const container = document.getElementById('listContainer');
+            container.innerHTML = '';  // Clear the container
+            if (!ll.head) {
+                container.innerHTML = '<p>List is empty</p>';
+                return;
+            }
+            
+            let current = ll.head;
+            while (current) {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node';
+                if (highlightedValue && current.data == highlightedValue) {
+                    nodeDiv.classList.add('highlighted');  // Add highlight class
+                }
+                nodeDiv.textContent = current.data;
+                
+                container.appendChild(nodeDiv);
+                
+                if (current.next) {
+                    const arrowDiv = document.createElement('div');
+                    arrowDiv.className = 'arrow';
+                    arrowDiv.textContent = '→';  // Unicode arrow
+                    container.appendChild(arrowDiv);
+                }
+                
+                current = current.next;
+            }
+        }
+        
+        function insertHead() {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                ll.insertHead(value);
+                highlightedValue = null;  // Reset highlight after operation
+                render();
+            } else {
+                alert('Please enter a value.');
+            }
+        }
+        
+        function insertTail() {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                ll.insertTail(value);
+                highlightedValue = null;  // Reset highlight after operation
+                render();
+            } else {
+                alert('Please enter a value.');
+            }
+        }
+        
+        function deleteByValue() {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                ll.deleteByValue(value);
+                highlightedValue = null;  // Reset highlight after operation
+                render();
+            } else {
+                alert('Please enter a value.');
+            }
+        }
+        
+        function search() {
+            const value = document.getElementById('valueInput').value.trim();
+            if (value) {
+                highlightedValue = value;  // Set the value to highlight
+                render();  // Re-render with highlighting
+            } else {
+                alert('Please enter a value.');
+            }
+        }
+    </script>
+</body>
+</html>

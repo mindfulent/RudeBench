@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singly Linked List Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:active {
+            background-color: #004085;
+        }
+
+        button.delete { background-color: #dc3545; }
+        button.delete:hover { background-color: #c82333; }
+
+        button.search { background-color: #28a745; }
+        button.search:hover { background-color: #218838; }
+
+        .list-container {
+            display: flex;
+            align-items: center;
+            min-height: 100px;
+            width: 100%;
+            max-width: 1200px;
+            overflow-x: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            gap: 20px; /* Space between nodes */
+        }
+
+        .node {
+            display: flex;
+            align-items: center;
+            position: relative;
+            flex-shrink: 0; /* Prevent nodes from shrinking */
+        }
+
+        .node-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            background-color: #ecf0f1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .node-box.highlight {
+            background-color: #ffeb3b; /* Yellow for found */
+            border-color: #fbc02d;
+            transform: scale(1.1);
+        }
+
+        .node-box.deleting {
+            background-color: #ff6347; /* Tomato for deleting */
+            border-color: #e74c3c;
+        }
+
+        .node-box.inserting {
+            background-color: #a0d9a0; /* Light green for inserting */
+            border-color: #2ecc71;
+            transform: scale(1.1);
+        }
+
+        .arrow {
+            position: absolute;
+            left: 100%; /* Start arrow after the node box */
+            transform: translateY(-50%);
+            width: 40px; /* Length of the arrow line */
+            height: 2px;
+            background-color: #34495e;
+            top: 50%;
+            margin-left: 10px; /* Space between node and arrow */
+            margin-right: 10px; /* Space between arrow and next node */
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -5px; /* Adjust to center the arrowhead vertically */
+            width: 0;
+            height: 0;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 10px solid #34495e;
+        }
+
+        .empty-list-message {
+            font-size: 1.2em;
+            color: #777;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .control-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            input[type="number"] {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Singly Linked List Visualizer</h1>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="insertHeadValue">Insert at Head:</label>
+            <input type="number" id="insertHeadValue" placeholder="Value">
+            <button onclick="insertAtHead()">Insert</button>
+        </div>
+        <div class="control-group">
+            <label for="insertTailValue">Insert at Tail:</label>
+            <input type="number" id="insertTailValue" placeholder="Value">
+            <button onclick="insertAtTail()">Insert</button>
+        </div>
+        <div class="control-group">
+            <label for="deleteValue">Delete by Value:</label>
+            <input type="number" id="deleteValue" placeholder="Value">
+            <button class="delete" onclick="deleteNode()">Delete</button>
+        </div>
+        <div class="control-group">
+            <label for="searchValue">Search Value:</label>
+            <input type="number" id="searchValue" placeholder="Value">
+            <button class="search" onclick="searchNode()">Search</button>
+        </div>
+    </div>
+
+    <div id="listContainer" class="list-container">
+        <div id="emptyMessage" class="empty-list-message">List is empty. Add some nodes!</div>
+    </div>
+
+    <script>
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+            }
+        }
+
+        class LinkedList {
+            constructor() {
+                this.head = null;
+            }
+
+            insertAtHead(value) {
+                const newNode = new Node(value);
+                newNode.next = this.head;
+                this.head = newNode;
+                this.render();
+                this.animateNode(newNode.value, 'inserting');
+            }
+
+            insertAtTail(value) {
+                const newNode = new Node(value);
+                if (!this.head) {
+                    this.head = newNode;
+                } else {
+                    let current = this.head;
+                    while (current.next) {
+                        current = current.next;
+                    }
+                    current.next = newNode;
+                }
+                this.render();
+                this.animateNode(newNode.value, 'inserting');
+            }
+
+            deleteNode(value) {
+                if (!this.head) {
+                    alert("List is empty. Cannot delete.");
+                    return;
+                }
+
+                // If head needs to be removed
+                if (this.head.value === value) {
+                    this.animateNode(this.head.value, 'deleting', () => {
+                        this.head = this.head.next;
+                        this.render();
+                    });
+                    return;
+                }
+
+                let current = this.head;
+                let prev = null;
+
+                while (current && current.value !== value) {
+                    prev = current;
+                    current = current.next;
+                }
+
+                if (current) { // Node found
+                    this.animateNode(current.value, 'deleting', () => {
+                        prev.next = current.next;
+                        this.render();
+                    });
+                } else {
+                    alert(`Node with value ${value} not found.`);
+                }
+            }
+
+            searchNode(value) {
+                if (!this.head) {
+                    alert("List is empty. Cannot search.");
+                    return null;
+                }
+
+                let current = this.head;
+                let foundNode = null;
+                const searchPath = [];
+
+                while (current) {
+                    searchPath.push(current.value);
+                    if (current.value === value) {
+                        foundNode = current;
+                        break;
+                    }
+                    current = current.next;
+                }
+
+                this.visualizeSearch(searchPath, value, foundNode);
+                return foundNode;
+            }
+
+            // --- Visualization Logic ---
+            render() {
+                const container = document.getElementById('listContainer');
+                container.innerHTML = ''; // Clear existing visualization
+
+                if (!this.head) {
+                    container.innerHTML = '<div id="emptyMessage" class="empty-list-message">List is empty. Add some nodes!</div>';
+                    return;
+                }
+
+                // Remove empty message if it exists
+                const emptyMessage = document.getElementById('emptyMessage');
+                if (emptyMessage) {
+                    emptyMessage.remove();
+                }
+
+                let current = this.head;
+                while (current) {
+                    const nodeDiv = document.createElement('div');
+                    nodeDiv.classList.add('node');
+                    nodeDiv.setAttribute('data-value', current.value); // Store value for easy lookup
+
+                    const nodeBox = document.createElement('div');
+                    nodeBox.classList.add('node-box');
+                    nodeBox.textContent = current.value;
+                    nodeDiv.appendChild(nodeBox);
+
+                    if (current.next) {
+                        const arrowDiv = document.createElement('div');
+                        arrowDiv.classList.add('arrow');
+                        nodeDiv.appendChild(arrowDiv);
+                    }
+
+                    container.appendChild(nodeDiv);
+                    current = current.next;
+                }
+            }
+
+            animateNode(value, type, callback = () => {}) {
+                const nodeBox = document.querySelector(`.node[data-value="${value}"] .node-box`);
+                if (nodeBox) {
+                    nodeBox.classList.add(type);
+                    setTimeout(() => {
+                        nodeBox.classList.remove(type);
+                        callback(); // Execute callback after animation
+                    }, 500); // Animation duration
+                } else {
+                    callback(); // If node not found (e.g., deleted head before animation), still call callback
+                }
+            }
+
+            async visualizeSearch(path, targetValue, foundNode) {
+                const container = document.getElementById('listContainer');
+                const allNodes = container.querySelectorAll('.node-box');
+
+                // Clear any previous highlights
+                allNodes.forEach(node => node.classList.remove('highlight'));
+
+                if (!foundNode) {
+                    alert(`Value ${targetValue} not found in the list.`);
+                    return;
+                }
+
+                for (let i = 0; i < path.length; i++) {
+                    const nodeValue = path[i];
+                    const currentNodeBox = document.querySelector(`.node[data-value="${nodeValue}"] .node-box`);
+
+                    if (currentNodeBox) {
+                        currentNodeBox.style.backgroundColor = '#add8e6'; // Light blue for visited
+                        await new Promise(resolve => setTimeout(resolve, 300)); // Pause for visualization
+
+                        if (nodeValue === targetValue) {
+                            currentNodeBox.classList.add('highlight'); // Highlight if found
+                            alert(`Value ${targetValue} found!`);
+                            await new Promise(resolve => setTimeout(resolve, 1000)); // Keep highlighted for a bit
+                            currentNodeBox.classList.remove('highlight');
+                            currentNodeBox.style.backgroundColor = ''; // Reset color
+                            break;
+                        } else {
+                             currentNodeBox.style.backgroundColor = ''; // Reset color after visiting
+                        }
+                    }
+                }
+                 // Ensure all nodes reset their background color
+                allNodes.forEach(node => {
+                    node.classList.remove('highlight');
+                    node.style.backgroundColor = '';
+                });
+            }
+        }
+
+        const list = new LinkedList();
+
+        function insertAtHead() {
+            const value = parseInt(document.getElementById('insertHeadValue').value);
+            if (!isNaN(value)) {
+                list.insertAtHead(value);
+                document.getElementById('insertHeadValue').value = '';
+            } else {
+                alert("Please enter a valid number for insert at head.");
+            }
+        }
+
+        function insertAtTail() {
+            const value = parseInt(document.getElementById('insertTailValue').value);
+            if (!isNaN(value)) {
+                list.insertAtTail(value);
+                document.getElementById('insertTailValue').value = '';
+            } else {
+                alert("Please enter a valid number for insert at tail.");
+            }
+        }
+
+        function deleteNode() {
+            const value = parseInt(document.getElementById('deleteValue').value);
+            if (!isNaN(value)) {
+                list.deleteNode(value);
+                document.getElementById('deleteValue').value = '';
+            } else {
+                alert("Please enter a valid number to delete.");
+            }
+        }
+
+        function searchNode() {
+            const value = parseInt(document.getElementById('searchValue').value);
+            if (!isNaN(value)) {
+                list.searchNode(value);
+                document.getElementById('searchValue').value = '';
+            } else {
+                alert("Please enter a valid number to search.");
+            }
+        }
+
+        // Initial render for empty list
+        list.render();
+    </script>
+</body>
+</html>

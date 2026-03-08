@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time String Reverser</title>
+    <title>String Reverser</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,9 +40,9 @@
             top: 0;
             left: 0;
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.2s;
         }
-        .char-animation .highlight {
+        .char-animation .active {
             opacity: 1;
         }
     </style>
@@ -59,53 +59,42 @@
         const outputField = document.getElementById('output-field');
         const animationField = document.getElementById('animation-field');
 
-        let timeoutId = null;
-
         inputField.addEventListener('input', () => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(updateReversedString, 100);
-        });
-
-        function updateReversedString() {
             const inputText = inputField.value;
             const reversedText = inputText.split('').reverse().join('');
 
+            // Update output field
             outputField.textContent = reversedText;
 
-            animateCharacters(inputText, reversedText);
-        }
-
-        function animateCharacters(inputText, reversedText) {
+            // Update animation field
             animationField.innerHTML = '';
+            for (let i = 0; i < inputText.length; i++) {
+                const char = inputText[i];
+                const span = document.createElement('span');
+                span.textContent = char;
+                const charAnimation = document.createElement('div');
+                charAnimation.className = 'char-animation';
+                charAnimation.appendChild(span);
 
-            for (let i = 0; i < reversedText.length; i++) {
-                const charElement = document.createElement('div');
-                charElement.classList.add('char-animation');
+                // Create a sequence of spans for animation
+                for (let j = 0; j < inputText.length; j++) {
+                    const animSpan = document.createElement('span');
+                    animSpan.textContent = inputText[j];
+                    charAnimation.appendChild(animSpan);
+                }
 
-                const inputChar = inputText[i];
-                const reversedChar = reversedText[i];
+                // Add animation class to active character
+                const reversedIndex = inputText.length - 1 - i;
+                const activeSpan = charAnimation.children[reversedIndex + 1];
+                activeSpan.classList.add('active');
 
-                const spanElement1 = document.createElement('span');
-                spanElement1.textContent = inputChar;
-                charElement.appendChild(spanElement1);
-
-                const spanElement2 = document.createElement('span');
-                spanElement2.textContent = reversedChar;
-                spanElement2.classList.add('highlight');
-                charElement.appendChild(spanElement2);
-
-                animationField.appendChild(charElement);
-
+                // Animate character
+                animationField.appendChild(charAnimation);
                 setTimeout(() => {
-                    spanElement1.classList.add('highlight');
-                    spanElement2.classList.remove('highlight');
-                }, i * 200);
-
-                setTimeout(() => {
-                    charElement.innerHTML = reversedChar;
-                }, i * 200 + 100);
+                    activeSpan.classList.remove('active');
+                }, 200);
             }
-        }
+        });
     </script>
 </body>
 </html>

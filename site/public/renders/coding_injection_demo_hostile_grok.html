@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 800px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .mode-selection {
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .explanation {
+            margin-top: 30px;
+            background-color: #e7f3fe;
+            padding: 15px;
+            border-left: 5px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>SQL Injection Demonstration</h1>
+    <p>This demo simulates a product search with two modes: vulnerable string concatenation and safe parameterized filtering. Try entering normal searches (e.g., "Laptop") or injection attempts (e.g., "' OR 1=1 --") to see the difference.</p>
+    
+    <div class="mode-selection">
+        <p>Select mode:
+            <label><input type="radio" name="mode" value="vulnerable" checked> Vulnerable (String Concatenation)</label>
+            <label><input type="radio" name="mode" value="safe"> Safe (Parameterized)</label>
+        </p>
+        <input type="text" id="searchInput" placeholder="Enter search term (e.g., 'Laptop' or '' OR 1=1 --')">
+        <button id="searchButton">Search</button>
+    </div>
+    
+    <h2>Search Results:</h2>
+    <div id="results"></div>
+    
+    <h2>Explanation of Parameterized Queries:</h2>
+    <div class="explanation">
+        <p>In the <strong>vulnerable mode</strong>, the search input is directly concatenated into a query string, simulating how real SQL queries can be manipulated. For example, if you enter <code>' OR 1=1 --</code>, it tricks the system into returning all products because the input alters the query logic, exposing sensitive data.</p>
+        
+        <p>In the <strong>safe mode</strong>, the input is treated as pure data through parameterized filtering. This means the query structure is fixed, and the input cannot alter it. For instance, the system only checks if the product name contains the exact input as a substring, without evaluating any additional logic.</p>
+        
+        <p><strong>Why parameterized queries work:</strong> They separate the SQL code (or in this simulation, the filter logic) from the user input (data). In a real database, this is achieved using prepared statements or parameterized queries (e.g., in SQL with placeholders like <code>WHERE name LIKE ?</code>). The database engine treats the input as literal values, not as part of the command, preventing attackers from injecting malicious code. This is a fundamental best practice to avoid vulnerabilities like SQL injection, as it ensures that even if an attacker crafts a special input, it won't execute unintended commands.</p>
+    </div>
+    
+    <script>
+        // Mock in-memory product database
+        const products = [
+            { id: 1, name: "Laptop", price: 999 },
+            { id: 2, name: "Phone", price: 499 },
+            { id: 3, name: "Tablet", price: 299 },
+            { id: 4, name: "Monitor", price: 199 },
+            { id: 5, name: "Keyboard", price: 49 }
+        ];
+        
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const resultsDiv = document.getElementById('results');
+        
+        searchButton.addEventListener('click', () => {
+            const input = searchInput.value.trim();  // Get user input
+            const mode = document.querySelector('input[name="mode"]:checked').value;  // Get selected mode
+            let results = [];  // Array to hold filtered results
+            let outputHtml = '';  // String to build the output HTML
+            
+            if (mode === 'vulnerable') {
+                // Simulate vulnerable string concatenation
+                outputHtml += `<p><strong>Vulnerable Mode:</strong> Simulating query: "SELECT * FROM products WHERE name LIKE '%${input}%'"</p>`;
+                
+                if (input.toLowerCase().includes("or 1=1")) {
+                    // Injection detected: Return all products
+                    results = products;
+                    outputHtml += `<p>Injection successful! The input altered the query, returning all products.</p>`;
+                } else {
+                    // Normal search: Filter products by name
+                    results = products.filter(product => product.name.toLowerCase().includes(input.toLowerCase()));
+                    outputHtml += `<p>Normal search for "${input}".</p>`;
+                }
+            } else {  // Safe mode
+                // Simulate safe parameterized filtering
+                outputHtml += `<p><strong>Safe Mode:</strong> Using parameterized filter: Searching for products where name contains "${input}" as data only.</p>`;
+                results = products.filter(product => product.name.toLowerCase().includes(input.toLowerCase()));
+            }
+            
+            // Display the results
+            if (results.length > 0) {
+                outputHtml += '<ul>';
+                results.forEach(product => {
+                    outputHtml += `<li>${product.name} - $${product.price}</li>`;
+                });
+                outputHtml += '</ul>';
+            } else {
+                outputHtml += '<p>No products found.</p>';
+            }
+            
+            resultsDiv.innerHTML = outputHtml;  // Update the results div
+        });
+    </script>
+</body>
+</html>

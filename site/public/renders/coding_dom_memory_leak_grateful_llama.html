@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Memory Leak Demonstration</title>
+<title>Memory Leak Demo</title>
 <style>
   .widget {
     padding: 10px;
@@ -12,105 +12,80 @@
 </style>
 
 <body>
-  <h1>Memory Leak Demonstration</h1>
-  <button id="add-widget-btn">Add Widget</button>
-  <button id="clear-widgets-btn">Clear Widgets</button>
-  <p>Widget count: <span id="widget-count">0</span></p>
-  <p>Memory usage: <span id="memory-usage">0</span> MB</p>
+<h1>Memory Leak Demo</h1>
 
-  <h2>Buggy Version (Memory Leak)</h2>
-  <div id="buggy-dashboard"></div>
+<h2>Leaking Version</h2>
+<button id="add-leaking-widget">Add Leaking Widget</button>
+<button id="remove-leaking-widget">Remove Leaking Widget</button>
+<div id="leaking-widgets"></div>
+<p>Leaking widget count: <span id="leaking-widget-count">0</span></p>
 
-  <h2>Fixed Version (No Memory Leak)</h2>
-  <div id="fixed-dashboard"></div>
+<h2>Fixed Version</h2>
+<button id="add-fixed-widget">Add Fixed Widget</button>
+<button id="remove-fixed-widget">Remove Fixed Widget</button>
+<div id="fixed-widgets"></div>
+<p>Fixed widget count: <span id="fixed-widget-count">0</span></p>
 
-  <script>
-    let widgetCount = 0;
-    let memoryUsage = 0;
+<script>
+  let leakingWidgetCount = 0;
+  let fixedWidgetCount = 0;
 
-    // Function to update widget count and memory usage
-    function updateCounts() {
-      document.getElementById('widget-count').innerText = widgetCount;
-      try {
-        performance.memory.usedJSHeapSize /= (1024 * 1024);
-        memoryUsage = performance.memory.usedJSHeapSize;
-        document.getElementById('memory-usage').innerText = memoryUsage.toFixed(2);
-      } catch (e) {
-        // Not supported in all browsers
-      }
+  // Leaking version
+  const leakingWidgets = document.getElementById('leaking-widgets');
+  const addLeakingWidgetButton = document.getElementById('add-leaking-widget');
+  const removeLeakingWidgetButton = document.getElementById('remove-leaking-widget');
+  const leakingWidgetCountSpan = document.getElementById('leaking-widget-count');
+
+  addLeakingWidgetButton.addEventListener('click', () => {
+    const widget = document.createElement('div');
+    widget.className = 'widget';
+    widget.textContent = `Leaking Widget ${leakingWidgetCount}`;
+    leakingWidgets.appendChild(widget);
+
+    // Attach event listener and store DOM reference
+    widget.addEventListener('click', () => console.log('Leaking widget clicked'));
+    window.leakingWidgetRefs = window.leakingWidgetRefs || [];
+    window.leakingWidgetRefs.push(widget);
+
+    leakingWidgetCount++;
+    leakingWidgetCountSpan.textContent = leakingWidgetCount;
+  });
+
+  removeLeakingWidgetButton.addEventListener('click', () => {
+    if (leakingWidgets.children.length > 0) {
+      leakingWidgets.removeChild(leakingWidgets.firstChild);
+      leakingWidgetCount--;
+      leakingWidgetCountSpan.textContent = leakingWidgetCount;
     }
+  });
 
-    // Buggy version (memory leak)
-    let buggyWidgets = [];
-    document.getElementById('add-widget-btn').addEventListener('click', () => {
-      const buggyWidget = document.createElement('div');
-      buggyWidget.className = 'widget';
-      buggyWidget.innerHTML = `Buggy Widget ${widgetCount}`;
-      document.getElementById('buggy-dashboard').appendChild(buggyWidget);
+  // Fixed version
+  const fixedWidgets = document.getElementById('fixed-widgets');
+  const addFixedWidgetButton = document.getElementById('add-fixed-widget');
+  const removeFixedWidgetButton = document.getElementById('remove-fixed-widget');
+  const fixedWidgetCountSpan = document.getElementById('fixed-widget-count');
 
-      // Attach event listener and store DOM reference (memory leak)
-      buggyWidget.addEventListener('click', () => {
-        console.log(`Buggy widget ${widgetCount} clicked`);
-      });
-      buggyWidgets.push(buggyWidget);
-      widgetCount++;
-      updateCounts();
-    });
+  addFixedWidgetButton.addEventListener('click', () => {
+    const widget = document.createElement('div');
+    widget.className = 'widget';
+    widget.textContent = `Fixed Widget ${fixedWidgetCount}`;
 
-    document.getElementById('clear-widgets-btn').addEventListener('click', () => {
-      // Remove event listeners and DOM references not cleaned up (memory leak)
-      buggyWidgets.forEach((widget) => {
-        widget.removeEventListener('click', () => {});
-        widget.parentNode.removeChild(widget);
-      });
-      buggyWidgets = [];
-      widgetCount = 0;
-      document.getElementById('buggy-dashboard').innerHTML = '';
-      updateCounts();
-    });
+    // No event listener or stored reference needed
+    fixedWidgets.appendChild(widget);
 
-    // Fixed version (no memory leak)
-    let fixedWidgets = [];
-    function createFixedWidget() {
-      const fixedWidget = document.createElement('div');
-      fixedWidget.className = 'widget';
-      fixedWidget.innerHTML = `Fixed Widget ${widgetCount}`;
-      fixedWidget.addEventListener('click', () => {
-        console.log(`Fixed widget ${widgetCount} clicked`);
-      });
+    fixedWidgetCount++;
+    fixedWidgetCountSpan.textContent = fixedWidgetCount;
+  });
 
-      // Use a weak reference to the widget to allow for garbage collection
-      const weakRef = new WeakRef(fixedWidget);
-
-      fixedWidgets.push({ widget: weakRef, element: fixedWidget });
-      document.getElementById('fixed-dashboard').appendChild(fixedWidget);
-      widgetCount++;
-      updateCounts();
+  removeFixedWidgetButton.addEventListener('click', () => {
+    if (fixedWidgets.children.length > 0) {
+      fixedWidgets.removeChild(fixedWidgets.firstChild);
+      fixedWidgetCount--;
+      fixedWidgetCountSpan.textContent = fixedWidgetCount;
     }
+  });
+</script>
 
-    let createFixedWidgetBtn = document.createElement('button');
-    createFixedWidgetBtn.textContent = 'Add Fixed Widget';
-    createFixedWidgetBtn.onclick = createFixedWidget;
-    document.body.appendChild(createFixedWidgetBtn);
-
-    function clearFixedWidgets() {
-      fixedWidgets.forEach((fixedWidget) => {
-        const widget = fixedWidget.widget.deref();
-        if (widget) {
-          widget.removeEventListener('click', () => {});
-          widget.parentNode.removeChild(widget);
-        }
-      });
-      fixedWidgets = [];
-      widgetCount = 0;
-      document.getElementById('fixed-dashboard').innerHTML = '';
-      updateCounts();
-    }
-
-    let clearFixedWidgetsBtn = document.createElement('button');
-    clearFixedWidgetsBtn.textContent = 'Clear Fixed Widgets';
-    clearFixedWidgetsBtn.onclick = clearFixedWidgets;
-    document.body.appendChild(clearFixedWidgetsBtn);
-  </script>
+<button onclick="gc();console.log('GC ran')">Run GC</button>
 </body>
 </html>

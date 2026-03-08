@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Fibonacci spiral — buggy vs fixed</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 16px; }
+  h1 { margin-top: 0; }
+  .row { display:flex; gap:20px; align-items:flex-start; }
+  .col { width: 48%; }
+  canvas { background: #fff; border:1px solid #ccc; display:block; }
+  .note { font-size: 13px; color:#333; margin-top:8px; }
+  .bug { color: #b22222; font-weight:600; }
+  .fix { color: #006400; font-weight:600; }
+</style>
+</head>
+<body>
+  <h1>Fibonacci spiral on canvas — buggy vs fixed</h1>
+  <p class="note">Left: common buggy implementation (the real bug is in how positions are accumulated). Right: corrected implementation that places squares and arc centers properly so arcs connect continuously. Both use Fibonacci numbers for square sizes (interpreted as side lengths / radii).</p>
+  <div class="row">
+    <div class="col">
+      <h2 class="bug">Buggy spiral</h2>
+      <canvas id="cBug" width="500" height="500"></canvas>
+      <div class="note">
+        Bug: positions are accumulated incorrectly — the code below uses the new square size to move the origin instead of using the previous square's size and direction properly, causing misaligned arcs.
+      </div>
+    </div>
+    <div class="col">
+      <h2 class="fix">Fixed spiral</h2>
+      <canvas id="cFix" width="500" height="500"></canvas>
+      <div class="note">
+        Fix: at each step, place the next square adjacent to the previous square using the correct previous size/direction. Compute the arc center inside that square and draw a quarter circle with radius equal to the square side length so arcs join continuously.
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // Utilities
+  function fibSequence(n){
+    const f = [1,1];
+    while(f.length < n) f.push(f[f.length-1] + f[f.length-2]);
+    return f.slice(0,n);
+  }
+
+  // Draw helper to show squares and arcs
+  function drawSpiral(ctx, fib, startX, startY, scale, buggy){
+    ctx.save();
+    ctx.translate(startX, startY);
+    ctx.scale(scale, scale);
+    ctx.lineWidth = 1/scale;
+    ctx.strokeStyle = '#333';
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+
+    // directions: 0=right,1=down,2=left,3=up
+    let dir = 0;
+    // We'll track current top-left corner of the most-recent square
+    // and its size. For a common reference, start with the first square at (0,0).
+    let x = 0, y = 0;
+    let size = fib[0];
+
+    // draw first square
+    ctx.beginPath();
+    ctx.rect(x, y, size, size);
+    ctx.fill();
+    ctx.stroke();
+
+    // draw first quarter arc centered at bottom-left corner of this square (for the typical spiral)
+    // For consistent spiral orientation we will draw arcs so the spiral grows clockwise.
+    // For the very first arc we want center at (0+size, 0+size) etc depending on pattern; we'll use the sequence below.
+    // We'll store previous position/size for the buggy variant to demonstrate the mistaken update.
+    let prevX = x, prevY = y, prevSize = size;
+
+    for(let i=1;i<fib.length;i++){
+      const s = fib[i];
+
+      if(buggy){
+        // BUGGY update: move origin by the new size instead of using previous size correctly.
+        // Many incorrect implementations do something like x += (dir==0 ? size : 0) then set size = s;
+        // Here we intentionally misplace the square by using s in the translation calculation, causing misalignment.
+        switch(dir){
+          case 0: x = x + s; break;      // should use prevSize but uses s
+          case 1: y = y + s; break;
+          case 2: x = x - s; break;
+          case 3: y = y - s; break;
+        }
+      } else {
+        // CORRECT update: place the new square adjacent to the previous square using prevSize.
+        // Depending on direction, the next square's top-left is computed relative to prevX, prevY and prevSize.
+        // We compute x,y for the new square (top-left) before setting size = s.
+        switch(dir){
+          case 0: x = prevX + prevSize; y = prevY; break; // to the right of previous
+          case 1: x = prevX; y = prevY + prevSize; break; // below previous
+          case 2: x = prevX - s; y = prevY; break;        // to the left (use new size because it extends left)
+          case 3: x = prevX; y = prevY - s; break;        // above
+        }
+      }
+
+      // draw the square (top-left at x,y, side s)
+      ctx.beginPath();
+      ctx.rect(x, y, s, s);
+      ctx.fill();
+      ctx.stroke();
+
+      // draw quarter arc inside the square. For continuity we pick center depending on direction:
+      // For direction 0 (we placed square to the right), arc center is at (x, y + s) with start angle 1.5pi -> end 0.5pi etc.
+      // We'll compute center (cx,cy), startAngle, endAngle for clockwise quarter arc that connects to previous arc.
+      let cx, cy, startAngle, endAngle;
+      if(buggy){
+        // Buggy variant computes arc center relative to the (possibly wrong) top-left x,y and uses s as radius.
+        // This will further show the misalignment.
+        switch(dir){
+          case 0: cx = x;     cy = y + s; startAngle = Math.PI * 1.5; endAngle = Math.PI * 1.0; break;
+          case 1: cx = x;     cy = y;     startAngle = 0; endAngle = Math.PI * 0.5; break;
+          case 2: cx = x + s; cy = y;     startAngle = Math.PI * 0.5; endAngle = Math.PI; break;
+          default: cx = x + s; cy = y + s; startAngle = Math.PI; endAngle = Math.PI * 1.5; break;
+        }
+      } else {
+        // Correct arc center choices to make the arcs connect smoothly.
+        switch(dir){
+          case 0: // new square is to the right of previous: arc center at (x, y + s)
+            cx = x; cy = y + s; startAngle = Math.PI * 1.5; endAngle = Math.PI * 1.0; break;
+          case 1: // below previous: center at (x + s, y)
+            cx = x + s; cy = y; startAngle = 0; endAngle = Math.PI * 0.5; break;
+          case 2: // left of previous: center at (x + s, y + s)
+            cx = x + s; cy = y + s; startAngle = Math.PI * 0.5; endAngle = Math.PI; break;
+          default: // above: center at (x, y)
+            cx = x; cy = y; startAngle = Math.PI; endAngle = Math.PI * 1.5; break;
+        }
+      }
+
+      // draw the quarter arc with radius = s
+      ctx.beginPath();
+      ctx.arc(cx, cy, s, startAngle, endAngle, true);
+      ctx.strokeStyle = '#b00';
+      ctx.stroke();
+
+      // prepare for next iteration: advance direction and set previous box info
+      dir = (dir + 1) % 4;
+      prevX = x; prevY = y; prevSize = s;
+      ctx.strokeStyle = '#333';
+    }
+
+    ctx.restore();
+  }
+
+  // Setup canvases
+  const fib = fibSequence(9); // first 9 Fibonacci numbers: 1,1,2,3,5,8,13,21,34
+  // scale to fit canvas — compute total approximate span:
+  // We'll use a fixed scale that shows both clearly.
+  const cBug = document.getElementById('cBug'), cFix = document.getElementById('cFix');
+  const ctxBug = cBug.getContext('2d'), ctxFix = cFix.getContext('2d');
+
+  // Clear and draw axes for clarity
+  function clearAndGuide(ctx){
+    ctx.clearRect(0,0,ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height);
+    // draw crosshair origin
+    ctx.save();
+    ctx.translate(0.5,0.5);
+    ctx.strokeStyle = '#eee';
+    ctx.beginPath();
+    ctx.moveTo(0, ctx.canvas.height/2); ctx.lineTo(ctx.canvas.width, ctx.canvas.height/2);
+    ctx.moveTo(ctx.canvas.width/2, 0); ctx.lineTo(ctx.canvas.width/2, ctx.canvas.height);
+    ctx.stroke();
+    ctx.restore();
+  }
+  clearAndGuide(ctxBug); clearAndGuide(ctxFix);
+
+  // Draw buggy spiral (left) — place starting square near the center left
+  drawSpiral(ctxBug, fib, 90, 80, 6, true);
+
+  // Draw fixed spiral (right) — same start but using corrected placement
+  drawSpiral(ctxFix, fib, 90, 80, 6, false);
+
+  // Add labels inside canvases to make things clear
+  function label(ctx, text){
+    ctx.save();
+    ctx.font = '14px system-ui';
+    ctx.fillStyle = '#333';
+    ctx.fillText(text, 10, 20);
+    ctx.restore();
+  }
+  label(ctxBug, 'Buggy: mis-accumulated positions');
+  label(ctxFix, 'Fixed: correct adjacency of squares');
+
+})();
+</script>
+</body>
+</html>

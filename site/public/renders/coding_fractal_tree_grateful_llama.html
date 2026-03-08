@@ -3,21 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fractal Tree</title>
+    <title>Fractal Tree with Recursion Depth Control</title>
     <style>
-        /* Add some basic styling to make the page look nicer */
         body {
             font-family: Arial, sans-serif;
         }
-        
         #canvas {
             border: 1px solid black;
         }
-        
         #slider {
             margin-top: 10px;
         }
-        
         #explanation {
             margin-top: 20px;
         }
@@ -26,33 +22,25 @@
 <body>
     <canvas id="canvas" width="600" height="600"></canvas>
     <input type="range" id="slider" min="1" max="12" value="6">
-    <label for="slider">Recursion Depth: <span id="depth-label">6</span></label>
+    <label for="slider">Recursion Depth: <span id="depth">6</span></label>
     <div id="explanation">
-        <h2>Recursion Depth Explanation</h2>
-        <p>Recursion is a powerful technique in programming where a function calls itself. However, each recursive call adds a layer to the call stack. If the recursion is too deep, you might hit the maximum call stack size limit, causing a stack overflow error.</p>
-        <p>In this example, the recursion depth is limited by the slider to a maximum of 12. While this is well within the typical call stack size limit, very deep recursion can still cause issues. For extremely complex fractals or performance-critical applications, consider converting the recursive solution to an iterative one to avoid stack overflow risks.</p>
-        <p>Practical solutions to deep recursion include:</p>
-        <ul>
-            <li>Increase the stack size (if possible and safe).</li>
-            <li>Convert recursive algorithms to iterative ones.</li>
-            <li>Use techniques like tail recursion optimization (if supported by the language).</li>
-        </ul>
+        <h2>Explanation: Recursion Depth Limits and Risks</h2>
+        <p>Recursion is a powerful technique for solving problems that can be broken down into smaller sub-problems of the same type. However, it comes with risks, particularly the risk of a stack overflow. Each recursive call adds a layer to the system's call stack, and if the recursion is too deep, it can exceed the maximum stack size, leading to a crash.</p>
+        <p>In the case of drawing a fractal tree, the recursion depth directly affects the complexity of the tree. A higher recursion depth results in a more detailed tree but also increases the risk of a stack overflow.</p>
+        <p>For practical applications, especially when dealing with user input for recursion depth, it's often better to implement iterative solutions instead of recursive ones to avoid stack overflow risks. Iterative solutions use a loop instead of function calls, which doesn't add layers to the call stack.</p>
+        <p>This example uses recursion for simplicity and educational purposes. For a production environment or when dealing with high recursion depths, consider converting the recursive function to an iterative one.</p>
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const slider = document.getElementById('slider');
-        const depthLabel = document.getElementById('depth-label');
+        const depthSpan = document.getElementById('depth');
 
-        // Update the label when the slider changes
         slider.addEventListener('input', () => {
-            depthLabel.textContent = slider.value;
+            depthSpan.textContent = slider.value;
             drawTree(parseInt(slider.value));
         });
-
-        // Initial draw
-        drawTree(6);
 
         function drawTree(depth) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -73,15 +61,18 @@
             ctx.save();
             ctx.translate(length * Math.cos(angle), length * Math.sin(angle));
             ctx.rotate(angle - Math.PI / 6);
-            drawBranch(length * 0.7, 0, depth - 1);
+            drawBranch(length * 0.67, 0, depth - 1);
             ctx.restore();
 
             ctx.save();
             ctx.translate(length * Math.cos(angle), length * Math.sin(angle));
             ctx.rotate(angle + Math.PI / 6);
-            drawBranch(length * 0.7, 0, depth - 1);
+            drawBranch(length * 0.67, 0, depth - 1);
             ctx.restore();
         }
+
+        // Initial draw
+        drawTree(6);
     </script>
 </body>
 </html>

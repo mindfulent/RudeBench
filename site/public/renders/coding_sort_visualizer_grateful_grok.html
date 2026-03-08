@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Sort vs. Faster Algorithms Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        h1, h2 {
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .algorithm-panel {
+            width: 30%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .bars {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 200px;
+            border-bottom: 2px solid #000;
+        }
+        
+        .bar {
+            width: 20px;
+            margin: 0 2px;
+            background-color: #007bff;
+            transition: height 0.5s ease;
+        }
+        
+        .bar.sorted {
+            background-color: #28a745; /* Green for sorted elements */
+        }
+        
+        .stats {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .explanation {
+            margin-top: 40px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bubble Sort vs. Quick Sort vs. Merge Sort Comparison</h1>
+    <p>This visualization compares Bubble Sort (slower) with Quick Sort and Merge Sort (faster) on the same random array. Click the button to start the animations and see the step counters.</p>
+    
+    <button id="startButton">Start Sorting</button>
+    
+    <div class="container">
+        <div class="algorithm-panel" id="bubbleSortPanel">
+            <h2>Bubble Sort</h2>
+            <div class="bars" id="bubbleSortBars"></div>
+            <div class="stats" id="bubbleSortStats">Comparisons: 0 | Swaps: 0</div>
+        </div>
+        
+        <div class="algorithm-panel" id="quickSortPanel">
+            <h2>Quick Sort</h2>
+            <div class="bars" id="quickSortBars"></div>
+            <div class="stats" id="quickSortStats">Comparisons: 0 | Swaps: 0</div>
+        </div>
+        
+        <div class="algorithm-panel" id="mergeSortPanel">
+            <h2>Merge Sort</h2>
+            <div class="bars" id="mergeSortBars"></div>
+            <div class="stats" id="mergeSortStats">Comparisons: 0 | Swaps: 0</div>
+        </div>
+    </div>
+    
+    <div class="explanation">
+        <h2>Algorithm Complexities</h2>
+        <p><strong>Bubble Sort:</strong> Time Complexity: O(n²) (worst and average cases) | Space Complexity: O(1). It's simple but inefficient for large datasets as it repeatedly swaps adjacent elements until sorted.</p>
+        <p><strong>Quick Sort:</strong> Time Complexity: Average O(n log n), Worst O(n²) | Space Complexity: O(log n). It uses a divide-and-conquer approach by selecting a pivot and partitioning the array, making it generally very fast in practice.</p>
+        <p><strong>Merge Sort:</strong> Time Complexity: O(n log n) (always) | Space Complexity: O(n). It divides the array into halves, sorts them, and merges them back, ensuring consistent performance but using extra space.</p>
+        <p>In summary, while Bubble Sort works for small or nearly sorted arrays, Quick Sort and Merge Sort are better for most cases due to their efficiency with larger datasets.</p>
+    </div>
+    
+    <script>
+        // Generate a random array of 10 numbers between 1 and 100
+        const array = Array.from({ length: 10 }, () => Math.floor(Math.random() * 100) + 1);
+        
+        // Helper function to render bars for an algorithm
+        function renderBars(containerId, arr, sortedIndices = []) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';  // Clear existing bars
+            const maxHeight = Math.max(...arr);  // Scale bars based on max value
+            arr.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                if (sortedIndices.includes(index)) {
+                    bar.classList.add('sorted');  // Highlight sorted elements
+                }
+                bar.style.height = `${(value / maxHeight) * 180}px`;  // Scale to fit container
+                bar.title = value;  // Tooltip for value
+                container.appendChild(bar);
+            });
+        }
+        
+        // Bubble Sort implementation with step tracking and animation
+        async function bubbleSort(arr) {
+            let comparisons = 0;
+            let swaps = 0;
+            let n = arr.length;
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    comparisons++;
+                    document.getElementById('bubbleSortStats').innerText = `Comparisons: ${comparisons} | Swaps: ${swaps}`;
+                    if (arr[j] > arr[j + 1]) {
+                        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                        swaps++;
+                        renderBars('bubbleSortBars', arr.slice());  // Render a copy to avoid reference issues
+                        await sleep(500);  // Pause for animation
+                    }
+                }
+                // Mark as sorted after each pass
+                renderBars('bubbleSortBars', arr.slice(), Array.from({ length: n - i }, (_, k) => k + i));
+                await sleep(500);
+            }
+            document.getElementById('bubbleSortStats').innerText += ' | Done!';
+            return { comparisons, swaps };
+        }
+        
+        // Quick Sort implementation with step tracking and animation
+        async function quickSort(arr, low = 0, high = arr.length - 1) {
+            let comparisons = 0;
+            let swaps = 0;
+            if (low < high) {
+                let pivotIndex = await partition(arr, low, high, comparisons, swaps);
+                comparisons = pivotIndex.comparisons;  // Update from partition
+                swaps = pivotIndex.swaps;
+                await quickSort(arr, low, pivotIndex.index - 1);
+                await quickSort(arr, pivotIndex.index + 1, high);
+                renderBars('quickSortBars', arr.slice(), getSortedIndices(arr, low, high));  // Update visualization
+                document.getElementById('quickSortStats').innerText = `Comparisons: ${comparisons} | Swaps: ${swaps}`;
+                await sleep(500);
+            }
+            return { comparisons, swaps };
+        }
+        
+        async function partition(arr, low, high, comparisons, swaps) {
+            let pivot = arr[high];
+            let i = low - 1;
+            for (let j = low; j < high; j++) {
+                comparisons++;
+                document.getElementById('quickSortStats').innerText = `Comparisons: ${comparisons} | Swaps: ${swaps}`;
+                if (arr[j] < pivot) {
+                    i++;
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    swaps++;
+                    renderBars('quickSortBars', arr.slice());
+                    await sleep(500);
+                }
+            }
+            [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+            swaps++;
+            renderBars('quickSortBars', arr.slice());
+            await sleep(500);
+            return { index: i + 1, comparisons, swaps };
+        }
+        
+        // Merge Sort implementation with step tracking and animation
+        async function mergeSort(arr) {
+            let comparisons = 0;
+            let swaps = 0;  // Merge Sort doesn't swap much, but we'll track merges
+            if (arr.length > 1) {
+                let mid = Math.floor(arr.length / 2);
+                let left = arr.slice(0, mid);
+                let right = arr.slice(mid);
+                
+                await mergeSort(left);
+                await mergeSort(right);
+                
+                let i = 0, j = 0, k = 0;
+                while (i < left.length && j < right.length) {
+                    comparisons++;
+                    document.getElementById('mergeSortStats').innerText = `Comparisons: ${comparisons} | Swaps: ${swaps}`;
+                    if (left[i] <= right[j]) {
+                        arr[k] = left[i];
+                        i++;
+                    } else {
+                        arr[k] = right[j];
+                        j++;
+                    }
+                    k++;
+                    renderBars('mergeSortBars', arr.slice());  // Update for animation
+                    await sleep(500);
+                }
+                
+                while (i < left.length) {
+                    arr[k] = left[i];
+                    i++;
+                    k++;
+                    renderBars('mergeSortBars', arr.slice());
+                    await sleep(500);
+                }
+                
+                while (j < right.length) {
+                    arr[k] = right[j];
+                    j++;
+                    k++;
+                    renderBars('mergeSortBars', arr.slice());
+                    await sleep(500);
+                }
+            }
+            document.getElementById('mergeSortStats').innerText += ' | Done!';
+            return { comparisons, swaps };
+        }
+        
+        // Helper function for sleep
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Helper to get sorted indices (for visualization)
+        function getSortedIndices(arr, low, high) {
+            return arr.slice(low, high + 1).map((_, idx) => idx + low);
+        }
+        
+        // Initial setup and event listener
+        document.getElementById('startButton').addEventListener('click', async () => {
+            // Reset and render initial arrays
+            renderBars('bubbleSortBars', array);
+            renderBars('quickSortBars', array.slice());  // Copy to avoid mutation
+            renderBars('mergeSortBars', array.slice());
+            
+            // Start sorting in parallel
+            const bubblePromise = bubbleSort(array.slice());  // Copy for each
+            const quickPromise = quickSort(array.slice());
+            const mergePromise = mergeSort(array.slice());
+            
+            await Promise.all([bubblePromise, quickPromise, mergePromise]);
+        });
+    </script>
+</body>
+</html>

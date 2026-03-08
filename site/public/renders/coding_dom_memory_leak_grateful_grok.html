@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Widget Memory Leak Demonstration</title>
+    <style>
+        /* Basic styling for the dashboard */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .dashboard {
+            margin-bottom: 40px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .widget {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            cursor: pointer; /* Indicates it's clickable */
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .counter {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Widget Memory Leak Demonstration</h1>
+
+    <div id="explanation">
+        <h2>Explanation of the Scenario</h2>
+        <p>In this demo, we have two dashboards: a "buggy" one and a "fixed" one. Each allows you to add and remove widgets dynamically. A widget is a simple clickable div that logs a message when clicked.</p>
+        
+        <p><strong>Why the GC diagnosis is wrong:</strong> Your colleague might think the garbage collector (GC) isn't working because memory usage appears to grow over time in the buggy version. However, the GC is functioning correctly—it's just that references to removed widgets (e.g., DOM elements and event listeners) are not being released. In the buggy dashboard, these references are stored in an array and never cleaned up, preventing the browser from garbage collecting them. This creates a memory leak, making it seem like the GC is broken.</p>
+        
+        <p>In the fixed dashboard, we properly remove these references when a widget is deleted, allowing the GC to free up memory. To visualize this:</p>
+        <ul>
+            <li><strong>Active Widgets Counter:</strong> Shows the number of widgets currently in the DOM for each dashboard.</li>
+            <li><strong>Leaked References Counter (buggy only):</strong> Shows how many unreleased references are lingering in memory.</li>
+        </ul>
+        <p>Try adding and removing widgets in both dashboards. In a real browser, you could use developer tools (e.g., Chrome's Performance tab) to monitor memory usage and confirm the leak in the buggy version.</p>
+    </div>
+
+    <h2>Buggy Dashboard (Memory Leak)</h2>
+    <div class="dashboard" id="buggy-dashboard">
+        <div id="buggy-container"></div>
+        <button id="add-buggy">Add Buggy Widget</button>
+        <button id="remove-buggy">Remove Buggy Widget</button>
+        <p>Active Buggy Widgets: <span id="buggy-counter" class="counter">0</span></p>
+        <p>Leaked References: <span id="leaked-counter" class="counter">0</span></p>
+    </div>
+
+    <h2>Fixed Dashboard</h2>
+    <div class="dashboard" id="fixed-dashboard">
+        <div id="fixed-container"></div>
+        <button id="add-fixed">Add Fixed Widget</button>
+        <button id="remove-fixed">Remove Fixed Widget</button>
+        <p>Active Fixed Widgets: <span id="fixed-counter" class="counter">0</span></p>
+    </div>
+
+    <script>
+        // Arrays to store references (simulating memory leaks)
+        let buggyArray = [];  // For buggy widgets: references are never cleaned up
+        let fixedArray = [];  // For fixed widgets: references are cleaned up
+
+        // Function to update counters
+        function updateCounters() {
+            document.getElementById('buggy-counter').textContent = document.getElementById('buggy-container').children.length;
+            document.getElementById('leaked-counter').textContent = buggyArray.length;  // Shows lingering references
+            document.getElementById('fixed-counter').textContent = document.getElementById('fixed-container').children.length;
+        }
+
+        // Buggy version: Add widget
+        document.getElementById('add-buggy').addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = 'Buggy Widget (Click me!)';
+            
+            // Attach an event listener (not removed in buggy version)
+            widget.addEventListener('click', () => {
+                console.log('Buggy Widget clicked!');  // This listener holds a reference
+            });
+            
+            document.getElementById('buggy-container').appendChild(widget);
+            buggyArray.push(widget);  // Store a reference in the array (never cleaned)
+            updateCounters();
+        });
+
+        // Buggy version: Remove widget
+        document.getElementById('remove-buggy').addEventListener('click', () => {
+            const container = document.getElementById('buggy-container');
+            if (container.lastChild) {
+                const widget = container.lastChild;  // Get the last widget
+                container.removeChild(widget);  // Remove from DOM, but...
+                // ...DO NOT remove the event listener or the reference from buggyArray
+                updateCounters();  // This will show the active count dropping, but leaked references remain
+            }
+        });
+
+        // Fixed version: Add widget
+        document.getElementById('add-fixed').addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = 'Fixed Widget (Click me!)';
+            
+            // Attach an event listener
+            widget.addEventListener('click', () => {
+                console.log('Fixed Widget clicked!');  // This listener will be handled properly
+            });
+            
+            document.getElementById('fixed-container').appendChild(widget);
+            fixedArray.push(widget);  // Store a reference temporarily
+            updateCounters();
+        });
+
+        // Fixed version: Remove widget
+        document.getElementById('remove-fixed').addEventListener('click', () => {
+            const container = document.getElementById('fixed-container');
+            if (container.lastChild) {
+                const widget = container.lastChild;  // Get the last widget
+                container.removeChild(widget);  // Remove from DOM
+                // Properly clean up: Remove the reference from the array
+                if (fixedArray.length > 0) {
+                    fixedArray.pop();  // Release the reference
+                }
+                updateCounters();  // Now, both active count and references are in sync
+            }
+        });
+    </script>
+</body>
+</html>

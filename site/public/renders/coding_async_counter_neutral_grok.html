@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counter Widget with Race Condition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        
+        .widget {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 40%;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Counter Widget Demo</h1>
+    
+    <div class="container">
+        <div class="widget" id="buggy-widget">
+            <h2>Buggy Counter (Race Condition)</h2>
+            <p>Current Count: <span id="buggy-count">0</span></p>
+            <button id="buggy-button">Increment</button>
+            <p><em>Rapid clicks may cause the count to be incorrect due to overlapping updates.</em></p>
+        </div>
+        
+        <div class="widget" id="corrected-widget">
+            <h2>Corrected Counter (No Race Condition)</h2>
+            <p>Current Count: <span id="corrected-count">0</span></p>
+            <button id="corrected-button">Increment</button>
+            <p><em>Rapid clicks will always show the correct count.</em></p>
+        </div>
+    </div>
+    
+    <div class="explanation">
+        <h2>Explanation of the Race Condition and Fix</h2>
+        <p><strong>Why the race condition occurs in the buggy version:</strong></p>
+        <p>In the buggy counter, each button click schedules an asynchronous update using <code>setTimeout</code>. This update reads the current value of the shared <code>count</code> variable, increments it, and writes it back. If you click the button rapidly, multiple <code>setTimeout</code> calls can overlap. For example:</p>
+        <ul>
+            <li>Click 1: Reads count (e.g., 0), increments to 1, but before writing, another click happens.</li>
+            <li>Click 2: Reads the still-unchanged count (e.g., 0), increments to 1, and writes 1.</li>
+            <li>Click 1 finally writes its value (1), overwriting the previous write.</li>
+        </ul>
+        <p>This results in lost updates, making the displayed count fall behind or show incorrect values because the operations are not atomic—they don't happen as a single, uninterruptible step.</p>
+        
+        <p><strong>How the fix resolves it in the corrected version:</strong></p>
+        <p>The corrected counter uses a promise chain to serialize the updates. Each increment operation waits for the previous one to complete before starting. This ensures that even if multiple button clicks are made rapidly, the updates are processed one at a time in the order they were requested. Specifically:</p>
+        <ul>
+            <li>We maintain a chain of promises where each <code>setTimeout</code> call returns a promise that resolves after the update is done.</li>
+            <li>This prevents overlapping by queuing the operations, making the increments effectively atomic in sequence.</li>
+        </ul>
+        <p>As a result, the corrected counter always reflects the accurate total number of clicks, regardless of how fast you click.</p>
+    </div>
+    
+    <script>
+        // Buggy version
+        let buggyCount = 0;  // Shared count variable
+        const buggyDisplay = document.getElementById('buggy-count');
+        const buggyButton = document.getElementById('buggy-button');
+        
+        buggyButton.addEventListener('click', () => {
+            setTimeout(() => {
+                let current = buggyCount;  // Read the current value
+                current += 1;              // Modify it
+                buggyCount = current;      // Write it back
+                buggyDisplay.textContent = buggyCount;  // Update the display
+            }, 0);  // Asynchronous delay
+        });
+        
+        // Corrected version
+        let correctedCount = 0;  // Shared count variable
+        let currentPromise = Promise.resolve();  // Start with a resolved promise
+        const correctedDisplay = document.getElementById('corrected-count');
+        const correctedButton = document.getElementById('corrected-button');
+        
+        correctedButton.addEventListener('click', () => {
+            currentPromise = currentPromise.then(() => {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        correctedCount += 1;  // Directly increment (now serialized)
+                        correctedDisplay.textContent = correctedCount;  // Update the display
+                        resolve();  // Resolve the promise after update
+                    }, 0);  // Asynchronous delay, but chained
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CSV to HTML Table</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 24px;
+      background: #f7f9fb;
+      color: #111;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 10px;
+      font-family: monospace;
+      box-sizing: border-box;
+      resize: vertical;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: white;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:active { transform: translateY(1px); }
+    button.secondary {
+      background: #64748b;
+    }
+
+    .output {
+      margin-top: 18px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+    }
+
+    table.csv-table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 480px;
+      table-layout: fixed;
+      word-wrap: break-word;
+    }
+
+    table.csv-table th,
+    table.csv-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    table.csv-table thead th {
+      background: linear-gradient(180deg,#f1f5f9,#e2e8f0);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    table.csv-table tbody tr:nth-child(odd) {
+      background: #ffffff;
+    }
+
+    table.csv-table tbody tr:nth-child(even) {
+      background: #fbfdff;
+    }
+
+    table.csv-table td.missing {
+      color: #9aa6b2;
+      font-style: italic;
+      background: #fffaf0;
+    }
+
+    .info {
+      margin-top: 8px;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .error {
+      color: #b91c1c;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>CSV → HTML Table</h1>
+  <div class="controls">
+    <div style="flex:1; min-width:320px;">
+      <label for="csvInput" style="display:block; font-weight:600; margin-bottom:6px;">Paste CSV data:</label>
+      <textarea id="csvInput" placeholder='Examples:
+Name,Age,Notes
+"Smith, John",30,"Likes ""escaping"" and commas"
+Alice,,"Missing age"'></textarea>
+
+      <div class="buttons">
+        <button id="parseBtn">Parse CSV</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+        <button id="sampleBtn" class="secondary">Insert Sample</button>
+      </div>
+      <div class="info">Parser supports quoted fields with commas, escaped quotes (""), and uneven row lengths.</div>
+      <div id="error" class="error" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="output">
+    <div id="tableContainer" class="table-wrap" aria-live="polite"></div>
+  </div>
+
+  <script>
+    // CSV parser: returns array of rows (arrays of strings)
+    // Handles RFC4180-like CSV:
+    // - Fields separated by commas
+    // - Fields may be quoted with double quotes
+    // - Inside quoted fields, double double-quotes ("") represent a literal quote
+    // - Handles CRLF or LF line breaks
+    // - Tolerant of varying row lengths; preserves empty fields
+    function parseCSV(text) {
+      if (text == null) return [];
+
+      // Remove BOM if present
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+      const rows = [];
+      let i = 0;
+      const len = text.length;
+      let row = [];
+      let field = '';
+      let inQuotes = false;
+      while (i < len) {
+        const ch = text[i];
+
+        if (inQuotes) {
+          if (ch === '"') {
+            // Check for escaped quote
+            if (i + 1 < len && text[i + 1] === '"') {
+              field += '"';
+              i += 2;
+              continue;
+            } else {
+              // Closing quote
+              inQuotes = false;
+              i++;
+              continue;
+            }
+          } else {
+            // Any character (including newlines) is part of the field
+            field += ch;
+            i++;
+            continue;
+          }
+        } else {
+          // Not in quotes
+          if (ch === '"') {
+            // Opening quote
+            inQuotes = true;
+            i++;
+            continue;
+          } else if (ch === ',') {
+            // Field separator
+            row.push(field);
+            field = '';
+            i++;
+            continue;
+          } else if (ch === '\r') {
+            // CR maybe followed by LF
+            row.push(field);
+            field = '';
+            rows.push(row);
+            row = [];
+            i++;
+            if (i < len && text[i] === '\n') i++;
+            continue;
+          } else if (ch === '\n') {
+            // LF line ending
+            row.push(field);
+            field = '';
+            rows.push(row);
+            row = [];
+            i++;
+            continue;
+          } else {
+            field += ch;
+            i++;
+            continue;
+          }
+        }
+      }
+
+      // End of input
+      // Push last field and row if needed
+      if (inQuotes) {
+        // Unterminated quoted field. We'll treat as end-of-input and close it.
+        // (Could also throw an error; here we try to be tolerant.)
+        // No extra action needed, field already contains remaining text.
+      }
+      // Push final field
+      row.push(field);
+      // If there's at least one non-empty cell or previous rows exist, push row
+      // We will push even an empty final row to reflect exact content
+      rows.push(row);
+
+      // If the input ends with an empty string and text ends with newline, above logic already added an extra empty row.
+      return rows;
+    }
+
+    // Render a parsed CSV (array of rows) into an HTML table
+    function renderTable(rows) {
+      const container = document.getElementById('tableContainer');
+      container.innerHTML = '';
+
+      if (!rows || rows.length === 0) {
+        container.textContent = 'No data to display.';
+        return;
+      }
+
+      // Determine max columns across all rows
+      const maxCols = rows.reduce((m, r) => Math.max(m, r.length), 0);
+
+      // Build table
+      const table = document.createElement('table');
+      table.className = 'csv-table';
+      const thead = document.createElement('thead');
+      const tbody = document.createElement('tbody');
+
+      // Use first row as header if there is more than one row; otherwise use generic headers
+      const headerRow = document.createElement('tr');
+      const headerSource = rows.length > 1 ? rows[0] : Array.from({length: maxCols}, (_,i)=>('Column ' + (i+1)));
+
+      for (let c = 0; c < maxCols; c++) {
+        const th = document.createElement('th');
+        const val = headerSource[c] != null ? headerSource[c] : '';
+        th.textContent = val;
+        headerRow.appendChild(th);
+      }
+
+      thead.appendChild(headerRow);
+
+      // Build body rows
+      // If we used first row as header, body starts at index 1; else index 0
+      const startIndex = rows.length > 1 ? 1 : 0;
+      for (let r = startIndex; r < rows.length; r++) {
+        const tr = document.createElement('tr');
+        const row = rows[r];
+        for (let c = 0; c < maxCols; c++) {
+          const td = document.createElement('td');
+          if (c < row.length) {
+            td.textContent = row[c];
+            // mark empty strings explicitly
+            if (row[c] === '') {
+              td.classList.add('missing');
+              td.textContent = '(empty)';
+            }
+          } else {
+            td.className = 'missing';
+            td.textContent = '(missing)';
+          }
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+
+    // Wire up UI
+    (function() {
+      const input = document.getElementById('csvInput');
+      const parseBtn = document.getElementById('parseBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const sampleBtn = document.getElementById('sampleBtn');
+      const errorBox = document.getElementById('error');
+
+      function showError(msg) {
+        errorBox.style.display = msg ? 'block' : 'none';
+        errorBox.textContent = msg || '';
+      }
+
+      parseBtn.addEventListener('click', () => {
+        showError('');
+        const text = input.value;
+        if (!text) {
+          showError('Please paste or enter CSV data first.');
+          return;
+        }
+
+        try {
+          const rows = parseCSV(text);
+
+          if (rows.length === 1 && rows[0].length === 1 && rows[0][0] === '') {
+            // single empty cell
+            showError('No CSV content detected.');
+            document.getElementById('tableContainer').innerText = 'No data to display.';
+            return;
+          }
+
+          renderTable(rows);
+        } catch (err) {
+          showError('Error parsing CSV: ' + (err && err.message ? err.message : String(err)));
+        }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        document.getElementById('tableContainer').innerHTML = '';
+        showError('');
+      });
+
+      sampleBtn.addEventListener('click', () => {
+        input.value = [
+          'Name,Age,Notes',
+          '"Smith, John",30,"Likes ""escaping"" and commas"',
+          'Alice,,"Missing age"',
+          '"Line\nBreak","Field with ""quote"" inside","Last"',
+          'Bob,45,Extra,Column,Here'
+        ].join('\\n');
+      });
+
+      // Allow Ctrl+Enter to parse
+      input.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          parseBtn.click();
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>

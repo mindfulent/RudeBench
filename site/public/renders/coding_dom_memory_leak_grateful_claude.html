@@ -2,250 +2,1298 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GC Memory Leak Demo Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Leak vs GC Demo</title>
   <style>
-    /* ── Reset & base ── */
+    /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3250;
+      --accent:    #6c63ff;
+      --accent2:   #00d4aa;
+      --danger:    #ff4d6d;
+      --warn:      #ffb347;
+      --text:      #e8eaf6;
+      --text-dim:  #8892b0;
+      --green:     #43e97b;
+      --radius:    12px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
 
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      padding: 24px;
+      padding: 24px 16px 60px;
     }
 
-    h1 {
-      text-align: center;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #f8fafc;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #94a3b8;
-      font-size: 0.9rem;
-      margin-bottom: 28px;
-    }
+    /* ── Typography ── */
+    h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -.5px; }
+    h2 { font-size: 1.15rem; font-weight: 600; }
+    h3 { font-size: .95rem; font-weight: 600; text-transform: uppercase;
+         letter-spacing: .08em; color: var(--text-dim); }
 
     /* ── Layout ── */
-    .panels {
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .page-header p {
+      color: var(--text-dim);
+      margin-top: 6px;
+      font-size: .95rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .badge-leak  { background: rgba(255,77,109,.2);  color: var(--danger); }
+    .badge-fixed { background: rgba(0,212,170,.2);   color: var(--accent2);}
+    .badge-info  { background: rgba(108,99,255,.2);  color: var(--accent); }
+
+    .columns {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 24px;
       max-width: 1200px;
       margin: 0 auto 32px;
     }
+    @media (max-width: 780px) { .columns { grid-template-columns: 1fr; } }
 
-    @media (max-width: 760px) {
-      .panels { grid-template-columns: 1fr; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
     }
-
-    /* ── Panel card ── */
-    .panel {
-      background: #1e2130;
-      border-radius: 14px;
-      border: 1px solid #2d3348;
-      overflow: hidden;
-    }
-
-    .panel-header {
-      padding: 16px 20px;
+    .card-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #2d3348;
-    }
-
-    .panel-header h2 {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .badge {
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .badge-bug  { background: #7f1d1d; color: #fca5a5; }
-    .badge-fix  { background: #14532d; color: #86efac; }
-
-    .panel-body { padding: 16px 20px; }
-
-    /* ── Controls ── */
-    .controls {
-      display: flex;
-      gap: 10px;
+      justify-content: space-between;
       margin-bottom: 16px;
-      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
     }
 
-    button {
-      cursor: pointer;
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
       border: none;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: .85rem;
       font-weight: 600;
-      padding: 8px 16px;
-      transition: filter 0.15s, transform 0.1s;
+      cursor: pointer;
+      transition: filter .15s, transform .1s;
+      white-space: nowrap;
     }
+    .btn:hover  { filter: brightness(1.15); }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent);  color: #fff; }
+    .btn-success { background: var(--accent2); color: #000; }
+    .btn-danger  { background: var(--danger);  color: #fff; }
+    .btn-warn    { background: var(--warn);    color: #000; }
+    .btn-ghost   {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 4px 10px; font-size: .78rem; border-radius: 6px; }
 
-    button:active { transform: scale(0.96); }
-    button:hover  { filter: brightness(1.15); }
-
-    .btn-add    { background: #3b82f6; color: #fff; }
-    .btn-remove { background: #ef4444; color: #fff; }
-    .btn-clear  { background: #6b7280; color: #fff; }
-
-    /* ── Stats bar ── */
-    .stats {
+    .controls {
       display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .stat-box {
-      flex: 1;
-      min-width: 100px;
-      background: #252840;
-      border-radius: 10px;
-      padding: 10px 14px;
-      text-align: center;
-    }
-
-    .stat-box .label {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #64748b;
-      margin-bottom: 4px;
-    }
-
-    .stat-box .value {
-      font-size: 1.4rem;
-      font-weight: 700;
-    }
-
-    .value-green  { color: #4ade80; }
-    .value-red    { color: #f87171; }
-    .value-yellow { color: #fbbf24; }
-    .value-blue   { color: #60a5fa; }
-
-    /* ── Leak indicator ── */
-    .leak-bar-wrap {
-      margin-bottom: 16px;
-    }
-
-    .leak-bar-label {
-      font-size: 0.75rem;
-      color: #94a3b8;
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .leak-bar-track {
-      height: 10px;
-      background: #252840;
-      border-radius: 99px;
-      overflow: hidden;
-    }
-
-    .leak-bar-fill {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.4s ease, background 0.4s ease;
-    }
-
-    /* ── Widget list ── */
-    .widget-list {
-      display: flex;
-      flex-direction: column;
       gap: 8px;
-      max-height: 320px;
-      overflow-y: auto;
-      padding-right: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
     }
 
-    .widget-list::-webkit-scrollbar { width: 5px; }
-    .widget-list::-webkit-scrollbar-track { background: transparent; }
-    .widget-list::-webkit-scrollbar-thumb { background: #3d4460; border-radius: 99px; }
+    /* ── Widget Grid ── */
+    .widget-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      min-height: 120px;
+    }
 
     .widget-item {
-      background: #252840;
+      background: var(--surface2);
+      border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid transparent;
-      animation: slideIn 0.2s ease;
+      padding: 12px;
+      position: relative;
+      transition: border-color .2s;
+      animation: popIn .2s ease;
+    }
+    .widget-item:hover { border-color: var(--accent); }
+    @keyframes popIn {
+      from { opacity:0; transform: scale(.85); }
+      to   { opacity:1; transform: scale(1);   }
     }
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .widget-icon {
-      font-size: 1.3rem;
-      flex-shrink: 0;
-    }
-
-    .widget-info { flex: 1; min-width: 0; }
-
-    .widget-name {
-      font-size: 0.85rem;
+    .widget-item .w-title {
+      font-size: .78rem;
       font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 6px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .widget-item .w-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .widget-item .w-bar {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .widget-item .w-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .4s ease;
+    }
+    .widget-item .w-remove {
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,77,109,.15);
+      color: var(--danger);
+      font-size: .7rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .widget-item:hover .w-remove { opacity: 1; }
+    .widget-item .w-remove:hover { background: var(--danger); color: #fff; }
 
-    .widget-meta {
-      font-size: 0.7rem;
-      color: #64748b;
-      margin-top: 2px;
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 32px;
+      color: var(--text-dim);
+      font-size: .9rem;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
     }
 
-    .widget-remove-btn {
-      background: #3d1f1f;
-      color: #f87171;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 0.75rem;
+    /* ── Stats Bar ── */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
     }
-
-    /* ── Ghost list (leaked references) ── */
-    .ghost-section {
-      margin-top: 14px;
-    }
-
-    .ghost-title {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: #ef4444;
-      margin-bottom: 6px;
+    .stat-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: .82rem;
       display: flex;
       align-items: center;
       gap: 6px;
     }
+    .stat-pill .sp-label { color: var(--text-dim); }
+    .stat-pill .sp-value { font-weight: 700; }
+    .sp-value.danger { color: var(--danger); }
+    .sp-value.success { color: var(--accent2); }
+    .sp-value.warn { color: var(--warn); }
 
-    .ghost-title::before {
-      content: '👻';
+    /* ── Leak Visualizer ── */
+    .leak-viz {
+      margin-top: 16px;
+      padding: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
     }
-
-    .ghost-list {
+    .leak-viz h3 { margin-bottom: 10px; }
+    .leak-list {
+      max-height: 160px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      max-height:
+      gap: 4px;
+    }
+    .leak-list::-webkit-scrollbar { width: 4px; }
+    .leak-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .leak-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: .78rem;
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity:0; transform: translateX(-8px); }
+      to   { opacity:1; transform: translateX(0);    }
+    }
+    .leak-entry.active   { background: rgba(108,99,255,.1); }
+    .leak-entry.leaked   { background: rgba(255,77,109,.08); }
+    .leak-entry.cleaned  { background: rgba(0,212,170,.08); }
+
+    .le-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .active  .le-dot { background: var(--accent); }
+    .leaked  .le-dot { background: var(--danger); }
+    .cleaned .le-dot { background: var(--accent2); }
+
+    .le-name  { flex: 1; font-weight: 600; }
+    .le-info  { color: var(--text-dim); font-size: .72rem; }
+    .le-badge {
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .leaked  .le-badge { background: rgba(255,77,109,.2);  color: var(--danger); }
+    .cleaned .le-badge { background: rgba(0,212,170,.2);   color: var(--accent2);}
+    .active  .le-badge { background: rgba(108,99,255,.2);  color: var(--accent); }
+
+    /* ── Memory Graph ── */
+    .graph-wrap {
+      position: relative;
+      height: 100px;
+      margin-top: 12px;
+    }
+    canvas.mem-graph {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+    }
+    .graph-label {
+      position: absolute;
+      top: 6px; right: 8px;
+      font-size: .7rem;
+      color: var(--text-dim);
+    }
+
+    /* ── Explanation Card ── */
+    .explanation {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+    }
+    .explanation .card { padding: 24px 28px; }
+    .exp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 16px;
+    }
+    @media (max-width: 680px) { .exp-grid { grid-template-columns: 1fr; } }
+
+    .exp-block {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 16px;
+      border-left: 3px solid transparent;
+    }
+    .exp-block.wrong  { border-color: var(--danger); }
+    .exp-block.right  { border-color: var(--accent2); }
+    .exp-block h3 { margin-bottom: 10px; font-size: .85rem; }
+    .exp-block p, .exp-block li {
+      font-size: .85rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .exp-block ul { padding-left: 18px; }
+    .exp-block li { margin-bottom: 4px; }
+    .exp-block strong { color: var(--text); }
+
+    /* ── Code Snippet ── */
+    .code-wrap {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+    }
+    .code-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: -1px;
+    }
+    .code-tab {
+      padding: 8px 16px;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: var(--surface2);
+      color: var(--text-dim);
+      font-size: .82rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background .15s, color .15s;
+    }
+    .code-tab.active { background: var(--surface); color: var(--text); }
+    .code-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0 8px 8px 8px;
+      padding: 20px;
+      overflow-x: auto;
+    }
+    .code-panel.active { display: block; }
+    pre {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: .8rem;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre;
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .cm  { color: #546e7a; font-style: italic; }
+    .num { color: #f78c6c; }
+    .prop{ color: #ffcb6b; }
+
+    /* ── Counter ── */
+    .counter-section {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+    }
+    .counter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .counter-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .counter-card .cc-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .counter-card .cc-label {
+      font-size: .75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .cc-num.danger  { color: var(--danger); }
+    .cc-num.success { color: var(--accent2); }
+    .cc-num.warn    { color: var(--warn); }
+    .cc-num.accent  { color: var(--accent); }
+
+    /* ── Log ── */
+    .log-section {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .log-box {
+      background: #0a0c14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      height: 160px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: .78rem;
+    }
+    .log-box::-webkit-scrollbar { width: 4px; }
+    .log-box::-webkit-scrollbar-thumb { background: var(--border); }
+    .log-line {
+      padding: 2px 0;
+      display: flex;
+      gap: 8px;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+    .log-time { color: #546e7a; flex-shrink: 0; }
+    .log-msg.info  { color: var(--accent); }
+    .log-msg.warn  { color: var(--warn); }
+    .log-msg.error { color: var(--danger); }
+    .log-msg.ok    { color: var(--accent2); }
+    .log-msg.dim   { color: var(--text-dim); }
+
+    /* ── Scrollbar global ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════════════════ -->
+<div class="page-header">
+  <h1>🧠 Memory Leak vs Garbage Collector</h1>
+  <p>Why your colleague's GC diagnosis is wrong — and how to actually fix it</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     COUNTER SECTION
+═══════════════════════════════════════════════════ -->
+<section class="counter-section">
+  <div class="card">
+    <div class="card-header">
+      <h2>📊 Live Widget Tracking Counter</h2>
+      <span class="badge badge-info">Real-time</span>
+    </div>
+    <div class="counter-grid">
+      <div class="counter-card">
+        <div class="cc-num accent"  id="cnt-total">0</div>
+        <div class="cc-label">Total Created</div>
+      </div>
+      <div class="counter-card">
+        <div class="cc-num success" id="cnt-active-buggy">0</div>
+        <div class="cc-label">Buggy Active DOM</div>
+      </div>
+      <div class="counter-card">
+        <div class="cc-num danger"  id="cnt-leaked-listeners">0</div>
+        <div class="cc-label">Leaked Listeners</div>
+      </div>
+      <div class="counter-card">
+        <div class="cc-num danger"  id="cnt-leaked-refs">0</div>
+        <div class="cc-label">Leaked DOM Refs</div>
+      </div>
+      <div class="counter-card">
+        <div class="cc-num success" id="cnt-active-fixed">0</div>
+        <div class="cc-label">Fixed Active DOM</div>
+      </div>
+      <div class="counter-card">
+        <div class="cc-num success" id="cnt-cleaned">0</div>
+        <div class="cc-label">Properly Cleaned</div>
+      </div>
+      <div class="counter-card">
+        <div class="cc-num warn"    id="cnt-mem-buggy">0 KB</div>
+        <div class="cc-label">Simulated Leak Size</div>
+      </div>
+      <div class="counter-card">
+        <div class="cc-num success" id="cnt-mem-fixed">0 KB</div>
+        <div class="cc-label">Fixed Memory Use</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     TWO-COLUMN DASHBOARDS
+═══════════════════════════════════════════════════ -->
+<div class="columns">
+
+  <!-- ── BUGGY VERSION ── -->
+  <div class="card" id="buggy-card">
+    <div class="card-header">
+      <h2>🐛 Buggy Version <span class="badge badge-leak">Leaking</span></h2>
+    </div>
+
+    <div class="stats-bar" id="buggy-stats">
+      <div class="stat-pill">
+        <span class="sp-label">DOM nodes:</span>
+        <span class="sp-value" id="bs-dom">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="sp-label">Hidden refs:</span>
+        <span class="sp-value danger" id="bs-refs">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="sp-label">Listeners:</span>
+        <span class="sp-value danger" id="bs-listeners">0</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-danger btn-sm" id="buggy-add">＋ Add Widget</button>
+      <button class="btn btn-warn btn-sm"   id="buggy-add5">＋＋ Add 5</button>
+      <button class="btn btn-ghost btn-sm"  id="buggy-clear">Remove All</button>
+    </div>
+
+    <div class="widget-grid" id="buggy-grid">
+      <div class="empty-state">No widgets yet. Add some to see the leak.</div>
+    </div>
+
+    <div class="leak-viz">
+      <h3>🔴 Retained References (never freed)</h3>
+      <div class="leak-list" id="buggy-leak-list">
+        <div style="color:var(--text-dim);font-size:.78rem;padding:8px;">
+          Leaked references will appear here when widgets are removed…
+        </div>
+      </div>
+    </div>
+
+    <div class="graph-wrap">
+      <canvas id="buggy-graph" class="mem-graph"></canvas>
+      <div class="graph-label">Simulated memory (buggy)</div>
+    </div>
+  </div>
+
+  <!-- ── FIXED VERSION ── -->
+  <div class="card" id="fixed-card">
+    <div class="card-header">
+      <h2>✅ Fixed Version <span class="badge badge-fixed">Clean</span></h2>
+    </div>
+
+    <div class="stats-bar" id="fixed-stats">
+      <div class="stat-pill">
+        <span class="sp-label">DOM nodes:</span>
+        <span class="sp-value" id="fs-dom">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="sp-label">Hidden refs:</span>
+        <span class="sp-value success" id="fs-refs">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="sp-label">Listeners:</span>
+        <span class="sp-value success" id="fs-listeners">0</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-success btn-sm" id="fixed-add">＋ Add Widget</button>
+      <button class="btn btn-warn btn-sm"    id="fixed-add5">＋＋ Add 5</button>
+      <button class="btn btn-ghost btn-sm"   id="fixed-clear">Remove All</button>
+    </div>
+
+    <div class="widget-grid" id="fixed-grid">
+      <div class="empty-state">No widgets yet. Add some to see clean removal.</div>
+    </div>
+
+    <div class="leak-viz">
+      <h3>🟢 Cleanup Log (properly freed)</h3>
+      <div class="leak-list" id="fixed-leak-list">
+        <div style="color:var(--text-dim);font-size:.78rem;padding:8px;">
+          Cleanup confirmations will appear here when widgets are removed…
+        </div>
+      </div>
+    </div>
+
+    <div class="graph-wrap">
+      <canvas id="fixed-graph" class="mem-graph"></canvas>
+      <div class="graph-label">Simulated memory (fixed)</div>
+    </div>
+  </div>
+
+</div><!-- /columns -->
+
+<!-- ═══════════════════════════════════════════════════
+     EXPLANATION
+═══════════════════════════════════════════════════ -->
+<section class="explanation">
+  <div class="card">
+    <div class="card-header">
+      <h2>🔍 Why the GC Diagnosis Is Wrong</h2>
+      <span class="badge badge-info">Analysis</span>
+    </div>
+
+    <div class="exp-grid">
+      <div class="exp-block wrong">
+        <h3 style="color:var(--danger)">❌ The Wrong Assumption</h3>
+        <p style="margin-bottom:10px;">
+          Your colleague says: <strong>"The GC isn't working because memory grows."</strong>
+          This is incorrect for several reasons:
+        </p>
+        <ul>
+          <li>The JavaScript GC works perfectly — it frees every object with <strong>zero remaining references</strong>.</li>
+          <li>The problem is that the code <strong>deliberately holds references</strong> to removed widgets inside arrays, closures, and Maps.</li>
+          <li>The GC <em>cannot</em> free an object if your code still points to it — that is not a GC bug, it is a <strong>logic bug</strong>.</li>
+          <li>Blaming the GC is like filling a bucket with holes then blaming gravity for the floor being wet.</li>
+          <li>The GC has no way to know whether a reference is <em>intentional</em> or <em>accidental</em> — it only counts references.</li>
+        </ul>
+      </div>
+
+      <div class="exp-block right">
+        <h3 style="color:var(--accent2)">✅ What Is Actually Happening</h3>
+        <ul>
+          <li>Each widget registers <strong>event listeners</strong> that close over the widget's DOM node — keeping it alive.</li>
+          <li>A global <code>widgetRegistry</code> array <strong>never removes</strong> entries — every removed widget stays in memory.</li>
+          <li>An <code>eventMap</code> Map stores listener functions keyed by element — elements can't be GC'd while the Map holds them.</li>
+          <li>A <code>dataCache</code> object stores widget data by ID — IDs are never deleted from it.</li>
+          <li>The fix is simple: <strong>call <code>removeEventListener</code></strong>, <strong>delete Map entries</strong>, and <strong>splice arrays</strong> before removing the DOM node.</li>
+          <li>After cleanup, the GC correctly frees all widget memory on the next cycle.</li>
+        </ul>
+      </div>
+
+      <div class="exp-block wrong">
+        <h3 style="color:var(--warn)">⚠️ The Three Leak Patterns Shown</h3>
+        <ul>
+          <li><strong>Pattern 1 — Detached DOM:</strong> The element is removed from the page but a JS array still holds a reference to the DOM node object.</li>
+          <li><strong>Pattern 2 — Event listener closure:</strong> An anonymous function passed to <code>addEventListener</code> closes over the widget object; without a reference to that exact function, <code>removeEventListener</code> can never be called.</li>
+          <li><strong>Pattern 3 — External cache:</strong> A module-level object (<code>dataCache</code>) stores widget data by ID. Removing the DOM node does nothing to this cache.</li>
+        </ul>
+      </div>
+
+      <div class="exp-block right">
+        <h3 style="color:var(--accent2)">✅ How the Fixed Version Works</h3>
+        <ul>
+          <li><strong>Named handler references</strong> are stored so <code>removeEventListener(type, ref)</code> can be called with the exact same function object.</li>
+          <li><strong>The registry array</strong> uses <code>splice()</code> to remove the entry when the widget is destroyed.</li>
+          <li><strong>The Map entry</strong> is deleted with <code>map.delete(element)</code> before the element is removed from the DOM.</li>
+          <li><strong>The cache entry</strong> is deleted with <code>delete dataCache[id]</code> so the GC can reclaim the data object.</li>
+          <li>After all references are dropped, the GC runs normally and the memory graph stays flat.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     CODE SNIPPETS
+═══════════════════════════════════════════════════ -->
+<div class="code-wrap">
+  <div class="code-tabs">
+    <div class="code-tab active" data-tab="buggy-code">🐛 Buggy Code</div>
+    <div class="code-tab"       data-tab="fixed-code">✅ Fixed Code</div>
+    <div class="code-tab"       data-tab="diff-code">🔄 Key Differences</div>
+  </div>
+
+  <div class="code-panel active" id="buggy-code">
+<pre><span class="cm">// ─── BUGGY WIDGET MANAGER ────────────────────────────────────────────────</span>
+<span class="cm">// Three separate leak patterns all present at once.</span>
+
+<span class="kw">const</span> <span class="prop">widgetRegistry</span> = [];          <span class="cm">// ❌ LEAK: entries are NEVER removed</span>
+<span class="kw">const</span> <span class="prop">eventMap</span>       = <span class="kw">new</span> <span class="fn">Map</span>();    <span class="cm">// ❌ LEAK: Map entries are NEVER deleted</span>
+<span class="kw">const</span> <span class="prop">dataCache</span>      = {};            <span class="cm">// ❌ LEAK: cache keys are NEVER deleted</span>
+
+<span class="kw">function</span> <span class="fn">addWidgetBuggy</span>(id, title) {
+  <span class="kw">const</span> el = document.<span class="fn">createElement</span>(<span class="str">'div'</span>);
+  el.className = <span class="str">'widget-item'</span>;
+
+  <span class="cm">// ❌ PATTERN 1: anonymous listener — impossible to removeEventListener later</span>
+  el.<span class="fn">addEventListener</span>(<span class="str">'mouseover'</span>, () =&gt; {
+    <span class="cm">// This closure captures `el` and `id`, keeping both alive</span>
+    console.<span class="fn">log</span>(<span class="str">'hover'</span>, id, el);
+  });
+
+  <span class="cm">// ❌ PATTERN 2: store DOM node in global array — never removed</span>
+  widgetRegistry.<span class="fn">push</span>({ id, el, title });
+
+  <span class="cm">// ❌ PATTERN 3: store in external cache — key never deleted</span>
+  dataCache[id] = { title, value: <span class="fn">Math.random</span>(), timestamp: <span class="fn">Date.now</span>() };
+
+  <span class="cm">// ❌ PATTERN 4: store listener in Map keyed by element</span>
+  <span class="kw">const</span> clickHandler = () =&gt; console.<span class="fn">log</span>(<span class="str">'click'</span>, id);
+  eventMap.<span class="fn">set</span>(el, { clickHandler });
+  el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, clickHandler);
+
+  <span class="kw">return</span> el;
+}
+
+<span class="kw">function</span> <span class="fn">removeWidgetBuggy</span>(id, el) {
+  <span class="cm">// ❌ Only removes from DOM — all references above still hold the object!</span>
+  el.<span class="fn">remove</span>();
+
+  <span class="cm">// widgetRegistry still has { id, el, title } → el is a detached DOM node</span>
+  <span class="cm">// eventMap still has el → { clickHandler }   → el cannot be GC'd</span>
+  <span class="cm">// dataCache still has dataCache[id]           → data object lives on</span>
+  <span class="cm">// The anonymous mouseover handler still closes over el</span>
+  <span class="cm">//</span>
+  <span class="cm">// The GC sees references → it CORRECTLY keeps objects alive.</span>
+  <span class="cm">// This is NOT a GC bug. This is a reference-management bug.</span>
+}</pre>
+  </div>
+
+  <div class="code-panel" id="fixed-code">
+<pre><span class="cm">// ─── FIXED WIDGET MANAGER ────────────────────────────────────────────────</span>
+<span class="cm">// Every reference created on add is explicitly released on remove.</span>
+
+<span class="kw">const</span> <span class="prop">widgetRegistry</span> = [];
+<span class="kw">const</span> <span class="prop">eventMap</span>       = <span class="kw">new</span> <span class="fn">Map</span>();
+<span class="kw">const</span> <span class="prop">dataCache</span>      = {};
+
+<span class="kw">function</span> <span class="fn">addWidgetFixed</span>(id, title) {
+  <span class="kw">const</span> el = document.<span class="fn">createElement</span>(<span class="str">'div'</span>);
+  el.className = <span class="str">'widget-item'</span>;
+
+  <span class="cm">// ✅ PATTERN 1: named handler → can be passed to removeEventListener</span>
+  <span class="kw">function</span> <span class="fn">hoverHandler</span>() {
+    console.<span class="fn">log</span>(<span class="str">'hover'</span>, id);   <span class="cm">// does NOT capture `el` unnecessarily</span>
+  }
+  el.<span class="fn">addEventListener</span>(<span class="str">'mouseover'</span>, hoverHandler);
+
+  <span class="cm">// ✅ PATTERN 2: still push to registry, but we'll splice it out on remove</span>
+  widgetRegistry.<span class="fn">push</span>({ id, el, title });
+
+  <span class="cm">// ✅ PATTERN 3: still cache data, but we'll delete the key on remove</span>
+  dataCache[id] = { title, value: <span class="fn">Math.random</span>(), timestamp: <span class="fn">Date.now</span>() };
+
+  <span class="cm">// ✅ PATTERN 4: store named handler in Map so we can clean it up</span>
+  <span class="kw">const</span> clickHandler = () =&gt; console.<span class="fn">log</span>(<span class="str">'click'</span>, id);
+  eventMap.<span class="fn">set</span>(el, { clickHandler, hoverHandler });
+  el.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, clickHandler);
+
+  <span class="kw">return</span> el;
+}
+
+<span class="kw">function</span> <span class="fn">removeWidgetFixed</span>(id, el) {
+  <span class="cm">// ✅ Step 1: retrieve stored handlers and remove all listeners</span>
+  <span class="kw">const</span> handlers = eventMap.<span class="fn">get</span>(el);
+  <span class="kw">if</span> (handlers) {
+    el.<span class="fn">removeEventListener</span>(<span class="str">'click'</span>,     handlers.clickHandler);
+    el.<span class="fn">removeEventListener</span>(<span class="str">'mouseover'</span>, handlers.hoverHandler);
+    eventMap.<span class="fn">delete</span>(el);   <span class="cm">// ✅ Map no longer holds el</span>
+  }
+
+  <span class="cm">// ✅ Step 2: remove from registry array</span>
+  <span class="kw">const</span> idx = widgetRegistry.<span class="fn">findIndex</span>(w =&gt; w.id === id);
+  <span class="kw">if</span> (idx !== -<span class="num">1</span>) widgetRegistry.<span class="fn">splice</span>(idx, <span class="num">1</span>);
+
+  <span class="cm">// ✅ Step 3: delete from data cache</span>
+  <span class="kw">delete</span> dataCache[id];
+
+  <span class="cm">// ✅ Step 4: remove from DOM — NOW the GC can actually collect it</span>
+  el.<span class="fn">remove</span>();
+
+  <span class="cm">// All references dropped → GC will collect el and associated data</span>
+  <span class="cm">// on its next cycle. Memory graph stays flat. ✓</span>
+}</pre>
+  </div>
+
+  <div class="code-panel" id="diff-code">
+<pre><span class="cm">// ─── KEY DIFFERENCES SUMMARY ─────────────────────────────────────────────</span>
+
+<span class="cm">// 1. ANONYMOUS vs NAMED HANDLERS</span>
+<span class="cm">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="cm">// ❌ Buggy:  el.addEventListener('click', () =&gt; { ... });  // no reference kept</span>
+<span class="cm">// ✅ Fixed:  const h = () =&gt; { ... };                      // reference kept</span>
+<span class="cm">//            el.addEventListener('click', h);</span>
+<span class="cm">//            // later: el.removeEventListener('click', h); // exact same ref!</span>
+
+<span class="cm">// 2. REGISTRY CLEANUP</span>
+<span class="cm">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="cm">// ❌ Buggy:  widgetRegistry.push(widget);  // push only, never remove</span>
+<span class="cm">// ✅ Fixed:  widgetRegistry.push(widget);  // push on add</span>
+<span class="cm">//            const i = widgetRegistry.findIndex(w =&gt; w.id === id);</span>
+<span class="cm">//            widgetRegistry.splice(i, 1);  // splice on remove</span>
+
+<span class="cm">// 3. MAP ENTRY LIFECYCLE</span>
+<span class="cm">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="cm">// ❌ Buggy:  eventMap.set(el, handlers);   // set only, never delete</span>
+<span class="cm">// ✅ Fixed:  eventMap.set(el, handlers);   // set on add</span>
+<span class="cm">//            eventMap.delete(el);          // delete on remove</span>
+<span class="cm">//</span>
+<span class="cm">// NOTE: WeakMap is an alternative — it holds keys weakly so the GC</span>
+<span class="cm">// CAN collect the element even if the WeakMap entry exists.</span>
+<span class="cm">// const eventMap = new WeakMap(); // automatic cleanup!</span>
+
+<span class="cm">// 4. CACHE KEY DELETION</span>
+<span class="cm">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="cm">// ❌ Buggy:  dataCache[id] = data;   // write only, never delete</span>
+<span class="cm">// ✅ Fixed:  dataCache[id] = data;   // write on add</span>
+<span class="cm">//            delete dataCache[id];   // delete on remove</span>
+
+<span class="cm">// 5. ORDER OF OPERATIONS</span>
+<span class="cm">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="cm">// Always clean up BEFORE removing from DOM, not after.</span>
+<span class="cm">// After el.remove(), you can still call removeEventListener on the</span>
+<span class="cm">// detached node — but it's cleaner to do it first.</span>
+
+<span class="cm">// 6. WEAKEREF / FINALIZATIONREGISTRY (advanced)</span>
+<span class="cm">// ─────────────────────────────────────────────────────────────────────────</span>
+<span class="cm">// For truly automatic cleanup you can use:</span>
+<span class="kw">const</span> registry = <span class="kw">new</span> <span class="fn">FinalizationRegistry</span>((id) =&gt; {
+  console.<span class="fn">log</span>(<span class="str">`Widget </span>${id}<span class="str"> was garbage collected`</span>);
+  <span class="kw">delete</span> dataCache[id];   <span class="cm">// cleanup when GC finally runs</span>
+});
+<span class="cm">// registry.register(el, id);  // register el; callback fires when el is GC'd</span>
+<span class="cm">// But this is non-deterministic — explicit cleanup is always preferred.</span></pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     LOG
+═══════════════════════════════════════════════════ -->
+<section class="log-section">
+  <div class="card">
+    <div class="card-header">
+      <h2>📋 Event Log</h2>
+      <button class="btn btn-ghost btn-sm" id="clear-log">Clear</button>
+    </div>
+    <div class="log-box" id="log-box"></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════
+   SHARED STATE
+═══════════════════════════════════════════════════ */
+let widgetIdCounter = 0;
+
+// ── Simulated memory tracking (in KB) ──
+// Each widget: ~12 KB of "data" (simulated)
+// Each leaked listener: ~2 KB overhead (simulated)
+// Each leaked DOM ref: ~8 KB overhead (simulated)
+const KB_PER_WIDGET_DATA     = 12;
+const KB_PER_LEAKED_LISTENER = 2;
+const KB_PER_LEAKED_DOM_REF  = 8;
+const KB_PER_ACTIVE_WIDGET   = 10; // legitimate in-use memory
+
+// ── Global counters ──
+const counters = {
+  totalCreated:       0,
+  buggyActiveDom:     0,
+  leakedListeners:    0,
+  leakedRefs:         0,
+  fixedActiveDom:     0,
+  cleaned:            0,
+};
+
+// ── Graph history (last N points) ──
+const GRAPH_POINTS = 40;
+const buggyHistory = Array(GRAPH_POINTS).fill(0);
+const fixedHistory = Array(GRAPH_POINTS).fill(0);
+
+
+/* ═══════════════════════════════════════════════════
+   BUGGY WIDGET MANAGER
+   Three deliberate leak patterns:
+   1. Anonymous listeners (can't be removed)
+   2. Global registry array (never spliced)
+   3. External data cache (keys never deleted)
+   + Map holding element → handlers (never deleted)
+═══════════════════════════════════════════════════ */
+const buggyRegistry = [];   // ❌ entries never removed
+const buggyEventMap = new Map(); // ❌ entries never deleted
+const buggyDataCache = {};  // ❌ keys never deleted
+let   buggyListenerCount = 0;
+
+const WIDGET_TYPES = [
+  { icon: '📈', label: 'Revenue',    color: '#6c63ff' },
+  { icon: '👥', label: 'Users',      color: '#00d4aa' },
+  { icon: '🛒', label: 'Orders',     color: '#ff4d6d' },
+  { icon: '⚡', label: 'Perf',       color: '#ffb347' },
+  { icon: '💾', label: 'Storage',    color: '#43e97b' },
+  { icon: '🌐', label: 'Requests',   color: '#38bdf8' },
+  { icon: '🔔', label: 'Alerts',     color: '#f472b6' },
+  { icon: '🔒', label: 'Security',   color: '#a78bfa' },
+];
+
+function makeWidgetId() {
+  return `w-${++widgetIdCounter}-${Date.now().toString(36)}`;
+}
+
+function randomType() {
+  return WIDGET_TYPES[Math.floor(Math.random() * WIDGET_TYPES.length)];
+}
+
+function randomValue() {
+  return Math.floor(Math.random() * 9900 + 100);
+}
+
+// Build the DOM element for a widget (shared between buggy/fixed)
+function buildWidgetEl(id, type, value, onRemove) {
+  const el = document.createElement('div');
+  el.className = 'widget-item';
+  el.dataset.id = id;
+
+  const pct = Math.floor(Math.random() * 80 + 10);
+
+  el.innerHTML = `
+    <button class="w-remove" title="Remove widget">✕</button>
+    <div class="w-title">${type.icon} ${type.label}</div>
+    <div class="w-value">${value.toLocaleString()}</div>
+    <div class="w-bar">
+      <div class="w-bar-fill" style="width:${pct}%;background:${type.color}"></div>
+    </div>
+    <div style="font-size:.7rem;color:var(--text-dim)">ID: ${id.slice(0,10)}</div>
+  `;
+
+  el.querySelector('.w-remove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    onRemove(id, el);
+  });
+
+  return el;
+}
+
+// ── ADD (buggy) ──
+function addWidgetBuggy() {
+  const id    = makeWidgetId();
+  const type  = randomType();
+  const value = randomValue();
+
+  const el = buildWidgetEl(id, type, value, removeBuggyWidget);
+
+  // ❌ LEAK 1: anonymous mouseover listener — no reference kept, can never be removed
+  el.addEventListener('mouseover', () => {
+    // This closure captures `el` and `id` — keeping them alive
+    void el.dataset.id;
+    void id;
+  });
+
+  // ❌ LEAK 2: anonymous interval that references el — never cleared
+  const intervalId = setInterval(() => {
+    const fill = el.querySelector('.w-bar-fill');
+    if (fill) {
+      const newPct = Math.floor(Math.random() * 80 + 10);
+      fill.style.width = newPct + '%';
+    }
+  }, 2000);
+
+  // ❌ LEAK 3: store named click handler in Map but never delete the Map entry
+  const clickHandler = () => log(`Buggy widget ${id} clicked`, 'warn');
+  buggyEventMap.set(el, { clickHandler, intervalId });
+  el.addEventListener('click', clickHandler);
+  buggyListenerCount += 2; // mouseover + click (anonymous, can't remove)
+
+  // ❌ LEAK 4: push to global registry — never spliced out
+  buggyRegistry.push({ id, el, type, value });
+
+  // ❌ LEAK 5: write to data cache — key never deleted
+  buggyDataCache[id] = {
+    title: type.label,
+    value,
+    history: new Array(100).fill(0).map(() => Math.random()), // some bulk data
+    timestamp: Date.now(),
+  };
+
+  // Mount
+  const grid = document.getElementById('buggy-grid');
+  const empty = grid.querySelector('.empty-state');
+  if (empty) empty.remove();
+  grid.appendChild(el);
+
+  // Update counters
+  counters.totalCreated++;
+  counters.buggyActiveDom++;
+  counters.leakedListeners = buggyListenerCount; // will only grow
+
+  updateLeakList('buggy', id, type.label, 'active');
+  updateCounterDisplay();
+  log(`[BUGGY] Added widget "${type.label}" (${id.slice(0,12)})`, 'warn');
+}
+
+// ── REMOVE (buggy) ──
+function removeBuggyWidget(id, el) {
+  // ❌ Only removes from DOM — all references above still hold the object!
+  el.remove();
+
+  // The interval is still running (leaked!)
+  // buggyRegistry still has { id, el, ... }  → el is a detached DOM node in memory
+  // buggyEventMap still has el → { clickHandler, intervalId }
+  // buggyDataCache still has buggyDataCache[id]
+  // The anonymous mouseover handler still closes over el
+
+  counters.buggyActiveDom = Math.max(0, counters.buggyActiveDom - 1);
+  // leakedRefs grows because registry was NOT cleaned:
+  counters.leakedRefs = buggyRegistry.length; // still contains removed entries!
+
+  updateLeakList('buggy', id, '???', 'leaked');
+  updateCounterDisplay();
+  updateBuggyStats();
+
+  // Show empty state if grid is empty
+  const grid = document.getElementById('buggy-grid');
+  if (!grid.querySelector('.widget-item')) {
+    grid.innerHTML = '<div class="empty-state">All widgets removed — but references still leak!</div>';
+  }
+
+  log(`[BUGGY] Removed widget DOM node — but ${buggyRegistry.length} refs, ${buggyListenerCount} listeners still retained!`, 'error');
+}
+
+// ── CLEAR ALL (buggy) ──
+function clearAllBuggy() {
+  const grid = document.getElementById('buggy-grid');
+  const widgets = grid.querySelectorAll('.widget-item');
+  widgets.forEach(el => {
+    const id = el.dataset.id;
+    el.remove();
+    updateLeakList('buggy', id, '???', 'leaked');
+  });
+  counters.buggyActiveDom = 0;
+  counters.leakedRefs     = buggyRegistry.length;
+  updateCounterDisplay();
+  updateBuggyStats();
+  grid.innerHTML = '<div class="empty-state">All removed — but ' + buggyRegistry.length + ' leaked references remain!</div>';
+  log(`[BUGGY] Cleared all DOM nodes — but ${buggyRegistry.length} entries still in registry, ${buggyListenerCount} listeners still attached to detached nodes!`, 'error');
+}
+
+
+/* ═══════════════════════════════════════════════════
+   FIXED WIDGET MANAGER
+   Every reference created on add is released on remove.
+═══════════════════════════════════════════════════ */
+const fixedRegistry  = [];
+const fixedEventMap  = new Map();
+const fixedDataCache = {};
+
+// ── ADD (fixed) ──
+function addWidgetFixed() {
+  const id    = makeWidgetId();
+  const type  = randomType();
+  const value = randomValue();
+
+  const el = buildWidgetEl(id, type, value, removeFixedWidget);
+
+  // ✅ Named handler — can be passed to removeEventListener
+  function hoverHandler() {
+    void id; // only captures id (a primitive string), not the DOM node
+  }
+  el.addEventListener('mouseover', hoverHandler);
+
+  // ✅ Interval stored so it can be cleared
+  const intervalId = setInterval(() => {
+    const fill = el.querySelector('.w-bar-fill');
+    if (fill) {
+      const newPct = Math.floor(Math.random() * 80 + 10);
+      fill.style.width = newPct + '%';
+    }
+  }, 2000);
+
+  // ✅ Named click handler stored in Map — will be retrieved and removed later
+  const clickHandler = () => log(`Fixed widget ${id} clicked`, 'ok');
+  fixedEventMap.set(el, { clickHandler, hoverHandler, intervalId });
+  el.addEventListener('click', clickHandler);
+
+  // ✅ Push to registry — will be spliced out on remove
+  fixedRegistry.push({ id, el, type, value });
+
+  // ✅ Write to cache — key will be deleted on remove
+  fixedDataCache[id] = {
+    title: type.label,
+    value,
+    history: new Array(100).fill(0).map(() => Math.random()),
+    timestamp: Date.now(),
+  };
+
+  // Mount
+  const grid = document.getElementById('fixed-grid');
+  const empty = grid.querySelector('.empty-state');
+  if (empty) empty.remove();
+  grid.appendChild(el);
+
+  counters.totalCreated++;
+  counters.fixedActiveDom++;
+  updateLeakList('fixed', id, type.label, 'active');
+  updateCounterDisplay();
+  log(`[FIXED] Added widget "${type.label}" (${id.slice(0,12)})`, 'ok');
+}
+
+// ── REMOVE (fixed) ──
+function removeFixedWidget(id, el) {
+  // ✅ Step 1: retrieve handlers and remove all listeners + clear interval
+  const handlers = fixedEventMap.get(el);
+  if (handlers) {
+    el.removeEventListener('click',     handlers.clickHandler);
+    el.removeEventListener('mouseover', handlers.hoverHandler);
+    clearInterval(handlers.intervalId);  // ✅ interval cleared!
+    fixedEventMap.delete(el);            // ✅ Map no longer holds el
+  }
+
+  // ✅ Step 2: remove from registry array
+  const idx = fixedRegistry.findIndex(w => w.id === id);
+  if (idx !== -1) fixedRegistry.splice(idx, 1);
+
+  // ✅ Step 3: delete from data cache
+  delete fixedDataCache[id];
+
+  // ✅ Step 4: remove from DOM — NOW GC can collect it
+  el.remove();
+
+  counters.fixedActiveDom = Math.max(0, counters.fixedActiveDom - 1);
+  counters.cleaned++;
+  updateLeakList('fixed', id, '✓ freed', 'cleaned');
+  updateCounterDisplay();
+  updateFixedStats();
+
+  const grid = document.getElementById('fixed-grid');
+  if (!grid.querySelector('.widget-item')) {
+    grid.innerHTML = '<div class="empty-state">All widgets removed and properly cleaned up ✓</div>';
+  }
+
+  log(`[FIXED] Removed widget ${id.slice(0,12)} — listeners removed, interval cleared, registry spliced, cache deleted. GC can now collect.`, 'ok');
+}
+
+// ── CLEAR ALL (fixed) ──
+function clearAllFixed() {
+  const grid = document.getElementById('fixed-grid');
+  const widgets = [...grid.querySelectorAll('.widget-item')];
+  widgets.forEach(el => {
+    const id = el.dataset.id;
+    removeFixedWidget(id, el);
+  });
+  if (!grid.querySelector('.widget-item')) {
+    grid.innerHTML = '<div class="empty-state">All removed and fully cleaned up ✓</div>';
+  }
+  log(`[FIXED] Cleared all widgets cleanly. Memory freed.`, 'ok');
+}
+
+
+/* ═══════════════════════════════════════════════════
+   UI HELPERS
+═══════════════════════════════════════════════════ */
+
+// ── Leak / cleanup list entries ──
+const leakListEntries = { buggy: {}, fixed: {} };
+
+function updateLeakList(side, id, label, state) {
+  const listEl = document.getElementById(`${side}-leak-list`);
+
+  // Remove placeholder
+  const placeholder = listEl.querySelector('div[style]');
+  if (placeholder) placeholder.remove();
+
+  const shortId = id.slice(0, 12);
+  const key = `${side}-${id}`;
+
+  if (leakListEntries[side][key]) {
+    // Update existing entry
+    const entry = leakListEntries[side][key];
+    entry.className = `leak-entry ${state}`;
+    entry.querySelector('.le-badge').textContent =
+      state === 'active'  ? 'ACTIVE'  :
+      state === 'leaked'  ? 'LEAKED'  : 'FREED';
+    entry.querySelector('.le-info').textContent =
+      state === 'leaked'  ? 'DOM removed, refs remain' :
+      state === 'cleaned' ? 'All refs released'        : 'In DOM';
+  } else {
+    // Create new entry
+    const entry = document.createElement('div');
+    entry.className = `leak-entry ${state}`;
+    entry.innerHTML = `
+      <div class="le-dot"></div>
+      <div class="le-name">${label}</div>
+      <div class="le-info">${shortId}</div>
+      <div class="le-badge">${state === 'active' ? 'ACTIVE' : state === 'leaked' ? 'LEAKED' : 'FREED'}</div>
+    `;
+    listEl.appendChild(entry);
+    listEl.scrollTop = listEl.scrollHeight;
+    leakListEntries[side][key] = entry;
+  }
+}
+
+// ── Stats bars ──
+function updateBuggyStats() {
+  document.getElementById('bs-dom').textContent       = counters.buggyActiveDom;
+  document.getElementById('bs-refs').textContent      = buggyRegistry.length;
+  document.getElementById('bs-listeners').textContent = buggyListenerCount;
+}
+
+function updateFixedStats() {
+  document.getElementById('fs-dom').textContent       = counters.fixedActiveDom;
+  document.getElementById('fs-refs').textContent      = fixedRegistry.length;
+  document.getElementById('fs-listeners').textContent = fixedEventMap.size * 2;
+}
+
+// ── Counter display ──
+function updateCounterDisplay() {
+  document.getElementById('cnt-total').textContent            = counters.totalCreated;
+  document.getElementById('cnt-active-buggy').textContent     = counters.buggyActiveDom;
+  document.getElementById('cnt-leaked-listeners').textContent = buggyListenerCount;
+  document.getElementById('cnt-leaked-refs').textContent      = buggyRegistry.length;
+  document.getElementById('cnt-active-fixed').textContent     = counters.fixedActiveDom;
+  document.getElementById('cnt-cleaned').textContent          = counters.cleaned;
+
+  // Simulated memory
+  const buggyMem =
+    counters.buggyActiveDom  * KB_PER_ACTIVE_WIDGET +
+    buggyRegistry.length     * KB_PER_LEAKED_DOM_REF +
+    buggyListenerCount       * KB_PER_LEAKED_LISTENER;
+
+  const fixedMem =
+    counters.fixedActiveDom  * KB_PER_ACTIVE_WIDGET;
+
+  document.getElementById('cnt-mem-buggy').textContent = buggyMem  + ' KB';
+  document.getElementById('cnt-mem-fixed').textContent = fixedMem  + ' KB';
+
+  updateBuggyStats();
+  updateFixedStats();
+
+  // Push to graph history
+  buggyHistory.push(buggyMem);
+  buggyHistory.shift();
+  fixedHistory.push(fixedMem);
+  fixedHistory.shift();
+
+  drawGraph('buggy-graph', buggyHistory, '#ff4d6d', 'rgba(255,77,109,0.15)');
+  drawGraph('fixed-graph', fixedHistory, '#00d4aa', 'rgba(0,212,170,0.15)');
+}
+
+
+/* ═══════════════════════════════════════════════════
+   CANVAS GRAPH
+═══════════════════════════════════════════════════ */
+function drawGraph(canvasId, data, lineColor, fillColor) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = rect.width  * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width  = rect.width  + 'px';
+  canvas.style.height = rect.height + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = rect.width;
+  const H = rect.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const max = Math.max(...data, 10);
+  const step = W / (data.length - 1);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = H - (i / 4) * H;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = H - (v / max) * (H - 8) - 4;
+    if (i === 0) ctx.lineTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = H -

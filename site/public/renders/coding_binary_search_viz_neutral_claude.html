@@ -13,63 +13,50 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
+      background: #0f0f1a;
+      color: #e0e0f0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 24px;
+      padding: 40px 20px;
     }
 
     h1 {
       font-size: 2rem;
-      font-weight: 700;
       margin-bottom: 8px;
-      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      background: linear-gradient(90deg, #7b61ff, #00d4ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
     .subtitle {
-      color: #94a3b8;
-      margin-bottom: 36px;
+      color: #888;
+      margin-bottom: 40px;
       font-size: 0.95rem;
     }
 
-    .card {
-      background: #1e293b;
-      border-radius: 16px;
-      padding: 32px;
-      width: 100%;
-      max-width: 860px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-      border: 1px solid #334155;
-    }
-
-    /* Controls */
     .controls {
       display: flex;
-      flex-wrap: wrap;
       gap: 12px;
       align-items: center;
-      margin-bottom: 32px;
+      margin-bottom: 50px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     label {
-      font-size: 0.9rem;
-      color: #94a3b8;
-      margin-right: 4px;
+      font-size: 0.95rem;
+      color: #aaa;
     }
 
     input[type="number"] {
-      background: #0f172a;
-      border: 1px solid #475569;
+      padding: 10px 14px;
       border-radius: 8px;
-      color: #e2e8f0;
-      padding: 8px 12px;
+      border: 2px solid #333;
+      background: #1a1a2e;
+      color: #e0e0f0;
       font-size: 1rem;
       width: 100px;
       outline: none;
@@ -77,180 +64,557 @@
     }
 
     input[type="number"]:focus {
-      border-color: #38bdf8;
+      border-color: #7b61ff;
     }
 
     button {
-      padding: 9px 20px;
-      border: none;
+      padding: 10px 22px;
       border-radius: 8px;
+      border: none;
       font-size: 0.95rem;
-      font-weight: 600;
       cursor: pointer;
+      font-weight: 600;
       transition: all 0.2s;
     }
 
     #stepBtn {
-      background: linear-gradient(135deg, #38bdf8, #818cf8);
-      color: #0f172a;
+      background: linear-gradient(135deg, #7b61ff, #00d4ff);
+      color: #fff;
     }
 
     #stepBtn:hover:not(:disabled) {
-      opacity: 0.88;
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(123, 97, 255, 0.5);
     }
 
     #stepBtn:disabled {
       opacity: 0.4;
       cursor: not-allowed;
-      transform: none;
     }
 
     #resetBtn {
-      background: #334155;
-      color: #e2e8f0;
+      background: #2a2a3e;
+      color: #aaa;
+      border: 2px solid #333;
     }
 
     #resetBtn:hover {
-      background: #475569;
-      transform: translateY(-1px);
+      background: #333;
+      color: #e0e0f0;
+      border-color: #555;
     }
 
-    /* Array display */
+    /* Array visualization */
     .array-wrapper {
+      width: 100%;
+      max-width: 900px;
       overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 28px;
+      padding-bottom: 20px;
     }
 
-    .array-row {
+    .array-container {
       display: flex;
       gap: 8px;
+      justify-content: center;
+      align-items: flex-end;
       min-width: max-content;
-      padding: 8px 4px;
+      margin: 0 auto;
+      padding: 20px 10px 60px;
+      position: relative;
     }
 
-    .box-container {
+    .box-wrapper {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 6px;
+      position: relative;
     }
 
     .box {
-      width: 52px;
-      height: 52px;
+      width: 58px;
+      height: 58px;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      border: 2px solid transparent;
+      border: 2px solid #2a2a3e;
+      background: #1a1a2e;
+      color: #555;
       transition: all 0.35s ease;
       position: relative;
-      background: #0f172a;
-      color: #94a3b8;
-      border-color: #334155;
     }
 
     .box.in-range {
-      background: #1e3a5f;
-      color: #93c5fd;
-      border-color: #3b82f6;
+      border-color: #4a4a7a;
+      background: #1e1e3a;
+      color: #9090c0;
     }
 
     .box.mid {
-      background: #f59e0b;
-      color: #0f172a;
-      border-color: #fbbf24;
-      transform: scale(1.12);
-      box-shadow: 0 0 18px rgba(245, 158, 11, 0.6);
+      border-color: #f0a500;
+      background: #2a2000;
+      color: #f0c040;
+      transform: translateY(-6px);
+      box-shadow: 0 0 20px rgba(240, 165, 0, 0.5);
     }
 
     .box.found {
-      background: #22c55e;
-      color: #0f172a;
-      border-color: #4ade80;
-      transform: scale(1.15);
-      box-shadow: 0 0 22px rgba(34, 197, 94, 0.7);
+      border-color: #00e676;
+      background: #002a10;
+      color: #00e676;
+      transform: translateY(-6px);
+      box-shadow: 0 0 25px rgba(0, 230, 118, 0.6);
+      animation: pulse-found 0.6s ease;
     }
 
     .box.not-found-range {
-      background: #450a0a;
-      color: #fca5a5;
-      border-color: #ef4444;
+      border-color: #ff4444;
+      background: #2a0000;
+      color: #ff6666;
     }
 
-    .index-label {
+    @keyframes pulse-found {
+      0%   { transform: translateY(-6px) scale(1); }
+      40%  { transform: translateY(-10px) scale(1.15); }
+      100% { transform: translateY(-6px) scale(1); }
+    }
+
+    .box-index {
       font-size: 0.7rem;
-      color: #64748b;
+      color: #444;
+      font-weight: 500;
     }
 
-    .pointer-label {
-      font-size: 0.68rem;
+    .box-label {
+      font-size: 0.65rem;
       font-weight: 700;
-      min-height: 16px;
-      text-align: center;
-      line-height: 1;
+      letter-spacing: 0.5px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: transparent;
+      transition: color 0.3s;
     }
 
-    .ptr-low  { color: #34d399; }
-    .ptr-mid  { color: #fbbf24; }
-    .ptr-high { color: #f87171; }
+    .box-label.show-low  { color: #7b61ff; }
+    .box-label.show-mid  { color: #f0a500; }
+    .box-label.show-high { color: #00d4ff; }
+    .box-label.show-low.show-high { color: #cc44ff; }
+
+    /* Range bracket */
+    .range-bar {
+      position: absolute;
+      bottom: 28px;
+      height: 4px;
+      background: linear-gradient(90deg, #7b61ff, #00d4ff);
+      border-radius: 2px;
+      transition: all 0.4s ease;
+      opacity: 0;
+    }
+
+    .range-bar.visible {
+      opacity: 1;
+    }
 
     /* Info panel */
     .info-panel {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
+      width: 100%;
+      max-width: 600px;
+      background: #1a1a2e;
+      border-radius: 14px;
+      padding: 20px 28px;
+      margin-bottom: 30px;
+      border: 1px solid #2a2a4a;
     }
 
-    .info-box {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 12px 16px;
+    .info-panel h2 {
+      font-size: 1rem;
+      color: #7b61ff;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info-item {
+      background: #0f0f1a;
+      border-radius: 8px;
+      padding: 10px;
       text-align: center;
     }
 
-    .info-box .info-label {
-      font-size: 0.72rem;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 4px;
-    }
-
-    .info-box .info-value {
-      font-size: 1.2rem;
+    .info-item .val {
+      font-size: 1.4rem;
       font-weight: 700;
-      color: #e2e8f0;
     }
 
-    .info-box.low-box  .info-value { color: #34d399; }
-    .info-box.mid-box  .info-value { color: #fbbf24; }
-    .info-box.high-box .info-value { color: #f87171; }
-    .info-box.step-box .info-value { color: #818cf8; }
-
-    /* Log */
-    .log-title {
-      font-size: 0.8rem;
-      color: #64748b;
+    .info-item .key {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 2px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 10px;
+      letter-spacing: 0.5px;
     }
 
-    .log {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 14px 16px;
-      min-height: 56px;
-      max-height: 160px;
-      overflow-y: auto;
+    .info-item.low  .val { color: #7b61ff; }
+    .info-item.mid  .val { color: #f0a500; }
+    .info-item.high .val { color: #00d4ff; }
+
+    .step-log {
       font-size: 0.88rem;
-      line-height: 1.7;
+      color: #aaa;
+      line-height: 1.6;
+      min-height: 22px;
     }
+
+    .step-log span {
+      color: #e0e0f0;
+      font-weight: 600;
+    }
+
+    /* Result banner */
+    .result-banner {
+      width: 100%;
+      max-width: 600px;
+      border-radius: 12px;
+      padding: 18px 24px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-align: center;
+      display: none;
+      animation: slide-in 0.4s ease;
+    }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-banner.found {
+      display: block;
+      background: #002a10;
+      border: 2px solid #00e676;
+      color: #00e676;
+    }
+
+    .result-banner.not-found {
+      display: block;
+      background: #2a0000;
+      border: 2px solid #ff4444;
+      color: #ff6666;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 2px solid;
+    }
+
+    .legend-dot.inactive  { border-color: #2a2a3e; background: #1a1a2e; }
+    .legend-dot.in-range  { border-color: #4a4a7a; background: #1e1e3a; }
+    .legend-dot.mid-dot   { border-color: #f0a500; background: #2a2000; }
+    .legend-dot.found-dot { border-color: #00e676; background: #002a10; }
+  </style>
+</head>
+<body>
+
+  <h1>Binary Search Visualizer</h1>
+  <p class="subtitle">Step through binary search on a sorted array</p>
+
+  <div class="controls">
+    <label for="targetInput">Target value:</label>
+    <input type="number" id="targetInput" value="37" min="1" max="99" />
+    <button id="stepBtn">▶ Step</button>
+    <button id="resetBtn">↺ Reset</button>
+  </div>
+
+  <div class="info-panel">
+    <h2>Search State</h2>
+    <div class="info-grid">
+      <div class="info-item low">
+        <div class="val" id="infoLow">—</div>
+        <div class="key">Low (idx)</div>
+      </div>
+      <div class="info-item mid">
+        <div class="val" id="infoMid">—</div>
+        <div class="key">Mid (idx)</div>
+      </div>
+      <div class="info-item high">
+        <div class="val" id="infoHigh">—</div>
+        <div class="key">High (idx)</div>
+      </div>
+    </div>
+    <div class="step-log" id="stepLog">Press <span>Step</span> to begin the search.</div>
+  </div>
+
+  <div class="array-wrapper">
+    <div class="array-container" id="arrayContainer">
+      <div class="range-bar" id="rangeBar"></div>
+    </div>
+  </div>
+
+  <div class="result-banner" id="resultBanner"></div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot inactive"></div> Out of range</div>
+    <div class="legend-item"><div class="legend-dot in-range"></div> In range</div>
+    <div class="legend-item"><div class="legend-dot mid-dot"></div> Mid (comparing)</div>
+    <div class="legend-item"><div class="legend-dot found-dot"></div> Found!</div>
+  </div>
+
+  <script>
+    // --- Data ---
+    const ARRAY = [2, 5, 8, 12, 16, 23, 29, 34, 37, 41, 45, 50, 56, 62, 67, 73, 78, 84, 91, 97];
+    const BOX_WIDTH  = 58;
+    const BOX_GAP    = 8;
+
+    // --- State ---
+    let low, high, mid, target, done, found, stepCount;
+    let boxes = [];
+
+    // --- DOM ---
+    const container   = document.getElementById('arrayContainer');
+    const rangeBar    = document.getElementById('rangeBar');
+    const stepBtn     = document.getElementById('stepBtn');
+    const resetBtn    = document.getElementById('resetBtn');
+    const targetInput = document.getElementById('targetInput');
+    const infoLow     = document.getElementById('infoLow');
+    const infoMid     = document.getElementById('infoMid');
+    const infoHigh    = document.getElementById('infoHigh');
+    const stepLog     = document.getElementById('stepLog');
+    const resultBanner = document.getElementById('resultBanner');
+
+    // --- Build array UI ---
+    function buildArray() {
+      // Remove old boxes (keep rangeBar)
+      const oldBoxes = container.querySelectorAll('.box-wrapper');
+      oldBoxes.forEach(b => b.remove());
+
+      boxes = [];
+      ARRAY.forEach((val, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'box-wrapper';
+
+        const label = document.createElement('div');
+        label.className = 'box-label';
+        label.textContent = '';
+
+        const box = document.createElement('div');
+        box.className = 'box';
+        box.textContent = val;
+
+        const idx = document.createElement('div');
+        idx.className = 'box-index';
+        idx.textContent = i;
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(box);
+        wrapper.appendChild(idx);
+        container.appendChild(wrapper);
+
+        boxes.push({ wrapper, box, label });
+      });
+    }
+
+    // --- Reset ---
+    function reset() {
+      low       = 0;
+      high      = ARRAY.length - 1;
+      mid       = null;
+      done      = false;
+      found     = false;
+      stepCount = 0;
+      target    = parseInt(targetInput.value, 10);
+
+      if (isNaN(target)) target = 37;
+
+      buildArray();
+      renderState(false);
+
+      infoLow.textContent  = '—';
+      infoMid.textContent  = '—';
+      infoHigh.textContent = '—';
+      stepLog.innerHTML    = `Press <span>Step</span> to begin searching for <span>${target}</span>.`;
+      resultBanner.className = 'result-banner';
+      resultBanner.textContent = '';
+      stepBtn.disabled = false;
+    }
+
+    // --- Render visual state ---
+    function renderState(showMid) {
+      boxes.forEach((b, i) => {
+        b.box.className = 'box';
+        b.label.className = 'box-label';
+        b.label.textContent = '';
+
+        if (done && found && i === mid) {
+          b.box.classList.add('found');
+          b.label.classList.add('show-mid');
+          b.label.textContent = 'FOUND';
+        } else if (done && !found) {
+          // Highlight last range as not found
+          if (i >= low && i <= high + 1) {
+            // just leave as inactive
+          }
+          b.box.classList.add('');
+        } else if (showMid && i === mid) {
+          b.box.classList.add('mid');
+          // labels
+          let lbl = 'MID';
+          if (i === low && i === high) lbl = 'L/M/H';
+          else if (i === low) lbl = 'L/M';
+          else if (i === high) lbl = 'M/H';
+          b.label.classList.add('show-mid');
+          b.label.textContent = lbl;
+        } else if (showMid && i >= low && i <= high) {
+          b.box.classList.add('in-range');
+          if (i === low && i === high) {
+            b.label.classList.add('show-low', 'show-high');
+            b.label.textContent = 'L/H';
+          } else if (i === low) {
+            b.label.classList.add('show-low');
+            b.label.textContent = 'LOW';
+          } else if (i === high) {
+            b.label.classList.add('show-high');
+            b.label.textContent = 'HIGH';
+          }
+        } else if (!showMid && i >= low && i <= high) {
+          b.box.classList.add('in-range');
+          if (i === low && i === high) {
+            b.label.classList.add('show-low', 'show-high');
+            b.label.textContent = 'L/H';
+          } else if (i === low) {
+            b.label.classList.add('show-low');
+            b.label.textContent = 'LOW';
+          } else if (i === high) {
+            b.label.classList.add('show-high');
+            b.label.textContent = 'HIGH';
+          }
+        }
+      });
+
+      updateRangeBar();
+    }
+
+    function updateRangeBar() {
+      if (done || low > high) {
+        rangeBar.classList.remove('visible');
+        return;
+      }
+
+      // Position range bar under the active range
+      const containerRect = container.getBoundingClientRect();
+
+      // Each box-wrapper has fixed width = BOX_WIDTH, gap = BOX_GAP
+      const totalBoxWidth = BOX_WIDTH + BOX_GAP;
+
+      // Calculate offset from center of container
+      const totalWidth = ARRAY.length * totalBoxWidth - BOX_GAP;
+      const startX = (container.offsetWidth - totalWidth) / 2;
+
+      const barLeft  = startX + low  * totalBoxWidth;
+      const barRight = startX + high * totalBoxWidth + BOX_WIDTH;
+
+      rangeBar.style.left  = barLeft + 'px';
+      rangeBar.style.width = (barRight - barLeft) + 'px';
+      rangeBar.classList.add('visible');
+    }
+
+    // --- Step ---
+    function step() {
+      if (done) return;
+
+      stepCount++;
+
+      if (low > high) {
+        // Not found
+        done  = true;
+        found = false;
+        renderState(false);
+        infoLow.textContent  = '—';
+        infoMid.textContent  = '—';
+        infoHigh.textContent = '—';
+        stepLog.innerHTML = `Search complete after <span>${stepCount - 1}</span> step(s).`;
+        showResult(false);
+        stepBtn.disabled = true;
+        return;
+      }
+
+      mid = Math.floor((low + high) / 2);
+      const midVal = ARRAY[mid];
+
+      infoLow.textContent  = low;
+      infoMid.textContent  = mid;
+      infoHigh.textContent = high;
+
+      renderState(true);
+
+      if (midVal === target) {
+        done  = true;
+        found = true;
+        stepLog.innerHTML = `Step <span>${stepCount}</span>: mid=<span>${mid}</span>, arr[${mid}]=<span>${midVal}</span> — 🎉 Found <span>${target}</span>!`;
+        renderState(true);
+        showResult(true, mid);
+        stepBtn.disabled = true;
+      } else if (midVal < target) {
+        stepLog.innerHTML = `Step <span>${stepCount}</span>: mid=<span>${mid}</span>, arr[${mid}]=<span>${midVal}</span> &lt; <span>${target}</span> → search <span>right half</span>`;
+        low = mid + 1;
+      } else {
+        stepLog.innerHTML = `Step <span>${stepCount}</span>: mid=<span>${mid}</span>, arr[${mid}]=<span>${midVal}</span> &gt; <span>${target}</span> → search <span>left half</span>`;
+        high = mid - 1;
+      }
+    }
+
+    function showResult(wasFound, idx) {
+      const banner = resultBanner;
+      if (wasFound) {
+        banner.className = 'result-banner found';
+        banner.textContent = `✅ Found ${target} at index ${idx}!`;
+      } else {
+        banner.className = 'result-banner not-found';
+        banner.textContent = `❌ ${target} is not in the array.`;
+      }
+    }
+
+    // --- Events ---
+    stepBtn.addEventListener('click', step);
+    resetBtn.addEventListener('click', reset);
+    targetInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') reset();
+    });
+
+    window.addEventListener('resize', updateRangeBar);
+
+    // --- Init ---
+    reset();
+  </script>
+</body>
+</html>

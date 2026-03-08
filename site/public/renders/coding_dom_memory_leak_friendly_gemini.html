@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Leak Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .dashboard-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 48%;
+            min-width: 400px;
+            box-sizing: border-box;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .widget-controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .widget-controls button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .widget-controls button.add {
+            background-color: #28a745;
+            color: white;
+        }
+        .widget-controls button.remove {
+            background-color: #dc3545;
+            color: white;
+        }
+        .widget-controls span {
+            font-weight: bold;
+        }
+        .widget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px; /* For scrollbar */
+        }
+        .widget {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            min-height: 100px;
+        }
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .widget h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: #333;
+        }
+        .widget .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #666;
+            padding: 0 5px;
+        }
+        .widget .close-btn:hover {
+            color: #dc3545;
+        }
+        .widget-content {
+            font-size: 0.9em;
+            color: #555;
+            flex-grow: 1;
+        }
+        .widget-footer {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #888;
+        }
+        .explanation {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #856404;
+        }
+        .explanation h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h2>Leaking Dashboard</h2>
+        <div class="widget-controls">
+            <button class="add" onclick="addLeakingWidget()">Add Leaking Widget</button>
+            <button class="remove" onclick="removeLeakingWidget()">Remove Last Leaking Widget</button>
+            <span>Widgets: <span id="leakingWidgetCount">0</span></span>
+        </div>
+        <div id="leakingWidgetGrid" class="widget-grid">
+            <!-- Leaking widgets will be added here -->
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <h2>Fixed Dashboard</h2>
+        <div class="widget-controls">
+            <button class="add" onclick="addFixedWidget()">Add Fixed Widget</button>
+            <button class="remove" onclick="removeFixedWidget()">Remove Last Fixed Widget</button>
+            <span>Widgets: <span id="fixedWidgetCount">0</span></span>
+        </div>
+        <div id="fixedWidgetGrid" class="widget-grid">
+            <!-- Fixed widgets will be added here -->
+        </div>
+    </div>
+
+    <div class="dashboard-container explanation" style="width: 100%;">
+        <h3>Why the Garbage Collector Diagnosis is Wrong Here</h3>
+        <p>Your colleague blames the garbage collector, but in this specific scenario, the problem isn't the garbage collector failing to do its job. It's about <strong>reachable objects</strong>.</p>
+        <ul>
+            <li><strong>What the Garbage Collector Does:</strong> The JavaScript garbage collector reclaims memory from objects that are no longer "reachable" from the root (e.g., the global object, active function call stacks). If an object can still be accessed by your running code, the garbage collector will not touch it.</li>
+            <li><strong>The Leaking Scenario:</strong> In the "Leaking Dashboard," when a widget is removed from the DOM, its associated event listeners (like the 'click' listener on the close button) are *not* removed. Crucially, these event listeners often form a closure over the widget's DOM element or other related data. This means the event listener function, which is still "active" (even if the element is not in the DOM), holds a reference to the widget's DOM element and potentially other data.</li>
+            <li><strong>DOM References:</strong> Furthermore, if you store references to DOM elements in global arrays or objects (as simulated in the `leakingWidgets` array), those elements remain reachable even after they've been removed from the visible page.</li>
+            <li><strong>Result:</strong> Because the event listener functions and/or explicit JavaScript references still point to the removed widget's DOM elements and associated data, these objects are considered "reachable." The garbage collector correctly identifies them as reachable and thus does not free their memory. The memory grows because new widgets are added, creating new reachable objects, while old, "removed" widgets are never truly released from memory.</li>
+            <li><strong>The Fix:</strong> The "Fixed Dashboard" explicitly cleans up these references. When a widget is removed, its event listeners are detached, and its reference is removed from the tracking array. This makes the widget's DOM element and associated data "unreachable," allowing the garbage collector to reclaim their memory.</li>
+        </ul>
+        <p>This is a common cause of memory leaks in web applications and highlights the importance of proper cleanup when dealing with dynamic DOM manipulation and event handling.</p>
+    </div>
+
+
+    <script>
+        // --- Leaking Dashboard Logic ---
+        let leakingWidgetCounter = 0;
+        const leakingWidgets = []; // Stores references to leaking widget elements
+        const leakingWidgetGrid = document.getElementById('leakingWidgetGrid');
+        const leakingWidgetCountSpan = document.getElementById('leakingWidgetCount');
+
+        function createLeakingWidgetElement(id) {
+            const widgetDiv = document.createElement('div');
+            widgetDiv.className = 'widget';
+            widgetDiv.dataset.widgetId = id;
+            widgetDiv.innerHTML = `
+                <div class="widget-header">
+                    <h3>Leaking Widget ${id}</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="widget-content">
+                    <p>This widget demonstrates a memory leak.</p>
+                    <p>It has an event listener that isn't cleaned up.</p>
+                </div>
+                <div class="widget-footer">Created: ${new Date().toLocaleTimeString()}</div>
+            `;
+
+            // THIS IS THE LEAK: Adding an event listener without removing it later
+            const closeBtn = widgetDiv.querySelector('.close-btn');
+            closeBtn.addEventListener('click', () => {
+                // This listener, when active, still holds a reference to widgetDiv
+                console.log(`Leaking Widget ${id} close button clicked!`);
+                // For demonstration, we'll just log. The actual removal happens via removeLeakingWidget()
+            });
+
+            return widgetDiv;
+        }
+
+        function addLeakingWidget() {
+            leakingWidgetCounter++;
+            const newWidget = createLeakingWidgetElement(leakingWidgetCounter);
+            leakingWidgetGrid.appendChild(newWidget);
+            leakingWidgets.push(newWidget); // Storing a DOM reference that isn't cleaned
+            updateLeakingWidgetCount();
+        }
+
+        function removeLeakingWidget() {
+            if (leakingWidgets.length > 0) {
+                const lastWidget = leakingWidgets.pop(); // Remove reference from our array
+                leakingWidgetGrid.removeChild(lastWidget); // Remove from DOM
+                // THE LEAK REMAINS: The event listener on 'lastWidget' is still active in memory
+                // and holds a reference to 'lastWidget' itself, preventing GC.
+                // Also, if 'lastWidget' was the only reference, the pop() helps, but the event listener
+                // closure is the primary culprit if no other JS references exist.
+            }
+            updateLeakingWidgetCount();
+        }
+
+        function updateLeakingWidgetCount() {
+            leakingWidgetCountSpan.textContent = leakingWidgetGrid.children.length;
+        }
+
+        // --- Fixed Dashboard Logic ---
+        let fixedWidgetCounter = 0;
+        const fixedWidgets = []; // Stores references to fixed widget elements
+        const fixedWidgetGrid = document.getElementById('fixedWidgetGrid');
+        const fixedWidgetCountSpan = document.getElementById('fixedWidgetCount');
+
+        // We'll store event listener references to clean them up
+        const fixedWidgetListeners = new Map(); // Map<widgetId, {element: HTMLElement, listener: Function}>
+
+        function createFixedWidgetElement(id) {
+            const widgetDiv = document.createElement('div');
+            widgetDiv.className = 'widget';
+            widgetDiv.dataset.widgetId = id;
+            widgetDiv.innerHTML = `
+                <div class="widget-header">
+                    <h3>Fixed Widget ${id}</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="widget-content">
+                    <p>This widget demonstrates proper cleanup.</p>
+                    <p>Event listeners are removed when the widget is gone.</p>
+                </div>
+                <div class="widget-footer">Created: ${new Date().toLocaleTimeString()}</div>
+            `;
+
+            const closeBtn = widgetDiv.querySelector('.close-btn');
+            // Define the listener as a named function or store its reference
+            const clickListener = () => {
+                console.log(`Fixed Widget ${id} close button clicked!`);
+                // In a real app, this button might trigger removal itself.
+                // For this demo, we'll remove it via removeFixedWidget().
+            };
+            closeBtn.addEventListener('click', clickListener);
+
+            // Store the listener reference so we can remove it later
+            fixedWidgetListeners.set(id, { element: closeBtn, listener: clickListener });
+
+            return widgetDiv;
+        }
+
+        function addFixedWidget() {
+            fixedWidgetCounter++;
+            const newWidget = createFixedWidgetElement(fixedWidgetCounter);
+            fixedWidgetGrid.appendChild(newWidget);
+            fixedWidgets.push(newWidget); // Store a reference
+            updateFixedWidgetCount();
+        }
+
+        function removeFixedWidget() {
+            if (fixedWidgets.length > 0) {
+                const lastWidget = fixedWidgets.pop(); // Remove reference from our array
+                const widgetId = parseInt(lastWidget.dataset.widgetId);
+
+                // THIS IS THE FIX: Remove the event listener
+                const listenerInfo = fixedWidgetListeners.get(widgetId);
+                if (listenerInfo) {
+                    listenerInfo.element.removeEventListener('click', listenerInfo.listener);
+                    fixedWidgetListeners.delete(widgetId); // Remove listener info from our map
+                    console.log(`Removed listener for Fixed Widget ${widgetId}`);
+                }
+
+                fixedWidgetGrid.removeChild(lastWidget); // Remove from DOM
+                // Now, 'lastWidget' and its associated data are no longer reachable (assuming no other references)
+                // and can be garbage collected.
+            }
+            updateFixedWidgetCount();
+        }
+
+        function updateFixedWidgetCount() {
+            fixedWidgetCountSpan.textContent = fixedWidgetGrid.children.length;
+        }
+    </script>
+</body>
+</html>

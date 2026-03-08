@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree with Recursion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            display: block;
+            margin: 20px auto;
+        }
+        #controls {
+            margin: 20px auto;
+            font-size: 16px;
+        }
+        #explanation {
+            margin: 40px auto;
+            max-width: 800px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+        }
+        #explanation h2 {
+            color: #333;
+        }
+        #explanation p, #explanation ul {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fractal Tree Generator</h1>
+    
+    <canvas id="treeCanvas" width="800" height="600"></canvas>
+    
+    <div id="controls">
+        <label for="depthSlider">Recursion Depth: <span id="depthValue">1</span></label>
+        <input type="range" id="depthSlider" min="1" max="12" value="1">
+    </div>
+    
+    <section id="explanation">
+        <h2>Understanding Recursion in Fractal Trees</h2>
+        <p>This interactive example uses recursion to draw a fractal tree. Recursion is a programming technique where a function calls itself to solve a smaller version of the same problem. In this case, the tree starts with a trunk and recursively adds branches until the specified depth is reached.</p>
+        
+        <h3>Recursion Depth Limits</h3>
+        <p>Recursion depth refers to how many times a function can call itself before stopping. In this demo, the depth is controlled by the slider (1 to 12 levels). However, most programming environments, including web browsers, impose limits on recursion depth due to the way the call stack works. The call stack is a region of memory that tracks function calls, and it has a finite size.</p>
+        
+        <h3>Why Deep Recursion Causes Stack Overflow Errors</h3>
+        <p>When recursion goes too deep (e.g., beyond a few thousand levels in JavaScript), it can exceed the call stack's capacity. Each recursive call adds a new frame to the stack, storing variables and the return address for that call. If the stack runs out of space, a "stack overflow" error occurs, crashing the program. In this example, depths up to 12 are safe, but in more complex scenarios, even moderate depths could cause issues depending on the browser and system resources.</p>
+        
+        <h3>Practical Solutions to Recursion Problems</h3>
+        <p>To avoid stack overflow errors in production code, especially for deeper recursion, consider these alternatives:</p>
+        <ul>
+            <li><strong>Iterative Approaches:</strong> Rewrite the algorithm using loops (e.g., a while or for loop) instead of recursion. This avoids building up the call stack altogether. For a fractal tree, you could use a loop with a stack data structure to simulate the recursive process, making it more efficient and scalable for very deep levels.</li>
+            <li><strong>Tail Call Optimization (TCO):</strong> In some programming languages, TCO allows the compiler or interpreter to reuse the current stack frame for the recursive call if it's the last operation in the function. This prevents stack growth. JavaScript supports TCO in theory (via strict mode), but it's not reliably implemented in all browsers. For example, you could restructure the tree-drawing function to make it tail-recursive, but this demo doesn't use it for simplicity and compatibility.</li>
+        </ul>
+        <p>By using these techniques, you can handle complex problems like fractals without hitting recursion limits, making your code more robust for real-world applications.</p>
+    </section>
+    
+    <script>
+        const canvas = document.getElementById('treeCanvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('depthSlider');
+        const depthValue = document.getElementById('depthValue');
+        
+        // Function to draw the fractal tree recursively
+        function drawTree(x, y, length, angle, depth) {
+            if (depth === 0) return;  // Base case: Stop recursion
+            
+            // Calculate the end point of the current branch
+            const endX = x + length * Math.cos(angle);
+            const endY = y + length * Math.sin(angle);
+            
+            // Draw the branch
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = 'green';  // Branch color
+            ctx.lineWidth = depth;  // Make thicker branches for higher depths
+            ctx.stroke();
+            
+            // Recursive calls for sub-branches
+            // First sub-branch (left)
+            drawTree(endX, endY, length * 0.7, angle - Math.PI / 6, depth - 1);
+            // Second sub-branch (right)
+            drawTree(endX, endY, length * 0.7, angle + Math.PI / 6, depth - 1);
+        }
+        
+        // Event listener for the slider
+        slider.addEventListener('input', () => {
+            const depth = parseInt(slider.value);
+            depthValue.textContent = depth;  // Update the displayed value
+            
+            // Clear the canvas and redraw the tree
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawTree(canvas.width / 2, canvas.height - 50, 100, -Math.PI / 2, depth);  // Start from bottom center
+        });
+        
+        // Initial draw when the page loads
+        slider.dispatchEvent(new Event('input'));
+    </script>
+</body>
+</html>

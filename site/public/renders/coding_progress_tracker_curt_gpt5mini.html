@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Progress Bar Concurrency Bug Demo — Buggy vs Fixed</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 24px; color: #111; }
+    h1 { margin-top: 0; }
+    .container { display: flex; gap: 24px; align-items: flex-start; }
+    .panel { border: 1px solid #ddd; padding: 16px; width: 48%; border-radius: 8px; background: #fafafa; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .panel h2 { margin-top: 0; font-size: 1.1rem; }
+    .barWrap { margin: 12px 0; }
+    .bar { position: relative; height: 28px; background: #eee; border-radius: 6px; overflow: hidden; }
+    .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg,#4caf50,#2e7d32); transition: width 160ms linear; }
+    .label { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+    button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+    button:active { transform: translateY(1px); }
+    .explain { font-size: 0.95rem; line-height: 1.35; background: #fff8e1; border: 1px solid #ffe082; padding: 10px; border-radius: 6px; margin-top: 12px; }
+    .log { height: 140px; overflow:auto; background:#111; color:#0f0; padding:8px; font-family: monospace; font-size:12px; border-radius:6px; margin-top:10px; }
+    .row { display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .muted { color:#666; font-size:0.95rem; }
+    .good { color:#2e7d32; font-weight:700; }
+    .bad { color:#b00020; font-weight:700; }
+    hr { border: none; height:1px; background:#eee; margin:12px 0; }
+    .small { font-size:0.9rem; color:#444; }
+  </style>
+</head>
+<body>
+  <h1>Progress Bar Concurrency Bug Demo</h1>
+  <p class="small">This single-file demo intentionally shows a shared-state concurrency problem: multiple async tasks update a single progress variable concurrently, causing wrong/skipped values and values >100%. The right-hand panel shows a fixed approach using per-task updates merged safely.</p>
+
+  <div class="container">
+    <div class="panel" id="buggyPanel">
+      <h2 class="bad">Buggy Implementation (shared mutable percentage)</h2>
+
+      <div class="barWrap">
+        <div class="bar" aria-hidden="true">
+          <div class="fill" id="buggyFill" style="width:0%"></div>
+          <div class="label" id="buggyLabel">0%</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="buggyStart">Start Buggy Run</button>
+        <button id="buggyReset">Reset</button>
+        <div class="muted">Tasks: <span id="buggyCount">5</span></div>
+      </div>
+
+      <div class="explain">
+        What goes wrong: All tasks read and write one shared numeric percentage variable. Because they run concurrently (timers, promises), their updates interleave and overwrite each other without coordination:
+        <ul>
+          <li>Updates can skip values (e.g., jump 30% → 60%).</li>
+          <li>Multiple tasks can increment past 100% resulting in >100% shown.</li>
+          <li>Late updates can regress or unexpectedly jump.</li>
+        </ul>
+      </div>
+
+      <div class="log" id="buggyLog"></div>
+    </div>
+
+    <div class="panel" id="fixedPanel">
+      <h2 class="good">Fixed Implementation (per-task contributions merged)</h2>
+
+      <div class="barWrap">
+        <div class="bar" aria-hidden="true">
+          <div class="fill" id="fixedFill" style="width:0%"></div>
+          <div class="label" id="fixedLabel">0%</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="fixedStart">Start Fixed Run</button>
+        <button id="fixedReset">Reset</button>
+        <div class="muted">Tasks: <span id="fixedCount">5</span></div>
+      </div>
+
+      <div class="explain">
+        Fix summary: Each task reports its own progress contribution; we merge them into a single progress by summing or averaging contributions and bounding the result. Updates are applied deterministically and atomically (no shared mutable counter incremented by each task).
+      </div>
+
+      <div class="log" id="fixedLog"></div>
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="small">
+    Try both runs several times. The buggy version often shows wrong behavior because of racey shared state. The fixed version isolates per-task progress and merges updates safely.
+  </div>
+
+  <script>
+    // Utility: render fill + label
+    function renderProgress(fillEl, labelEl, pct) {
+      const bounded = Math.round(pct);
+      fillEl.style.width = Math.min(300, Math.max(0, bounded)) + '%';
+      labelEl.textContent = bounded + '%';
+    }
+
+    // ---------- Buggy implementation ----------
+    (function(){
+      const startBtn = document.getElementById('buggyStart');
+      const resetBtn = document.getElementById('buggyReset');
+      const fill = document.getElementById('buggyFill');
+      const label = document.getElementById('buggyLabel');
+      const log = document.getElementById('buggyLog');
+      const countEl = document.getElementById('buggyCount');
+
+      let sharedPercent = 0;
+      let running = false;
+      let tasks = 5;
+
+      countEl.textContent = String(tasks);
+
+      function appendLog(s){
+        log.textContent += s + '\n';
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function reset() {
+        running = false;
+        sharedPercent = 0;
+        renderProgress(fill, label, 0);
+        log.textContent = '';
+        appendLog('// Reset state. sharedPercent = 0');
+      }
+
+      // A simulated async "task" that increases progress by a given amount
+      // but uses and mutates the sharedPercent without coordination.
+      function buggyTask(id, targetAdd) {
+        return new Promise((resolve) => {
+          // random delay to maximize interleaving
+          const delay = 50 + Math.random()*600;
+          setTimeout(() => {
+            appendLog(`[task ${id}] woke after ${Math.round(delay)}ms. about to read & write sharedPercent.`);
+            // Read-modify-write on shared state (race-prone)
+            const read = sharedPercent;
+            appendLog(`[task ${id}] read sharedPercent = ${read}%`);
+            // simulate some async work (microtask)
+            Promise.resolve().then(() => {
+              // calculate new value and write back
+              const newVal = read + targetAdd;
+              sharedPercent = newVal; // no locking or coordination
+              appendLog(`[task ${id}] wrote sharedPercent = ${newVal}%`);
+              // reflect in UI (note: may go >100)
+              renderProgress(fill, label, sharedPercent);
+              resolve();
+            });
+          }, delay);
+        });
+      }
+
+      async function runBuggy() {
+        if (running) return;
+        running = true;
+        sharedPercent = 0;
+        renderProgress(fill, label, 0);
+        log.textContent = '';
+        appendLog('// Starting buggy run. sharedPercent initially 0.');
+        // Split 100% across tasks but as increments (may overlap)
+        const increments = [];
+        for (let i=0;i<tasks;i++){
+          // variable increments to make misbehavior clearer
+          const add = Math.round(20 + Math.random()*30); // e.g., 20-50 each
+          increments.push(add);
+        }
+        appendLog('// Each task will add: ' + increments.join(', '));
+
+        // Launch tasks concurrently; they mutate sharedPercent directly.
+        const promises = increments.map((add, i) => buggyTask(i+1, add));
+        await Promise.all(promises);
+        appendLog('// All tasks finished. sharedPercent final = ' + sharedPercent + '%');
+        running = false;
+      }
+
+      startBtn.addEventListener('click', runBuggy);
+      resetBtn.addEventListener('click', reset);
+
+      // initial reset
+      reset();
+    })();
+
+    // ---------- Fixed implementation ----------
+    (function(){
+      const startBtn = document.getElementById('fixedStart');
+      const resetBtn = document.getElementById('fixedReset');
+      const fill = document.getElementById('fixedFill');
+      const label = document.getElementById('fixedLabel');
+      const log = document.getElementById('fixedLog');
+      const countEl = document.getElementById('fixedCount');
+
+      let running = false;
+      let tasks = 5;
+      countEl.textContent = String(tasks);
+
+      function appendLog(s){
+        log.textContent += s + '\n';
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function reset() {
+        running = false;
+        perTaskProgress = Array(tasks).fill(0);
+        renderProgress(fill, label, 0);
+        log.textContent = '';
+        appendLog('// Reset fixed-run: perTaskProgress all zero.');
+      }
+
+      // Instead of one shared percent, each task reports its own contribution.
+      // We compute global progress deterministically by averaging or summing bounded contributions.
+      let perTaskProgress = Array(tasks).fill(0);
+
+      function recomputeGlobal() {
+        // Example: sum of contributions but bounded to 100.
+        const sum = perTaskProgress.reduce((a,b)=>a+b, 0);
+        // If tasks represent parts of work, we normalize to 100:
+        // We'll treat each task's max as 100/tasks, so sumNormalized = (sum / tasks)
+        // Simpler: average the per-task % -> overall percent.
+        const avg = sum / tasks;
+        const bounded = Math.min(100, Math.max(0, avg));
+        renderProgress(fill, label, bounded);
+        appendLog(`[merge] recomputed overall = ${Math.round(bounded)}% (perTask: ${perTaskProgress.map(n=>Math.round(n)).join(',')})`);
+      }
+
+      // Each task will call reportProgress(value) rather than directly mutate shared variable.
+      function reportProgress(taskIndex, value) {
+        perTaskProgress[taskIndex] = value;
+        recomputeGlobal();
+      }
+
+      // Simulated async tasks that report their own progress in increments.
+      function fixedTask(id, maxContribution) {
+        return new Promise((resolve) => {
+          // random stagger to simulate concurrency
+          const startDelay = 50 + Math.random()*400;
+          setTimeout(() => {
+            appendLog(`[task ${id}] starting after ${Math.round(startDelay)}ms. will report up to ${maxContribution}%.`);
+            // Simulate multiple micro-updates from task
+            const updates = 2 + Math.floor(Math.random()*4); // 2..5 updates
+            let done = 0;
+            function doUpdate() {
+              done++;
+              // progress fraction for this task (0..maxContribution)
+              const frac = Math.min(maxContribution, Math.round((done/updates)*maxContribution));
+              appendLog(`[task ${id}] reports ${frac}% of its share.`);
+              reportProgress(id-1, frac);
+              if (done < updates) {
+                // schedule next internal update
+                setTimeout(doUpdate, 60 + Math.random()*220);
+              } else {
+                // final settle to maxContribution
+                reportProgress(id-1, maxContribution);
+                appendLog(`[task ${id}] finished.`);
+                resolve();
+              }
+            }
+            // first micro-update
+            doUpdate();
+          }, startDelay);
+        });
+      }
+
+      async function runFixed() {
+        if (running) return;
+        running = true;
+        perTaskProgress = Array(tasks).fill(0);
+        renderProgress(fill, label, 0);
+        log.textContent = '';
+        appendLog('// Starting fixed run. perTaskProgress all zero.');
+
+        // Decide each task's max contribution so total averages to ~100
+        // If we want average to reach 100 when each task hits their max, set each max to 100.
+        // But to mimic realistic "split work", you could set parts so sum=100.
+        // We'll set each task's max to a random 60-140% so that per-task merging + bounding is needed.
+        const maxContrib = [];
+        for (let i=0;i<tasks;i++){
+          // varied contributions make the merging interesting
+          const c = Math.round(60 + Math.random()*120); // 60..180
+          maxContrib.push(c);
+        }
+        appendLog('// Each task max contribution (per-task % scale): ' + maxContrib.join(', '));
+        // But because recomputeGlobal averages per-task values, overall will be bounded to 100.
+
+        const promises = maxContrib.map((c,i) => fixedTask(i+1, c));
+        await Promise.all(promises);
+        appendLog('// All fixed tasks finished. Final perTaskProgress: ' + perTaskProgress.map(n=>Math.round(n)).join(','));
+        running = false;
+      }
+
+      startBtn.addEventListener('click', runFixed);
+      resetBtn.addEventListener('click', reset);
+
+      // initial reset
+      reset();
+    })();
+
+    // Make both panels respond to keyboard (Space starts both)
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        document.getElementById('buggyStart').click();
+        document.getElementById('fixedStart').click();
+      }
+    });
+  </script>
+</body>
+</html>

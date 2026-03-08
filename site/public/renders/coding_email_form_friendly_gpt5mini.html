@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Real-time Email Validation (Regex) — Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --valid-color: #118C4F;
+      --invalid-color: #C42B2B;
+      --neutral-color: #ccc;
+      --bg: #f7f9fb;
+      --card-bg: #fff;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      font-family:var(--font);
+      color:#111;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .wrap{
+      max-width:840px;
+      margin:36px auto;
+      padding:22px;
+    }
+    .card{
+      background:var(--card-bg);
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(28,40,50,0.06);
+      padding:20px;
+    }
+    h1{
+      margin:0 0 10px 0;
+      font-size:20px;
+    }
+    p.lead{
+      margin:0 0 16px 0;
+      color:#4b5563;
+    }
+    .form-row{
+      display:flex;
+      gap:12px;
+      align-items:stretch;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    input[type="text"]{
+      flex:1 1 320px;
+      padding:12px 14px;
+      font-size:15px;
+      border:2px solid var(--neutral-color);
+      border-radius:8px;
+      outline:none;
+      transition:box-shadow .12s ease, border-color .12s ease;
+      background:#fff;
+    }
+    .hint{
+      min-width:220px;
+      padding:10px 12px;
+      border-radius:8px;
+      font-size:13px;
+      color:#333;
+      background:#fafafa;
+      border:1px dashed #e6e9ee;
+    }
+    .status{
+      margin-top:8px;
+      font-size:13px;
+      height:20px;
+    }
+    .status.valid{ color:var(--valid-color); }
+    .status.invalid{ color:var(--invalid-color); }
+    .explain{
+      margin-top:18px;
+      font-size:14px;
+      line-height:1.45;
+      color:#2b3742;
+    }
+    .explain h2{ font-size:15px; margin:6px 0 8px 0; }
+    .explain ul{ margin:8px 0 8px 18px; }
+    .code{
+      display:block;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      background:#0f1724;
+      color:#e6eef8;
+      padding:10px;
+      border-radius:6px;
+      font-size:13px;
+      overflow:auto;
+    }
+    footer{
+      margin-top:18px;
+      font-size:12px;
+      color:#556;
+    }
+    /* Valid / invalid border styles */
+    input.valid{
+      border-color:var(--valid-color);
+      box-shadow:0 0 0 4px rgba(17,140,79,0.08);
+    }
+    input.invalid{
+      border-color:var(--invalid-color);
+      box-shadow:0 0 0 4px rgba(196,43,43,0.08);
+    }
+    /* small screens */
+    @media (max-width:560px){
+      .form-row{ flex-direction:column; }
+      .hint{ width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Email validation (real-time, regex)</h1>
+      <p class="lead">Type an email address below. The input border turns green if it matches the regex, red otherwise.</p>
+
+      <div class="form-row" aria-live="polite">
+        <input id="email" type="text" inputmode="email" autocomplete="email" placeholder="name@example.com" aria-label="Email address" />
+        <div class="hint">
+          Pattern shown: <strong id="patternLabel"></strong>
+        </div>
+      </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+
+      <div class="explain" role="region" aria-labelledby="why-title">
+        <h2 id="why-title">Why a regex can't fully validate RFC email addresses</h2>
+        <p>
+          The Internet message format for email addresses (defined in RFCs such as 5322 and related specs) is very permissive and includes many cases that are hard or impractical to validate with a single regular expression. Examples include quoted local-parts with escaped characters, comments, internationalized domain names (IDNs), and very long or unusual forms permitted by the RFC.
+        </p>
+        <ul>
+          <li>RFC grammar is complex — a single accurate regex becomes extremely long and hard to maintain.</li>
+          <li>Even if syntactically valid per RFC, the address might not exist, may be blocked by policies, or require IDN/Punycode handling.</li>
+          <li>Client-side regex gives only syntactic checks — it can't verify mailbox existence, MX records, or delivery acceptability.</li>
+        </ul>
+
+        <h2>Better practical alternatives for production</h2>
+        <ul>
+          <li>Use a reasonably permissive regex client-side for UX (quick feedback). Don't try to cover every RFC corner case.</li>
+          <li>On the server: perform canonicalization (IDN/Punycode conversion) and stronger validation like DNS MX or A record checks.</li>
+          <li>For final verification, send a confirmation email (double opt-in) or use a verification API/service that can check mailbox existence and catch disposable addresses.</li>
+        </ul>
+
+        <p>
+          Below is the regex used in this demo (intentionally practical and not fully RFC-complete):
+        </p>
+        <pre class="code" id="regexBlock"></pre>
+
+        <footer>
+          Note: This demo is client-side only and intended for UX. Always enforce server-side validation and verification before trusting an email address in production.
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // A practical, commonly used regex for reasonable email validation in forms.
+    // This is intentionally not fully RFC-complete — it balances strictness and usability.
+    // Explanation: it allows quoted local parts, dots inside local part (not consecutive or at ends),
+    // and a domain made of labels separated by dots, each label 1-63 chars, with TLD at least 2 chars.
+    const emailRegex = new RegExp(
+      // local-part
+      // - "(...)" quoted or
+      // - unquoted: atoms separated by dots; atoms allow letters, numbers, and these special chars: !#$%&'*+/=?^_`{|}~-
+      '^(' +
+        // quoted string
+        '"(?:\\\\[\\s\\S]|[^"\\\\])*"' +
+        '|' +
+        // unquoted
+        "(?:[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)" +
+      ')' +
+      // @
+      '@' +
+      // domain: labels (letters, numbers, hyphen), separated by dots. Last label (TLD) min 2 chars
+      '(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+' +
+      '[A-Za-z]{2,}$'
+    );
+
+    // Display pattern for users (escaped, single-line)
+    document.getElementById('patternLabel').textContent = 'reasonable-email-regex';
+    document.getElementById('regexBlock').textContent = emailRegex.toString();
+
+    const input = document.getElementById('email');
+    const status = document.getElementById('status');
+
+    function updateValidation() {
+      const value = input.value.trim();
+      if (value === '') {
+        input.classList.remove('valid', 'invalid');
+        status.textContent = '';
+        return;
+      }
+      const ok = emailRegex.test(value);
+      input.classList.toggle('valid', ok);
+      input.classList.toggle('invalid', !ok);
+      if (ok) {
+        status.textContent = 'Looks like a valid email format.';
+        status.classList.remove('invalid');
+        status.classList.add('valid');
+      } else {
+        status.textContent = 'Invalid email format.';
+        status.classList.remove('valid');
+        status.classList.add('invalid');
+      }
+    }
+
+    // Validate in real-time with input event
+    input.addEventListener('input', updateValidation);
+
+    // Also validate on paste (some browsers fire input but be safe)
+    input.addEventListener('paste', function() {
+      // Delay to allow pasted data to appear in the input
+      setTimeout(updateValidation, 0);
+    });
+
+    // Optional: validate on blur to ensure final state
+    input.addEventListener('blur', updateValidation);
+
+    // Keyboard accessibility: press Enter to re-check (and prevent form submission if any)
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        updateValidation();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to Table Converter</title>
+    <style>
+        /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid #ddd; /* Clear borders */
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top; /* Align content to top for varying row lengths */
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternating row colors */
+        }
+        
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSV to Table Converter</h1>
+    <label for="csvInput">Paste your CSV data here:</label>
+    <textarea id="csvInput" placeholder='Example:
+Name,Age,"Address, City",Quote
+John,25,"123 Main St, New York","He said ""Hello"""
+Jane,30,"456 Elm St, Los Angeles"
+Bob,40'></textarea>
+    <button id="parseButton">Parse CSV</button>
+    <div id="output"></div>
+
+    <script>
+        // Add event listener to the button
+        document.getElementById('parseButton').addEventListener('click', function() {
+            var csvText = document.getElementById('csvInput').value.trim();
+            if (csvText === '') {
+                document.getElementById('output').innerHTML = '<p>No CSV data provided.</p>';
+                return;
+            }
+            
+            var rows = parseCSV(csvText);  // Parse the CSV into a 2D array
+            var tableHTML = generateTable(rows);  // Generate the table HTML
+            document.getElementById('output').innerHTML = tableHTML;  // Insert into the output div
+        });
+
+        // Function to parse CSV string into a 2D array
+        function parseCSV(csv) {
+            var lines = csv.split('\n');  // Split into lines
+            var result = [];
+            var maxColumns = 0;  // Track the maximum number of columns
+            
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (line === '') continue;  // Skip empty lines
+                var fields = parseLine(line);  // Parse each line into fields
+                result.push(fields);
+                if (fields.length > maxColumns) {
+                    maxColumns = fields.length;  // Update max columns
+                }
+            }
+            
+            // Ensure all rows have the same number of columns as the longest one
+            for (var i = 0; i < result.length; i++) {
+                while (result[i].length < maxColumns) {
+                    result[i].push('');  // Add empty strings for missing columns
+                }
+            }
+            
+            return result;
+        }
+
+        // Function to parse a single line of CSV
+        function parseLine(line) {
+            var fields = [];
+            var field = '';
+            var inQuotes = false;
+            
+            for (var i = 0; i < line.length; i++) {
+                var char = line[i];
+                
+                if (char === '"') {
+                    // Handle quotes
+                    if (inQuotes && line[i + 1] === '"') {
+                        // Escaped quote (e.g., "" inside quotes)
+                        field += '"';  // Add a single quote
+                        i++;  // Skip the next quote
+                    } else {
+                        // Toggle inQuotes flag
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    // Comma separates fields, but only if not inside quotes
+                    fields.push(field.trim());  // Add the field and trim whitespace
+                    field = '';
+                } else {
+                    // Add the character to the current field
+                    field += char;
+                }
+            }
+            
+            fields.push(field.trim());  // Add the last field
+            return fields;
+        }
+
+        // Function to generate the table HTML from a 2D array
+        function generateTable(rows) {
+            if (rows.length === 0) return '<p>No data to display.</p>';
+            
+            var table = '<table>';
+            
+            // Assume the first row is headers for better styling
+            table += '<tr>';
+            for (var j = 0; j < rows[0].length; j++) {
+                table += '<th>' + escapeHTML(rows[0][j]) + '</th>';
+            }
+            table += '</tr>';
+            
+            // Add data rows
+            for (var i = 1; i < rows.length; i++) {  // Start from 1 to skip headers
+                table += '<tr>';
+                for (var j = 0; j < rows[i].length; j++) {
+                    table += '<td>' + escapeHTML(rows[i][j]) + '</td>';
+                }
+                table += '</tr>';
+            }
+            
+            table += '</table>';
+            return table;
+        }
+
+        // Helper function to escape HTML to prevent XSS
+        function escapeHTML(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

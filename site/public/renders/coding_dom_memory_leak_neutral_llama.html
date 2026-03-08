@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Leak Demonstration</title>
     <style>
+        #dashboard {
+            display: flex;
+            flex-wrap: wrap;
+        }
         .widget {
-            padding: 10px;
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
             border: 1px solid #ccc;
             margin: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
@@ -16,76 +25,68 @@
     <h1>Memory Leak Demonstration</h1>
     <button id="add-widget-btn">Add Widget</button>
     <button id="remove-widget-btn">Remove Widget</button>
-    <button id="add-fixed-widget-btn">Add Fixed Widget</button>
-    <button id="remove-fixed-widget-btn">Remove Fixed Widget</button>
-    <div id="leaking-widgets"></div>
-    <div id="fixed-widgets"></div>
-    <p>Leaking Widgets Count: <span id="leaking-widgets-count">0</span></p>
-    <p>Fixed Widgets Count: <span id="fixed-widgets-count">0</span></p>
+    <button id="toggle-leak-btn">Toggle Leak</button>
+    <div id="dashboard"></div>
+    <p>Memory Usage: <span id="memory-usage">0</span> widgets</p>
 
     <script>
-        // Leaking version
-        let leakingWidgets = [];
-        let leakingWidgetCount = 0;
+        let widgets = [];
+        let leak = true;
+        let widgetCount = 0;
 
+        // Function to create a new widget
+        function createWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Widget ${widgetCount}`;
+            widgetCount++;
+            document.getElementById('dashboard').appendChild(widget);
+            return widget;
+        }
+
+        // Function to remove a widget
+        function removeWidget() {
+            if (widgets.length > 0) {
+                const widget = widgets.pop();
+                if (leak) {
+                    // Buggy code: not cleaning up event listeners or DOM references
+                    widget.parentNode.removeChild(widget);
+                } else {
+                    // Fixed code: cleaning up event listeners and DOM references
+                    widget.removeEventListener('click', widget.clickHandler);
+                    widget.parentNode.removeChild(widget);
+                }
+            }
+        }
+
+        // Event listener for add widget button
         document.getElementById('add-widget-btn').addEventListener('click', () => {
-            const widget = document.createElement('div');
-            widget.className = 'widget';
-            widget.textContent = `Leaking Widget ${leakingWidgetCount}`;
-            document.getElementById('leaking-widgets').appendChild(widget);
-            leakingWidgets.push(widget);
-
-            // Attach event listener
-            widget.addEventListener('click', () => {
-                console.log(`Leaking Widget ${leakingWidgetCount} clicked`);
-            });
-
-            leakingWidgetCount++;
-            document.getElementById('leaking-widgets-count').textContent = leakingWidgetCount;
-        });
-
-        document.getElementById('remove-widget-btn').addEventListener('click', () => {
-            if (leakingWidgets.length > 0) {
-                const widget = leakingWidgets.shift();
-                widget.parentNode.removeChild(widget);
-                leakingWidgetCount--;
-                document.getElementById('leaking-widgets-count').textContent = leakingWidgetCount;
+            const widget = createWidget();
+            if (leak) {
+                // Buggy code: attaching event listener and storing DOM reference
+                widget.addEventListener('click', () => {
+                    console.log(`Clicked on ${widget.textContent}`);
+                });
+                widgets.push(widget);
+            } else {
+                // Fixed code: no event listener or DOM reference stored
+                widget.addEventListener('click', () => {
+                    console.log(`Clicked on ${widget.textContent}`);
+                });
             }
+            document.getElementById('memory-usage').textContent = widgets.length + (leak ? ' (leaking)' : '');
         });
 
-        // Fixed version
-        let fixedWidgets = [];
-        let fixedWidgetCount = 0;
+        // Event listener for remove widget button
+        document.getElementById('remove-widget-btn').addEventListener('click', removeWidget);
 
-        document.getElementById('add-fixed-widget-btn').addEventListener('click', () => {
-            const widget = document.createElement('div');
-            widget.className = 'widget';
-            widget.textContent = `Fixed Widget ${fixedWidgetCount}`;
-            document.getElementById('fixed-widgets').appendChild(widget);
-            fixedWidgets.push(widget);
-
-            // Attach event listener
-            const clickHandler = () => {
-                console.log(`Fixed Widget ${fixedWidgetCount} clicked`);
-            };
-            widget.addEventListener('click', clickHandler);
-
-            // Store the click handler for later removal
-            widget.dataset.clickHandler = clickHandler.toString();
-
-            fixedWidgetCount++;
-            document.getElementById('fixed-widgets-count').textContent = fixedWidgetCount;
-        });
-
-        document.getElementById('remove-fixed-widget-btn').addEventListener('click', () => {
-            if (fixedWidgets.length > 0) {
-                const widget = fixedWidgets.shift();
-                // Remove event listener
-                widget.removeEventListener('click', widget.dataset.clickHandler);
-                widget.parentNode.removeChild(widget);
-                fixedWidgetCount--;
-                document.getElementById('fixed-widgets-count').textContent = fixedWidgetCount;
-            }
+        // Event listener for toggle leak button
+        document.getElementById('toggle-leak-btn').addEventListener('click', () => {
+            leak = !leak;
+            widgets = [];
+            document.getElementById('dashboard').innerHTML = '';
+            widgetCount = 0;
+            document.getElementById('memory-usage').textContent = '0' + (leak ? ' (leaking)' : '');
         });
     </script>
 </body>

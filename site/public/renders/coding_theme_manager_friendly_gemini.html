@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singleton Theme Toggle & Discussion</title>
+    <style>
+        /* Base styles for both themes */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            transition: color 0.3s ease;
+        }
+
+        p, ul, ol, pre, blockquote {
+            margin-bottom: 1em;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 25px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle-container {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle-button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-group input[type="text"],
+        .input-group textarea,
+        .input-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .input-group button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        pre {
+            background-color: rgba(128, 128, 128, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+
+        a {
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Dark Theme */
+        body.dark-theme {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+        }
+        body.dark-theme h1, body.dark-theme h2, body.dark-theme h3,
+        body.dark-theme h4, body.dark-theme h5, body.dark-theme h6 {
+            color: #bb86fc; /* A vibrant accent for headers */
+        }
+        body.dark-theme .container {
+            background-color: #28283f;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid #3a3a5a;
+        }
+        body.dark-theme .theme-toggle-button {
+            background-color: #bb86fc;
+            color: #1a1a2e;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        body.dark-theme .theme-toggle-button:hover {
+            background-color: #bb86fc;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        body.dark-theme .card {
+            background-color: #2e2e4a;
+            border-color: #4a4a6e;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        body.dark-theme .input-group label {
+            color: #bb86fc;
+        }
+        body.dark-theme .input-group input[type="text"],
+        body.dark-theme .input-group textarea,
+        body.dark-theme .input-group select {
+            background-color: #3a3a5a;
+            border-color: #5a5a7a;
+            color: #e0e0e0;
+        }
+        body.dark-theme .input-group input[type="text"]:focus,
+        body.dark-theme .input-group textarea:focus,
+        body.dark-theme .input-group select:focus {
+            outline: none;
+            border-color: #bb86fc;
+            box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.3);
+        }
+        body.dark-theme .input-group button {
+            background-color: #03dac6; /* A secondary accent color */
+            color: #1a1a2e;
+        }
+        body.dark-theme .input-group button:hover {
+            background-color: #03dac6;
+            opacity: 0.9;
+        }
+        body.dark-theme pre {
+            background-color: #1f1f3a;
+            border: 1px solid #3a3a5a;
+        }
+        body.dark-theme a {
+            color: #03dac6;
+        }
+        body.dark-theme a:hover {
+            color: #03dac6;
+            text-decoration: underline;
+        }
+
+
+        /* Light Theme */
+        body.light-theme {
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        body.light-theme h1, body.light-theme h2, body.light-theme h3,
+        body.light-theme h4, body.light-theme h5, body.light-theme h6 {
+            color: #2c3e50;
+        }
+        body.light-theme .container {
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+        body.light-theme .theme-toggle-button {
+            background-color: #007bff;
+            color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+        body.light-theme .theme-toggle-button:hover {
+            background-color: #0069d9;
+            box-shadow: 0 3px 7px rgba(0, 0, 0, 0.2);
+        }
+        body.light-theme .card {
+            background-color: #ffffff;
+            border-color: #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        body.light-theme .input-group label {
+            color: #333;
+        }
+        body.light-theme .input-group input[type="text"],
+        body.light-theme .input-group textarea,
+        body.light-theme .input-group select {
+            background-color: #ffffff;
+            border-color: #ccc;
+            color: #333;
+        }
+        body.light-theme .input-group input[type="text"]:focus,
+        body.light-theme .input-group textarea:focus,
+        body.light-theme .input-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        body.light-theme .input-group button {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+        body.light-theme .input-group button:hover {
+            background-color: #218838;
+        }
+        body.light-theme pre {
+            background-color: #f8f8f8;
+            border: 1px solid #e0e0e0;
+        }
+        body.light-theme a {
+            color: #007bff;
+        }
+        body.light-theme a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="theme-toggle-container">
+            <button id="themeToggle" class="theme-toggle-button">Toggle Theme</button>
+        </div>
+
+        <h1>Singleton Pattern for Theme Management</h1>
+        <p>This page demonstrates a dark and light theme toggle using the Singleton pattern for managing the theme state. Notice how various elements react to the theme change.</p>
+
+        <section id="general-elements">
+            <h2>General Elements</h2>
+            <p>This is a standard paragraph. Its text color and background should change with the theme.</p>
+            <ul>
+                <li>List item one</li>
+                <li>List item two</li>
+                <li>List item three with some <a href="#">inline link</a>.</li>
+            </ul>
+            <ol>
+                <li>Ordered list item A</li>
+                <li>Ordered list item B</li>
+            </ol>
+            <blockquote>
+                "The only way to do great work is to love what you do." – Steve Jobs.
+                This blockquote should also adapt.
+            </blockquote>
+        </section>
+
+        <section id="interactive-elements">
+            <h2>Interactive Elements & Cards</h2>
+
+            <div class="card">
+                <h3>A Themed Card</h3>
+                <p>This card visually represents content that should adapt to the current theme, including its background, border, and text color.</p>
+                <div class="input-group">
+                    <label for="nameInput">Your Name:</label>
+                    <input type="text" id="nameInput" placeholder="Enter your name">
+                </div>
+                <div class="input-group">
+                    <label for="messageTextarea">Your Message:</label>
+                    <textarea id="messageTextarea" rows="4" placeholder="Type your message here..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="themeSelect">Favorite Color:</label>
+                    <select id="themeSelect">
+                        <option value="red">Red</option>
+                        <option value="blue">Blue</option>
+                        <option value="green">Green</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <button onclick="alert('Form submitted!')">Submit Form</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Another Card</h3>
+                <p>Just another card to show consistency across multiple similar components.</p>
+                <button onclick="console.log('Button clicked!')">Click Me</button>
+            </div>
+        </section>
+
+        <section id="code-example">
+            <h2>Code Example</h2>
+            <p>Code blocks are particularly important for readability in different themes.</p>
+            <pre><code>
+// JavaScript Singleton Pattern for ThemeManager
+class ThemeManager {
+    constructor() {
+        if (ThemeManager.instance) {
+            return ThemeManager.instance;
+        }
+        this._currentTheme = localStorage.getItem('theme') || 'light-theme';
+        this.applyTheme();
+        ThemeManager.instance = this;
+    }
+
+    get currentTheme() {
+        return this._currentTheme;
+    }
+
+    setTheme(theme) {
+        if (this._currentTheme !== theme) {
+            this._currentTheme = theme;
+            localStorage.setItem('theme', theme);
+            this.applyTheme();
+        }
+    }
+
+    toggleTheme() {
+        const newTheme = this._currentTheme === 'light-theme' ? 'dark-theme' : 'light-theme';
+        this.setTheme(newTheme);
+    }
+
+    applyTheme() {
+        document.body.className = ''; // Clear existing theme classes
+        document.body.classList.add(this._currentTheme);
+        document.getElementById('themeToggle').textContent =
+            this._currentTheme === 'light-theme' ? 'Switch to Dark' : 'Switch to Light';
+    }
+}
+
+// Usage:
+const themeManager = new ThemeManager(); // Gets the singleton instance
+document.getElementById('themeToggle').addEventListener('click', () => {
+    themeManager.toggleTheme();
+});
+            </code></pre>
+        </section>
+
+        <section id="singleton-discussion">
+            <h2>Singleton Pattern: Pros, Cons, and Alternatives</h2>
+
+            <h3>What is the Singleton Pattern?</h3>
+            <p>The Singleton pattern ensures that a class has only one instance and provides a global point of access to that instance. It's often used for logging, configuration management, and, as in this example, theme management, where a single, globally accessible instance is desired.</p>
+
+            <h3>Pros of the Singleton Pattern:</h3>
+            <ul>
+                <li><strong>Controlled Access to Single Instance:</strong> It ensures that there's only one instance of the class, preventing multiple, potentially conflicting, instances.</li>
+                <li><strong>Global Access Point:</strong> It provides a well-known global access point to that instance, making it easy for any part of the application to retrieve and use it.</li>
+                <li><strong>Lazy Initialization:</strong> The instance can be created only when it's first needed, saving resources if the instance is not always required.</li>
+                <li><strong>Resource Management:</strong> Useful for managing shared resources like database connections, file systems, or, as here, a global theme state, where only one instance makes sense.</li>
+            </ul>
+
+            <h3>Cons of the Singleton Pattern:</h3>
+            <ul>
+                <li><strong>Global State:</strong> Introduces global state, which can make testing difficult (due to tightly coupled components) and lead to unforeseen side effects.</li>
+                <li><strong>Tight Coupling:</strong> Components that directly access the Singleton become tightly coupled to it, reducing modularity and reusability.</li>
+                <li><strong>Difficult to Test:</strong> Mocking or replacing a Singleton for unit testing can be challenging, as its instance is globally fixed.</li>
+                <li><strong>Violation of Single Responsibility Principle (SRP):</strong> The Singleton class often takes on the responsibility of managing its own creation and lifecycle, in addition to its primary business logic.</li>
+                <li><strong>Hidden Dependencies:</strong> Dependencies on a Singleton are often not explicit in method signatures or constructors, making code harder to understand and maintain.</li>
+                <li><strong>Scalability Issues:</strong> In multi-threaded environments (less common in typical browser JS, but relevant in Node.js or Web Workers), ensuring thread-safety for Singleton creation can add complexity.</li>
+            </ul>
+
+            <h3>When Dependency Injection (DI) is a Better Choice:</h3>
+            <p>Dependency Injection is an alternative approach that focuses on providing dependencies to an object from an external source, rather than the object creating them itself. Here's why and when it's often preferred over Singletons:</p>
+            <ul>
+                <li><strong>Testability:</strong> With DI, you can easily inject mock implementations of dependencies during testing, isolating the unit under test. Singletons are hard to mock.</li>
+                <li><strong>Loose Coupling:</strong> Components don't know how their dependencies are created or managed. They simply receive them, leading to more modular and reusable code.</li>
+                <li><strong>Flexibility:</strong> You can easily swap out different implementations of a dependency without changing the consuming code. For example, a <code>ThemeManager</code> could be replaced with a <code>DebugThemeManager</code>.</li>
+                <li><strong>Clarity:</strong> Dependencies are explicitly declared (e.g., in a constructor), making the object's requirements clear at a glance.</li>
+                <li><strong>Scalability and Maintainability:</strong> Leads to more maintainable and scalable codebases in the long run, especially for larger applications, by reducing global state and promoting clear interfaces.</li>
+            </ul>
+            <p><strong>Example Scenario for DI:</strong> If your application had multiple distinct modules (e.g., an Admin Dashboard, a User Profile, a Public Blog), and each needed a theme manager, but perhaps with slightly different configurations or behaviors, injecting a <code>ThemeManager</code> instance into each module would be more flexible than relying on a single global Singleton that might need to be reconfigured globally or handle too many responsibilities.</p>
+            <p>While the Singleton works for this simple theme toggle, in a larger, more complex application, carefully considering Dependency Injection would generally lead to a more robust, testable, and maintainable architecture.</p>
+        </section>
+    </div>
+
+    <script>
+        // JavaScript Singleton Pattern for ThemeManager
+        class ThemeManager {
+            constructor() {
+                // Ensure only one instance exists
+                if (ThemeManager.instance) {
+                    return ThemeManager.instance;
+                }
+
+                // Initialize theme from localStorage or default to 'light-theme'
+                this._currentTheme = localStorage.getItem('theme') || 'light-theme';
+                this.applyTheme(); // Apply theme on initialization
+
+                // Store the instance
+                ThemeManager.instance = this;
+            }
+
+            // Getter for current theme
+            get currentTheme() {
+                return this._currentTheme;
+            }
+
+            // Setter for theme, updates localStorage and applies theme
+            setTheme(theme) {
+                if (this._currentTheme !== theme) {
+                    this._currentTheme = theme;
+                    localStorage.setItem('theme', theme);
+                    this.applyTheme();
+                }
+            }
+
+            // Toggles between light and dark themes
+            toggleTheme() {
+                const newTheme = this._currentTheme === 'light-theme' ? 'dark-theme' : 'light-theme';
+                this.setTheme(newTheme);
+            }
+
+            // Applies the current theme to the document body
+            applyTheme() {
+                document.body.className = ''; // Clear existing theme classes
+                document.body.classList.add(this._currentTheme);
+
+                // Update the button text
+                const themeToggleButton = document.getElementById('themeToggle');
+                if (themeToggleButton) {
+                    themeToggleButton.textContent =
+                        this._currentTheme === 'light-theme' ? 'Switch to Dark' : 'Switch to Light';
+                }
+            }
+        }
+
+        // --- Application Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the singleton instance of ThemeManager
+            const themeManager = new ThemeManager();
+
+            // Attach event listener to the toggle button
+            const themeToggleButton = document.getElementById('themeToggle');
+            if (themeToggleButton) {
+                themeToggleButton.addEventListener('click', () => {
+                    themeManager.toggleTheme();
+                });
+            }
+
+            // Optional: You could have other components react to theme changes
+            // For example, if you had a chart library, you might trigger its
+            // theme update function here, or have it subscribe to a custom event
+            // that ThemeManager could dispatch. For this example, CSS handles
+            // most of the visual changes directly based on the body class.
+        });
+    </script>
+</body>
+</html>

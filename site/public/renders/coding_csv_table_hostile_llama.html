@@ -21,106 +21,93 @@
   tr:nth-child(even) {
     background-color: #f9f9f9;
   }
-  textarea {
-    width: 100%;
-    height: 150px;
-    padding: 10px;
+  #textarea-container {
     margin-bottom: 10px;
-    font-size: 16px;
   }
 </style>
 </head>
 <body>
 
-<textarea id="csvInput" placeholder="Enter your CSV data here..."></textarea>
-<button id="parseBtn">Parse CSV</button>
-<div id="output"></div>
+<div id="textarea-container">
+  <textarea id="csvInput" rows="10" cols="50"></textarea>
+  <button onclick="parseCSV()">Parse</button>
+</div>
+<div id="table-container"></div>
 
 <script>
-  function parseCSV(csvText) {
-    const csvRows = csvText.trim().split('\n');
-    const parsedData = [];
-    for (let row of csvRows) {
-      if (row.trim() === '') continue; // Skip empty lines
-      parsedData.push(parseRow(row));
-    }
-    return parsedData;
-  }
+function parseCSV() {
+  const csvInput = document.getElementById('csvInput').value;
+  const rows = csvInput.trim().split('\n');
+  const tableContainer = document.getElementById('table-container');
+  tableContainer.innerHTML = ''; // Clear previous results
 
-  function parseRow(row) {
-    const quoted = row.includes('"');
-    if (!quoted) {
-      return row.split(',').map(item => item.trim());
-    }
+  if (!csvInput) return; // Exit if input is empty
 
-    const result = [];
-    let currentItem = '';
-    let inQuote = false;
-    let escaped = false;
+  const table = document.createElement('table');
+  tableContainer.appendChild(table);
 
-    for (let i = 0; i < row.length; i++) {
-      let char = row[i];
+  let headers = null;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i].trim();
+    if (!row) continue; // Skip empty lines
 
-      if (escaped) {
-        currentItem += char;
-        escaped = false;
-      } else if (char === '\\') {
-        escaped = true;
-      } else if (char === '"') {
-        inQuote = !inQuote;
-      } else if (!inQuote && char === ',') {
-        result.push(currentItem.trim());
-        currentItem = '';
-      } else {
-        currentItem += char;
-      }
-    }
-
-    if (currentItem || row.endsWith(',')) {
-      result.push(currentItem.trim());
-    }
-
-    return result;
-  }
-
-  document.getElementById('parseBtn').addEventListener('click', function() {
-    const csvInput = document.getElementById('csvInput').value;
-    const parsedData = parseCSV(csvInput);
-
-    const outputDiv = document.getElementById('output');
-    outputDiv.innerHTML = '';
-
-    if (parsedData.length === 0) return;
-
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-
-    table.appendChild(thead);
-    table.appendChild(tbody);
-
-    if (parsedData[0].length > 0) {
-      const headerRow = document.createElement('tr');
-      parsedData[0].forEach(headerText => {
+    const cells = parseRow(row);
+    if (!headers) {
+      headers = cells;
+      const thead = document.createElement('thead');
+      const tr = document.createElement('tr');
+      thead.appendChild(tr);
+      table.appendChild(thead);
+      cells.forEach(cell => {
         const th = document.createElement('th');
-        th.textContent = headerText;
-        headerRow.appendChild(th);
+        th.textContent = cell;
+        tr.appendChild(th);
       });
-      thead.appendChild(headerRow);
+    } else {
+      const tbody = table.querySelector('tbody');
+      if (!tbody) {
+        const tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+        table.insertBefore(tbody, table.querySelector('thead'));
+      }
+      const tr = document.createElement('tr');
+      tbody.appendChild(tr);
+      cells.forEach(cell => {
+        const td = document.createElement('td');
+        td.textContent = cell;
+        tr.appendChild(td);
+      });
     }
+  }
+}
 
-    parsedData.slice(1).forEach(rowData => {
-      const row = document.createElement('tr');
-      rowData.forEach(data => {
-        const cell = document.createElement('td');
-        cell.textContent = data;
-        row.appendChild(cell);
-      });
-      tbody.appendChild(row);
-    });
+function parseRow(row) {
+  const escaped = row.match(/"((?:\\.|[^"])*)"/g);
+  let offset = 0;
+  const cells = [];
 
-    outputDiv.appendChild(table);
-  });
+  while (offset < row.length) {
+    if (row[offset] === '"') {
+      const match = row.substring(offset).match(/^"((?:\\.|[^"])*)"(,|$)/);
+      if (match) {
+        cells.push(unescape(match[1].replace(/\\(.)/g, '$1')));
+        offset += match[0].length;
+      } else {
+        throw new Error('Malformed CSV');
+      }
+    } else {
+      const cellMatch = row.substring(offset).match(/^[^,]*($|,)/);
+      cells.push(cellMatch[0].replace(/,$/, ''));
+      offset += cellMatch[0].length;
+    }
+  }
+
+  return cells;
+}
+
+function unescape(str) {
+  return str.replace(/\\(.)/g, '$1');
+}
 </script>
 
 </body>

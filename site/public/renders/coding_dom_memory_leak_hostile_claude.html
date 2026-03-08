@@ -6,253 +6,818 @@
 <title>Memory Leak Detective: Event Listeners vs GC</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #0f1117;
-    color: #e2e8f0;
-    min-height: 100vh;
-  }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; min-height: 100vh; }
 
   header {
-    background: linear-gradient(135deg, #1a1f2e, #252d3d);
-    border-bottom: 1px solid #2d3748;
+    background: linear-gradient(135deg, #1a1d2e, #2d1b4e);
     padding: 20px 30px;
+    border-bottom: 2px solid #7c3aed;
   }
+  header h1 { font-size: 1.4rem; color: #a78bfa; }
+  header p { font-size: 0.85rem; color: #9ca3af; margin-top: 4px; }
 
-  header h1 {
-    font-size: 1.5rem;
-    color: #63b3ed;
-    margin-bottom: 6px;
-  }
-
-  header p {
-    color: #718096;
-    font-size: 0.9rem;
-  }
-
-  .verdict-banner {
-    background: linear-gradient(135deg, #1a2a1a, #1f2d1f);
-    border: 1px solid #276227;
-    border-left: 4px solid #48bb78;
+  .colleague-banner {
+    background: linear-gradient(135deg, #1e1008, #2d1a08);
+    border: 1px solid #d97706;
+    border-left: 4px solid #f59e0b;
     margin: 20px 30px;
-    padding: 16px 20px;
-    border-radius: 8px;
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    color: #fcd34d;
+  }
+  .colleague-banner strong { color: #fbbf24; }
+  .colleague-banner .wrong-badge {
+    display: inline-block;
+    background: #dc2626;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.05em;
   }
 
-  .verdict-banner h2 {
-    color: #48bb78;
-    font-size: 1rem;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .verdict-banner p {
-    color: #9ae6b4;
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-
-  .verdict-banner strong {
-    color: #f6ad55;
-  }
-
-  .main-grid {
+  .main-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     padding: 0 30px 30px;
   }
 
-  @media (max-width: 900px) {
-    .main-grid { grid-template-columns: 1fr; }
-  }
-
   .panel {
-    background: #1a1f2e;
-    border: 1px solid #2d3748;
-    border-radius: 12px;
+    background: #1a1d2e;
+    border-radius: 10px;
+    border: 1px solid #2d3148;
     overflow: hidden;
   }
 
   .panel-header {
-    padding: 16px 20px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #2d3748;
+    border-bottom: 1px solid #2d3148;
   }
-
-  .panel-header.leaking {
-    background: linear-gradient(135deg, #2d1515, #3d1a1a);
-    border-bottom-color: #742a2a;
-  }
-
-  .panel-header.fixed {
-    background: linear-gradient(135deg, #152d15, #1a3d1a);
-    border-bottom-color: #276227;
-  }
-
-  .panel-title {
-    font-size: 1rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .leaking .panel-title { color: #fc8181; }
-  .fixed .panel-title { color: #68d391; }
+  .panel-header h2 { font-size: 1rem; }
+  .leak-header { background: linear-gradient(135deg, #2d1a1a, #1a1d2e); }
+  .leak-header h2 { color: #f87171; }
+  .fixed-header { background: linear-gradient(135deg, #1a2d1a, #1a1d2e); }
+  .fixed-header h2 { color: #4ade80; }
 
   .badge {
     font-size: 0.7rem;
-    padding: 3px 8px;
+    font-weight: bold;
+    padding: 3px 10px;
     border-radius: 20px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.05em;
   }
+  .badge-leak { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }
+  .badge-fixed { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
 
-  .badge-leak {
-    background: #742a2a;
-    color: #fc8181;
-  }
+  .panel-body { padding: 16px 18px; }
 
-  .badge-fixed {
-    background: #276227;
-    color: #68d391;
-  }
-
-  .stats-bar {
-    display: flex;
-    gap: 12px;
-    padding: 12px 20px;
-    background: #141820;
-    border-bottom: 1px solid #2d3748;
-    flex-wrap: wrap;
-  }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 70px;
-  }
-
-  .stat-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-size: 0.65rem;
-    color: #718096;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 3px;
-    text-align: center;
-  }
-
-  .stat-value.danger { color: #fc8181; }
-  .stat-value.success { color: #68d391; }
-  .stat-value.warning { color: #f6ad55; }
-  .stat-value.info { color: #63b3ed; }
-
-  .controls {
-    padding: 12px 20px;
-    display: flex;
-    gap: 8px;
-    border-bottom: 1px solid #2d3748;
-    flex-wrap: wrap;
-  }
-
+  .controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   button {
-    padding: 8px 14px;
+    padding: 8px 16px;
     border: none;
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
-    letter-spacing: 0.3px;
   }
+  button:active { transform: scale(0.96); }
 
-  button:active { transform: scale(0.97); }
+  .btn-add-leak { background: #dc2626; color: white; }
+  .btn-add-leak:hover { background: #ef4444; }
+  .btn-del-leak { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }
+  .btn-del-leak:hover { background: #991b1b; }
 
-  .btn-add {
-    background: #3182ce;
-    color: white;
-  }
-  .btn-add:hover { background: #2b6cb0; }
+  .btn-add-fixed { background: #16a34a; color: white; }
+  .btn-add-fixed:hover { background: #22c55e; }
+  .btn-del-fixed { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
+  .btn-del-fixed:hover { background: #166534; }
 
-  .btn-delete-all {
-    background: #c53030;
-    color: white;
-  }
-  .btn-delete-all:hover { background: #9b2c2c; }
-
-  .btn-stress {
-    background: #744210;
-    color: #f6ad55;
-    border: 1px solid #975a16;
-  }
-  .btn-stress:hover { background: #975a16; }
-
-  .widget-container {
-    padding: 16px;
-    min-height: 200px;
-    max-height: 380px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+  .widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 10px;
+    min-height: 120px;
   }
-
-  .widget-container::-webkit-scrollbar { width: 6px; }
-  .widget-container::-webkit-scrollbar-track { background: #141820; }
-  .widget-container::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
 
   .widget {
-    background: #252d3d;
-    border: 1px solid #2d3748;
+    background: #252840;
     border-radius: 8px;
     padding: 12px;
+    border: 1px solid #3d4166;
     position: relative;
-    animation: slideIn 0.2s ease;
+    animation: widgetIn 0.2s ease;
   }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
+  @keyframes widgetIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
   }
+  .widget-title { font-size: 0.75rem; color: #9ca3af; margin-bottom: 6px; }
+  .widget-value { font-size: 1.3rem; font-weight: bold; color: #a78bfa; }
+  .widget-sub { font-size: 0.65rem; color: #6b7280; margin-top: 4px; }
+  .widget-id { font-size: 0.6rem; color: #4b5563; margin-top: 6px; font-family: monospace; }
 
-  .widget-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+  .stats-box {
+    background: #0f1117;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    border: 1px solid #2d3148;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
+  .stat-item { text-align: center; }
+  .stat-value { font-size: 1.4rem; font-weight: bold; }
+  .stat-label { font-size: 0.65rem; color: #6b7280; margin-top: 2px; }
+  .stat-leak .stat-value { color: #f87171; }
+  .stat-fixed .stat-value { color: #4ade80; }
+  .stat-neutral .stat-value { color: #a78bfa; }
+  .stat-warn .stat-value { color: #fbbf24; }
 
-  .widget-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #a0aec0;
-  }
-
-  .widget-id {
-    font-size: 0.65rem;
-    color: #4a5568;
+  .leak-log {
+    background: #0a0c14;
+    border-radius: 6px;
+    padding: 10px 12px;
     font-family: monospace;
+    font-size: 0.72rem;
+    max-height: 130px;
+    overflow-y: auto;
+    border: 1px solid #1e2235;
+    color: #6b7280;
+  }
+  .leak-log .log-leak { color: #f87171; }
+  .leak-log .log-fixed { color: #4ade80; }
+  .leak-log .log-warn { color: #fbbf24; }
+  .leak-log .log-info { color: #60a5fa; }
+
+  /* Explanation section */
+  .explanation {
+    grid-column: 1 / -1;
+    background: #1a1d2e;
+    border-radius: 10px;
+    border: 1px solid #2d3148;
+    padding: 24px 28px;
+  }
+  .explanation h2 { color: #a78bfa; font-size: 1.1rem; margin-bottom: 18px; border-bottom: 1px solid #2d3148; padding-bottom: 10px; }
+
+  .gc-myth {
+    background: linear-gradient(135deg, #1e1008, #1a1d2e);
+    border: 1px solid #d97706;
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+  .gc-myth h3 { color: #fbbf24; font-size: 0.9rem; margin-bottom: 10px; }
+
+  .truth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .truth-card {
+    background: #0f1117;
+    border-radius: 8px;
+    padding: 14px 16px;
+    border-left: 3px solid;
+  }
+  .truth-card.wrong { border-color: #dc2626; }
+  .truth-card.right { border-color: #22c55e; }
+  .truth-card h4 { font-size: 0.82rem; margin-bottom: 8px; }
+  .truth-card.wrong h4 { color: #f87171; }
+  .truth-card.right h4 { color: #4ade80; }
+  .truth-card p { font-size: 0.78rem; color: #9ca3af; line-height: 1.5; }
+
+  .code-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .code-block { background: #0a0c14; border-radius: 8px; padding: 14px 16px; border: 1px solid #1e2235; }
+  .code-block h4 { font-size: 0.78rem; margin-bottom: 10px; }
+  .code-block.bad h4 { color: #f87171; }
+  .code-block.good h4 { color: #4ade80; }
+  pre { font-family: 'Courier New', monospace; font-size: 0.7rem; color: #d1d5db; line-height: 1.6; white-space: pre-wrap; }
+  .hl-red { color: #f87171; }
+  .hl-green { color: #4ade80; }
+  .hl-yellow { color: #fbbf24; }
+  .hl-blue { color: #60a5fa; }
+  .hl-purple { color: #c084fc; }
+  .hl-gray { color: #6b7280; }
+
+  .proof-section {
+    background: #0f1117;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    border: 1px solid #2d3148;
+  }
+  .proof-section h3 { color: #60a5fa; font-size: 0.85rem; margin-bottom: 10px; }
+  .proof-list { list-style: none; }
+  .proof-list li { font-size: 0.78rem; color: #9ca3af; padding: 4px 0; padding-left: 20px; position: relative; line-height: 1.5; }
+  .proof-list li::before { content: '→'; position: absolute; left: 0; color: #7c3aed; }
+
+  .global-counter {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1a1d2e;
+    border: 1px solid #7c3aed;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.3);
+    z-index: 100;
+    min-width: 180px;
+  }
+  .global-counter h4 { color: #a78bfa; font-size: 0.72rem; margin-bottom: 8px; letter-spacing: 0.05em; }
+  .gc-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .gc-row span:first-child { color: #6b7280; font-size: 0.7rem; }
+  .gc-row span:last-child { font-weight: bold; font-size: 0.75rem; }
+  .gc-leak { color: #f87171; }
+  .gc-fixed { color: #4ade80; }
+  .gc-total { color: #fbbf24; }
+
+  .empty-state { color: #4b5563; font-size: 0.8rem; text-align: center; padding: 30px; }
+
+  @media (max-width: 900px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .truth-grid, .code-compare { grid-template-columns: 1fr; }
+    .explanation { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔍 Memory Leak Detective Dashboard</h1>
+  <p>Proving that uncleaned event listeners — not the garbage collector — are the real culprit</p>
+</header>
+
+<div class="colleague-banner">
+  <strong>💬 Colleague's theory:</strong>
+  "The memory leak is a garbage collector problem — the GC just isn't running often enough to clean up deleted widgets."
+  <span class="wrong-badge">❌ COMPLETELY WRONG</span>
+  <br><br>
+  <span style="color:#d1d5db; font-size:0.82rem;">
+    The GC cannot collect objects that are still <strong style="color:#fbbf24">actively referenced</strong>.
+    Detached DOM nodes held in arrays and live event listeners pointing back to widget data
+    are <em>reachable objects</em> — the GC is doing its job perfectly. <strong style="color:#fbbf24">We are the problem.</strong>
+  </span>
+</div>
+
+<div class="main-layout">
+
+  <!-- LEAKING PANEL -->
+  <div class="panel">
+    <div class="panel-header leak-header">
+      <h2>🚨 Leaking Version</h2>
+      <span class="badge badge-leak">LEAKS MEMORY</span>
+    </div>
+    <div class="panel-body">
+      <div class="stats-box">
+        <div class="stat-item stat-leak">
+          <div class="stat-value" id="leak-created">0</div>
+          <div class="stat-label">Widgets Created</div>
+        </div>
+        <div class="stat-item stat-warn">
+          <div class="stat-value" id="leak-listeners">0</div>
+          <div class="stat-label">Leaked Listeners</div>
+        </div>
+        <div class="stat-item stat-leak">
+          <div class="stat-value" id="leak-refs">0</div>
+          <div class="stat-label">Leaked DOM Refs</div>
+        </div>
+        <div class="stat-item stat-neutral">
+          <div class="stat-value" id="leak-active">0</div>
+          <div class="stat-label">Visible Widgets</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-add-leak" onclick="leakingDashboard.addWidget()">+ Add Widget</button>
+        <button class="btn-del-leak" onclick="leakingDashboard.removeWidget()">− Delete Last</button>
+      </div>
+
+      <div class="widget-grid" id="leak-grid">
+        <div class="empty-state">No widgets yet</div>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <div style="font-size:0.72rem; color:#6b7280; margin-bottom:6px; font-family:monospace;">// Activity Log</div>
+        <div class="leak-log" id="leak-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIXED PANEL -->
+  <div class="panel">
+    <div class="panel-header fixed-header">
+      <h2>✅ Fixed Version</h2>
+      <span class="badge badge-fixed">CLEAN MEMORY</span>
+    </div>
+    <div class="panel-body">
+      <div class="stats-box">
+        <div class="stat-item stat-fixed">
+          <div class="stat-value" id="fixed-created">0</div>
+          <div class="stat-label">Widgets Created</div>
+        </div>
+        <div class="stat-item stat-fixed">
+          <div class="stat-value" id="fixed-listeners">0</div>
+          <div class="stat-label">Active Listeners</div>
+        </div>
+        <div class="stat-item stat-fixed">
+          <div class="stat-value" id="fixed-refs">0</div>
+          <div class="stat-label">Tracked DOM Refs</div>
+        </div>
+        <div class="stat-item stat-neutral">
+          <div class="stat-value" id="fixed-active">0</div>
+          <div class="stat-label">Visible Widgets</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-add-fixed" onclick="fixedDashboard.addWidget()">+ Add Widget</button>
+        <button class="btn-del-fixed" onclick="fixedDashboard.removeWidget()">− Delete Last</button>
+      </div>
+
+      <div class="widget-grid" id="fixed-grid">
+        <div class="empty-state">No widgets yet</div>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <div style="font-size:0.72rem; color:#6b7280; margin-bottom:6px; font-family:monospace;">// Activity Log</div>
+        <div class="leak-log" id="fixed-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPLANATION -->
+  <div class="explanation">
+    <h2>🧠 Why Your Colleague Is Wrong: A Complete Breakdown</h2>
+
+    <div class="gc-myth">
+      <h3>⚠️ The Myth: "It's a GC Problem"</h3>
+      <p style="font-size:0.8rem; color:#d1d5db; line-height:1.6;">
+        JavaScript's garbage collector uses <strong style="color:#fbbf24">mark-and-sweep</strong>: starting from root objects
+        (window, global scope), it traces every reference. Anything still reachable is <em>not collected</em> — by design.
+        Blaming the GC means assuming it should collect objects <strong>you are still pointing to</strong>.
+        That's not a GC bug. That's you holding references and not letting go.
+        The GC is working exactly as specified. The leak is 100% in application code.
+      </p>
+    </div>
+
+    <div class="truth-grid">
+      <div class="truth-card wrong">
+        <h4>❌ What the colleague thinks is happening</h4>
+        <p>
+          Widget is deleted from the DOM → GC should automatically clean everything up →
+          GC isn't running → memory grows → solution: force GC or wait longer.
+          This assumes all references disappear when the DOM element is removed.
+          They absolutely do not.
+        </p>
+      </div>
+      <div class="truth-card right">
+        <h4>✅ What is actually happening</h4>
+        <p>
+          Widget is deleted from DOM but: (1) the leaking array still holds a direct reference
+          to the detached DOM node, (2) every interval/event listener created for that widget
+          still holds a closure referencing the widget's data object. The GC sees live references
+          and correctly keeps everything in memory. The leak is the references, not the GC.
+        </p>
+      </div>
+      <div class="truth-card wrong">
+        <h4>❌ Why "force GC" won't fix it</h4>
+        <p>
+          Even if you could force a GC cycle (you can't reliably in production), it would
+          find the same live references and collect nothing. Forcing GC on a real leak
+          is like emptying a bucket while the tap is still running. You must close the tap —
+          remove the references — first.
+        </p>
+      </div>
+      <div class="truth-card right">
+        <h4>✅ The actual fix</h4>
+        <p>
+          Before removing a widget: call removeEventListener with the exact same function
+          reference, clear all intervals/timers, null out or splice the DOM reference from
+          the tracking array. Now the GC sees zero references to the widget objects and
+          collects them on the very next cycle. The GC was never broken.
+        </p>
+      </div>
+    </div>
+
+    <div class="code-compare">
+      <div class="code-block bad">
+        <h4>❌ Leaking Code Pattern</h4>
+        <pre><span class="hl-gray">// Global leak accumulator — never cleaned</span>
+<span class="hl-red">const leakedRefs = [];</span>
+<span class="hl-red">const leakedListeners = [];</span>
+
+<span class="hl-purple">function</span> <span class="hl-blue">addWidget</span>(element) {
+  <span class="hl-gray">// Store DOM ref — never removed on delete</span>
+  <span class="hl-red">leakedRefs.push(element);</span>
+
+  <span class="hl-gray">// Handler created inline — can't removeEventListener</span>
+  <span class="hl-gray">// because we lose the reference immediately</span>
+  element.<span class="hl-blue">addEventListener</span>(<span class="hl-yellow">'click'</span>, <span class="hl-purple">function</span>() {
+    <span class="hl-gray">// Closure captures element, widgetData, etc.</span>
+    console.<span class="hl-blue">log</span>(element.id, widgetData);
+  });
+  <span class="hl-gray">// ^ anonymous fn reference is lost forever</span>
+
+  <span class="hl-gray">// Interval never cleared on widget removal</span>
+  <span class="hl-red">setInterval</span>(<span class="hl-purple">function</span>() {
+    element.textContent = <span class="hl-blue">getData</span>();
+  }, <span class="hl-yellow">1000</span>);
+  <span class="hl-gray">// ^ timer ID not stored, can never clearInterval</span>
+}
+
+<span class="hl-purple">function</span> <span class="hl-blue">removeWidget</span>(element) {
+  element.<span class="hl-blue">remove</span>();
+  <span class="hl-gray">// DOM gone from view but:</span>
+  <span class="hl-red">// leakedRefs[n] still points to detached node</span>
+  <span class="hl-red">// interval still firing on detached node</span>
+  <span class="hl-red">// event listener still attached and alive</span>
+  <span class="hl-red">// GC cannot collect ANY of this</span>
+}</pre>
+      </div>
+      <div class="code-block good">
+        <h4>✅ Fixed Code Pattern</h4>
+        <pre><span class="hl-gray">// Clean registry — properly managed</span>
+<span class="hl-green">const widgetRegistry = new Map();</span>
+
+<span class="hl-purple">function</span> <span class="hl-blue">addWidget</span>(element, id) {
+  <span class="hl-gray">// Named handler — reference kept for cleanup</span>
+  <span class="hl-green">const handler = (e) => handleClick(e, id);</span>
+
+  <span class="hl-gray">// Store timer ID so we can clear it</span>
+  <span class="hl-green">const timerId = setInterval</span>(<span class="hl-purple">function</span>() {
+    element.textContent = <span class="hl-blue">getData</span>();
+  }, <span class="hl-yellow">1000</span>);
+
+  element.<span class="hl-blue">addEventListener</span>(<span class="hl-yellow">'click'</span>, handler);
+
+  <span class="hl-gray">// Registry holds everything needed for cleanup</span>
+  <span class="hl-green">widgetRegistry.set(id, {</span>
+  <span class="hl-green">  element, handler, timerId</span>
+  <span class="hl-green">});</span>
+}
+
+<span class="hl-purple">function</span> <span class="hl-blue">removeWidget</span>(id) {
+  <span class="hl-green">const entry = widgetRegistry.get(id);</span>
+  <span class="hl-purple">if</span> (!entry) <span class="hl-purple">return</span>;
+
+  <span class="hl-gray">// 1. Stop the timer</span>
+  <span class="hl-green">clearInterval(entry.timerId);</span>
+
+  <span class="hl-gray">// 2. Remove listener with exact same reference</span>
+  <span class="hl-green">entry.element.removeEventListener(</span>
+  <span class="hl-green">  'click', entry.handler</span>
+  <span class="hl-green">);</span>
+
+  <span class="hl-gray">// 3. Remove DOM node</span>
+  entry.element.<span class="hl-blue">remove</span>();
+
+  <span class="hl-gray">// 4. Delete from registry — zero references left</span>
+  <span class="hl-green">widgetRegistry.delete(id);</span>
+  <span class="hl-gray">// GC now sees no references → collects everything ✓</span>
+}</pre>
+      </div>
+    </div>
+
+    <div class="proof-section">
+      <h3>🔬 How to Prove This to Your Colleague (Chrome DevTools)</h3>
+      <ul class="proof-list">
+        <li>Open DevTools → Memory tab → take a Heap Snapshot baseline</li>
+        <li>Add 10 widgets using the <strong>Leaking Version</strong>, then delete all 10 — take another snapshot</li>
+        <li>In the snapshot comparison, filter by "Detached" — you will see 10 detached HTMLDivElement nodes still in memory with non-zero retained size</li>
+        <li>Those detached nodes exist because the leakedRefs array holds direct references to them — the GC correctly refuses to collect reachable objects</li>
+        <li>Now do the same with the <strong>Fixed Version</strong> — the heap snapshot comparison will show zero detached nodes after deletion</li>
+        <li>Open the Performance tab → record while rapidly adding/deleting leaking widgets → the memory timeline will show a sawtooth pattern that never returns to baseline (classic leak signature)</li>
+        <li>The fixed version's memory timeline returns to baseline after each delete cycle — proving the GC works perfectly when references are properly released</li>
+        <li>Check the "Listeners" count in DevTools Elements panel — leaking widgets accumulate listeners; fixed widgets show 0 after removal</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Global floating counter -->
+<div class="global-counter">
+  <h4>📊 LIVE REFERENCE TRACKER</h4>
+  <div class="gc-row">
+    <span>Leaked DOM refs:</span>
+    <span class="gc-leak" id="gc-leaked-refs">0</span>
+  </div>
+  <div class="gc-row">
+    <span>Leaked listeners:</span>
+    <span class="gc-leak" id="gc-leaked-listeners">0</span>
+  </div>
+  <div class="gc-row">
+    <span>Fixed active refs:</span>
+    <span class="gc-fixed" id="gc-fixed-refs">0</span>
+  </div>
+  <div class="gc-row">
+    <span>Fixed listeners:</span>
+    <span class="gc-fixed" id="gc-fixed-listeners">0</span>
+  </div>
+  <div class="gc-row" style="border-top:1px solid #2d3148; padding-top:6px; margin-top:4px;">
+    <span>Total leaked objects:</span>
+    <span class="gc-total" id="gc-total-leaked">0</span>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// LEAKING DASHBOARD
+// Intentionally demonstrates the exact memory leak pattern:
+// - DOM references stored in array, never removed on delete
+// - Event listeners created with anonymous functions (can't removeEventListener)
+// - Intervals created without storing IDs (can't clearInterval)
+// ============================================================
+const LeakingDashboard = function() {
+  // These arrays simulate what happens in real leaky code:
+  // module-level or closure-level arrays that accumulate references
+  const leakedDOMRefs = [];       // detached DOM nodes pile up here
+  const leakedListenerCount = { value: 0 }; // we can't actually track anon listeners
+  const leakedIntervals = [];     // interval IDs we "forgot" to store properly
+
+  let widgetIdCounter = 0;
+  let createdCount = 0;
+  const activeWidgets = []; // just for display tracking
+
+  function log(msg, type = 'info') {
+    const logEl = document.getElementById('leak-log');
+    const line = document.createElement('div');
+    line.className = `log-${type}`;
+    const time = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    line.textContent = `[${time}] ${msg}`;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
   }
 
-  .widget-body {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+  function updateStats() {
+    document.getElementById('leak-created').textContent = createdCount;
+    document.getElementById('leak-listeners').textContent = leakedListenerCount.value;
+    document.getElementById('leak-refs').textContent = leakedDOMRefs.length;
+    document.getElementById('leak-active').textContent = activeWidgets.length;
+    updateGlobalCounter();
   }
 
-  .widget-btn {
-    padding: 5px 10px;
-    font-size: 0.72
+  function addWidget() {
+    const id = ++widgetIdCounter;
+    createdCount++;
+
+    const grid = document.getElementById('leak-grid');
+    const empty = grid.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    // Create widget DOM element
+    const widget = document.createElement('div');
+    widget.className = 'widget';
+    widget.id = `leak-widget-${id}`;
+
+    const widgetData = {
+      id,
+      name: `Widget ${id}`,
+      value: Math.floor(Math.random() * 1000),
+      history: new Array(50).fill(0).map(() => Math.random()), // simulate data payload
+      metadata: { created: Date.now(), tags: [`tag-${id}`, `metric-${id}`] }
+    };
+
+    widget.innerHTML = `
+      <div class="widget-title">${widgetData.name}</div>
+      <div class="widget-value" id="lv-${id}">${widgetData.value}</div>
+      <div class="widget-sub">clicks: <span id="lc-${id}">0</span></div>
+      <div class="widget-id">id: leak-${id}</div>
+    `;
+
+    grid.appendChild(widget);
+
+    // ❌ LEAK #1: Store DOM reference — this ref will NEVER be removed
+    // even after the widget is "deleted" from the page
+    leakedDOMRefs.push(widget);
+
+    // ❌ LEAK #2: Anonymous event listener — we lose the reference immediately
+    // so we can NEVER call removeEventListener with the correct function reference
+    // The listener keeps widgetData alive in its closure forever
+    let clickCount = 0;
+    widget.addEventListener('click', function() {
+      // This anonymous closure captures: widget (DOM ref), widgetData (data object),
+      // clickCount (local var). All of these stay in memory as long as this
+      // listener exists — which is forever since we can't remove it.
+      clickCount++;
+      const el = document.getElementById(`lc-${id}`);
+      if (el) el.textContent = clickCount;
+    });
+    leakedListenerCount.value++;
+
+    // ❌ LEAK #3: Interval without stored ID
+    // We create the interval but don't keep the ID, so clearInterval is impossible.
+    // Even after the widget is removed from DOM, this interval keeps firing,
+    // holding the closure (and all captured variables) alive.
+    setInterval(function() {
+      // This closure captures: widget, widgetData, id
+      // It fires every second, accessing a detached DOM node after deletion
+      widgetData.value = Math.floor(Math.random() * 1000);
+      const el = document.getElementById(`lv-${id}`);
+      if (el) el.textContent = widgetData.value;
+    }, 1000 + Math.random() * 500);
+    // ^^^ interval ID not stored — can never be cleared
+
+    activeWidgets.push(id);
+    log(`Created widget leak-${id} | DOM refs in memory: ${leakedDOMRefs.length} | Listeners: ${leakedListenerCount.value}`, 'leak');
+    updateStats();
+  }
+
+  function removeWidget() {
+    if (activeWidgets.length === 0) {
+      log('No widgets to remove', 'warn');
+      return;
+    }
+
+    const id = activeWidgets.pop();
+    const widget = document.getElementById(`leak-widget-${id}`);
+
+    if (widget) {
+      // Remove from DOM — this is the ONLY cleanup done in leaking version
+      widget.remove();
+    }
+
+    // ❌ leakedDOMRefs[n] still holds reference to the now-detached DOM node
+    // ❌ The click event listener is still attached to the detached node
+    // ❌ The interval is still running, referencing the detached node
+    // ❌ widgetData object is still alive, held by the listener closure and interval closure
+    // The GC sees all these references and correctly keeps everything in memory
+
+    const grid = document.getElementById('leak-grid');
+    if (activeWidgets.length === 0) {
+      grid.innerHTML = '<div class="empty-state">No widgets yet</div>';
+    }
+
+    log(`"Deleted" widget leak-${id} | BUT: ${leakedDOMRefs.length} DOM refs still in memory | ${leakedListenerCount.value} listeners still alive`, 'warn');
+    log(`  ↳ Detached node leak-${id} is still referenced by leakedDOMRefs[${leakedDOMRefs.length-1}] — GC cannot collect it`, 'leak');
+    updateStats();
+  }
+
+  return { addWidget, removeWidget, getLeakedRefs: () => leakedDOMRefs.length, getLeakedListeners: () => leakedListenerCount.value };
+};
+
+// ============================================================
+// FIXED DASHBOARD
+// Demonstrates proper cleanup:
+// - Named handler references stored for removeEventListener
+// - Interval IDs stored for clearInterval
+// - DOM references removed from registry on widget deletion
+// ============================================================
+const FixedDashboard = function() {
+  // Clean registry using Map — each entry holds everything needed for cleanup
+  const widgetRegistry = new Map();
+
+  let widgetIdCounter = 0;
+  let createdCount = 0;
+  const activeWidgets = [];
+
+  function log(msg, type = 'info') {
+    const logEl = document.getElementById('fixed-log');
+    const line = document.createElement('div');
+    line.className = `log-${type}`;
+    const time = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    line.textContent = `[${time}] ${msg}`;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function updateStats() {
+    document.getElementById('fixed-created').textContent = createdCount;
+    document.getElementById('fixed-listeners').textContent = widgetRegistry.size;
+    document.getElementById('fixed-refs').textContent = widgetRegistry.size;
+    document.getElementById('fixed-active').textContent = activeWidgets.length;
+    updateGlobalCounter();
+  }
+
+  function addWidget() {
+    const id = ++widgetIdCounter;
+    createdCount++;
+
+    const grid = document.getElementById('fixed-grid');
+    const empty = grid.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const widget = document.createElement('div');
+    widget.className = 'widget';
+    widget.id = `fixed-widget-${id}`;
+
+    const widgetData = {
+      id,
+      name: `Widget ${id}`,
+      value: Math.floor(Math.random() * 1000),
+      history: new Array(50).fill(0).map(() => Math.random()),
+      metadata: { created: Date.now(), tags: [`tag-${id}`, `metric-${id}`] }
+    };
+
+    widget.innerHTML = `
+      <div class="widget-title">${widgetData.name}</div>
+      <div class="widget-value" id="fv-${id}">${widgetData.value}</div>
+      <div class="widget-sub">clicks: <span id="fc-${id}">0</span></div>
+      <div class="widget-id">id: fixed-${id}</div>
+    `;
+
+    grid.appendChild(widget);
+
+    // ✅ FIX #1: Named handler — reference is preserved so removeEventListener works
+    let clickCount = 0;
+    const clickHandler = function(e) {
+      clickCount++;
+      const el = document.getElementById(`fc-${id}`);
+      if (el) el.textContent = clickCount;
+    };
+    widget.addEventListener('click', clickHandler);
+
+    // ✅ FIX #2: Store interval ID so we can clearInterval on cleanup
+    const intervalId = setInterval(function() {
+      widgetData.value = Math.floor(Math.random() * 1000);
+      const el = document.getElementById(`fv-${id}`);
+      if (el) el.textContent = widgetData.value;
+    }, 1000 + Math.random() * 500);
+
+    // ✅ FIX #3: Registry stores the element reference AND cleanup handles
+    // When we delete, we use this registry to clean everything up properly
+    widgetRegistry.set(id, {
+      element: widget,
+      clickHandler,   // named reference for removeEventListener
+      intervalId,     // stored ID for clearInterval
+      widgetData      // data object (will be GC'd after registry.delete)
+    });
+
+    activeWidgets.push(id);
+    log(`Created widget fixed-${id} | Registry size: ${widgetRegistry.size} (healthy)`, 'fixed');
+    updateStats();
+  }
+
+  function removeWidget() {
+    if (activeWidgets.length === 0) {
+      log('No widgets to remove', 'warn');
+      return;
+    }
+
+    const id = activeWidgets.pop();
+    const entry = widgetRegistry.get(id);
+
+    if (entry) {
+      // ✅ CLEANUP STEP 1: Stop the interval — no more closure references from timer
+      clearInterval(entry.intervalId);
+
+      // ✅ CLEANUP STEP 2: Remove event listener using the SAME function reference
+      // This is only possible because we stored the named handler above
+      entry.element.removeEventListener('click', entry.clickHandler);
+
+      // ✅ CLEANUP STEP 3: Remove from DOM
+      entry.element.remove();
+
+      // ✅ CLEANUP STEP 4: Delete from registry
+      // Now: zero references to entry.element (detached node), zero references to
+      // entry.clickHandler, zero references to entry.widgetData
+      // The GC will collect all of these on the next cycle — as it should
+      widgetRegistry.delete(id);
+    }
+
+    const grid = document.getElementById('fixed-grid');
+    if (activeWidgets.length === 0) {
+      grid.innerHTML = '<div class="empty-state">No widgets yet</div>';
+    }
+
+    log(`Deleted widget fixed-${id} | Interval cleared ✓ | Listener removed ✓ | Registry cleaned ✓`, 'fixed');
+    log(`  ↳ Registry size: ${widgetRegistry.size} | All references released — GC can now collect widget-${id}`, 'info');
+    updateStats();
+  }
+
+  return {
+    addWidget,
+    removeWidget,
+    getActiveRefs: () => widgetRegistry.size,
+    getActiveListeners: () => widgetRegistry.size
+  };
+};
+
+// Instantiate both dashboards
+const leakingDashboard = LeakingDashboard();
+const fixedDashboard = FixedDashboard();
+
+function updateGlobalCounter() {
+  const leakedRefs = leakingDashboard.getLeakedRefs();
+  const leakedListeners = leakingDashboard.getLeakedListeners();
+  const fixedRefs = fixedDashboard.getActiveRefs();
+  const fixedListeners = fixedDashboard.getActiveListeners();
+
+  document.getElementById('gc-leaked-refs').textContent = leakedRefs;
+  document.getElementById('gc-leaked-listeners').textContent = leakedListeners;
+  document.getElementById('gc-fixed-refs').textContent = fixedRefs;
+  document.getElementById('gc-fixed-listeners').textContent = fixedListeners;
+  document.getElementById('gc-total-leaked').textContent = leakedRefs + leakedListeners;
+}
+
+updateGlobalCounter();
+</script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Progress Concurrency Bug Demo</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 20px; }
+  .container { display: flex; gap: 20px; }
+  .panel { border: 1px solid #ccc; border-radius: 6px; padding: 12px; width: 48%; box-sizing: border-box; }
+  .title { font-weight: 600; margin-bottom: 8px; }
+  .barWrap { background: #eee; height: 26px; border-radius: 13px; overflow: hidden; position: relative; }
+  .bar { height: 100%; background: linear-gradient(90deg,#4caf50,#81c784); width: 0%; transition: width 120ms linear; }
+  .label { position: absolute; left: 50%; top: 0; transform: translateX(-50%); height: 100%; display:flex; align-items:center; justify-content:center; font-weight:600; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,0.3); }
+  .controls { margin-top: 10px; display:flex; gap: 8px; }
+  button { padding: 6px 10px; border-radius:4px; border:1px solid #bbb; background:#fafafa; cursor:pointer; }
+  button:active { transform: translateY(1px); }
+  .explain { margin-top:12px; font-size:13px; color:#333; background:#f9f9f9; padding:8px; border-radius:6px; border:1px dashed #ddd; }
+  .log { margin-top:12px; height:140px; overflow:auto; background:#111; color:#b8ffd9; padding:8px; font-family: monospace; font-size:12px; border-radius:6px; }
+  .good { color: #155724; background: #d4edda; padding:6px; border-radius:4px; border:1px solid #c3e6cb; }
+  .bad { color: #721c24; background: #f8d7da; padding:6px; border-radius:4px; border:1px solid #f5c6cb; }
+</style>
+</head>
+<body>
+
+<h2>Progress Bar Concurrency Bug Demo</h2>
+<p>Two side-by-side demos: left shows a buggy approach where tasks race when updating a shared percentage variable; right shows a corrected approach that avoids the race. Use "Start" to run a single simulation or "Run 10 times" to see the bug appear more often.</p>
+
+<div class="container">
+  <div class="panel" id="leftPanel">
+    <div class="title">Buggy Implementation</div>
+    <div class="barWrap">
+      <div class="bar" id="bugBar"></div>
+      <div class="label" id="bugLabel">0%</div>
+    </div>
+    <div class="controls">
+      <button id="startBug">Start</button>
+      <button id="runBug10">Run 10 times</button>
+      <button id="resetBug">Reset</button>
+    </div>
+    <div class="explain bad" id="bugExplain">
+      Problem: multiple asynchronous tasks read and write the same shared percentage variable without coordination. Race conditions can make the progress jump, skip values, or even exceed 100%.
+    </div>
+    <div class="log" id="bugLog"></div>
+  </div>
+
+  <div class="panel" id="rightPanel">
+    <div class="title">Fixed Implementation</div>
+    <div class="barWrap">
+      <div class="bar" id="fixBar"></div>
+      <div class="label" id="fixLabel">0%</div>
+    </div>
+    <div class="controls">
+      <button id="startFix">Start</button>
+      <button id="runFix10">Run 10 times</button>
+      <button id="resetFix">Reset</button>
+    </div>
+    <div class="explain good" id="fixExplain">
+      Fix: each task reports its own share of work; the aggregator performs a single atomic update (adding the task's contribution). Alternatively, serialize updates or use per-task bookkeeping to avoid overwriting reads from other tasks.
+    </div>
+    <div class="log" id="fixLog"></div>
+  </div>
+</div>
+
+<script>
+/*
+Overview of the simulated workload:
+- We simulate N tasks (files/chunks).
+- Each task completes after a randomized delay and reports progress.
+- Buggy implementation: tasks compute and set globalPercentage by reading it, adding their completed percentage slice, and writing back. Because reads/writes interleave, updates can be lost or duplicated.
+- Fixed implementation: each task reports its own contribution, and the aggregator sums contributions to maintain total; updates happen by adding the task's slice in one operation that doesn't rely on a stale read.
+*/
+
+// Utility helpers
+function rand(msMin, msMax) {
+  return msMin + Math.floor(Math.random() * (msMax - msMin + 1));
+}
+function logTo(el, msg) {
+  const p = document.createElement('div');
+  p.textContent = msg;
+  el.appendChild(p);
+  el.scrollTop = el.scrollHeight;
+}
+
+// Buggy Implementation
+(function() {
+  const bar = document.getElementById('bugBar');
+  const label = document.getElementById('bugLabel');
+  const log = document.getElementById('bugLog');
+  const startBtn = document.getElementById('startBug');
+  const run10Btn = document.getElementById('runBug10');
+  const resetBtn = document.getElementById('resetBug');
+
+  let globalPercent = 0;
+  let runId = 0;
+
+  function render(pct) {
+    const clamped = Math.max(0, Math.min(100, pct));
+    bar.style.width = clamped + '%';
+    label.textContent = Math.round(pct) + '%';
+  }
+
+  function reset() {
+    globalPercent = 0;
+    runId++;
+    render(0);
+    log.innerHTML = '';
+  }
+
+  function startSingle() {
+    reset();
+    const thisRun = runId;
+    const taskCount = 8;
+    // Each task conceptually contributes this share of total progress
+    const share = 100 / taskCount;
+
+    logTo(log, 'Starting buggy run with ' + taskCount + ' tasks. each share=' + share.toFixed(2) + '%');
+
+    // Simulate tasks that do some async work then update progress
+    for (let i = 0; i < taskCount; i++) {
+      // Each task will finish at a random time between 100ms and 1000ms
+      const delay = rand(80, 900);
+
+      // To emphasize the race, we use a Promise to do some async work, then a setTimeout that mimics more events,
+      // producing multiple reads/writes interleaving.
+      // Also, create some micro-steps so each task tries to increment progress in small chunks.
+      (function(taskIndex) {
+        const steps = 1 + Math.floor(Math.random() * 3); // tasks may update in 1..3 steps
+        const perStep = share / steps;
+
+        // Simulate initial async work
+        Promise.resolve().then(() => {
+          return new Promise(res => setTimeout(res, delay));
+        }).then(() => {
+          // perform 'steps' updates separated by small random gaps to allow interleaving
+          let s = 0;
+          function doStep() {
+            if (runId !== thisRun) return; // aborted
+            // BUG: read-modify-write on shared globalPercent without any synchronization
+            const read = globalPercent;
+            const newVal = read + perStep;
+            // simulate some computation delay to widen the race window
+            setTimeout(() => {
+              // Another read-modify-write might have happened in between
+              globalPercent = newVal;
+              logTo(log, '[Task ' + taskIndex + ' step ' + s + '] read ' + read.toFixed(2) + ' -> wrote ' + newVal.toFixed(2));
+              render(globalPercent);
+              s++;
+              if (s < steps) {
+                setTimeout(doStep, rand(10, 120));
+              }
+            }, rand(5, 60));
+          }
+          doStep();
+        });
+      })(i);
+    }
+
+    // After some time, print final value
+    setTimeout(() => {
+      logTo(log, 'Final globalPercent (buggy) = ' + globalPercent.toFixed(2));
+      if (globalPercent > 100) {
+        logTo(log, '!!! Exceeded 100% due to races');
+      } else if (Math.round(globalPercent) < 100) {
+        logTo(log, 'Warning: did not reach 100% (' + globalPercent.toFixed(2) + '%) — some updates were lost');
+      } else {
+        logTo(log, 'Reached 100% (maybe by luck)');
+      }
+    }, 1700);
+  }
+
+  startBtn.addEventListener('click', startSingle);
+  run10Btn.addEventListener('click', () => {
+    // Run startSingle repeatedly to make race more observable
+    let i = 0;
+    function doRun() {
+      if (i++ >= 10) return;
+      startSingle();
+      setTimeout(doRun, 2000);
+    }
+    doRun();
+  });
+  resetBtn.addEventListener('click', reset);
+
+  reset();
+})();
+
+
+// Fixed Implementation
+(function() {
+  const bar = document.getElementById('fixBar');
+  const label = document.getElementById('fixLabel');
+  const log = document.getElementById('fixLog');
+  const startBtn = document.getElementById('startFix');
+  const run10Btn = document.getElementById('runFix10');
+  const resetBtn = document.getElementById('resetFix');
+
+  let totalPercent = 0;
+  let runId = 0;
+
+  function render(pct) {
+    const clamped = Math.max(0, Math.min(100, pct));
+    bar.style.width = clamped + '%';
+    label.textContent = Math.round(pct) + '%';
+  }
+
+  function reset() {
+    totalPercent = 0;
+    runId++;
+    render(0);
+    log.innerHTML = '';
+  }
+
+  function startSingle() {
+    reset();
+    const thisRun = runId;
+    const taskCount = 8;
+    const share = 100 / taskCount;
+
+    logTo(log, 'Starting fixed run with ' + taskCount + ' tasks. each share=' + share.toFixed(2) + '%');
+
+    // Approach: each task reports increments to an aggregator.
+    // The aggregator updates totalPercent by adding the task's contribution.
+    // This eliminates using a stale read to compute the new total.
+    // Additionally, we clamp the final value to 100 and track per-task completed state.
+    const completed = new Array(taskCount).fill(false);
+
+    // Aggregator function that "atomically" adds contribution.
+    function addContribution(delta, source) {
+      if (runId !== thisRun) return;
+      // In single-threaded JS, this function executes without interleaving until it yields.
+      // That means read-add-write here is effectively atomic for our async callbacks.
+      totalPercent += delta;
+      // guard against tiny floating errors
+      if (totalPercent > 100) totalPercent = 100;
+      logTo(log, '[Aggregator] added ' + delta.toFixed(2) + '% from ' + source + ' -> total=' + totalPercent.toFixed(2));
+      render(totalPercent);
+    }
+
+    for (let i = 0; i < taskCount; i++) {
+      (function(taskIndex) {
+        const delay = rand(80, 900);
+        const steps = 1 + Math.floor(Math.random() * 3);
+        const perStep = share / steps;
+
+        Promise.resolve().then(() => {
+          return new Promise(res => setTimeout(res, delay));
+        }).then(() => {
+          let s = 0;
+          function doStep() {
+            if (runId !== thisRun) return;
+            // Instead of reading total and computing new total, report the contribution amount
+            // to the aggregator which performs the update.
+            setTimeout(() => {
+              addContribution(perStep, 'Task ' + taskIndex + ' step ' + s);
+              s++;
+              if (s < steps) {
+                setTimeout(doStep, rand(10, 120));
+              } else {
+                completed[taskIndex] = true;
+              }
+            }, rand(5, 60));
+          }
+          doStep();
+        });
+      })(i);
+    }
+
+    // After some time, print final value
+    setTimeout(() => {
+      logTo(log, 'Final totalPercent (fixed) = ' + totalPercent.toFixed(2));
+      if (Math.round(totalPercent) < 100) {
+        logTo(log, 'Warning: did not reach 100% (' + totalPercent.toFixed(2) + '%) — maybe tasks were cancelled or rounding issues.');
+      } else {
+        logTo(log, 'Reached 100%');
+      }
+    }, 1700);
+  }
+
+  startBtn.addEventListener('click', startSingle);
+  run10Btn.addEventListener('click', () => {
+    let i = 0;
+    function doRun() {
+      if (i++ >= 10) return;
+      startSingle();
+      setTimeout(doRun, 2000);
+    }
+    doRun();
+  });
+  resetBtn.addEventListener('click', reset);
+
+  reset();
+})();
+
+// Short explanation panel appended below
+(function() {
+  const e = document.createElement('div');
+  e.style.marginTop = '18px';
+  e.innerHTML = '<strong>Explanation:</strong> The buggy version has each task read the current shared percentage, compute newValue = read + contribution, then write newValue. Because many async callbacks interleave, two tasks may read the same "old" value and both write updates based on that old value, causing lost updates (total < 100%) or if steps are sized differently, can even exceed 100%. The fix is to have each task report its own contribution and let a single aggregator add contributions (so updates don\\'t rely on stale reads), or otherwise serialize updates (queue, mutex). In JS, the aggregator pattern leverages the single-threaded event loop so a small function that adds a contribution runs to completion without being preempted by another task. This eliminates the race on stale reads.'
+  document.body.appendChild(e);
+})();
+</script>
+
+</body>
+</html>

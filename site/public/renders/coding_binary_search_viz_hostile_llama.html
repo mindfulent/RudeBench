@@ -6,26 +6,28 @@
     <title>Binary Search Visualization</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: monospace;
         }
         #array-container {
             display: flex;
-            gap: 5px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
         }
         .box {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             border: 1px solid black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: lightblue;
+            display: inline-block;
+            margin: 2px;
+            text-align: center;
+            line-height: 20px;
+            font-size: 12px;
         }
         .highlight {
             background-color: yellow;
         }
         .search-range {
-            border: 2px solid red;
+            background-color: lightblue;
         }
     </style>
 </head>
@@ -34,75 +36,65 @@
     <button id="start">Start</button>
     <button id="step">Step</button>
     <div id="array-container"></div>
-    <p id="result"></p>
+    <div id="result"></div>
 
     <script>
-        let array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
-        let target;
-        let left;
-        let right;
-        let mid;
-        let stepCount = 0;
-
-        const arrayContainer = document.getElementById('array-container');
         const targetInput = document.getElementById('target');
         const startButton = document.getElementById('start');
         const stepButton = document.getElementById('step');
-        const resultElement = document.getElementById('result');
+        const arrayContainer = document.getElementById('array-container');
+        const resultDiv = document.getElementById('result');
 
-        function renderArray() {
+        let array = [];
+        let target;
+        let low;
+        let high;
+        let boxes = [];
+
+        startButton.addEventListener('click', () => {
+            array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; // example array
+            target = parseInt(targetInput.value);
+            low = 0;
+            high = array.length - 1;
+            boxes = [];
+
             arrayContainer.innerHTML = '';
+            resultDiv.innerText = '';
+
             for (let i = 0; i < array.length; i++) {
                 const box = document.createElement('div');
                 box.classList.add('box');
-                if (left <= i && i <= right) {
-                    box.classList.add('search-range');
-                    if (i === mid) {
-                        box.classList.add('highlight');
-                    }
-                }
-                box.textContent = array[i];
+                box.innerText = array[i];
                 arrayContainer.appendChild(box);
+                boxes.push(box);
             }
-        }
 
-        startButton.addEventListener('click', () => {
-            target = parseInt(targetInput.value);
-            left = 0;
-            right = array.length - 1;
-            stepCount = 0;
-            resultElement.textContent = '';
-            renderArray();
             stepButton.disabled = false;
         });
 
         stepButton.addEventListener('click', () => {
-            if (left > right) {
-                resultElement.textContent = 'Not found';
+            if (low > high) {
+                resultDiv.innerText = 'Not found';
                 stepButton.disabled = true;
                 return;
             }
-            mid = Math.floor((left + right) / 2);
-            stepCount++;
+
+            const mid = Math.floor((low + high) / 2);
+            boxes.forEach(box => box.classList.remove('highlight', 'search-range'));
+            for (let i = low; i <= high; i++) {
+                boxes[i].classList.add('search-range');
+            }
+            boxes[mid].classList.add('highlight');
+
             if (array[mid] === target) {
-                resultElement.textContent = `Found at index ${mid} in ${stepCount} steps`;
+                resultDiv.innerText = 'Found!';
                 stepButton.disabled = true;
             } else if (array[mid] < target) {
-                left = mid + 1;
+                low = mid + 1;
             } else {
-                right = mid - 1;
+                high = mid - 1;
             }
-            renderArray();
         });
-
-        // initial render
-        arrayContainer.innerHTML = '';
-        for (let i = 0; i < array.length; i++) {
-            const box = document.createElement('div');
-            box.classList.add('box');
-            box.textContent = array[i];
-            arrayContainer.appendChild(box);
-        }
     </script>
 </body>
 </html>

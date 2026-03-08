@@ -7,14 +7,30 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a24;
+      --surface2: #22222f;
+      --border: #2e2e42;
+      --accent: #7c6aff;
+      --accent2: #ff6ab0;
+      --accent3: #6affda;
+      --text: #e8e8f0;
+      --muted: #6b6b8a;
+      --glow: rgba(124,106,255,0.35);
+    }
+
     body {
       min-height: 100vh;
+      background: var(--bg);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #0a0a0f;
       font-family: 'Segoe UI', system-ui, sans-serif;
-      overflow: hidden;
+      color: var(--text);
+      padding: 2rem;
+      overflow-x: hidden;
     }
 
     /* Animated background grid */
@@ -23,204 +39,536 @@
       position: fixed;
       inset: 0;
       background-image:
-        linear-gradient(rgba(99,102,241,0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.07) 1px, transparent 1px);
+        linear-gradient(rgba(124,106,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,106,255,0.04) 1px, transparent 1px);
       background-size: 40px 40px;
-      animation: gridMove 20s linear infinite;
       pointer-events: none;
+      z-index: 0;
     }
 
-    @keyframes gridMove {
-      0%   { transform: translateY(0); }
-      100% { transform: translateY(40px); }
-    }
-
-    .card {
+    .container {
       position: relative;
-      width: min(620px, 95vw);
-      background: rgba(15,15,25,0.85);
-      border: 1px solid rgba(99,102,241,0.25);
-      border-radius: 24px;
-      padding: 48px 40px;
-      backdrop-filter: blur(20px);
-      box-shadow:
-        0 0 0 1px rgba(99,102,241,0.1),
-        0 32px 80px rgba(0,0,0,0.6),
-        0 0 80px rgba(99,102,241,0.08);
-    }
-
-    /* Glowing orbs */
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(60px);
-      pointer-events: none;
-      animation: orbFloat 6s ease-in-out infinite alternate;
-    }
-    .orb-1 {
-      width: 200px; height: 200px;
-      background: rgba(99,102,241,0.15);
-      top: -60px; left: -60px;
-      animation-delay: 0s;
-    }
-    .orb-2 {
-      width: 150px; height: 150px;
-      background: rgba(236,72,153,0.12);
-      bottom: -40px; right: -40px;
-      animation-delay: -3s;
-    }
-
-    @keyframes orbFloat {
-      from { transform: translate(0,0) scale(1); }
-      to   { transform: translate(20px,15px) scale(1.1); }
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      text-align: center;
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.35);
-      margin-bottom: 36px;
-      letter-spacing: 0.5px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: rgba(99,102,241,0.8);
-      margin-bottom: 10px;
-    }
-
-    .input-wrap {
-      position: relative;
-      margin-bottom: 28px;
-    }
-
-    input[type="text"] {
+      z-index: 1;
       width: 100%;
-      padding: 16px 20px;
-      background: rgba(255,255,255,0.04);
-      border: 1.5px solid rgba(99,102,241,0.2);
-      border-radius: 14px;
-      color: #fff;
-      font-size: 1.05rem;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
-      caret-color: #818cf8;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
     }
 
-    input[type="text"]:focus {
-      border-color: rgba(99,102,241,0.6);
-      background: rgba(255,255,255,0.07);
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.1), 0 0 20px rgba(99,102,241,0.1);
+    /* Header */
+    .header {
+      text-align: center;
     }
 
-    input[type="text"]::placeholder { color: rgba(255,255,255,0.2); }
-
-    /* Char counter */
-    .char-count {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.2);
-      pointer-events: none;
-      transition: color 0.3s;
+    .header h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.4rem;
     }
 
-    /* Output area */
-    .output-box {
-      background: rgba(255,255,255,0.03);
-      border: 1.5px solid rgba(99,102,241,0.15);
-      border-radius: 14px;
-      padding: 20px;
-      min-height: 80px;
+    .header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: 0 0 60px rgba(124,106,255,0.08);
+      transition: box-shadow 0.3s;
+    }
+
+    .card:focus-within {
+      box-shadow: 0 0 80px rgba(124,106,255,0.18);
+    }
+
+    /* Label */
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 2px;
-      position: relative;
-      transition: border-color 0.3s;
+      gap: 0.5rem;
     }
 
-    .output-box.active {
-      border-color: rgba(99,102,241,0.35);
-    }
-
-    .placeholder-text {
-      color: rgba(255,255,255,0.15);
-      font-size: 0.95rem;
-      font-style: italic;
-      user-select: none;
-    }
-
-    /* Each character span */
-    .char {
+    .field-label .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
       display: inline-block;
-      font-size: 1.05rem;
-      color: #e0e7ff;
+    }
+
+    .field-label .dot.green { background: var(--accent3); }
+
+    /* Input */
+    .input-wrap {
       position: relative;
-      animation: charDrop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
-      opacity: 0;
-      transform: translateY(-12px) scale(0.6);
     }
 
-    .char.space { width: 0.35em; }
-
-    @keyframes charDrop {
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    #inputField {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      font-size: 1.1rem;
+      font-family: 'Courier New', monospace;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.05em;
     }
 
-    /* Stagger delays applied via JS */
+    #inputField::placeholder { color: var(--muted); }
 
-    /* Stats row */
+    #inputField:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+
+    /* Char counter */
+    .char-counter {
+      position: absolute;
+      right: 1rem;
+      bottom: 0.85rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: monospace;
+      transition: color 0.2s;
+    }
+
+    /* Stats bar */
     .stats {
       display: flex;
-      gap: 12px;
-      margin-top: 24px;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
-    .stat {
-      flex: 1;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 12px;
-      padding: 14px 16px;
-      text-align: center;
-      transition: border-color 0.3s, background 0.3s;
+    .stat-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
     }
 
-    .stat.highlight {
-      border-color: rgba(99,102,241,0.3);
-      background: rgba(99,102,241,0.06);
-    }
-
-    .stat-value {
-      font-size: 1.4rem;
+    .stat-pill span.val {
+      color: var(--accent3);
       font-weight: 700;
-      color: #818cf8;
-      display: block;
-      line-height: 1;
-      margin-bottom: 4px;
-      transition: transform 0.2s;
+      font-family: monospace;
+      min-width: 1ch;
     }
 
-    .stat-value.bump {
-      animation: bumpScale 0.25s ease;
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--muted);
+      font-size: 0.8rem;
     }
 
-    @keyframes bumpScale {
-      
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .arrow-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      animation: pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--glow); }
+      50% { box-shadow: 0 0 0 6px transparent; }
+    }
+
+    /* Output */
+    .output-box {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      min-height: 56px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1px;
+      transition: border-color 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .output-box.active { border-color: var(--accent3); }
+
+    .output-box .empty-hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-style: italic;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Individual animated characters */
+    .char-span {
+      display: inline-block;
+      position: relative;
+      transition: color 0.15s;
+      animation: charPop 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    @keyframes charPop {
+      from { opacity: 0; transform: translateY(-8px) scale(0.6); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .char-span.space-char {
+      width: 0.55em;
+      display: inline-block;
+    }
+
+    /* Color bands for chars */
+    .char-span[data-idx="0n"] { color: #ff6ab0; }
+
+    /* Hue cycling via CSS custom property */
+    .char-span { color: var(--char-color, var(--text)); }
+
+    /* Controls row */
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.7rem 1rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    #copyBtn {
+      background: linear-gradient(135deg, var(--accent), #5a4fe0);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(124,106,255,0.3);
+    }
+
+    #copyBtn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,106,255,0.45); }
+    #copyBtn:active { transform: translateY(0); }
+
+    #clearBtn {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+    }
+
+    #clearBtn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    #swapBtn {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+    }
+
+    #swapBtn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent3);
+      color: #0f0f13;
+      padding: 0.6rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Progress bar */
+    .progress-bar-wrap {
+      height: 3px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+      border-radius: 999px;
+      transition: width 0.15s ease;
+    }
+
+    /* Ripple on output update */
+    .ripple {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(106,255,218,0.06), transparent);
+      animation: rippleFade 0.4s ease forwards;
+      pointer-events: none;
+    }
+
+    @keyframes rippleFade {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .card { padding: 1.4rem; }
+      button { min-width: 90px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>String Reverser</h1>
+      <p>Type anything — watch it flip in real time</p>
+    </div>
+
+    <div class="card">
+
+      <!-- Input -->
+      <div>
+        <div class="field-label"><span class="dot"></span> Input</div>
+        <div class="input-wrap">
+          <input
+            id="inputField"
+            type="text"
+            placeholder="Start typing here…"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="200"
+          />
+          <span class="char-counter" id="charCounter">0/200</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-pill">✦ Chars <span class="val" id="statChars">0</span></div>
+        <div class="stat-pill">⎵ Words <span class="val" id="statWords">0</span></div>
+        <div class="stat-pill">🔄 Unique <span class="val" id="statUnique">0</span></div>
+        <div class="stat-pill">⚡ Palindrome? <span class="val" id="statPalin">—</span></div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider">
+        <div class="arrow-icon">↕</div>
+        reversed
+      </div>
+
+      <!-- Output -->
+      <div>
+        <div class="field-label"><span class="dot green"></span> Output</div>
+        <div class="output-box" id="outputBox">
+          <span class="empty-hint">Your reversed text will appear here…</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button id="copyBtn">⎘ Copy Result</button>
+        <button id="swapBtn">⇄ Swap</button>
+        <button id="clearBtn">✕ Clear</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const input       = document.getElementById('inputField');
+    const outputBox   = document.getElementById('outputBox');
+    const charCounter = document.getElementById('charCounter');
+    const progressBar = document.getElementById('progressBar');
+    const statChars   = document.getElementById('statChars');
+    const statWords   = document.getElementById('statWords');
+    const statUnique  = document.getElementById('statUnique');
+    const statPalin   = document.getElementById('statPalin');
+    const copyBtn     = document.getElementById('copyBtn');
+    const clearBtn    = document.getElementById('clearBtn');
+    const swapBtn     = document.getElementById('swapBtn');
+    const toast       = document.getElementById('toast');
+
+    // Hue palette cycling
+    const palette = [
+      '#ff6ab0','#ff9f6a','#ffe06a','#6affa3',
+      '#6affda','#6ac4ff','#a56aff','#ff6aec'
+    ];
+
+    let toastTimer = null;
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function isPalindrome(str) {
+      const s = str.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!s) return null;
+      return s === s.split('').reverse().join('');
+    }
+
+    function updateStats(val) {
+      const len   = val.length;
+      const words = val.trim() === '' ? 0 : val.trim().split(/\s+/).length;
+      const unique = new Set(val.replace(/\s/g, '').toLowerCase()).size;
+      const palin  = isPalindrome(val);
+
+      statChars.textContent  = len;
+      statWords.textContent  = words;
+      statUnique.textContent = unique || 0;
+      statPalin.textContent  = palin === null ? '—' : palin ? '✓ Yes' : '✗ No';
+      statPalin.style.color  = palin ? 'var(--accent3)' : palin === false ? 'var(--accent2)' : '';
+
+      charCounter.textContent = `${len}/200`;
+      charCounter.style.color = len > 180 ? 'var(--accent2)' : 'var(--muted)';
+      progressBar.style.width = `${(len / 200) * 100}%`;
+    }
+
+    function renderOutput(val) {
+      const reversed = val.split('').reverse().join('');
+
+      // Ripple effect
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple';
+      outputBox.appendChild(ripple);
+      ripple.addEventListener('animationend', () => ripple.remove());
+
+      if (!reversed) {
+        outputBox.innerHTML = '<span class="empty-hint">Your reversed text will appear here…</span>';
+        outputBox.classList.remove('active');
+        return;
+      }
+
+      outputBox.classList.add('active');
+
+      // Build chars with staggered animation delays
+      const fragment = document.createDocumentFragment();
+      [...reversed].forEach((ch, i) => {
+        const span = document.createElement('span');
+        span.className = 'char-span' + (ch === ' ' ? ' space-char' : '');
+        span.textContent = ch === ' ' ? '\u00A0' : ch;
+
+        // Assign color from palette based on position
+        const color = palette[i % palette.length];
+        span.style.setProperty('--char-color', color);
+
+        // Stagger animation
+        span.style.animationDelay = `${Math.min(i * 18, 300)}ms`;
+
+        fragment.appendChild(span);
+      });
+
+      outputBox.innerHTML = '';
+      outputBox.appendChild(ripple.cloneNode());
+      outputBox.appendChild(fragment);
+    }
+
+    // Main handler
+    input.addEventListener('input', () => {
+      const val = input.value;
+      updateStats(val);
+      renderOutput(val);
+    });
+
+    // Copy
+    copyBtn.addEventListener('click', () => {
+      const reversed = input.value.split('').reverse().join('');
+      if (!reversed) { showToast('Nothing to copy!'); return; }
+      navigator.clipboard.writeText(reversed).then(() => {
+        showToast('✓ Copied to clipboard!');
+        copyBtn.textContent = '✓ Copied!';
+        setTimeout(() => { copyBtn.innerHTML = '⎘ Copy Result'; }, 1500);
+      }).catch(() => showToast('Copy failed'));
+    });
+
+    // Clear
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+      input.focus();
+    });
+
+    // Swap — put reversed into input
+    swapBtn.addEventListener('click', () => {
+      const reversed = input.value.split('').reverse().join('');
+      if (!reversed) return;
+      input.value = reversed;
+      input.dispatchEvent(new Event('input'));
+      showToast('⇄ Swapped!');
+      input.focus();
+    });
+
+    // Focus input on load
+    input.focus();
+  </script>
+</body>
+</html>

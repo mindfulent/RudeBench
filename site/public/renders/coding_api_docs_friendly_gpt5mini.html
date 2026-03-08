@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>API Review & Corrected REST Endpoints</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --bg:#f6f8fb; --card:#ffffff; --muted:#6b7280; --accent:#0b5cff; --danger:#dc3545;
+      --success:#198754; --border:#e6e9ef; --shadow: 0 6px 18px rgba(18, 36, 86, 0.06);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#ffffff 60%);color:#0b1a2b}
+    header{padding:28px 32px;border-bottom:1px solid var(--border);background:transparent}
+    .container{max-width:1100px;margin:28px auto;padding:0 20px}
+    h1{margin:0;font-size:20px}
+    p.lead{color:var(--muted);margin:8px 0 0}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:24px;margin-top:22px}
+    .card{background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:12px;padding:18px}
+    .section-title{display:flex;align-items:center;justify-content:space-between}
+    .muted{color:var(--muted);font-size:13px}
+    .problems li{margin:8px 0}
+    details{margin-top:12px;border-radius:8px;padding:12px;border:1px solid #eef2f7;background:#fbfdff}
+    summary{cursor:pointer;outline:none;font-weight:600}
+    code{background:#f3f6fb;padding:3px 6px;border-radius:6px;font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:13px}
+    .endpoint{display:flex;gap:12px;align-items:center;margin-bottom:12px;padding:12px;border-radius:8px;border:1px solid #f0f4fb;background:#ffffff}
+    .method{font-weight:700;padding:6px 10px;border-radius:6px;color:white;font-size:13px}
+    .GET{background:#0b5cff}
+    .POST{background:#0b9342}
+    .PUT{background:#0b5cff}
+    .DELETE{background:var(--danger)}
+    .endpoint .path{font-family:ui-monospace,monospace;color:#0b1a2b}
+    .small{font-size:13px;color:var(--muted)}
+    .example{background:#0f1724;color:white;padding:12px;border-radius:8px;font-family:ui-monospace,monospace;font-size:13px;overflow:auto}
+    .footer{margin-top:18px;color:var(--muted);font-size:13px}
+    .kbd{display:inline-block;background:#eef2ff;padding:4px 8px;border-radius:6px;font-weight:600;color:var(--accent);font-size:13px}
+    .pill{font-size:12px;padding:6px 8px;border-radius:999px;background:#f1f6ff;color:var(--accent);border:1px solid #e4efff}
+    .right-col .meta{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .toggle{background:#fff;border:1px solid var(--border);padding:8px;border-radius:8px;cursor:pointer}
+    .status{display:inline-block;padding:6px 8px;border-radius:6px;font-weight:700;color:white}
+    .s-200{background:var(--success)} .s-201{background:#0b6ee6} .s-204{background:#6b7280}
+    .s-400{background:#f59e0b} .s-401{background:#f97316} .s-404{background:var(--danger)} .s-500{background:#a21caf}
+    .note{border-left:4px solid #e6eefb;background:#fbfdff;padding:10px;border-radius:6px;margin-top:10px;color:#0d2a4d}
+    footer{padding:20px 32px;color:var(--muted);font-size:13px;text-align:center}
+    @media (max-width:980px){.grid{grid-template-columns:1fr;}.container{padding:0 14px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>API Review & Corrected REST Endpoints</h1>
+      <p class="lead">Review of provided endpoints and a corrected, RESTful design with examples, status codes, and notes.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="grid">
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <strong>Provided endpoints</strong>
+            <div class="small">GET /getUsers, POST /user/delete/5, GET /createUser?name=Jo, PUT /updateAllUsers</div>
+          </div>
+          <div class="pill">Resource: users</div>
+        </div>
+
+        <details open class="problems">
+          <summary>Problems found (summary)</summary>
+          <ul>
+            <li><strong>Verb in URL</strong> — endpoints include verbs like "get", "create", "update", "delete" in the path. RESTful design uses nouns (resources) in paths and verbs via HTTP methods.</li>
+            <li><strong>Inconsistent resource naming</strong> — /getUsers vs /user (singular) vs /updateAllUsers. Paths should use consistent plural nouns (e.g., /users).</li>
+            <li><strong>Incorrect HTTP methods</strong> — POST /user/delete/5 uses POST for delete; DELETE should be used for deletions. GET /createUser triggers creation (side-effect) and violates GET being safe and idempotent.</li>
+            <li><strong>Resource identification in path vs body</strong> — /user/delete/5 puts the ID after a verb segment. IDs should be direct child resources like /users/5.</li>
+            <li><strong>Ambiguous operation scope</strong> — PUT /updateAllUsers is unclear: does it replace all users? PUT should replace a resource at a specific URI and be idempotent. For bulk operations, use clear endpoints (e.g., /users/bulk) and appropriate method (POST for complex operations or PATCH for partial bulk updates).</li>
+            <li><strong>Query parameter misuse</strong> — GET /createUser?name=Jo uses query to create a resource; creation should be a POST with the payload in the request body (JSON).</li>
+            <li><strong>Missing status code guidance</strong> — no suggested success/error status codes (201 Created for creation, 204 No Content for deletion, etc.).</li>
+            <li><strong>Missing pagination/filtering</strong> — /getUsers returns many users without pagination or filtering parameters.</li>
+            <li><strong>Security and idempotency not specified</strong> — no notes about authentication (e.g., Bearer token), rate limiting, or idempotency keys for retrying non-idempotent operations.</li>
+            <li><strong>HATEOAS / hypermedia omitted</strong> — optional, but for discoverability you may include next/prev links or Location header on creation.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Detailed breakdown by original endpoint</summary>
+          <div style="margin-top:12px">
+            <strong>1) GET /getUsers</strong>
+            <ul>
+              <li>Problem: "get" verb in path; ambiguous resource pluralization; no pagination/filtering indicated; may return too much data.</li>
+              <li>REST-correct approach: GET /users with query params for pagination and filtering, e.g., ?page=1&limit=25&sort=created_at:desc&name=Jo</li>
+            </ul>
+
+            <strong>2) POST /user/delete/5</strong>
+            <ul>
+              <li>Problem: Using POST to delete; mixes verb "delete" into URI; uses singular 'user'.</li>
+              <li>REST-correct approach: DELETE /users/5 — id is a resource identifier and operation is expressed by HTTP DELETE.</li>
+            </ul>
+
+            <strong>3) GET /createUser?name=Jo</strong>
+            <ul>
+              <li>Problem: GET must be safe and side-effect-free; this violates intent. Using query string to create a resource is not appropriate for structured payloads or security.</li>
+              <li>REST-correct approach: POST /users with body { "name": "Jo", ... } and server returns 201 Created with Location: /users/{id} and response body containing created resource representation.</li>
+            </ul>
+
+            <strong>4) PUT /updateAllUsers</strong>
+            <ul>
+              <li>Problem: Vague semantics; PUT implies replacing a resource at a specific URL. 'updateAllUsers' as a path includes a verb and implies a bulk operation without clear specification.</li>
+              <li>REST-correct approach: - For updating a single user: PATCH /users/{id} (partial update) or PUT /users/{id} (full replacement). - For bulk updates: POST /users/bulk-update or PATCH /users (with clear contract), and ensure idempotency or document behavior.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary>Recommended global conventions</summary>
+          <div style="margin-top:12px">
+            <ul>
+              <li>Resource naming: use plural nouns (e.g., /users, /orders, /invoices).</li>
+              <li>Use HTTP methods to express actions: GET (read), POST (create), PUT (replace), PATCH (partial update), DELETE (delete).</li>
+              <li>Use status codes consistently: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable Entity, 500 Internal Server Error.</li>
+              <li>Filter and paginate list endpoints (limit, offset/page, sort, filter by fields).</li>
+              <li>Send request payloads as JSON in request bodies for POST/PUT/PATCH.</li>
+              <li>Return created resource representation and Location header on 201 Created.</li>
+              <li>Use ETag or Last-Modified and conditional requests for caching and concurrency (If-Match for optimistic concurrency).</li>
+              <li>For bulk operations, use a clear subresource (/users/bulk or /users:bulk-update) and document idempotency and partial failure strategy.</li>
+              <li>Document authentication (e.g., Authorization: Bearer &lt;token&gt;) and rate limits.</li>
+            </ul>
+          </div>
+        </details>
+
+        <div class="footer">Below: corrected endpoints with examples, status codes, and notes.</div>
+      </div>
+
+      <aside class="card right-col">
+        <div class="meta"><strong>Quick reference</strong></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <div class="status s-200">200 OK</div>
+          <div class="status s-201">201 Created</div>
+          <div class="status s-204">204 No Content</div>
+          <div class="status s-400">400 Bad Request</div>
+          <div class="status s-401">401 Unauthorized</div>
+          <div class="status s-404">404 Not Found</div>
+          <div class="status s-500">500 Server Error</div>
+        </div>
+
+        <div class="meta">Headers & auth</div>
+        <div class="small" style="margin-bottom:8px">
+          Authorization: <code>Bearer &lt;token&gt;</code><br>
+          Content-Type: <code>application/json</code><br>
+          Accept: <code>application/json</code>
+        </div>
+
+        <div class="meta">Pagination</div>
+        <div class="small">Use query params: <code>?page=1&limit=25</code> or <code>?offset=0&limit=50</code>. Return pagination meta in response.</div>
+      </aside>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Corrected endpoints</strong>
+        <div class="small">Consistent, resource-oriented, and method-correct</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <!-- LIST /users -->
+        <div class="endpoint">
+          <div class="method GET">GET</div>
+          <div>
+            <div class="path">/users</div>
+            <div class="small">List users. Supports filtering, sorting and pagination.</div>
+            <details style="margin-top:10px">
+              <summary>Examples & notes</summary>
+              <div style="margin-top:10px">
+                <div class="small">Query parameters</div>
+                <ul>
+                  <li><code>?page=1&amp;limit=25</code> — pagination</li>
+                  <li><code>?sort=created_at:desc</code> — sorting</li>
+                  <li><code>?name=Jo</code> — filtering</li>
+                </ul>
+
+                <div class="small">Success response (200)</div>
+                <pre class="example">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [
+    { "id": 5, "name": "Jo", "email": "jo@example.com", "created_at": "2025-12-01T12:00:00Z" }
+  ],
+  "meta": { "page": 1, "limit": 25, "total": 123 }
+}</pre>
+
+                <div class="note">Avoid returning all users without pagination. Use appropriate permission checks for returned fields.</div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- CREATE /users -->
+        <div class="endpoint">
+          <div class="method POST">POST</div>
+          <div>
+            <div class="path">/users</div>
+            <div class="small">Create a new user.</div>
+            <details style="margin-top:10px">
+              <summary>Examples & notes</summary>
+              <div style="margin-top:10px">
+                <div class="small">Request</div>
+                <pre class="example">POST /users
+Content-Type: application/json
+
+{
+  "name": "Jo",
+  "email": "jo@example.com",
+  "password": "s3cr3t"
+}</pre>
+
+                <div class="small">Success (201)</div>
+                <pre class="example">HTTP/1.1 201 Created
+Location: /users/18
+Content-Type: application/json
+
+{
+  "id": 18,
+  "name": "Jo",
+  "email": "jo@example.com",
+  "created_at": "2026-03-08T10:15:00Z"
+}</pre>
+
+                <div class="small">Errors</div>
+                <ul>
+                  <li>400 Bad Request — validation failed</li>
+                  <li>409 Conflict — email already exists</li>
+                </ul>
+
+                <div class="note">Do not use GET to create resources. Use POST with a JSON body. Return Location header pointing to the new resource.</div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- GET single -->
+        <div class="endpoint">
+          <div class="method GET">GET</div>
+          <div>
+            <div class="path">/users/{id}</div>
+            <div class="small">Get a single user by id.</div>
+            <details style="margin-top:10px">
+              <summary>Examples & notes</summary>
+              <div style="margin-top:10px">
+                <div class="small">Success (200)</div>
+                <pre class="example">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ "id": 5, "name": "Jo", "email": "jo@example.com" }</pre>
+
+                <div class="small">Errors</div>
+                <ul>
+                  <li>404 Not Found — user does not exist</li>
+                  <li>401 Unauthorized — missing or invalid auth</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- PATCH single -->
+        <div class="endpoint">
+          <div class="method PUT">PATCH</div>
+          <div>
+            <div class="path">/users/{id}</div>
+            <div class="small">Partially update a user (preferred for partial updates). Use PUT only for full replace.</div>
+            <details style="margin-top:10px">
+              <summary>Examples & notes</summary>
+              <div style="margin-top:10px">
+                <div class="small">Request</div>
+                <pre class="example">PATCH /users/5
+Content-Type: application/json
+
+{ "name": "Jo D." }</pre>
+
+                <div class="small">Success</div>
+                <pre class="example">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ "id": 5, "name": "Jo D.", "email": "jo@example.com" }</pre>
+
+                <div class="note">Use ETag / If-Match headers for optimistic concurrency control to avoid lost updates. PUT can be used if the client sends the full user object and expects a full replacement.</div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- DELETE single -->
+        <div class="endpoint">
+          <div class="method DELETE">DELETE</div>
+          <div>
+            <div class="path">/users/{id}</div>
+            <div class="small">Delete a user by id.</div>
+            <details style="margin-top:10px">
+              <summary>Examples & notes</summary>
+              <div style="margin-top:10px">
+                <div class="small">Success (204)</div>
+                <pre class="example">HTTP/1.1 204 No Content</pre>
+
+                <div class="small">Errors</div>
+                <ul>
+                  <li>404 Not Found — if not present</li>
+                  <li>403 Forbidden — if user cannot be deleted by requester</li>
+                </ul>
+
+                <div class="note">Prefer DELETE /users/{id} instead of POST /user/delete/{id}. Use 204 No Content for successful deletion with no response body.</div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- BULK update example -->
+        <div class="endpoint">
+          <div class="method POST">POST</div>
+          <div>
+            <div class="path">/users/bulk-update</div>
+            <div class="small">Perform bulk updates. Use POST or PATCH depending on semantics; document idempotency.</div>
+            <details style="margin-top:10px">
+              <summary>Examples & notes</summary>
+              <div style="margin-top:10px">
+                <div class="small">Request</div>
+                <pre class="example">POST /users/bulk-update
+Content-Type: application/json
+
+{
+  "updates": [
+    { "id": 5, "name": "Jo Updated" },
+    { "id": 6, "email": "alex+update@example.com" }
+  ]
+}</pre>
+
+                <div class="small">Success (200 or 207)</div>
+                <pre class="example">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ "updated": [5,6], "errors": [] }</pre>
+
+                <div class="note">For partial failures, you may return 207 Multi-Status (less common) or 200 with an array of per-item results. Document retry behavior and idempotency keys if needed.</div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <strong>Additional recommendations</strong>
+      <ul style="margin-top:10px">
+        <li>Authentication: use OAuth2 or JWT Bearer tokens (Authorization: Bearer &lt;token&gt;). Return 401 for missing/invalid credentials and 403 for insufficient permissions.</li>
+        <li>Validation errors: return 400 (or 422) with a structured errors object describing field issues.</li>
+        <li>Rate limiting: support X-RateLimit-* headers and return 429 Too Many Requests when exceeded.</li>
+        <li>Versioning: version your API (e.g., /v1/users) or use an Accept header for content negotiation.</li>
+        <li>Documentation: provide clear error codes, request/response schemas (OpenAPI/JSON Schema), and examples for client implementers.</li>
+      </ul>
+    </div>
+
+    <footer class="card" style="margin-top:18px">
+      Need this exported as OpenAPI (Swagger) or want endpoint samples for a specific tech stack (Express, Spring Boot, Flask)? I can generate them from the corrected endpoints.
+    </footer>
+  </main>
+
+  <footer>
+    API review generated on demand — adapt to your product's requirements and security model.
+  </footer>
+</body>
+</html>

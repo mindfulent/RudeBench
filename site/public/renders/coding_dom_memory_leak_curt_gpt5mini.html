@@ -1,0 +1,321 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard Widget Leak Demo (Event listeners & references, not GC bug)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 20px; }
+    h1 { margin-bottom: 4px; }
+    .row { display:flex; gap:20px; align-items:flex-start; }
+    .col { border:1px solid #ccc; padding:12px; width:48%; box-sizing:border-box; border-radius:6px; }
+    .controls { margin-bottom:8px; }
+    .widget { border:1px solid #ddd; padding:8px; margin:6px 0; border-radius:4px; background:#fafafa; display:flex; justify-content:space-between; align-items:center; }
+    .widget .left { display:flex; gap:8px; align-items:center; }
+    .small { font-size:12px; color:#666; }
+    .counter { font-weight:700; font-size:18px; }
+    .stats { margin-top:10px; font-size:13px; color:#444; }
+    button { padding:6px 8px; cursor:pointer; }
+    .leak { background:#fff5f5; }
+    .fixed { background:#f5fff8; }
+    .note { font-size:13px; color:#333; margin-top:10px; padding:8px; border-radius:4px; background:#f7f7f7; }
+  </style>
+</head>
+<body>
+  <h1>Widget Dashboard Leak Demo</h1>
+  <div class="row">
+    <div class="col leak" id="leakyPanel">
+      <h2>Leaky dashboard</h2>
+      <div class="controls">
+        <button id="leakyAdd">Add widget</button>
+        <button id="leakyRemoveAll">Remove all widgets (visual only)</button>
+      </div>
+      <div class="small">Displayed widgets:</div>
+      <div id="leakyContainer"></div>
+      <div class="stats small">Live widget instances (detected): <span id="leakyCount" class="counter">0</span></div>
+      <div class="note">
+        This version removes DOM nodes when a widget is closed, but does NOT remove timers, event listeners or JS references held by the widget object. Those closures continue to reference the DOM node and the widget's data, preventing garbage collection.
+      </div>
+    </div>
+
+    <div class="col fixed" id="fixedPanel">
+      <h2>Fixed dashboard</h2>
+      <div class="controls">
+        <button id="fixedAdd">Add widget</button>
+        <button id="fixedRemoveAll">Remove all widgets (clean)</button>
+      </div>
+      <div class="small">Displayed widgets:</div>
+      <div id="fixedContainer"></div>
+      <div class="stats small">Live widget instances (detected): <span id="fixedCount" class="counter">0</span></div>
+      <div class="note">
+        This version cleans up timers, listeners and references when a widget is removed so the objects can be reclaimed by the garbage collector.
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:18px;">
+    <strong>Instructions / demo:</strong>
+    <ol>
+      <li>Click "Add widget" repeatedly on either side to create widgets.</li>
+      <li>Close widgets one-by-one or click "Remove all".</li>
+      <li>Watch the "Live widget instances" counters. The leaky dashboard's count keeps growing because removed widgets remain referenced; the fixed dashboard's counter goes down.</li>
+    </ol>
+    <p class="small">Note: browser devtools can show memory differences. The purpose here is to show retained JavaScript references, not a GC bug — the collector only reclaims objects that are unreachable from roots; if your code keeps references (timers/listeners/closures), GC cannot free them.</p>
+  </div>
+
+<script>
+/*
+ Demo design:
+ - Widget objects created for each widget contain:
+   - a DOM element
+   - a click listener on document (simulates global listener referencing the widget)
+   - a setInterval that updates internal state and captures the DOM element in closure
+   - a moderately large Array to make retention visible (memory sink)
+ - LeakyWidget.prototype.remove() will only remove the DOM node but will NOT remove the event listener or clear the interval or null references.
+ - FixedWidget.prototype.remove() will remove node and also remove listeners, clear interval and drop references.
+ - We keep a global registry of "known widgets" and a WeakRef-based probe to detect which widget instances are still reachable.
+   Because WeakRefs can't be enumerated, we store a unique ID and a finalization-like pattern: every time we create a widget we also store a WeakRef in a map and periodically check which weakrefs are dead to estimate live count.
+ - This demo intentionally does not rely on FinalizationRegistry for clarity and broader compatibility.
+*/
+
+// Utilities to track instances with WeakRef probe
+class InstanceTracker {
+  constructor() {
+    this._map = new Map(); // id -> WeakRef(obj)
+    this._lastId = 1;
+  }
+  track(obj) {
+    const id = this._lastId++;
+    // store a WeakRef so GC can collect the object if nothing else references it
+    if (typeof WeakRef === 'undefined') {
+      // If WeakRef unsupported, fallback to strong reference for demo (won't show GC cleanup)
+      // But modern browsers support WeakRef. We just store strong so demo still runs.
+      this._map.set(id, { strong: obj });
+    } else {
+      this._map.set(id, new WeakRef(obj));
+    }
+    return id;
+  }
+  // count how many weakrefs still deref() to an object
+  countLive() {
+    let live = 0;
+    for (const [id, w] of this._map.entries()) {
+      if (w && w.deref) {
+        if (w.deref() !== undefined) live++;
+      } else {
+        // fallback: strong reference present
+        if (w && w.strong) live++;
+      }
+    }
+    return live;
+  }
+  // optional: drop map entries with dead refs to keep map size manageable
+  cleanup() {
+    for (const [id, w] of this._map.entries()) {
+      if (w && w.deref) {
+        if (w.deref() === undefined) this._map.delete(id);
+      }
+    }
+  }
+}
+
+// Create trackers for both dashboards
+const leakyTracker = new InstanceTracker();
+const fixedTracker = new InstanceTracker();
+
+// Make a moderately large memory sink for each widget to make retention visible
+function createMemorySink(kb) {
+  // create a Uint8Array of given size in KB
+  return new Uint8Array(1024 * Math.max(1, kb) | 0);
+}
+
+// Leaky widget (buggy): doesn't clean up listeners/timers/references
+class LeakyWidget {
+  constructor(container, tracker) {
+    this.container = container;
+    this.id = tracker.track(this);
+    this.el = document.createElement('div');
+    this.el.className = 'widget';
+    this.el.innerHTML = `<div class="left"><span>Leaky widget #${this.id}</span><span class="small">[leaks]</span></div>
+                         <button class="close">Close</button>`;
+    this.container.appendChild(this.el);
+
+    // Simulate a memory sink attached to the object to make retention measurable
+    this.sink = createMemorySink(100); // ~100KB
+
+    // A timer that captures 'this' and this.el in closure -> retains widget
+    this._timer = setInterval(() => {
+      // mutate some internal state, referencing this.el
+      if (this.el) {
+        this.el.dataset.t = (parseInt(this.el.dataset.t || '0') + 1).toString();
+      }
+      // occasionally do a small work with sink so it's captured
+      this.sink[0] = (this.sink[0] + 1) & 0xff;
+    }, 1000);
+
+    // A global listener on document that references this widget object in closure
+    this._docHandler = (e) => {
+      // reference this.id and this.el to make closure hold object
+      if (e && e.type === 'click') {
+        // no-op, but keep references alive
+        void this.id;
+      }
+    };
+    document.addEventListener('click', this._docHandler);
+
+    // local close button that removes DOM only
+    this.el.querySelector('.close').addEventListener('click', () => {
+      this.remove(); // remove visual node, but leaky remove won't clear listeners/timers
+    });
+  }
+
+  // BUG: only removes the DOM element; does NOT clear interval, remove document listener, or drop this.el/sink
+  remove() {
+    if (this.el && this.el.parentNode) {
+      this.el.parentNode.removeChild(this.el);
+    }
+    // intentionally NOT clearing this._timer or removing document listener or nulling fields
+  }
+}
+
+// Fixed widget: cleans up everything so it becomes collectible
+class FixedWidget {
+  constructor(container, tracker) {
+    this.container = container;
+    this.id = tracker.track(this);
+    this.el = document.createElement('div');
+    this.el.className = 'widget';
+    this.el.innerHTML = `<div class="left"><span>Fixed widget #${this.id}</span><span class="small">[clean]</span></div>
+                         <button class="close">Close</button>`;
+    this.container.appendChild(this.el);
+
+    this.sink = createMemorySink(100);
+
+    this._timer = setInterval(() => {
+      if (this.el) {
+        this.el.dataset.t = (parseInt(this.el.dataset.t || '0') + 1).toString();
+      }
+      this.sink[0] = (this.sink[0] + 1) & 0xff;
+    }, 1000);
+
+    this._docHandler = (e) => {
+      void this.id;
+    };
+    document.addEventListener('click', this._docHandler);
+
+    this.el.querySelector('.close').addEventListener('click', () => {
+      this.remove();
+    });
+  }
+
+  // Proper cleanup: clear interval, remove document listener, null references
+  remove() {
+    if (this._timer) {
+      clearInterval(this._timer);
+      this._timer = null;
+    }
+    if (this._docHandler) {
+      document.removeEventListener('click', this._docHandler);
+      this._docHandler = null;
+    }
+    // Remove DOM node
+    if (this.el && this.el.parentNode) {
+      this.el.parentNode.removeChild(this.el);
+    }
+    // Drop references to allow GC
+    this.el = null;
+    this.sink = null;
+  }
+}
+
+// Dashboard controllers
+function Dashboard(containerEl, TrackerClass, WidgetClass, countEl) {
+  this.containerEl = containerEl;
+  this.tracker = TrackerClass;
+  this.WidgetClass = WidgetClass;
+  this.countEl = countEl;
+  this.widgets = []; // strong references to widget objects so creation is visible; in production you might not keep these
+}
+
+// Add a widget and keep a reference in widgets[]
+Dashboard.prototype.add = function() {
+  const w = new this.WidgetClass(this.containerEl, this.tracker);
+  this.widgets.push(w);
+  this._updateCount();
+};
+
+// Remove all displayed widgets by calling remove() on each and also clearing visual container
+Dashboard.prototype.removeAll = function(leakyBehavior) {
+  // call remove() on each widget object (LeakyWidget.remove is intentionally incomplete)
+  for (const w of this.widgets) {
+    try { w.remove(); } catch(e) { /* ignore */ }
+  }
+  // Clear displayed children (defensive)
+  while (this.containerEl.firstChild) this.containerEl.removeChild(this.containerEl.firstChild);
+
+  // In the fixed behavior we also drop our strong references to allow GC.
+  // For the leaky demo, keep references in the widgets[] array to simulate having stored them somewhere (like a cache).
+  if (leakyBehavior) {
+    // Intentionally keep the JS references (so they remain reachable from 'this.widgets')
+    // Simulates application code that visually removes DOM but keeps objects in memory.
+  } else {
+    // Drop references so GC can reclaim (the widget has also cleaned up its timers/listeners)
+    this.widgets.length = 0;
+  }
+  this._updateCount();
+};
+
+Dashboard.prototype._updateCount = function() {
+  // Do a small cleanup of tracker map for nicer numbers
+  if (this.tracker.cleanup) this.tracker.cleanup();
+  const live = this.tracker.countLive();
+  this.countEl.textContent = String(live);
+};
+
+// Setup UI
+const leakyContainer = document.getElementById('leakyContainer');
+const fixedContainer = document.getElementById('fixedContainer');
+const leakyCountEl = document.getElementById('leakyCount');
+const fixedCountEl = document.getElementById('fixedCount');
+
+const leakyDash = new Dashboard(leakyContainer, leakyTracker, LeakyWidget, leakyCountEl);
+const fixedDash = new Dashboard(fixedContainer, fixedTracker, FixedWidget, fixedCountEl);
+
+document.getElementById('leakyAdd').addEventListener('click', () => {
+  leakyDash.add();
+  // keep strong references in leakyDash.widgets to simulate sloppy app behavior
+  leakyDash._updateCount();
+});
+document.getElementById('fixedAdd').addEventListener('click', () => {
+  fixedDash.add();
+  fixedDash._updateCount();
+});
+
+document.getElementById('leakyRemoveAll').addEventListener('click', () => {
+  // leakyBehavior = true to keep strong references in array
+  leakyDash.removeAll(true);
+  leakyDash._updateCount();
+});
+document.getElementById('fixedRemoveAll').addEventListener('click', () => {
+  fixedDash.removeAll(false);
+  fixedDash._updateCount();
+});
+
+// Periodically update counts and also encourage GC in Chrome by allocating
+setInterval(() => {
+  leakyDash._updateCount();
+  fixedDash._updateCount();
+
+  // Try to nudge the JS engine to run GC in some environments by allocating ephemeral memory.
+  // This is not guaranteed to force collection; it's just a gentle nudge for the demo.
+  const tmp = new Array(10000).fill(12345);
+  // Drop tmp immediately
+}, 1000);
+
+// Also expose a function to help manual testing from console
+window.demo = {
+  leakyDash, fixedDash, leakyTracker, fixedTracker
+};
+
+</script>
+</body>
+</html>

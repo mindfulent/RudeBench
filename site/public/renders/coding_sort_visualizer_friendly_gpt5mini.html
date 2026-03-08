@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sorting Algorithm Comparison — Bubble vs Insertion vs Quick</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:#0b1220;
+    --text:#e6eef6;
+    --accent:#4dd0e1;
+    --muted:#9fb4c6;
+    --bar:#66bb6a;
+    --comp:#ffca28;
+    --swap:#ef5350;
+  }
+  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  body{margin:0;background:linear-gradient(180deg,#071028 0%, #092033 100%);color:var(--text);min-height:100vh;padding:18px;}
+  h1{margin:4px 0 10px;font-size:20px;}
+  .top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+  .controls{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;}
+  label{font-size:13px;color:var(--muted);}
+  input[type=range]{width:160px;}
+  button{background:var(--accent);color:#052025;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;}
+  button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);font-weight:500;}
+  .container{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;min-height:260px;display:flex;flex-direction:column;}
+  .panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .title{font-weight:700;}
+  .counts{font-size:13px;color:var(--muted);}
+  .bars{flex:1;display:flex;align-items:end;gap:2px;padding:6px 2px;border-radius:6px;background:linear-gradient(180deg, rgba(255,255,255,0.006), transparent);}
+  .bar{background:var(--bar);width:100%;border-radius:3px;transition:background 120ms, height 120ms, transform 120ms;}
+  .bar.comp{background:var(--comp);}
+  .bar.swap{background:var(--swap);transform:scaleX(1.03);}
+  .footer{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.3;}
+  .explain{padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;margin-top:12px;font-size:13px;color:var(--muted);}
+  .small{font-size:12px;color:var(--muted);}
+  .controls > *{margin-right:6px;}
+  @media (max-width:900px){ .container{grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+  <h1>Sorting comparison: Bubble sort vs Insertion sort vs Quick sort</h1>
+
+  <div class="top">
+    <div class="controls" title="Adjust size and speed">
+      <label class="small">Array size <span id="sizeLabel">40</span></label>
+      <input id="size" type="range" min="10" max="160" value="40">
+      <label class="small">Speed <span id="speedLabel">60 ms</span></label>
+      <input id="speed" type="range" min="5" max="500" value="60">
+      <button id="randomize">Randomize</button>
+      <button id="start" class="secondary">Start</button>
+      <button id="pause" class="secondary" disabled>Pause</button>
+      <button id="reset" class="secondary" disabled>Reset</button>
+    </div>
+    <div style="margin-left:auto;color:var(--muted);font-size:13px;">
+      Note: All three run on the same shuffled input each run.
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="panel" id="panel-bubble">
+      <div class="panel-header">
+        <div>
+          <div class="title">Bubble Sort</div>
+          <div class="small">Stable, simple comparison sort</div>
+        </div>
+        <div class="counts"><span id="count-bubble">steps: 0</span></div>
+      </div>
+      <div class="bars" id="bars-bubble"></div>
+      <div class="footer" id="status-bubble"></div>
+    </div>
+
+    <div class="panel" id="panel-insert">
+      <div class="panel-header">
+        <div>
+          <div class="title">Insertion Sort</div>
+          <div class="small">Efficient on mostly-sorted data</div>
+        </div>
+        <div class="counts"><span id="count-insert">steps: 0</span></div>
+      </div>
+      <div class="bars" id="bars-insert"></div>
+      <div class="footer" id="status-insert"></div>
+    </div>
+
+    <div class="panel" id="panel-quick">
+      <div class="panel-header">
+        <div>
+          <div class="title">Quick Sort (Lomuto)</div>
+          <div class="small">Divide and conquer, average-case fast</div>
+        </div>
+        <div class="counts"><span id="count-quick">steps: 0</span></div>
+      </div>
+      <div class="bars" id="bars-quick"></div>
+      <div class="footer" id="status-quick"></div>
+    </div>
+  </div>
+
+  <div class="explain">
+    Time complexity summary:
+    <ul style="margin:6px 0 0 18px;padding:0;color:var(--muted)">
+      <li><strong>Bubble sort:</strong> O(n^2) comparisons and swaps in the worst and average case; O(n) best case if already sorted with optimized pass.</li>
+      <li><strong>Insertion sort:</strong> O(n^2) worst/average; O(n) best case for nearly-sorted input. Good for small arrays or nearly sorted data.</li>
+      <li><strong>Quick sort:</strong> Average-case O(n log n); worst-case O(n^2) (rare with random pivot or randomized data). Generally much faster on average than bubble/insertion for larger n.</li>
+    </ul>
+  </div>
+
+<script>
+(function(){
+  // Utilities
+  function randArray(n){
+    const a = Array.from({length:n}, (_,i)=>i+1);
+    // Fisher-Yates shuffle
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  // DOM refs
+  const sizeInput = document.getElementById('size');
+  const sizeLabel = document.getElementById('sizeLabel');
+  const speedInput = document.getElementById('speed');
+  const speedLabel = document.getElementById('speedLabel');
+  const randomizeBtn = document.getElementById('randomize');
+  const startBtn = document.getElementById('start');
+  const pauseBtn = document.getElementById('pause');
+  const resetBtn = document.getElementById('reset');
+
+  const barsBubble = document.getElementById('bars-bubble');
+  const barsInsert = document.getElementById('bars-insert');
+  const barsQuick = document.getElementById('bars-quick');
+
+  const countBubble = document.getElementById('count-bubble');
+  const countInsert = document.getElementById('count-insert');
+  const countQuick = document.getElementById('count-quick');
+
+  const statusBubble = document.getElementById('status-bubble');
+  const statusInsert = document.getElementById('status-insert');
+  const statusQuick = document.getElementById('status-quick');
+
+  // State
+  let N = +sizeInput.value;
+  let speed = +speedInput.value;
+  let baseArray = randArray(N);
+  let running = false;
+  let paused = false;
+  let workers = []; // algorithm controllers
+
+  sizeLabel.textContent = N;
+  speedLabel.textContent = speed + ' ms';
+
+  // create bars
+  function renderPanels(arr){
+    [barsBubble, barsInsert, barsQuick].forEach((container)=>{
+      container.innerHTML = '';
+      // create bars proportional height
+      const max = Math.max(...arr);
+      arr.forEach((v, idx)=>{
+        const b = document.createElement('div');
+        b.className = 'bar';
+        b.style.height = (v/max*100) + '%';
+        b.dataset.index = idx;
+        b.title = v;
+        container.appendChild(b);
+      });
+    });
+  }
+
+  function setCounts(b,i,q){
+    countBubble.textContent = 'steps: ' + b;
+    countInsert.textContent = 'steps: ' + i;
+    countQuick.textContent = 'steps: ' + q;
+  }
+
+  function highlight(container,index,cls){
+    const bar = container.children[index];
+    if(!bar) return;
+    bar.classList.add(cls);
+    setTimeout(()=>bar.classList.remove(cls), Math.max(80, speed/2));
+  }
+
+  function swapHeights(container,i,j){
+    const bi = container.children[i];
+    const bj = container.children[j];
+    if(!bi || !bj) return;
+    const hi = bi.style.height;
+    bi.style.height = bj.style.height;
+    bj.style.height = hi;
+    // swap titles for hover values
+    const ti = bi.title, tj = bj.title;
+    bi.title = tj; bj.title = ti;
+  }
+
+  // Algorithm generator wrappers: each yields actions for animation
+  // Actions: {type:'compare'|'swap'|'set'|'markSorted'|'done', i, j}
+  function* bubbleSortGen(arr){
+    const a = arr.slice();
+    const n = a.length;
+    let swapped;
+    for(let pass=0; pass<n-1; pass++){
+      swapped = false;
+      for(let i=0;i<n-1-pass;i++){
+        yield {type:'compare', i, j:i+1};
+        if(a[i] > a[i+1]){
+          // swap
+          [a[i],a[i+1]]=[a[i+1],a[i]];
+          swapped = true;
+          yield {type:'swap', i, j:i+1};
+        }
+      }
+      yield {type:'markSorted', idx: n-1-pass};
+      if(!swapped) break;
+    }
+    // mark remaining sorted
+    for(let k=0;k<n;k++) yield {type:'markSorted', idx:k};
+    yield {type:'done'};
+  }
+
+  function* insertionSortGen(arr){
+    const a = arr.slice();
+    const n = a.length;
+    yield {type:'markSorted', idx:0};
+    for(let i=1;i<n;i++){
+      let j=i;
+      yield {type:'compare', i:j, j:j-1};
+      while(j>0 && a[j] < a[j-1]){
+        // swap in place to visualize insert-by-swapping
+        [a[j],a[j-1]]=[a[j-1],a[j]];
+        yield {type:'swap', i:j, j:j-1};
+        j--;
+        if(j>0) yield {type:'compare', i:j, j:j-1};
+      }
+      yield {type:'markSorted', idx:i};
+    }
+    for(let k=0;k<n;k++) yield {type:'markSorted', idx:k};
+    yield {type:'done'};
+  }
+
+  // Quick sort (iterative with explicit stack) using Lomuto partition, but yielding actions
+  function* quickSortGen(arr){
+    const a = arr.slice();
+    const n = a.length;
+    const stack = [[0,n-1]];
+    while(stack.length){
+      const [lo,hi] = stack.pop();
+      if(lo >= hi){
+        if(lo===hi) yield {type:'markSorted', idx:lo};
+        continue;
+      }
+      // lomuto partition
+      const pivotIndex = hi;
+      const pivot = a[pivotIndex];
+      let i = lo;
+      for(let j=lo;j<hi;j++){
+        yield {type:'compare', i:j, j:pivotIndex};
+        if(a[j] < pivot){
+          [a[i],a[j]]=[a[j],a[i]];
+          yield {type:'swap', i:i, j:j};
+          i++;
+        }
+      }
+      [a[i],a[pivotIndex]]=[a[pivotIndex],a[i]];
+      yield {type:'swap', i:i, j:pivotIndex};
+      // pivot placed at i
+      yield {type:'markSorted', idx:i};
+      // push larger partition first so smaller processed next (to limit stack)
+      if(i+1 < hi) stack.push([i+1,hi]);
+      if(lo < i-1) stack.push([lo,i-1]);
+    }
+    for(let k=0;k<n;k++) yield {type:'markSorted', idx:k};
+    yield {type:'done'};
+  }
+
+  // Controller for a panel
+  function makeWorker(name, container, genFunc, countEl, statusEl){
+    return {
+      name, container, genFunc, gen:null,
+      steps:0,
+      running:false,
+      finished:false,
+      async run(arr){
+        this.steps=0;
+        this.finished=false;
+        countEl.textContent = 'steps: 0';
+        statusEl.textContent = 'running';
+        this.gen = genFunc(arr);
+        this.running = true;
+        while(true){
+          if(!running) { this.running=false; return; } // global stop
+          if(paused){ await new Promise(r=>setTimeout(r, 80)); continue; }
+          const next = this.gen.next();
+          if(next.done) break;
+          const a = next.value;
+          if(a.type==='compare'){
+            this.steps++;
+            countEl.textContent = 'steps: ' + this.steps;
+            highlight(container, a.i, 'comp');
+            highlight(container, a.j, 'comp');
+          } else if(a.type==='swap'){
+            this.steps++;
+            countEl.textContent = 'steps: ' + this.steps;
+            swapHeights(container, a.i, a.j);
+            highlight(container, a.i, 'swap');
+            highlight(container, a.j, 'swap');
+          } else if(a.type==='markSorted'){
+            // color sorted by adding a subtle green tint via style
+            const bar = container.children[a.idx];
+            if(bar) { bar.style.background = 'linear-gradient(180deg, rgba(102,187,106,0.95), rgba(102,187,106,0.85))'; }
+          } else if(a.type==='done'){
+            // nothing
+          }
+          await new Promise(r=>setTimeout(r, speed));
+        }
+        // final update
+        this.finished=true;
+        this.running=false;
+        statusEl.textContent = 'done';
+      }
+    };
+  }
+
+  // Setup initial
+  function initialize(){
+    N = +sizeInput.value;
+    baseArray = randArray(N);
+    renderPanels(baseArray);
+    setCounts(0,0,0);
+    // reset status
+    statusBubble.textContent = '';
+    statusInsert.textContent = '';
+    statusQuick.textContent = '';
+    // reset bar colors
+    Array.from(document.querySelectorAll('.bar')).forEach(b=>{
+      b.style.background = '';
+    });
+    // enable controls
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    resetBtn.disabled = true;
+    running = false;
+    paused = false;
+    workers = [
+      makeWorker('bubble', barsBubble, bubbleSortGen, countBubble, statusBubble),
+      makeWorker('insert', barsInsert, insertionSortGen, countInsert, statusInsert),
+      makeWorker('quick', barsQuick, quickSortGen, countQuick, statusQuick)
+    ];
+  }
+
+  initialize();
+
+  // Controls
+  sizeInput.addEventListener('input', ()=>{
+    sizeLabel.textContent = sizeInput.value;
+  });
+  speedInput.addEventListener('input', ()=>{
+    speed = +speedInput.value;
+    speedLabel.textContent = speed + ' ms';
+  });
+
+  randomizeBtn.addEventListener('click', ()=>{
+    if(running) return;
+    baseArray = randArray(+sizeInput.value);
+    renderPanels(baseArray);
+  });
+
+  startBtn.addEventListener('click', async ()=>{
+    if(running) return;
+    running = true;
+    paused = false;
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    resetBtn.disabled = false;
+    randomizeBtn.disabled = true;
+    sizeInput.disabled = true;
+    speedInput.disabled = false;
+    // render fresh copies per panel (same initial heights)
+    renderPanels(baseArray);
+    // reset counts and statuses
+    setCounts(0,0,0);
+    statusBubble.textContent = 'starting';
+    statusInsert.textContent = 'starting';
+    statusQuick.textContent = 'starting';
+    // recreate workers with fresh gens
+    workers = [
+      makeWorker('bubble', barsBubble, bubbleSortGen, countBubble, statusBubble),
+      makeWorker('insert', barsInsert, insertionSortGen, countInsert, statusInsert),
+      makeWorker('quick', barsQuick, quickSortGen, countQuick, statusQuick)
+    ];
+    // Kick off all three (they run concurrently in JS event loop)
+    const promises = workers.map(w => w.run(baseArray));
+    // also update overall step display occasionally (counts are updated by workers)
+    await Promise.all(promises);
+    running = false;
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    randomizeBtn.disabled = false;
+    sizeInput.disabled = false;
+    resetBtn.disabled = true;
+  });
+
+  pauseBtn.addEventListener('click', ()=>{
+    if(!running) return;
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    running = false;
+    paused = false;
+    pauseBtn.textContent = 'Pause';
+    initialize();
+  });
+
+  // Start by showing an initial random array
+  renderPanels(baseArray);
+
+  // Accessibility: keyboard shortcuts
+  window.addEventListener('keydown', (e)=>{
+    if(e.key===' '){ e.preventDefault(); startBtn.click(); }
+    if(e.key==='p'){ pauseBtn.click(); }
+    if(e.key==='r'){ randomizeBtn.click(); }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        #array-container {
+            display: flex;
+            margin: 20px 0;
+            align-items: center;
+        }
+        
+        .array-element {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        /* Highlight colors */
+        .highlight-low-high {
+            background-color: #ADD8E6; /* Light blue for the search range */
+        }
+        
+        .highlight-mid {
+            background-color: #90EE90; /* Light green for the middle element */
+        }
+        
+        .highlight-found {
+            background-color: #FF0; /* Yellow for found element */
+        }
+        
+        #status {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        #controls {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binary Search Visualizer</h1>
+    <p>Array: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]</p>
+    
+    <label for="target-input">Enter target number: </label>
+    <input type="number" id="target-input" placeholder="e.g., 7">
+    <button id="start-button">Start Search</button>
+    <button id="step-button" disabled>Step</button>
+    
+    <div id="array-container"></div>
+    
+    <div id="status">Status: Enter a target and click 'Start Search' to begin.</div>
+    
+    <script>
+        // Sorted array
+        const array = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
+        let low = 0;
+        let high = array.length - 1;
+        let mid = null;
+        let target = null;
+        let isSearching = false;
+        let foundIndex = null;
+        
+        // Function to render the array with highlights
+        function renderArray() {
+            const container = document.getElementById('array-container');
+            container.innerHTML = ''; // Clear previous content
+            
+            array.forEach((value, index) => {
+                const element = document.createElement('div');
+                element.className = 'array-element';
+                element.textContent = value;
+                
+                // Add highlights based on current state
+                if (isSearching) {
+                    if (index >= low && index <= high) {
+                        element.classList.add('highlight-low-high');  // Highlight search range
+                    }
+                    if (index === mid) {
+                        element.classList.add('highlight-mid');  // Highlight middle
+                    }
+                    if (index === foundIndex) {
+                        element.classList.add('highlight-found');  // Highlight found element
+                    }
+                }
+                
+                container.appendChild(element);
+            });
+        }
+        
+        // Function to perform one step of binary search
+        function stepSearch() {
+            if (!isSearching || low > high) {
+                // Search has ended
+                document.getElementById('step-button').disabled = true;
+                if (foundIndex !== null) {
+                    document.getElementById('status').textContent = `Status: Target ${target} found at index ${foundIndex}!`;
+                } else {
+                    document.getElementById('status').textContent = `Status: Target ${target} not found.`;
+                }
+                return;
+            }
+            
+            mid = Math.floor((low + high) / 2);
+            
+            document.getElementById('status').textContent = `Status: Low: ${low}, High: ${high}, Mid: ${mid}, Value at Mid: ${array[mid]}`;
+            
+            if (array[mid] === target) {
+                foundIndex = mid;
+                isSearching = false;  // End search
+            } else if (array[mid] < target) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+            
+            renderArray();  // Update visualization
+        }
+        
+        // Event listeners
+        document.getElementById('start-button').addEventListener('click', () => {
+            target = parseInt(document.getElementById('target-input').value);
+            if (isNaN(target)) {
+                alert('Please enter a valid number.');
+                return;
+            }
+            
+            low = 0;
+            high = array.length - 1;
+            mid = null;
+            foundIndex = null;
+            isSearching = true;
+            document.getElementById('step-button').disabled = false;  // Enable step button
+            document.getElementById('status').textContent = 'Status: Search started. Click "Step" to proceed.';
+            renderArray();  // Initial render with search range
+        });
+        
+        document.getElementById('step-button').addEventListener('click', stepSearch);
+        
+        // Initial render of the array
+        renderArray();
+    </script>
+</body>
+</html>

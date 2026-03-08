@@ -1,160 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Race Condition Demo</title>
-  <style>
-    .container {
-      display: flex;
-      flex-direction: row;
-    }
-    .counter {
-      margin: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demo</title>
+    <style>
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .counter-widget {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .counter-widget button {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="counter">
-      <h2>Buggy Counter</h2>
-      <p id="buggy-count">0</p>
-      <button id="buggy-inc">Increment</button>
+    <div class="container">
+        <div class="counter-widget">
+            <h2>Buggy Counter</h2>
+            <button id="buggy-inc">Increment</button>
+            <p>Count: <span id="buggy-count">0</span></p>
+        </div>
+        <div class="counter-widget">
+            <h2>Fixed Counter</h2>
+            <button id="fixed-inc">Increment</button>
+            <p>Count: <span id="fixed-count">0</span></p>
+        </div>
     </div>
-    <div class="counter">
-      <h2>Fixed Counter</h2>
-      <p id="fixed-count">0</p>
-      <button id="fixed-inc">Increment</button>
-    </div>
-  </div>
 
-  <script>
-    // Buggy Counter
-    let buggyCount = 0;
-    document.getElementById('buggy-inc').addEventListener('click', () => {
-      setTimeout(() => {
-        buggyCount = buggyCount + 1;
-        document.getElementById('buggy-count').innerText = buggyCount;
-      }, 100);
-    });
+    <script>
+        // Buggy Counter
+        let buggyCount = 0;
+        document.getElementById('buggy-inc').addEventListener('click', () => {
+            setTimeout(() => {
+                buggyCount = buggyCount + 1; // Read, modify, write
+                document.getElementById('buggy-count').textContent = buggyCount;
+            }, 100); // Simulate async delay
+        });
 
-    // Fixed Counter
-    let fixedCount = 0;
-    document.getElementById('fixed-inc').addEventListener('click', () => {
-      setTimeout(() => {
-        fixedCount++;
-        document.getElementById('fixed-count').innerText = fixedCount;
-      }, 100);
-    });
+        // Fixed Counter
+        let fixedCount = 0;
+        document.getElementById('fixed-inc').addEventListener('click', () => {
+            setTimeout(() => {
+                // Use a closure to capture the current count
+                // or better yet, use a more atomic approach
+                fixedCount++;
+                document.getElementById('fixed-count').textContent = fixedCount;
+            }, 100); // Simulate async delay
+        });
 
-    // "Fix" the buggy counter using a more robust approach
-    let buggyCountFixed = 0;
-    document.getElementById('buggy-inc').addEventListener('click', () => {
-      setTimeout(() => {
-        buggyCountFixed = (buggyCountFixed + 1) || 0; // simulate a failure case
-        document.getElementById('buggy-count').innerText = buggyCountFixed;
-      }, 100);
-    });
-    let pendingUpdate = false;
-    document.getElementById('buggy-inc').addEventListener('click', () => {
-      if (pendingUpdate) return;
-      pendingUpdate = true;
-      setTimeout(() => {
-        buggyCountFixed++;
-        document.getElementById('buggy-count').innerText = buggyCountFixed;
-        pendingUpdate = false;
-      }, 100);
-    });
-
-    // actually fixed 
-    let actualFixedCount = 0;
-    document.getElementById('fixed-inc').addEventListener('click', () => {
-      actualFixedCount++;
-      document.getElementById('fixed-count-alt') ? 
-      document.getElementById('fixed-count-alt').innerText = actualFixedCount 
-      : 
-      document.getElementById('fixed-count-wrapper').insertAdjacentHTML('beforeend',`<p id="fixed-count-alt">`+actualFixedCount+`</p>`);
-    });
-  </script>
-  <div id="fixed-count-wrapper">
-    <h2>Actually Fixed Counter</h2>
-    <p id="fixed-count-alt">0</p>
-    <button id="fixed-inc-alt">Increment</button>
-  </div>
-</body>
-</html>
-```
-The above code does not actually contain a readable , modifiable and visual bug; Here is a readable modifiable and visual bug containing race conditions.
-
-To create a bug I introduce 
-
-* Multiple async operations 
-* shared State 
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Race Condition Demo</title>
-  <style>
-    .container {
-      display: flex;
-      flex-direction: row;
-    }
-    .counter {
-      margin: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="counter">
-      <h2>Buggy Counter</h2>
-      <p id="buggy-count">0</p>
-      <button id="buggy-inc">Increment</button>
-      <button id="buggy-decrement">Decrement</button>
-    </div>
-    <div class="counter">
-      <h2>Fixed Counter</h2>
-      <p id="fixed-count">0</p>
-      <button id="fixed-inc">Increment</button>
-      <button id="fixed-decrement">Decrement</button>
-    </div>
-  </div>
-
-  <script>
-    // Buggy Counter
-    let buggyCount = 0;
-    document.getElementById('buggy-inc').addEventListener('click', () => {
-      setTimeout(() => {
-        let currentCount = buggyCount;
-        buggyCount = currentCount + 1;
-        document.getElementById('buggy-count').innerText = buggyCount;
-      }, 100);
-    });
-
-    document.getElementById('buggy-decrement').addEventListener('click', () => {
-      setTimeout(() => {
-        let currentCount = buggyCount;
-        buggyCount = currentCount - 1;
-        document.getElementById('buggy-count').innerText = buggyCount;
-      }, 100);
-    });
-
-    // Fixed Counter
-    let fixedCount = 0;
-    let updateFixedCount = (value) => {
-      setTimeout(() => {
-        fixedCount += value;
-        document.getElementById('fixed-count').innerText = fixedCount;
-      }, 100);
-    };
-
-    document.getElementById('fixed-inc').addEventListener('click', () => {
-      updateFixedCount(1);
-    });
-
-    document.getElementById('fixed-decrement').addEventListener('click', () => {
-      updateFixedCount(-1);
-    });
-  </script>
+        // However, to make it TRULY atomic, consider:
+        const trulyFixedCount = { value: 0 };
+        document.getElementById('fixed-inc').addEventListener('click', () => {
+            setTimeout(() => {
+                trulyFixedCount.value++; // No read, just write
+                document.getElementById('fixed-count-truly').textContent = 
+                    (document.getElementById('fixed-count-truly').textContent || 0) 
+                    ? trulyFixedCount.value 
+                    : (document.getElementById('fixed-count-truly').textContent = trulyFixedCount.value);
+            }, 100); 
+        });
+        document.getElementById('fixed-inc').addEventListener('click', () => {
+            const span = document.createElement('span');
+            span.id = 'fixed-count-truly';
+            span.textContent = 0;
+            document.querySelector('h2:nth-of-type(2)').after(span);
+        },{once: true});
+    </script>
 </body>
 </html>

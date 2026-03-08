@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Race Condition Demo: Buggy vs Fixed Counter</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; background: #f5f7fb; color: #111; }
+  h1 { margin-top: 0; }
+  .container { display: flex; gap: 20px; align-items: flex-start; }
+  .card { background: white; border-radius: 8px; box-shadow: 0 6px 18px rgba(20,30,70,0.07); padding: 16px; width: 420px; }
+  .title { font-weight: 700; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center; }
+  .count { font-size: 48px; font-weight: 700; margin: 8px 0; text-align:center; }
+  .controls { display:flex; gap:8px; justify-content:center; margin-top: 8px; }
+  button { padding: 8px 12px; border-radius:6px; border: 1px solid #c9d4ee; background: linear-gradient(#fff,#f6f9ff); cursor:pointer; }
+  button:active { transform: translateY(1px); }
+  .explain { margin-top: 12px; background:#f0f4ff; border:1px solid #d6e2ff; padding:10px; border-radius:6px; font-size:14px; color:#07204a; }
+  .log { margin-top:10px; max-height:160px; overflow:auto; font-family: monospace; font-size:12px; background:#0b1220; color:#cfe8ff; padding:8px; border-radius:6px; }
+  .footer { margin-top:16px; font-size:13px; color:#334155; }
+  .label { font-size:13px; color:#334155; text-align:center; }
+  .speed { text-align:center; margin-top:8px; }
+  input[type=range] { width:100%; }
+  .small { font-size:12px; color:#556; }
+</style>
+</head>
+<body>
+  <h1>Race condition demo: Buggy vs Fixed counter</h1>
+  <p class="small">Click the "Increment" buttons rapidly (or hold the mouse) to trigger asynchronous overlapping updates. The buggy version can lose increments. The fixed version serializes updates so the count never falls behind.</p>
+
+  <div class="container">
+    <div class="card" id="buggyCard">
+      <div class="title">
+        <div>Buggy counter (race-prone)</div>
+        <div class="label">Shared state: single number</div>
+      </div>
+
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="flex:1">
+          <div class="count" id="buggyDisplay">0</div>
+          <div class="controls">
+            <button id="buggyInc">Increment</button>
+            <button id="buggySpam">Start Rapid Click</button>
+            <button id="buggyStop">Stop</button>
+          </div>
+          <div class="speed">
+            Delay multiplier: <input id="buggyDelay" type="range" min="0" max="2000" step="50" value="600">
+            <div class="small">Adds random delay up to chosen ms to simulate async work.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="explain" id="buggyExplain">
+        How it works (buggy): on click we read the current shared count, wait asynchronously (random delay),
+        then write back (readValue + 1). If two clicks read the same value before either writes, one write overwrites the other and a count increment is lost.
+      </div>
+
+      <div class="log" id="buggyLog" aria-live="polite"></div>
+    </div>
+
+    <div class="card" id="fixedCard">
+      <div class="title">
+        <div>Fixed counter (sequential)</div>
+        <div class="label">Applies updates one at a time</div>
+      </div>
+
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="flex:1">
+          <div class="count" id="fixedDisplay">0</div>
+          <div class="controls">
+            <button id="fixedInc">Increment</button>
+            <button id="fixedSpam">Start Rapid Click</button>
+            <button id="fixedStop">Stop</button>
+          </div>
+          <div class="speed">
+            Delay multiplier: <input id="fixedDelay" type="range" min="0" max="2000" step="50" value="600">
+            <div class="small">Same asynchronous delay, but updates are queued and processed sequentially.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="explain" id="fixedExplain">
+        Fix approach: queue each increment request and process them one-by-one. Each queued job reads the current value only when it runs, ensuring no concurrent reads/writes can conflict.
+      </div>
+
+      <div class="log" id="fixedLog" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Notes:
+    <ul>
+      <li>Rapidly click both Increment buttons and watch logs. The buggy counter may skip increments when multiple async handlers overlap.</li>
+      <li>The fixed counter sacrifices some concurrency for correctness by serializing updates; other techniques include optimistic compare-and-swap or using atomic operations where available.</li>
+    </ul>
+  </div>
+
+<script>
+(function(){
+  // Utility: random delay up to max ms
+  function randDelay(max) {
+    return Math.floor(Math.random() * (Number(max) || 0));
+  }
+
+  // ---------- Buggy counter implementation ----------
+  const buggyState = { count: 0 };
+  const buggyDisplay = document.getElementById('buggyDisplay');
+  const buggyLog = document.getElementById('buggyLog');
+  const buggyDelayRange = document.getElementById('buggyDelay');
+
+  function buggyLogLine(text) {
+    const el = document.createElement('div');
+    el.textContent = text;
+    buggyLog.appendChild(el);
+    // keep log length reasonable
+    if (buggyLog.childElementCount > 200) buggyLog.removeChild(buggyLog.firstChild);
+    buggyLog.scrollTop = buggyLog.scrollHeight;
+  }
+
+  function buggyAsyncIncrement(callerId) {
+    // read shared value immediately
+    const readValue = buggyState.count;
+    const delay = randDelay(buggyDelayRange.value) + 20; // ensure some delay
+    buggyLogLine(`[${callerId}] READ ${readValue} -> scheduling write +1 after ${delay}ms`);
+    // asynchronous work (e.g., network, timeout)
+    setTimeout(() => {
+      const newValue = readValue + 1;
+      buggyLogLine(`[${callerId}] WRITING ${newValue} (overwriting current ${buggyState.count})`);
+      buggyState.count = newValue; // potential overwrite of concurrent updates
+      buggyDisplay.textContent = buggyState.count;
+    }, delay);
+  }
+
+  document.getElementById('buggyInc').addEventListener('click', () => {
+    const id = Math.random().toString(36).slice(2,7);
+    buggyAsyncIncrement(id);
+  });
+
+  // rapid click helper
+  let buggySpamTimer = null;
+  document.getElementById('buggySpam').addEventListener('click', () => {
+    if (buggySpamTimer) return;
+    buggyLogLine('--- START rapid clicks ---');
+    buggySpamTimer = setInterval(() => {
+      document.getElementById('buggyInc').click();
+    }, 40); // click ~25 times per second
+  });
+  document.getElementById('buggyStop').addEventListener('click', () => {
+    if (buggySpamTimer) {
+      clearInterval(buggySpamTimer); buggySpamTimer = null;
+      buggyLogLine('--- STOP rapid clicks ---');
+    }
+  });
+
+  // ---------- Fixed counter implementation (queue) ----------
+  const fixedState = { count: 0 };
+  const fixedDisplay = document.getElementById('fixedDisplay');
+  const fixedLog = document.getElementById('fixedLog');
+  const fixedDelayRange = document.getElementById('fixedDelay');
+
+  function fixedLogLine(text) {
+    const el = document.createElement('div');
+    el.textContent = text;
+    fixedLog.appendChild(el);
+    if (fixedLog.childElementCount > 200) fixedLog.removeChild(fixedLog.firstChild);
+    fixedLog.scrollTop = fixedLog.scrollHeight;
+  }
+
+  // A simple queue that serializes update tasks.
+  const fixedQueue = {
+    tasks: [],
+    running: false,
+    enqueue(task) {
+      this.tasks.push(task);
+      if (!this.running) this.runNext();
+    },
+    runNext() {
+      if (this.tasks.length === 0) {
+        this.running = false;
+        return;
+      }
+      this.running = true;
+      const task = this.tasks.shift();
+      // run task (task returns a Promise)
+      task().then(() => {
+        // next
+        this.runNext();
+      }).catch((err) => {
+        fixedLogLine('Task error: ' + String(err));
+        this.runNext();
+      });
+    }
+  };
+
+  // Each increment enqueues a job. The job reads current value when it runs,
+  // performs async delay, then writes incremented value.
+  function fixedEnqueueIncrement(callerId) {
+    fixedQueue.enqueue(() => {
+      // This function returns a Promise
+      return new Promise((resolve) => {
+        const delay = randDelay(fixedDelayRange.value) + 20;
+        fixedLogLine(`[${callerId}] QUEUED -> will run now, read current ${fixedState.count}, wait ${delay}ms, then write +1`);
+        // read current only when job executes (we are single-threaded here)
+        const readValue = fixedState.count;
+        setTimeout(() => {
+          const newValue = readValue + 1;
+          fixedLogLine(`[${callerId}] WRITING ${newValue} (current was ${fixedState.count})`);
+          fixedState.count = newValue;
+          fixedDisplay.textContent = fixedState.count;
+          resolve();
+        }, delay);
+      });
+    });
+  }
+
+  document.getElementById('fixedInc').addEventListener('click', () => {
+    const id = Math.random().toString(36).slice(2,7);
+    fixedEnqueueIncrement(id);
+  });
+
+  // rapid click helper for fixed
+  let fixedSpamTimer = null;
+  document.getElementById('fixedSpam').addEventListener('click', () => {
+    if (fixedSpamTimer) return;
+    fixedLogLine('--- START rapid clicks ---');
+    fixedSpamTimer = setInterval(() => {
+      document.getElementById('fixedInc').click();
+    }, 40);
+  });
+  document.getElementById('fixedStop').addEventListener('click', () => {
+    if (fixedSpamTimer) {
+      clearInterval(fixedSpamTimer); fixedSpamTimer = null;
+      fixedLogLine('--- STOP rapid clicks ---');
+    }
+  });
+
+  // Optional: let user reset both counters by double-clicking the display.
+  function addReset(displayEl, stateObj, logFunc) {
+    displayEl.addEventListener('dblclick', () => {
+      stateObj.count = 0;
+      displayEl.textContent = '0';
+      logFunc('RESET to 0');
+    });
+  }
+  addReset(buggyDisplay, buggyState, buggyLogLine);
+  addReset(fixedDisplay, fixedState, fixedLogLine);
+
+  // Seed logs with instructions
+  buggyLogLine('Tip: double-click the display to reset to 0. Use Start Rapid Click to reproduce race.');
+  fixedLogLine('Tip: double-click the display to reset to 0. Uses a queue to serialize updates.');
+
+})();
+</script>
+</body>
+</html>

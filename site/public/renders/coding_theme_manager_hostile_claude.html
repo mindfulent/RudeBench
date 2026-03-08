@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Singleton Theme Manager</title>
   <style>
     * {
@@ -11,256 +11,955 @@
       box-sizing: border-box;
     }
 
-    :root {
-      --transition-speed: 0.3s;
-    }
-
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      transition: background-color var(--transition-speed), color var(--transition-speed);
+      transition: background 0.3s, color 0.3s;
       min-height: 100vh;
       padding: 2rem;
     }
 
-    /* ── LIGHT THEME ── */
+    /* ── Theme tokens applied by JS to :root ── */
     body.light {
-      background-color: #f0f4f8;
-      color: #1a202c;
+      --bg:          #f0f4f8;
+      --surface:     #ffffff;
+      --surface-alt: #e8edf2;
+      --border:      #cbd5e0;
+      --text:        #1a202c;
+      --text-muted:  #4a5568;
+      --accent:      #3b82f6;
+      --accent-hover:#2563eb;
+      --danger:      #ef4444;
+      --success:     #22c55e;
+      --warning:     #f59e0b;
+      --shadow:      rgba(0,0,0,0.08);
     }
 
-    body.light .card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    body.light .navbar {
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-
-    body.light .badge {
-      background: #ebf8ff;
-      color: #2b6cb0;
-      border: 1px solid #bee3f8;
-    }
-
-    body.light .btn-primary {
-      background: #3182ce;
-      color: #ffffff;
-    }
-
-    body.light .btn-primary:hover {
-      background: #2b6cb0;
-    }
-
-    body.light .btn-secondary {
-      background: #edf2f7;
-      color: #4a5568;
-      border: 1px solid #e2e8f0;
-    }
-
-    body.light .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-
-    body.light .code-block {
-      background: #1a202c;
-      color: #e2e8f0;
-    }
-
-    body.light .sidebar {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-    }
-
-    body.light .tag {
-      background: #f7fafc;
-      border: 1px solid #e2e8f0;
-      color: #4a5568;
-    }
-
-    body.light .status-bar {
-      background: #edf2f7;
-      border: 1px solid #e2e8f0;
-    }
-
-    body.light .toggle-btn {
-      background: #1a202c;
-      color: #f0f4f8;
-    }
-
-    body.light .toggle-btn:hover {
-      background: #2d3748;
-    }
-
-    body.light .alert {
-      background: #fff5f5;
-      border: 1px solid #fed7d7;
-      color: #c53030;
-    }
-
-    body.light .progress-bar-bg {
-      background: #e2e8f0;
-    }
-
-    body.light .progress-bar-fill {
-      background: #3182ce;
-    }
-
-    /* ── DARK THEME ── */
     body.dark {
-      background-color: #0f1117;
-      color: #e2e8f0;
+      --bg:          #0f1117;
+      --surface:     #1a1d27;
+      --surface-alt: #252836;
+      --border:      #2d3148;
+      --text:        #e2e8f0;
+      --text-muted:  #94a3b8;
+      --accent:      #60a5fa;
+      --accent-hover:#93c5fd;
+      --danger:      #f87171;
+      --success:     #4ade80;
+      --warning:     #fbbf24;
+      --shadow:      rgba(0,0,0,0.4);
     }
 
-    body.dark .card {
-      background: #1a1d27;
-      border: 1px solid #2d3748;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    body {
+      background: var(--bg);
+      color: var(--text);
     }
 
-    body.dark .navbar {
-      background: #1a1d27;
-      border-bottom: 1px solid #2d3748;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    .page-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
     }
 
-    body.dark .badge {
-      background: #1a365d;
-      color: #90cdf4;
-      border: 1px solid #2a4a7f;
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.75rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px var(--shadow);
     }
 
-    body.dark .btn-primary {
-      background: #4299e1;
-      color: #ffffff;
+    .header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.3px;
     }
 
-    body.dark .btn-primary:hover {
-      background: #3182ce;
+    .header p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
 
-    body.dark .btn-secondary {
-      background: #2d3748;
-      color: #a0aec0;
-      border: 1px solid #4a5568;
+    /* ── Toggle Button ── */
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: all 0.2s;
     }
 
-    body.dark .btn-secondary:hover {
-      background: #4a5568;
+    .toggle-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
     }
 
-    body.dark .code-block {
-      background: #0d1117;
-      color: #79c0ff;
+    .toggle-btn .icon {
+      font-size: 1.1rem;
+      transition: transform 0.4s;
     }
 
-    body.dark .sidebar {
-      background: #1a1d27;
-      border: 1px solid #2d3748;
+    .toggle-btn:hover .icon {
+      transform: rotate(20deg);
     }
 
-    body.dark .tag {
-      background: #2d3748;
-      border: 1px solid #4a5568;
-      color: #a0aec0;
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
     }
 
-    body.dark .status-bar {
-      background: #1a1d27;
-      border: 1px solid #2d3748;
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    body.dark .toggle-btn {
-      background: #e2e8f0;
-      color: #0f1117;
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow);
     }
 
-    body.dark .toggle-btn:hover {
-      background: #cbd5e0;
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
     }
 
-    body.dark .alert {
-      background: #1a0a0a;
-      border: 1px solid #742a2a;
-      color: #fc8181;
+    /* ── Stat Card ── */
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
     }
 
-    body.dark .progress-bar-bg {
-      background: #2d3748;
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
     }
 
-    body.dark .progress-bar-fill {
-      background: #4299e1;
+    .stat-bar {
+      height: 6px;
+      background: var(--surface-alt);
+      border-radius: 99px;
+      margin-top: 1rem;
+      overflow: hidden;
     }
 
-    /* ── LAYOUT ── */
-    .navbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
+    .stat-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--accent);
+      transition: width 0.6s ease;
+    }
+
+    /* ── Alert Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-danger  { background: var(--danger);  color: #fff; }
+    .badge-success { background: var(--success);  color: #fff; }
+    .badge-warning { background: var(--warning);  color: #fff; }
+
+    .alert-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 2rem;
-      z-index: 100;
-      transition: background-color var(--transition-speed), border-color var(--transition-speed);
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
     }
 
-    .navbar-brand {
-      font-weight: 700;
-      font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+    .alert-row:last-child { border-bottom: none; }
+
+    /* ── Code Block ── */
+    .code-block {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--text);
+      overflow-x: auto;
     }
 
-    .navbar-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+    .code-keyword  { color: var(--accent); font-weight: 700; }
+    .code-string   { color: var(--success); }
+    .code-comment  { color: var(--text-muted); font-style: italic; }
+    .code-fn       { color: var(--warning); }
 
-    .main-content {
-      margin-top: 80px;
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 1.5rem;
-      max-width: 1100px;
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 80px;
-    }
-
-    .sidebar {
+    /* ── Log Panel ── */
+    .log-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.5rem;
-      height: fit-content;
-      position: sticky;
-      top: 80px;
-      transition: background-color var(--transition-speed), border-color var(--transition-speed);
+      box-shadow: 0 2px 12px var(--shadow);
+      margin-bottom: 1.5rem;
     }
 
-    .sidebar h3 {
+    .log-panel h3 {
       font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      opacity: 0.5;
+      letter-spacing: 1px;
+      color: var(--text-muted);
       margin-bottom: 1rem;
     }
 
-    .sidebar-item {
-      padding: 0.6rem 0.8rem;
-      border-radius: 8px;
-      margin-bottom: 0.25rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background-color 0.15s;
+    .log-entries {
+      max-height: 140px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
     }
 
-    .sidebar-item:hover {
-      opacity: 0.8;
+    .log-entry {
+      font-size: 0.78rem;
+      font-family: monospace;
+      color: var(--text-muted);
+      padding: 0.3rem 0.6rem;
+      background: var(--surface-alt);
+      border-radius: 4px;
+      border-left: 3px solid var(--accent);
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Instance Counter ── */
+    .instance-box {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .instance-count {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--success);
+      line-height: 1;
+    }
+
+    .instance-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    /* ── Form ── */
+    .form-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .form-input {
+      flex: 1;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus { border-color: var(--accent); }
+
+    .form-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1.1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .form-btn:hover { background: var(--accent-hover); }
+
+    /* ── Subscribe list ── */
+    .sub-list {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .sub-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      padding: 0.45rem 0.75rem;
+      background: var(--surface-alt);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .sub-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    /* ── Discussion Section ── */
+    .discussion {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+
+    .discussion h2 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .discussion h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 1.5rem 0 0.6rem;
+    }
+
+    .discussion p, .discussion li {
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: var(--text-muted);
+    }
+
+    .discussion ul, .discussion ol {
+      padding-left: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .discussion li::marker { color: var(--accent); }
+
+    .pro-con-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+
+    .pro-box, .con-box {
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.82rem;
+      line-height: 1.65;
+    }
+
+    .pro-box {
+      background: color-mix(in srgb, var(--success) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+    }
+
+    .con-box {
+      background: color-mix(in srgb, var(--danger) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    }
+
+    .pro-box strong { color: var(--success); }
+    .con-box strong { color: var(--danger); }
+
+    .callout {
+      background: color-mix(in srgb, var(--warning) 12%, transparent);
+      border-left: 4px solid var(--warning);
+      border-radius: 0 8px 8px 0;
+      padding: 0.85rem 1.1rem;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .callout strong { color: var(--warning); }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding-bottom: 1rem;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface-alt); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    @media (max-width: 600px) {
+      .pro-con-grid { grid-template-columns: 1fr; }
+      .header { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body class="light">
+
+<div class="page-wrapper">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="header">
+    <div>
+      <h1>⚙ Singleton Theme Manager</h1>
+      <p>One instance. Global state. Real consequences.</p>
+    </div>
+    <button class="toggle-btn" id="themeToggle" onclick="ThemeManager.getInstance().toggle()">
+      <span class="icon">🌙</span>
+      <span class="label">Dark Mode</span>
+    </button>
+  </header>
+
+  <!-- ══════════ STATS ROW ══════════ -->
+  <div class="grid">
+
+    <!-- Stat 1 -->
+    <div class="card">
+      <div class="card-title">📡 Singleton Calls</div>
+      <div class="stat-value" id="callCount">0</div>
+      <div class="stat-label">getInstance() invocations</div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="callBar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Stat 2 -->
+    <div class="card">
+      <div class="card-title">🔄 Theme Toggles</div>
+      <div class="stat-value" id="toggleCount">0</div>
+      <div class="stat-label">times theme was changed</div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="toggleBar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Instance proof -->
+    <div class="card">
+      <div class="card-title">🔒 Instance Count</div>
+      <div class="instance-box">
+        <div class="instance-count" id="instanceCount">1</div>
+        <div class="instance-note">Always exactly one.<br/>No matter how many times you call getInstance().</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ ALERTS + CODE ══════════ -->
+  <div class="grid">
+
+    <!-- Alert panel — reacts to theme -->
+    <div class="card">
+      <div class="card-title">🚨 System Alerts</div>
+      <div class="alert-row">
+        <span>Global theme state</span>
+        <span class="badge badge-success" id="alertTheme">LIGHT</span>
+      </div>
+      <div class="alert-row">
+        <span>Singleton initialized</span>
+        <span class="badge badge-success">READY</span>
+      </div>
+      <div class="alert-row">
+        <span>Observer count</span>
+        <span class="badge badge-warning" id="observerBadge">0</span>
+      </div>
+      <div class="alert-row">
+        <span>localStorage sync</span>
+        <span class="badge badge-success">ACTIVE</span>
+      </div>
+    </div>
+
+    <!-- Singleton source snippet -->
+    <div class="card" style="grid-column: span 1;">
+      <div class="card-title">💻 The Singleton Core</div>
+      <div class="code-block">
+<span class="code-keyword">class</span> <span class="code-fn">ThemeManager</span> {<br>
+&nbsp;&nbsp;<span class="code-keyword">static</span> #instance = <span class="code-keyword">null</span>;<br>
+&nbsp;&nbsp;<span class="code-keyword">constructor</span>() {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span> (ThemeManager.#instance)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> ThemeManager.#instance;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ThemeManager.#instance = <span class="code-keyword">this</span>;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="code-keyword">static</span> <span class="code-fn">getInstance</span>() {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment">// Same object. Every. Time.</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> ThemeManager.#instance<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?? (ThemeManager.#instance =<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">new</span> <span class="code-fn">ThemeManager</span>());<br>
+&nbsp;&nbsp;}<br>
+}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ SUBSCRIBER DEMO ══════════ -->
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-title">📬 Subscribe to Theme Changes</div>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.5rem;">
+        Add named observers. Each will fire on every toggle, demonstrating the hidden coupling problem.
+      </p>
+      <div class="form-row">
+        <input class="form-input" id="subName" placeholder="Observer name e.g. NavBar" maxlength="20"/>
+        <button class="form-btn" onclick="addObserver()">Subscribe</button>
+      </div>
+      <div class="sub-list" id="subList"></div>
+    </div>
+
+    <!-- Event log -->
+    <div class="card">
+      <div class="card-title">📋 Event Log</div>
+      <div class="log-entries" id="logEntries">
+        <div class="log-entry">System ready — awaiting events…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ LOG PANEL (full width) ══════════ -->
+  <div class="log-panel">
+    <h3>🧵 Observer Notification Trace</h3>
+    <div class="log-entries" id="traceLog">
+      <div class="log-entry">No observers notified yet.</div>
+    </div>
+  </div>
+
+  <!-- ══════════ DISCUSSION ══════════ -->
+  <div class="discussion">
+    <h2>🔍 The Real Problem With Singletons</h2>
+
+    <p>
+      The demo above works perfectly. The theme propagates everywhere, state is consistent,
+      and there's exactly one instance. So what's the problem?
+      The problem is that <strong style="color:var(--text)">working and well-designed are not the same thing.</strong>
+    </p>
+
+    <h3>1. Global State Is the Root Issue</h3>
+    <p>
+      A Singleton is just a globally accessible object with a fancy name. Every piece of code that
+      calls <code style="color:var(--accent)">ThemeManager.getInstance()</code> is implicitly depending on
+      shared mutable state. That dependency is invisible — it doesn't appear in any function signature,
+      constructor parameter, or interface. You can't tell from the outside that a module reaches into
+      global state without reading its internals.
+    </p>
+
+    <h3>2. Testing Becomes a Nightmare</h3>
+    <p>
+      Because the instance persists across the lifetime of a process, unit tests bleed into each other.
+      Test A toggles the theme to dark. Test B assumes it starts in light. Test B fails — but only
+      when run after Test A, and only on Tuesdays when Jenkins decides to run them in alphabetical order.
+      You end up writing teardown hooks to reset global state, which is a sign you've already lost.
+    </p>
+
+    <div class="callout">
+      <strong>⚠ The Real Tell:</strong> If you find yourself writing
+      <code>ThemeManager._resetForTesting()</code>, the pattern has already cost you more than it saved.
+    </div>
+
+    <h3>3. It Violates Dependency Inversion</h3>
+    <p>
+      Components that call <code style="color:var(--accent)">getInstance()</code> directly are hardcoded
+      to a specific concrete implementation. You cannot swap in a different theme strategy, a test double,
+      or a server-side-rendering-safe alternative without modifying every call site. Contrast this with
+      injecting a <code style="color:var(--accent)">ThemeService</code> interface — the consumer doesn't
+      care how many instances exist.
+    </p>
+
+    <h3>4. Concurrency and SSR Are Silent Killers</h3>
+    <p>
+      In a Node.js SSR environment, your "one instance" is shared across all incoming HTTP requests.
+      User A's dark mode preference leaks into User B's server-rendered HTML. In multi-threaded
+      environments the lazy initialization path has a race condition unless you add locking — at which
+      point you're managing infrastructure for the privilege of having global state.
+    </p>
+
+    <h3>5. The Observer Coupling Shown Above</h3>
+    <p>
+      The subscriber demo illustrates a real trap. Every component that subscribes to the Singleton
+      is now coupled to its event model. When the Singleton changes its notification API, every
+      subscriber breaks. The Singleton becomes a God Object — it knows about everything because
+      everything knows about it.
+    </p>
+
+    <div class="pro-con-grid">
+      <div class="pro-box">
+        <strong>✓ When Singletons Are Defensible</strong><br><br>
+        <ul style="padding-left:1rem;">
+          <li>Truly stateless service locators</li>
+          <li>Immutable config loaded once at boot</li>
+          <li>Hardware-bound resources (one GPU context)</li>
+          <li>Logger — when you genuinely don't care about test isolation</li>
+          <li>Small scripts with no test suite and no collaborators</li>
+        </ul>
+      </div>
+      <div class="con-box">
+        <strong>✗ When You Should Refuse</strong><br><br>
+        <ul style="padding-left:1rem;">
+          <li>Any mutable shared state in a tested codebase</li>
+          <li>SSR / multi-tenant server environments</li>
+          <li>Anything a component should receive, not reach for</li>
+          <li>When "one instance" is an assumption, not a hard constraint</li>
+          <li>When future you might need two instances (spoiler: you will)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Better Alternatives</h3>
+    <ol>
+      <li>
+        <strong style="color:var(--text)">Dependency Injection</strong> — Pass the service in.
+        The container manages lifetime. Components stay testable and decoupled.
+      </li>
+      <li>
+        <strong style="color:var(--text)">React Context / Svelte Stores / Vue provide-inject</strong> —
+        Framework-native scoped state that doesn't leak across component trees or requests.
+      </li>
+      <li>
+        <strong style="color:var(--text)">Module-level constants</strong> — If the value is truly
+        immutable, a plain ES module export is a Singleton without the ceremony or the footguns.
+      </li>
+      <li>
+        <strong style="color:var(--text)">Event bus with explicit subscription management</strong> —
+        Decouple producers and consumers without a shared object reference.
+      </li>
+      <li>
+        <strong style="color:var(--text)">Zustand / Redux / Signals</strong> — Purpose-built global
+        state with time-travel debugging, middleware, and test utilities built in.
+      </li>
+    </ol>
+
+    <div class="callout">
+      <strong>💡 The Honest Summary:</strong>
+      The Singleton pattern solves a real problem — controlled access to a shared resource.
+      It's overused because it's <em>easy</em>: one class, one static method, done.
+      The cost is paid later, in test suites that require careful ordering, in SSR bugs that
+      only appear in production, and in codebases where every module is secretly coupled to
+      every other module through a chain of global state. Use it when the constraint
+      "exactly one" is a hard physical or architectural requirement — not just because
+      you want convenient global access.
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Singleton demo — one instance confirmed · Toggle the theme to see all consumers update simultaneously
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     THE SINGLETON IMPLEMENTATION
+══════════════════════════════════════════════ -->
+<script>
+  // ─────────────────────────────────────────────
+  // ThemeManager Singleton
+  // ─────────────────────────────────────────────
+  class ThemeManager {
+    static #instance = null;
+
+    #theme        = 'light';
+    #observers    = new Map();   // name → callback
+    #callCount    = 0;
+    #toggleCount  = 0;
+
+    constructor() {
+      // Guard: return existing instance if somehow called directly
+      if (ThemeManager.#instance) {
+        return ThemeManager.#instance;
+      }
+      ThemeManager.#instance = this;
+
+      // Restore persisted theme
+      const saved = localStorage.getItem('singleton-theme');
+      if (saved === 'dark' || saved === 'light') {
+        this.#theme = saved;
+      }
+
+      this.#applyTheme();
+      this.#log(`ThemeManager instantiated — theme: ${this.#theme}`);
+    }
+
+    // ── Public API ──────────────────────────────
+
+    static getInstance() {
+      if (!ThemeManager.#instance) {
+        new ThemeManager();   // constructor sets #instance
+      }
+
+      // Track every call for the demo counter
+      ThemeManager.#instance.#callCount++;
+      ThemeManager.#instance.#updateCallUI();
+
+      return ThemeManager.#instance;
+    }
+
+    get theme()       { return this.#theme; }
+    get callCount()   { return this.#callCount; }
+    get toggleCount() { return this.#toggleCount; }
+
+    toggle() {
+      this.#theme = this.#theme === 'light' ? 'dark' : 'light';
+      this.#toggleCount++;
+      localStorage.setItem('singleton-theme', this.#theme);
+      this.#applyTheme();
+      this.#notifyObservers();
+      this.#updateToggleUI();
+      this.#log(`Theme toggled → ${this.#theme}`);
+    }
+
+    subscribe(name, callback) {
+      if (this.#observers.has(name)) {
+        this.#log(`Observer "${name}" already registered — skipping`);
+        return false;
+      }
+      this.#observers.set(name, callback);
+      this.#updateObserverBadge();
+      this.#log(`Observer "${name}" subscribed (total: ${this.#observers.size})`);
+      return true;
+    }
+
+    unsubscribe(name) {
+      const removed = this.#observers.delete(name);
+      if (removed) {
+        this.#updateObserverBadge();
+        this.#log(`Observer "${name}" unsubscribed`);
+      }
+      return removed;
+    }
+
+    getObserverNames() {
+      return [...this.#observers.keys()];
+    }
+
+    // ── Private helpers ──────────────────────────
+
+    #applyTheme() {
+      document.body.className = this.#theme;
+
+      const btn   = document.getElementById('themeToggle');
+      const icon  = btn?.querySelector('.icon');
+      const label = btn?.querySelector('.label');
+
+      if (icon)  icon.textContent  = this.#theme === 'dark' ? '☀' : '🌙';
+      if (label) label.textContent = this.#theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+
+      const alertTheme = document.getElementById('alertTheme');
+      if (alertTheme) {
+        alertTheme.textContent = this.#theme.toUpperCase();
+        alertTheme.className   = `badge badge-${this.#theme === 'dark' ? 'warning' : 'success'}`;
+      }
+    }
+
+    #notifyObservers() {
+      const traceLog = document.getElementById('traceLog');
+      if (!traceLog) return;
+
+      if (this.#observers.size === 0) {
+        this.#addTrace('No observers registered — notification skipped.');
+        return;
+      }
+
+      this.#observers.forEach((callback, name) => {
+        try {
+          callback(this.#theme);
+          this.#addTrace(`✓ "${name}" notified → received theme: "${this.#theme}"`);
+        } catch (e) {
+          this.#addTrace(`✗ "${name}" threw an error: ${e.message}`);
+        }
+      });
+    }
+
+    #updateCallUI() {
+      const el  = document.getElementById('callCount');
+      const bar = document.getElementById('callBar');
+      if (el)  el.textContent = this.#callCount;
+      if (bar) bar.style.width = Math.min(this.#callCount * 4, 100) + '%';
+    }
+
+    #updateToggleUI() {
+      const el  = document.getElementById('toggleCount');
+      const bar = document.getElementById('toggleBar');
+      if (el)  el.textContent = this.#toggleCount;
+      if (bar) bar.style.width = Math.min(this.#toggleCount * 10, 100) + '%';
+    }
+
+    #updateObserverBadge() {
+      const badge = document.getElementById('observerBadge');
+      if (badge) badge.textContent = this.#observers.size;
+    }
+
+    #log(message) {
+      const container = document.getElementById('logEntries');
+      if (!container) return;
+
+      const entry = document.createElement('div');
+      entry.className   = 'log-entry';
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      container.prepend(entry);
+
+      // Keep log trim
+      while (container.children.length > 20) {
+        container.removeChild(container.lastChild);
+      }
+    }
+
+    #addTrace(message) {
+      const container = document.getElementById('traceLog');
+      if (!container) return;
+
+      // Remove placeholder
+      const placeholder = container.querySelector('.log-entry');
+      if (placeholder?.textContent.startsWith('No observers')) {
+        placeholder.remove();
+      }
+
+      const entry = document.createElement('div');
+      entry.className   = 'log-entry';
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      container.prepend(entry);
+
+      while (container.children.length > 30) {
+        container.removeChild(container.lastChild);
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Observer UI helper
+  // ─────────────────────────────────────────────
+  function addObserver() {
+    const input = document.getElementById('subName');
+    const name  = input.value.trim();
+    if (!name) return;
+
+    const tm = ThemeManager.getInstance();
+
+    const success = tm.subscribe(name, (theme) => {
+      // Each observer just logs what it received
+      const item = document.getElementById(`sub-${CSS.escape(name)}`);
+      if (item) {
+        const dot = item.querySelector('.sub-dot');
+        if (dot) {
+          dot.style.background = theme === 'dark'
+            ? 'var(--warning)'
+            : 'var(--success)';
+        }
+      }
+    });
+
+    if (!success) {
+      input.style.borderColor = 'var(--danger)';
+      setTimeout(() => input.style.borderColor = '', 1000);
+      input.value = '';
+      return;
+    }
+
+    // Add to UI list
+    const list = document.getElementById('subList');
+    const item = document.createElement('div');
+    item.className = 'sub-item';
+    item.id        = `sub-${name}`;
+    item.innerHTML = `
+      <span><span class="sub-dot"></span>${name}</span>
+      <button class="form-btn" style="padding:0.2rem 0.6rem;font-size:0.75rem;"
+              onclick="removeObserver('${name}')">Remove</button>
+    `;
+    list.appendChild(item);
+
+    input.value = '';
+    input.style.borderColor = 'var(--success)';
+    setTimeout(() => input.style.borderColor = '', 1000);
+  }
+
+  function removeObserver(name) {
+    ThemeManager.getInstance().unsubscribe(name);
+    const item = document.getElementById(`sub-${CSS.escape(name)}`);
+    if (item) item.remove();
+  }
+
+  // ─────────────────────────────────────────────
+  // Boot — call getInstance() from multiple
+  // "modules" to prove only one instance exists
+  // ─────────────────────────────────────────────
+  (function boot() {
+    // Simulating three separate modules all grabbing the instance
+    const tm1 = ThemeManager.getInstance(); // module: Header
+    const tm2 = ThemeManager.getInstance(); // module: Sidebar
+    const tm3 = ThemeManager.getInstance(); // module: Footer
+
+    // Prove they're the same object
+    console.assert(tm1 === tm2, 'FAIL: different instances!');
+    console.assert(tm2 === tm3, 'FAIL: different instances!');
+
+    document.getElementById('instanceCount').textContent = '1';
+
+    // Auto-subscribe three built-in observers to show the coupling problem
+    ['NavBar', 'Sidebar', 'Footer'].forEach(name => {
+      tm1.subscribe(name, (theme) => {
+        // Simulated work each component does on theme change
+        void theme;
+      });
+
+      const list = document.getElementById('subList');
+      const item = document.createElement('div');
+      item.className = 'sub-item';
+      item.id        = `sub-${name}`;
+      item.innerHTML = `
+        <span><span class="sub-dot"></span>${name} <em style="color:var(--text-muted);font-size:0.7rem;">(built-in)</em></span>
+        <button class="form-btn" style="padding:0.2rem 0.6rem;font-size:0.75rem;"
+                onclick="removeObserver('${name}')">Remove</button>
+      `;
+      list.appendChild(item);
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sorting Algorithm Showdown</title>
+  <title>Sorting Algorithm Comparison</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f1117;
-      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0f0;
       min-height: 100vh;
       padding: 20px;
     }
@@ -19,16 +19,15 @@
       text-align: center;
       font-size: 1.8rem;
       margin-bottom: 6px;
-      background: linear-gradient(90deg, #f97316, #a855f7, #3b82f6);
+      background: linear-gradient(90deg, #f06, #a0f, #0cf);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
     }
 
     .subtitle {
       text-align: center;
-      color: #9ca3af;
-      font-size: 0.9rem;
+      color: #888;
+      font-size: 0.95rem;
       margin-bottom: 20px;
     }
 
@@ -36,56 +35,50 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       flex-wrap: wrap;
       margin-bottom: 24px;
     }
 
     .controls label {
-      color: #d1d5db;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      color: #aaa;
     }
 
-    select, input[type=range] {
-      background: #1f2937;
-      border: 1px solid #374151;
-      color: #e0e0e0;
-      border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 0.85rem;
-      cursor: pointer;
+    .controls input[type=range] {
+      width: 130px;
+      accent-color: #a0f;
     }
-
-    input[type=range] { padding: 5px 0; width: 110px; accent-color: #a855f7; }
 
     button {
-      padding: 8px 20px;
+      padding: 9px 22px;
       border: none;
       border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: opacity 0.2s, transform 0.1s;
     }
-    button:active { transform: scale(0.96); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button:hover { opacity: 0.85; transform: scale(1.03); }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    #btnStart  { background: linear-gradient(135deg,#a855f7,#6366f1); color:#fff; }
-    #btnReset  { background: #374151; color: #e0e0e0; }
+    #btnStart { background: linear-gradient(135deg, #a0f, #f06); color: #fff; }
+    #btnReset { background: #2a2a3a; color: #ccc; border: 1px solid #444; }
 
-    .speed-label { color: #9ca3af; font-size: 0.82rem; min-width: 60px; }
+    #speedLabel { color: #ccc; font-size: 0.9rem; }
 
-    /* ── panels ── */
-    .panels {
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      max-width: 1200px;
+      margin: 0 auto 30px;
     }
 
     .panel {
-      background: #1a1d27;
-      border: 1px solid #2d3148;
+      background: #16162a;
+      border: 1px solid #2a2a4a;
       border-radius: 14px;
       padding: 16px;
       display: flex;
@@ -96,136 +89,608 @@
     .panel-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
     }
 
     .algo-name {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 700;
     }
 
     .badge {
-      font-size: 0.7rem;
-      padding: 2px 8px;
+      font-size: 0.75rem;
+      padding: 3px 10px;
       border-radius: 20px;
       font-weight: 600;
-      white-space: nowrap;
     }
-    .badge-slow  { background:#7f1d1d; color:#fca5a5; }
-    .badge-fast  { background:#14532d; color:#86efac; }
-    .badge-vfast { background:#1e3a5f; color:#93c5fd; }
+    .badge-slow { background: #3a0a0a; color: #f66; border: 1px solid #f664; }
+    .badge-fast { background: #0a2a1a; color: #4f8; border: 1px solid #4f84; }
+    .badge-done { background: #1a2a0a; color: #cf4; border: 1px solid #cf44; }
 
-    .complexity {
-      font-size: 0.75rem;
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-    .complexity span { color: #e0e0e0; font-weight: 600; }
-
-    .stat-row {
+    .stats {
       display: flex;
       gap: 16px;
+      font-size: 0.82rem;
+      color: #aaa;
     }
 
-    .stat {
-      flex: 1;
-      background: #111827;
-      border-radius: 8px;
-      padding: 8px 10px;
-      text-align: center;
-    }
     .stat-val {
-      font-size: 1.3rem;
       font-weight: 700;
-      line-height: 1;
-    }
-    .stat-lbl {
-      font-size: 0.65rem;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 3px;
+      font-size: 0.95rem;
     }
 
-    .status-pill {
-      font-size: 0.75rem;
-      text-align: center;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-      background: #1f2937;
-      color: #6b7280;
-      transition: background 0.3s, color 0.3s;
-    }
-    .status-pill.running  { background:#312e81; color:#a5b4fc; }
-    .status-pill.done     { background:#14532d; color:#86efac; }
-    .status-pill.winner   { background:#713f12; color:#fcd34d; }
+    .stat-comparisons .stat-val { color: #f9a; }
+    .stat-swaps .stat-val { color: #9cf; }
+    .stat-time .stat-val { color: #cf9; }
 
-    /* bar chart */
     .chart-wrap {
       position: relative;
       height: 160px;
-      background: #111827;
+      background: #0d0d1e;
       border-radius: 8px;
       overflow: hidden;
-      display: flex;
-      align-items: flex-end;
-      padding: 4px 4px 0;
-      gap: 1px;
+      border: 1px solid #222240;
     }
 
-    .bar {
-      flex: 1;
-      border-radius: 2px 2px 0 0;
-      transition: height 0.04s;
-      min-width: 2px;
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
     }
 
-    /* ── explanation ── */
+    .complexity-box {
+      background: #1e1e30;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .complexity-box strong { color: #e0e0f0; }
+
     .explanation {
-      background: #1a1d27;
-      border: 1px solid #2d3148;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      background: #16162a;
+      border: 1px solid #2a2a4a;
       border-radius: 14px;
       padding: 20px 24px;
-      max-width: 900px;
-      margin: 0 auto 24px;
     }
 
     .explanation h2 {
-      font-size: 1rem;
+      font-size: 1.1rem;
       margin-bottom: 12px;
-      color: #c4b5fd;
+      color: #a0f;
     }
 
-    .explanation p {
-      font-size: 0.83rem;
-      color: #9ca3af;
-      line-height: 1.7;
-    }
-
-    .explanation strong { color: #e0e0e0; }
-
-    .tc-table {
+    .complexity-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 14px;
-      font-size: 0.8rem;
+      font-size: 0.88rem;
     }
-    .tc-table th {
-      background: #111827;
-      color: #6b7280;
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 0.7rem;
-      letter-spacing: 0.05em;
+
+    .complexity-table th {
+      background: #1e1e3a;
       padding: 8px 12px;
       text-align: left;
+      color: #ccc;
+      border-bottom: 1px solid #333;
     }
-    .tc-table td {
+
+    .complexity-table td {
       padding: 8px 12px;
-      border-top: 1px solid #1f2937;
-      color: #d1d5db;
+      border-bottom: 1px solid #222;
+      vertical-align: middle;
     }
-    .tc-table tr:hover td { background: #111827; }
-    .highlight-row td { color: #fca5a5 !important; }
-    .good td:nth-child(3),
+
+    .complexity-table tr:last-child td { border-bottom: none; }
+
+    .tc-bad { color: #f66; font-weight: 700; }
+    .tc-ok  { color: #fa6; font-weight: 700; }
+    .tc-good{ color: #4f8; font-weight: 700; }
+
+    .verdict {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: #1a0a2a;
+      border-left: 4px solid #a0f;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #ccc;
+    }
+    .verdict strong { color: #f9a; }
+
+    #globalStatus {
+      text-align: center;
+      font-size: 1rem;
+      min-height: 24px;
+      color: #cf4;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⚡ Sorting Algorithm Showdown</h1>
+<p class="subtitle">Why Bubble Sort is NOT the best algorithm for all use cases</p>
+
+<div class="controls">
+  <label>Array size:
+    <input type="range" id="sizeSlider" min="20" max="120" value="60" />
+    <span id="sizeVal">60</span>
+  </label>
+  <label>Speed:
+    <input type="range" id="speedSlider" min="1" max="10" value="5" />
+    <span id="speedLabel">5</span>
+  </label>
+  <button id="btnReset">🔀 New Array</button>
+  <button id="btnStart">▶ Start Sort</button>
+</div>
+
+<div id="globalStatus"></div>
+
+<div class="grid" id="grid"></div>
+
+<div class="explanation">
+  <h2>📊 Time Complexity Comparison</h2>
+  <table class="complexity-table">
+    <thead>
+      <tr>
+        <th>Algorithm</th>
+        <th>Best Case</th>
+        <th>Average Case</th>
+        <th>Worst Case</th>
+        <th>Space</th>
+        <th>Stable?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#f66">Bubble Sort</strong></td>
+        <td class="tc-ok">O(n)</td>
+        <td class="tc-bad">O(n²)</td>
+        <td class="tc-bad">O(n²)</td>
+        <td class="tc-good">O(1)</td>
+        <td>✅ Yes</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#4f8">Merge Sort</strong></td>
+        <td class="tc-good">O(n log n)</td>
+        <td class="tc-good">O(n log n)</td>
+        <td class="tc-good">O(n log n)</td>
+        <td class="tc-ok">O(n)</td>
+        <td>✅ Yes</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#9cf">Quick Sort</strong></td>
+        <td class="tc-good">O(n log n)</td>
+        <td class="tc-good">O(n log n)</td>
+        <td class="tc-bad">O(n²)</td>
+        <td class="tc-good">O(log n)</td>
+        <td>❌ No</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="verdict">
+    <strong>Verdict:</strong> Bubble sort's O(n²) average and worst-case complexity means it performs
+    <strong>dramatically more comparisons and swaps</strong> than Merge Sort or Quick Sort as array size grows.
+    For n=1000, bubble sort needs ~500,000 operations vs ~10,000 for O(n log n) algorithms — a
+    <strong>50× difference</strong>. Bubble sort is only acceptable for tiny arrays (&lt;20 elements)
+    or nearly-sorted data. Real-world libraries (Python's Timsort, Java's Arrays.sort) use
+    O(n log n) algorithms for good reason.
+  </div>
+</div>
+
+<script>
+// ─── Configuration ────────────────────────────────────────────────────────────
+const ALGORITHMS = [
+  {
+    id: 'bubble',
+    name: 'Bubble Sort',
+    color: '#f06060',
+    badge: 'slow',
+    complexity: {
+      best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)'
+    },
+    desc: 'Repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order. Very inefficient on large lists.'
+  },
+  {
+    id: 'merge',
+    name: 'Merge Sort',
+    color: '#40f090',
+    badge: 'fast',
+    complexity: {
+      best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)'
+    },
+    desc: 'Divides the array in half, recursively sorts each half, then merges them. Guaranteed O(n log n) in all cases.'
+  },
+  {
+    id: 'quick',
+    name: 'Quick Sort',
+    color: '#60c0ff',
+    badge: 'fast',
+    complexity: {
+      best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n²)', space: 'O(log n)'
+    },
+    desc: 'Picks a pivot, partitions elements around it, then recursively sorts partitions. Very fast in practice due to cache efficiency.'
+  }
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let baseArray = [];
+let states = {};       // per-algo animation state
+let canvases = {};
+let ctxs = {};
+let statEls = {};
+let running = false;
+let animFrameId = null;
+let lastFrameTime = 0;
+
+const sizeSlider  = document.getElementById('sizeSlider');
+const speedSlider = document.getElementById('speedSlider');
+const sizeVal     = document.getElementById('sizeVal');
+const speedLabel  = document.getElementById('speedLabel');
+const btnStart    = document.getElementById('btnStart');
+const btnReset    = document.getElementById('btnReset');
+const globalStatus= document.getElementById('globalStatus');
+
+// ─── DOM Setup ────────────────────────────────────────────────────────────────
+function buildUI() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  canvases = {}; ctxs = {}; statEls = {};
+
+  ALGORITHMS.forEach(algo => {
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.innerHTML = `
+      <div class="panel-header">
+        <span class="algo-name" style="color:${algo.color}">${algo.name}</span>
+        <span class="badge badge-${algo.badge}" id="badge-${algo.id}">
+          ${algo.badge === 'slow' ? '🐢 Slow' : '⚡ Fast'}
+        </span>
+      </div>
+      <div class="stats">
+        <div class="stat-comparisons">
+          Comparisons<br><span class="stat-val" id="cmp-${algo.id}">0</span>
+        </div>
+        <div class="stat-swaps">
+          Swaps / Writes<br><span class="stat-val" id="swp-${algo.id}">0</span>
+        </div>
+        <div class="stat-time">
+          Status<br><span class="stat-val" id="status-${algo.id}">Ready</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="canvas-${algo.id}"></canvas>
+      </div>
+      <div class="complexity-box">
+        <strong>Complexity:</strong>
+        Best <span style="color:#4f8">${algo.complexity.best}</span> ·
+        Avg <span style="color:#fa6">${algo.complexity.avg}</span> ·
+        Worst <span style="color:#f66">${algo.complexity.worst}</span> ·
+        Space <span style="color:#9cf">${algo.complexity.space}</span><br>
+        <span style="color:#888;font-size:0.8rem">${algo.desc}</span>
+      </div>
+    `;
+    grid.appendChild(panel);
+
+    const canvas = panel.querySelector(`#canvas-${algo.id}`);
+    canvases[algo.id] = canvas;
+    ctxs[algo.id] = canvas.getContext('2d');
+    statEls[algo.id] = {
+      cmp:    document.getElementById(`cmp-${algo.id}`),
+      swp:    document.getElementById(`swp-${algo.id}`),
+      status: document.getElementById(`status-${algo.id}`),
+      badge:  document.getElementById(`badge-${algo.id}`)
+    };
+  });
+}
+
+// ─── Array Generation ─────────────────────────────────────────────────────────
+function generateArray(n) {
+  const arr = Array.from({length: n}, (_, i) => i + 1);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ─── Drawing ──────────────────────────────────────────────────────────────────
+function drawBars(algoId, arr, highlights) {
+  const canvas = canvases[algoId];
+  const ctx = ctxs[algoId];
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+
+  if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+    canvas.width  = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  ctx.clearRect(0, 0, w, h);
+
+  const n = arr.length;
+  const barW = w / n;
+  const maxVal = n;
+
+  for (let i = 0; i < n; i++) {
+    const barH = (arr[i] / maxVal) * (h - 2);
+    const x = i * barW;
+    const y = h - barH;
+
+    let color = ALGORITHMS.find(a => a.id === algoId).color + 'bb';
+
+    if (highlights) {
+      if (highlights.sorted && highlights.sorted.has(i))       color = '#cfff44cc';
+      else if (highlights.comparing && highlights.comparing.includes(i)) color = '#ffffff';
+      else if (highlights.pivot === i)                          color = '#ffaa00';
+      else if (highlights.merging && highlights.merging.has(i)) color = '#ff88ffcc';
+    }
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x + 0.5, y, Math.max(barW - 1, 1), barH);
+  }
+}
+
+// ─── Algorithm Generators ─────────────────────────────────────────────────────
+
+function* bubbleSortGen(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let comparisons = 0, swaps = 0;
+  const sorted = new Set();
+
+  for (let i = 0; i < n - 1; i++) {
+    let swapped = false;
+    for (let j = 0; j < n - i - 1; j++) {
+      comparisons++;
+      yield { arr: a, highlights: { comparing: [j, j+1], sorted }, comparisons, swaps };
+      if (a[j] > a[j+1]) {
+        [a[j], a[j+1]] = [a[j+1], a[j]];
+        swaps++;
+        swapped = true;
+        yield { arr: a, highlights: { comparing: [j, j+1], sorted }, comparisons, swaps };
+      }
+    }
+    sorted.add(n - 1 - i);
+    if (!swapped) {
+      for (let k = 0; k < n; k++) sorted.add(k);
+      break;
+    }
+  }
+  sorted.add(0);
+  yield { arr: a, highlights: { sorted }, comparisons, swaps, done: true };
+}
+
+function* mergeSortGen(arr) {
+  const a = [...arr];
+  let comparisons = 0, swaps = 0;
+  const sorted = new Set();
+
+  function* merge(left, right, start) {
+    const result = [];
+    let i = 0, j = 0;
+    const merging = new Set();
+    for (let k = start; k < start + left.length + right.length; k++) merging.add(k);
+
+    while (i < left.length && j < right.length) {
+      comparisons++;
+      yield { arr: a, highlights: { merging, sorted }, comparisons, swaps };
+      if (left[i] <= right[j]) {
+        result.push(left[i++]);
+      } else {
+        result.push(right[j++]);
+      }
+    }
+    while (i < left.length)  result.push(left[i++]);
+    while (j < right.length) result.push(right[j++]);
+
+    for (let k = 0; k < result.length; k++) {
+      a[start + k] = result[k];
+      swaps++;
+    }
+    yield { arr: a, highlights: { merging, sorted }, comparisons, swaps };
+  }
+
+  function* msort(lo, hi) {
+    if (hi - lo <= 1) return;
+    const mid = Math.floor((lo + hi) / 2);
+    yield* msort(lo, mid);
+    yield* msort(mid, hi);
+    yield* merge(a.slice(lo, mid), a.slice(mid, hi), lo);
+  }
+
+  yield* msort(0, a.length);
+  for (let k = 0; k < a.length; k++) sorted.add(k);
+  yield { arr: a, highlights: { sorted }, comparisons, swaps, done: true };
+}
+
+function* quickSortGen(arr) {
+  const a = [...arr];
+  let comparisons = 0, swaps = 0;
+  const sorted = new Set();
+
+  function* partition(lo, hi) {
+    const pivotVal = a[hi];
+    let i = lo;
+    for (let j = lo; j < hi; j++) {
+      comparisons++;
+      yield { arr: a, highlights: { comparing: [j, hi], pivot: hi, sorted }, comparisons, swaps };
+      if (a[j] <= pivotVal) {
+        if (i !== j) { [a[i], a[j]] = [a[j], a[i]]; swaps++; }
+        i++;
+        yield { arr: a, highlights: { comparing: [i-1, j], pivot: hi, sorted }, comparisons, swaps };
+      }
+    }
+    [a[i], a[hi]] = [a[hi], a[i]]; swaps++;
+    yield { arr: a, highlights: { pivot: i, sorted }, comparisons, swaps };
+    return i;
+  }
+
+  function* qsort(lo, hi) {
+    if (lo >= hi) {
+      if (lo === hi) sorted.add(lo);
+      return;
+    }
+    const p = yield* partition(lo, hi);
+    sorted.add(p);
+    yield* qsort(lo, p - 1);
+    yield* qsort(p + 1, hi);
+  }
+
+  yield* qsort(0, a.length - 1);
+  for (let k = 0; k < a.length; k++) sorted.add(k);
+  yield { arr: a, highlights: { sorted }, comparisons, swaps, done: true };
+}
+
+const GENERATORS = {
+  bubble: bubbleSortGen,
+  merge:  mergeSortGen,
+  quick:  quickSortGen
+};
+
+// ─── Animation Loop ───────────────────────────────────────────────────────────
+function getDelay() {
+  const speed = parseInt(speedSlider.value);
+  // speed 1 = ~200ms/step, speed 10 = ~1ms/step
+  return Math.round(200 / (speed * speed * 0.09 + 0.1));
+}
+
+function stepAll(timestamp) {
+  const delay = getDelay();
+  const elapsed = timestamp - lastFrameTime;
+  if (elapsed < delay) {
+    animFrameId = requestAnimationFrame(stepAll);
+    return;
+  }
+  lastFrameTime = timestamp;
+
+  // Number of steps per frame scales with speed
+  const speed = parseInt(speedSlider.value);
+  const stepsPerFrame = speed >= 8 ? 12 : speed >= 5 ? 4 : 1;
+
+  let anyRunning = false;
+
+  for (let s = 0; s < stepsPerFrame; s++) {
+    ALGORITHMS.forEach(algo => {
+      const st = states[algo.id];
+      if (st.done) return;
+      anyRunning = true;
+
+      const result = st.gen.next();
+      if (result.done || (result.value && result.value.done)) {
+        st.done = true;
+        const v = result.value || st.last;
+        if (v) {
+          drawBars(algo.id, v.arr, v.highlights);
+          statEls[algo.id].cmp.textContent    = v.comparisons.toLocaleString();
+          statEls[algo.id].swp.textContent    = v.swaps.toLocaleString();
+          statEls[algo.id].status.textContent = '✅ Done';
+          const badge = statEls[algo.id].badge;
+          badge.className = 'badge badge-done';
+          badge.textContent = '✅ Done';
+        }
+      } else {
+        const v = result.value;
+        st.last = v;
+        drawBars(algo.id, v.arr, v.highlights);
+        statEls[algo.id].cmp.textContent = v.comparisons.toLocaleString();
+        statEls[algo.id].swp.textContent = v.swaps.toLocaleString();
+        statEls[algo.id].status.textContent = '⚙ Sorting…';
+      }
+    });
+  }
+
+  const allDone = ALGORITHMS.every(a => states[a.id].done);
+  if (allDone) {
+    running = false;
+    btnStart.disabled = false;
+    btnReset.disabled = false;
+    globalStatus.textContent = '🏁 All done! Notice the difference in comparisons & swaps.';
+
+    // Highlight winner
+    let minCmp = Infinity, winner = null;
+    ALGORITHMS.forEach(a => {
+      const cmp = parseInt(statEls[a.id].cmp.textContent.replace(/,/g,''));
+      if (cmp < minCmp) { minCmp = cmp; winner = a.id; }
+    });
+    if (winner) {
+      statEls[winner].status.textContent = '🏆 Winner!';
+    }
+  } else {
+    animFrameId = requestAnimationFrame(stepAll);
+  }
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────────────
+function resetAll() {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  running = false;
+  btnStart.disabled = false;
+  globalStatus.textContent = '';
+
+  const n = parseInt(sizeSlider.value);
+  baseArray = generateArray(n);
+
+  ALGORITHMS.forEach(algo => {
+    states[algo.id] = { gen: null, done: false, last: null };
+    drawBars(algo.id, baseArray, null);
+    statEls[algo.id].cmp.textContent    = '0';
+    statEls[algo.id].swp.textContent    = '0';
+    statEls[algo.id].status.textContent = 'Ready';
+    const badge = statEls[algo.id].badge;
+    badge.className = `badge badge-${algo.badge}`;
+    badge.textContent = algo.badge === 'slow' ? '🐢 Slow' : '⚡ Fast';
+  });
+}
+
+function startSort() {
+  if (running) return;
+  running = true;
+  btnStart.disabled = true;
+  btnReset.disabled = true;
+  globalStatus.textContent = '⚙ Sorting in progress…';
+
+  ALGORITHMS.forEach(algo => {
+    states[algo.id] = {
+      gen:  GENERATORS[algo.id]([...baseArray]),
+      done: false,
+      last: null
+    };
+  });
+
+  lastFrameTime = 0;
+  animFrameId = requestAnimationFrame(stepAll);
+}
+
+sizeSlider.addEventListener('input', () => {
+  sizeVal.textContent = sizeSlider.value;
+  if (!running) resetAll();
+});
+
+speedSlider.addEventListener('input', () => {
+  speedLabel.textContent = speedSlider.value;
+});
+
+btnReset.addEventListener('click', resetAll);
+btnStart.addEventListener('click', startSort);
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+buildUI();
+resetAll();
+
+window.addEventListener('resize', () => {
+  if (!running) {
+    ALGORITHMS.forEach(algo => drawBars(algo.id, baseArray, null));
+  }
+});
+</script>
+</body>
+</html>

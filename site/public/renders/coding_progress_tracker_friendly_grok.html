@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared State Concurrency Bug Demo</title>
+    <style>
+        /* CSS for styling the page and progress bars */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 20px;
+            background-color: #4CAF50; /* Green for progress */
+            width: 0%; /* Starts at 0% */
+            transition: width 0.2s ease-in-out; /* Smooth animation */
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .explanation {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shared State Concurrency Bug Demo</h1>
+    <p>This demo shows a shared state concurrency issue in JavaScript. Five tasks each try to add 20% to a shared progress variable (targeting 100%). In the buggy version, unsynchronized updates can cause errors like skipping values or exceeding 100%. The corrected version fixes this with synchronization.</p>
+
+    <div class="section">
+        <h2>Buggy Implementation</h2>
+        <p class="explanation">
+            <strong>Problem Explanation:</strong> Here, multiple asynchronous tasks (using <code>setTimeout</code> and Promises) access and update a shared percentage variable without coordination. This leads to a race condition: one task might read the current value, then another task updates it before the first one writes back, resulting in lost updates, skipped percentages, or values exceeding 100%. For example, if two tasks both read 0 and add 20, the final value might only be 20 instead of 40.
+        </p>
+        <div id="buggy-progress-bar" class="progress-bar">
+            <div id="buggy-progress-fill" class="progress-fill"></div>
+        </div>
+        <p>Current Buggy Percentage: <span id="buggy-percentage-display">0%</span></p>
+        <button id="buggy-button">Start Buggy Tasks</button>
+    </div>
+
+    <div class="section">
+        <h2>Corrected Implementation</h2>
+        <p class="explanation">
+            <strong>Fix Explanation:</strong> In this version, updates are synchronized by running tasks sequentially using <code>async/await</code> and Promises. This ensures that only one task modifies the shared state at a time, avoiding race conditions. By chaining the tasks, we prevent interleaved access, so the percentage updates correctly without skipping values or exceeding 100%.
+        </p>
+        <div id="corrected-progress-bar" class="progress-bar">
+            <div id="corrected-progress-fill" class="progress-fill"></div>
+        </div>
+        <p>Current Corrected Percentage: <span id="corrected-percentage-display">0%</span></p>
+        <button id="corrected-button">Start Corrected Tasks</button>
+    </div>
+
+    <script>
+        // Shared variables for each implementation
+        let buggyPercentage = 0;  // Shared state for buggy demo
+        let correctedPercentage = 0;  // Shared state for corrected demo
+
+        // Function to update the buggy progress bar and display
+        function updateBuggyBar() {
+            document.getElementById('buggy-progress-fill').style.width = buggyPercentage + '%';
+            document.getElementById('buggy-percentage-display').textContent = buggyPercentage + '%';
+        }
+
+        // Function to update the corrected progress bar and display
+        function updateCorrectedBar() {
+            document.getElementById('corrected-progress-fill').style.width = correctedPercentage + '%';
+            document.getElementById('corrected-percentage-display').textContent = correctedPercentage + '%';
+        }
+
+        // Buggy implementation: Unsynchronized updates
+        function startBuggyTasks() {
+            buggyPercentage = 0;  // Reset
+            updateBuggyBar();  // Reset the bar
+
+            // Launch 5 concurrent tasks
+            for (let i = 0; i < 5; i++) {
+                // Use setTimeout for asynchronous delay and Promise for additional concurrency simulation
+                setTimeout(() => {
+                    new Promise(resolve => {
+                        setTimeout(() => {
+                            let current = buggyPercentage;  // Read the current value
+                            // Simulate a delay in processing (e.g., race condition opportunity)
+                            setTimeout(() => {
+                                buggyPercentage = current + 20;  // Add 20% (unsynchronized)
+                                if (buggyPercentage > 100) buggyPercentage = 100;  // Cap at 100%
+                                updateBuggyBar();  // Update the UI
+                                console.log('Buggy task ' + i + ' updated percentage to:', buggyPercentage);
+                                resolve();
+                            }, Math.random() * 500);  // Random short delay to exacerbate the issue
+                        }, Math.random() * 1000);  // Random initial delay
+                    });
+                }, Math.random() * 500);  // Even more randomness
+            }
+        }
+
+        // Corrected implementation: Synchronized updates
+        async function startCorrectedTasks() {
+            correctedPercentage = 0;  // Reset
+            updateCorrectedBar();  // Reset the bar
+
+            for (let i = 0; i < 5; i++) {
+                // Wait for a random delay (simulating concurrency), then update sequentially
+                await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
+                correctedPercentage += 20;  // Add 20% in a synchronized manner
+                if (correctedPercentage > 100) correctedPercentage = 100;  // Cap at 100%
+                updateCorrectedBar();  // Update the UI
+                console.log('Corrected task ' + i + ' updated percentage to:', correctedPercentage);
+            }
+        }
+
+        // Add event listeners for the buttons
+        document.getElementById('buggy-button').addEventListener('click', startBuggyTasks);
+        document.getElementById('corrected-button').addEventListener('click', startCorrectedTasks);
+    </script>
+</body>
+</html>

@@ -23,18 +23,18 @@
 
     .container {
       background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 24px;
-      padding: 48px 40px;
+      padding: 50px 40px;
       width: 100%;
       max-width: 620px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
     }
 
     .title {
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .title h1 {
@@ -48,7 +48,7 @@
     }
 
     .title p {
-      color: rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.45);
       font-size: 0.9rem;
       margin-top: 6px;
     }
@@ -77,23 +77,23 @@
       width: 100%;
       padding: 16px 50px 16px 18px;
       background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
       border-radius: 14px;
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       outline: none;
-      transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
       caret-color: #a78bfa;
     }
 
     #inputText::placeholder {
-      color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.25);
     }
 
     #inputText:focus {
-      border-color: rgba(167, 139, 250, 0.6);
-      background: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+      border-color: #a78bfa;
+      background: rgba(167, 139, 250, 0.08);
+      box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.12);
     }
 
     .clear-btn {
@@ -106,112 +106,422 @@
       color: rgba(255, 255, 255, 0.3);
       cursor: pointer;
       font-size: 1.1rem;
+      line-height: 1;
       padding: 4px;
       border-radius: 50%;
       transition: color 0.2s, background 0.2s;
       display: none;
-      line-height: 1;
     }
 
     .clear-btn:hover {
-      color: rgba(255, 255, 255, 0.8);
-      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      background: rgba(255,255,255,0.1);
     }
 
     .char-count {
       text-align: right;
-      font-size: 0.75rem;
       color: rgba(255, 255, 255, 0.3);
+      font-size: 0.75rem;
       margin-top: 6px;
-      transition: color 0.3s;
     }
 
-    .char-count.active {
-      color: rgba(167, 139, 250, 0.7);
-    }
-
-    .output-section {
-      margin-top: 28px;
-    }
-
-    .output-header {
+    .arrow-section {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
+      justify-content: center;
+      gap: 12px;
+      margin: 22px 0;
     }
 
-    .output-header label {
+    .arrow-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1));
+    }
+
+    .arrow-line.right {
+      background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
+    }
+
+    .arrow-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 15px rgba(167, 139, 250, 0.35);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 4px 15px rgba(167, 139, 250, 0.35); }
+      50% { box-shadow: 0 4px 25px rgba(167, 139, 250, 0.65); }
+    }
+
+    .output-section label {
+      display: block;
       color: rgba(255, 255, 255, 0.6);
       font-size: 0.78rem;
       font-weight: 600;
       letter-spacing: 1.2px;
       text-transform: uppercase;
-    }
-
-    .copy-btn {
-      background: rgba(167, 139, 250, 0.15);
-      border: 1px solid rgba(167, 139, 250, 0.3);
-      color: rgba(167, 139, 250, 0.9);
-      padding: 5px 14px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.5px;
-    }
-
-    .copy-btn:hover {
-      background: rgba(167, 139, 250, 0.28);
-      border-color: rgba(167, 139, 250, 0.6);
-      transform: translateY(-1px);
-    }
-
-    .copy-btn.copied {
-      background: rgba(52, 211, 153, 0.15);
-      border-color: rgba(52, 211, 153, 0.4);
-      color: rgba(52, 211, 153, 0.9);
+      margin-bottom: 10px;
     }
 
     .output-box {
-      min-height: 64px;
+      min-height: 58px;
       padding: 16px 18px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
       border-radius: 14px;
+      color: #fff;
+      font-size: 1.05rem;
+      word-break: break-all;
+      line-height: 1.6;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
       gap: 1px;
-      word-break: break-all;
       transition: border-color 0.3s;
       position: relative;
       overflow: hidden;
     }
 
     .output-box.has-content {
-      border-color: rgba(96, 165, 250, 0.25);
+      border-color: rgba(96, 165, 250, 0.3);
     }
 
-    .output-box::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(167,139,250,0.03), rgba(96,165,250,0.03));
-      pointer-events: none;
-    }
-
-    .placeholder-text {
-      color: rgba(255, 255, 255, 0.18);
-      font-size: 1rem;
+    .output-box .placeholder-text {
+      color: rgba(255, 255, 255, 0.2);
       font-style: italic;
-      user-select: none;
+      font-size: 0.95rem;
     }
 
     .char-span {
       display: inline-block;
-      font-size: 1.1rem;
-      font-weight: 500;
-      color: #e2e8f0;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2
+      animation: charDrop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      position: relative;
+    }
+
+    @keyframes charDrop {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.7);
+        color: #a78bfa;
+      }
+      60% {
+        color: #c4b5fd;
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        color: #fff;
+      }
+    }
+
+    .char-span.space-char {
+      width: 0.35em;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 28px;
+      gap: 12px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      transition: background 0.3s;
+    }
+
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 3px;
+    }
+
+    .copy-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 6px 20px rgba(167, 139, 250, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .copy-btn:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(167, 139, 250, 0.45);
+    }
+
+    .copy-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .copy-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #34d399, #059669);
+      box-shadow: 0 6px 20px rgba(52, 211, 153, 0.35);
+    }
+
+    .shimmer {
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      animation: shimmer 2.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 200%; }
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 36px 24px; }
+      .title h1 { font-size: 1.6rem; }
+      .stats-row { gap: 8px; }
+      .stat-card { padding: 12px 6px; }
+      .stat-value { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">
+      <h1>⟵ String Reverser ⟶</h1>
+      <p>Type below and watch your text flip instantly</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="input-section">
+      <label>Input</label>
+      <div class="input-wrapper">
+        <input
+          type="text"
+          id="inputText"
+          placeholder="Start typing something..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="clear-btn" id="clearBtn" title="Clear">✕</button>
+      </div>
+      <div class="char-count"><span id="charCount">0</span> characters</div>
+    </div>
+
+    <div class="arrow-section">
+      <div class="arrow-line"></div>
+      <div class="arrow-icon">↕</div>
+      <div class="arrow-line right"></div>
+    </div>
+
+    <div class="output-section">
+      <label>Reversed Output</label>
+      <div class="output-box" id="outputBox">
+        <div class="shimmer"></div>
+        <span class="placeholder-text">Your reversed text will appear here…</span>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="statChars">0</div>
+        <div class="stat-label">Characters</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statWords">0</div>
+        <div class="stat-label">Words</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statUnique">0</div>
+        <div class="stat-label">Unique Chars</div>
+      </div>
+    </div>
+
+    <button class="copy-btn" id="copyBtn" disabled>
+      <span id="copyIcon">📋</span>
+      <span id="copyLabel">Copy Reversed Text</span>
+    </button>
+  </div>
+
+  <script>
+    const inputEl   = document.getElementById('inputText');
+    const outputBox = document.getElementById('outputBox');
+    const clearBtn  = document.getElementById('clearBtn');
+    const copyBtn   = document.getElementById('copyBtn');
+    const copyIcon  = document.getElementById('copyIcon');
+    const copyLabel = document.getElementById('copyLabel');
+    const charCount = document.getElementById('charCount');
+    const statChars = document.getElementById('statChars');
+    const statWords = document.getElementById('statWords');
+    const statUnique= document.getElementById('statUnique');
+
+    let previousReversed = '';
+    let copyTimeout = null;
+
+    function reverseString(str) {
+      return str.split('').reverse().join('');
+    }
+
+    function countWords(str) {
+      const trimmed = str.trim();
+      if (!trimmed) return 0;
+      return trimmed.split(/\s+/).length;
+    }
+
+    function countUnique(str) {
+      if (!str) return 0;
+      return new Set(str.replace(/\s/g, '')).size;
+    }
+
+    function animateOutput(newReversed) {
+      outputBox.innerHTML = '';
+
+      if (!newReversed) {
+        outputBox.classList.remove('has-content');
+        const shimmer = document.createElement('div');
+        shimmer.className = 'shimmer';
+        outputBox.appendChild(shimmer);
+        const ph = document.createElement('span');
+        ph.className = 'placeholder-text';
+        ph.textContent = 'Your reversed text will appear here…';
+        outputBox.appendChild(ph);
+        previousReversed = '';
+        return;
+      }
+
+      outputBox.classList.add('has-content');
+
+      const shimmer = document.createElement('div');
+      shimmer.className = 'shimmer';
+      outputBox.appendChild(shimmer);
+
+      // Stagger each character animation
+      [...newReversed].forEach((char, i) => {
+        const span = document.createElement('span');
+        span.className = 'char-span' + (char === ' ' ? ' space-char' : '');
+        span.textContent = char === ' ' ? '\u00A0' : char;
+
+        // Only animate chars that changed position or are new
+        const wasTheSame = previousReversed[i] === char;
+        if (!wasTheSame) {
+          span.style.animationDelay = `${i * 18}ms`;
+        } else {
+          span.style.animation = 'none';
+          span.style.opacity = '1';
+        }
+
+        outputBox.appendChild(span);
+      });
+
+      previousReversed = newReversed;
+    }
+
+    function updateStats(input) {
+      const len   = input.length;
+      const words = countWords(input);
+      const uniq  = countUnique(input);
+
+      charCount.textContent = len;
+      statChars.textContent = len;
+      statWords.textContent = words;
+      statUnique.textContent = uniq;
+    }
+
+    function handleInput() {
+      const value   = inputEl.value;
+      const reversed = reverseString(value);
+
+      clearBtn.style.display = value.length ? 'flex' : 'none';
+      copyBtn.disabled = !value.length;
+
+      animateOutput(reversed);
+      updateStats(value);
+    }
+
+    clearBtn.addEventListener('click', () => {
+      inputEl.value = '';
+      inputEl.focus();
+      handleInput();
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const reversed = reverseString(inputEl.value);
+      if (!reversed) return;
+
+      try {
+        await navigator.clipboard.writeText(reversed);
+      } catch {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = reversed;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+
+      copyBtn.classList.add('copied');
+      copyIcon.textContent = '✅';
+      copyLabel.textContent = 'Copied!';
+
+      clearTimeout(copyTimeout);
+      copyTimeout = setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyIcon.textContent = '📋';
+        copyLabel.textContent = 'Copy Reversed Text';
+      }, 2000);
+    });
+
+    inputEl.addEventListener('input', handleInput);
+
+    // Focus input on load
+    inputEl.focus();
+  </script>
+</body>
+</html>

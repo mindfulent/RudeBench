@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bubble Sort vs Faster Algorithms — Visual Comparison</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --panel:#0b1220;
+    --text:#e6eef8;
+    --muted:#98a6c0;
+    --accent:#3ddc97;
+    --red:#ff6b6b;
+    --yellow:#ffd166;
+    --blue:#7cc7ff;
+  }
+  html,body{height:100%;margin:0;font-family:Inter, Roboto, system-ui, -apple-system, "Segoe UI", Arial;}
+  body{background:linear-gradient(180deg,#071126 0%, #081222 60%); color:var(--text); padding:18px; box-sizing:border-box;}
+  header{display:flex;align-items:center;gap:16px;margin-bottom:14px;}
+  h1{font-size:18px;margin:0;}
+  p.lead{margin:0;color:var(--muted);font-size:13px;}
+  .wrap{display:flex;gap:12px;flex-wrap:wrap;}
+  .panel{
+    background:linear-gradient(180deg,var(--panel), #081123);
+    padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.6);
+    color:var(--text);
+  }
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  label{font-size:13px;color:var(--muted);}
+  input[type=range]{accent-color:var(--accent);}
+  button{background:linear-gradient(180deg,#115e3d,#0b4a32);color:white;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;}
+  button.secondary{background:linear-gradient(180deg,#273349,#1b2636);}
+  .boards{display:flex;gap:12px;margin-top:12px;flex:1;flex-wrap:wrap;}
+  .board{width:320px;height:260px;display:flex;flex-direction:column;border-radius:8px;padding:10px;box-sizing:border-box;gap:8px;background:linear-gradient(180deg,#071827,#04101a);border:1px solid rgba(255,255,255,0.03);}
+  .board .title{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+  .bars{flex:1;display:flex;align-items:flex-end;gap:2px;height:180px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:6px;border-radius:6px;overflow:hidden;}
+  .bar{background:var(--blue);flex:1;border-radius:3px 3px 0 0;transition:height 60ms linear, background 60ms linear;}
+  .bar.bubble{background:var(--yellow);}
+  .bar.swap{background:var(--red);}
+  .info{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);}
+  .counters{display:flex;gap:8px;align-items:center;}
+  .counter{background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:6px;font-size:13px;}
+  footer{margin-top:14px;color:var(--muted);font-size:13px;line-height:1.3;}
+  .complex{margin-top:8px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;font-size:13px;color:var(--muted);}
+  small.hint{color:var(--muted);display:block;margin-top:6px;}
+  @media (max-width:1040px){
+    .board{width:calc(50vw - 32px);}
+  }
+  @media (max-width:640px){
+    .board{width:100%;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Bubble Sort vs Faster Algorithms — Animated Comparison</h1>
+    <p class="lead">Watch bubble sort compared side-by-side with faster algorithms on the same random data.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="panel" style="min-width:320px;">
+    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;">
+      <div class="controls">
+        <label>Items: <span id="sizeLabel">40</span></label>
+        <input id="size" type="range" min="10" max="120" value="40" />
+        <label>Speed: <span id="speedLabel">1x</span></label>
+        <input id="speed" type="range" min="0.2" max="4" step="0.1" value="1" />
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="shuffleBtn" class="secondary">Shuffle</button>
+        <button id="startBtn">Start</button>
+        <button id="stopBtn" class="secondary">Stop</button>
+      </div>
+    </div>
+
+    <div class="boards" style="margin-top:12px;">
+      <div class="board" id="board-bubble" aria-label="Bubble sort">
+        <div class="title"><strong>Bubble Sort</strong><span class="info">O(n^2) average/worst</span></div>
+        <div class="bars" id="bars-bubble"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="counters">
+            <div class="counter">Comparisons: <span id="cmp-bubble">0</span></div>
+            <div class="counter">Swaps: <span id="swap-bubble">0</span></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)" id="status-bubble">idle</div>
+        </div>
+      </div>
+
+      <div class="board" id="board-quick" aria-label="Quick sort">
+        <div class="title"><strong>Quick Sort</strong><span class="info">O(n log n) average</span></div>
+        <div class="bars" id="bars-quick"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="counters">
+            <div class="counter">Comparisons: <span id="cmp-quick">0</span></div>
+            <div class="counter">Swaps: <span id="swap-quick">0</span></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)" id="status-quick">idle</div>
+        </div>
+      </div>
+
+      <div class="board" id="board-merge" aria-label="Merge sort">
+        <div class="title"><strong>Merge Sort</strong><span class="info">O(n log n) worst</span></div>
+        <div class="bars" id="bars-merge"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="counters">
+            <div class="counter">Comparisons: <span id="cmp-merge">0</span></div>
+            <div class="counter">Writes: <span id="swap-merge">0</span></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)" id="status-merge">idle</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="complex">
+      Brief explanation:
+      <ul style="margin:8px 0 0 18px;">
+        <li>Bubble sort compares adjacent items repeatedly and swaps them — O(n^2) time in average and worst cases.</li>
+        <li>Quick sort partitions and recursively sorts partitions — average O(n log n), worst O(n^2) but typically much faster than bubble sort for random data.</li>
+        <li>Merge sort repeatedly merges sorted runs — guaranteed O(n log n) time and stable performance.</li>
+      </ul>
+      <small class="hint">Observe counters and animations to see how many operations each algorithm performs on the same data.</small>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Tip: Increase the number of items to see bubble sort become dramatically slower compared to quick and merge sorts.
+</footer>
+
+<script>
+(() => {
+  // Utilities
+  const randArray = (n) => {
+    const a = [];
+    for (let i=0;i<n;i++) a.push(Math.random());
+    return a;
+  };
+
+  // DOM refs
+  const sizeEl = document.getElementById('size');
+  const sizeLabel = document.getElementById('sizeLabel');
+  const speedEl = document.getElementById('speed');
+  const speedLabel = document.getElementById('speedLabel');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+
+  const barsBubble = document.getElementById('bars-bubble');
+  const barsQuick = document.getElementById('bars-quick');
+  const barsMerge = document.getElementById('bars-merge');
+
+  const cmpBubble = document.getElementById('cmp-bubble');
+  const swapBubble = document.getElementById('swap-bubble');
+  const cmpQuick = document.getElementById('cmp-quick');
+  const swapQuick = document.getElementById('swap-quick');
+  const cmpMerge = document.getElementById('cmp-merge');
+  const swapMerge = document.getElementById('swap-merge');
+
+  const statusBubble = document.getElementById('status-bubble');
+  const statusQuick = document.getElementById('status-quick');
+  const statusMerge = document.getElementById('status-merge');
+
+  let size = +sizeEl.value;
+  let speed = +speedEl.value;
+  let baseDelay = 20; // ms per step, scaled by speed
+
+  let arrays = { bubble: [], quick: [], merge: [] };
+  let bars = { bubble: [], quick: [], merge: [] };
+  let controllers = { bubble: null, quick: null, merge: null };
+
+  function createBars(container, data, tag) {
+    container.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    const n = data.length;
+    for (let i=0;i<n;i++){
+      const div = document.createElement('div');
+      div.className = 'bar';
+      div.dataset.idx = i;
+      // height scaled to container
+      div.style.height = (data[i]*100) + '%';
+      frag.appendChild(div);
+    }
+    container.appendChild(frag);
+    return Array.from(container.children);
+  }
+
+  function resetCounters() {
+    cmpBubble.textContent = '0';
+    swapBubble.textContent = '0';
+    cmpQuick.textContent = '0';
+    swapQuick.textContent = '0';
+    cmpMerge.textContent = '0';
+    swapMerge.textContent = '0';
+    statusBubble.textContent = 'idle';
+    statusQuick.textContent = 'idle';
+    statusMerge.textContent = 'idle';
+  }
+
+  function initArrays() {
+    const n = size;
+    const base = randArray(n);
+    arrays.bubble = base.slice();
+    arrays.quick = base.slice();
+    arrays.merge = base.slice();
+
+    bars.bubble = createBars(barsBubble, arrays.bubble, 'bubble');
+    bars.quick = createBars(barsQuick, arrays.quick, 'quick');
+    bars.merge = createBars(barsMerge, arrays.merge, 'merge');
+
+    // colorize initial
+    bars.bubble.forEach(b=> b.classList.remove('swap','bubble'));
+    bars.quick.forEach(b=> b.classList.remove('swap'));
+    bars.merge.forEach(b=> b.classList.remove('swap'));
+  }
+
+  // animation helpers
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+  function stepDelay() { return baseDelay / speed; }
+
+  function setBarHeight(list, idx, value) {
+    const el = list[idx];
+    if (!el) return;
+    el.style.height = (value*100) + '%';
+  }
+
+  function mark(list, idx, cls) {
+    if (idx<0 || idx>=list.length) return;
+    list[idx].classList.add(cls);
+  }
+  function unmark(list, idx, cls) {
+    if (idx<0 || idx>=list.length) return;
+    list[idx].classList.remove(cls);
+  }
+
+  // Sorting algorithms implemented as async generators of steps
+  // Each step yields an object: {type:'compare'|'swap'|'write'|'done', i, j, array}
+  async function runBubble(arr, barsList, counters, statusEl) {
+    statusEl.textContent = 'running';
+    let n = arr.length;
+    let comps = 0, swaps = 0;
+    for (let i=0;i<n;i++){
+      let swapped = false;
+      for (let j=0;j<n-1-i;j++){
+        comps++; counters.cmp.textContent = comps;
+        // highlight compare
+        mark(barsList, j, 'bubble');
+        mark(barsList, j+1, 'bubble');
+        await sleep(stepDelay());
+        unmark(barsList, j, 'bubble');
+        unmark(barsList, j+1, 'bubble');
+
+        if (arr[j] > arr[j+1]) {
+          // swap
+          swaps++; counters.swap.textContent = swaps;
+          mark(barsList, j, 'swap');
+          mark(barsList, j+1, 'swap');
+          const tmp = arr[j];
+          arr[j] = arr[j+1];
+          arr[j+1] = tmp;
+          setBarHeight(barsList, j, arr[j]);
+          setBarHeight(barsList, j+1, arr[j+1]);
+          await sleep(stepDelay()*2);
+          unmark(barsList, j, 'swap');
+          unmark(barsList, j+1, 'swap');
+          swapped = true;
+        }
+        if (!controllers.bubble) return; // stopped externally
+      }
+      if (!swapped) break;
+    }
+    statusEl.textContent = 'done';
+  }
+
+  async function runQuick(arr, barsList, counters, statusEl) {
+    statusEl.textContent = 'running';
+    let comps=0, swaps=0;
+    async function partition(a, lo, hi) {
+      const pivot = a[hi];
+      let i = lo-1;
+      for (let j=lo;j<hi;j++){
+        comps++; counters.cmp.textContent = comps;
+        mark(barsList,j,'bubble');
+        mark(barsList,hi,'bubble');
+        await sleep(stepDelay());
+        unmark(barsList,j,'bubble');
+        unmark(barsList,hi,'bubble');
+        if (a[j] < pivot){
+          i++;
+          if (i!==j){
+            swaps++; counters.swap.textContent = swaps;
+            mark(barsList,i,'swap');
+            mark(barsList,j,'swap');
+            [a[i],a[j]] = [a[j],a[i]];
+            setBarHeight(barsList,i,a[i]);
+            setBarHeight(barsList,j,a[j]);
+            await sleep(stepDelay()*2);
+            unmark(barsList,i,'swap');
+            unmark(barsList,j,'swap');
+          }
+        }
+        if (!controllers.quick) return;
+      }
+      // place pivot
+      swaps++; counters.swap.textContent = swaps;
+      mark(barsList,i+1,'swap');
+      mark(barsList,hi,'swap');
+      [a[i+1], a[hi]] = [a[hi], a[i+1]];
+      setBarHeight(barsList,i+1,a[i+1]);
+      setBarHeight(barsList,hi,a[hi]);
+      await sleep(stepDelay()*2);
+      unmark(barsList,i+1,'swap');
+      unmark(barsList,hi,'swap');
+      return i+1;
+    }
+
+    async function quickrec(a, lo, hi) {
+      if (lo < hi){
+        const p = await partition(a,lo,hi);
+        if (!controllers.quick) return;
+        await quickrec(a, lo, p-1);
+        if (!controllers.quick) return;
+        await quickrec(a, p+1, hi);
+      }
+    }
+
+    await quickrec(arr,0,arr.length-1);
+    statusEl.textContent = 'done';
+  }
+
+  async function runMerge(arr, barsList, counters, statusEl) {
+    statusEl.textContent = 'running';
+    let comps=0, writes=0;
+    async function merge(a, l, m, r){
+      const left = a.slice(l,m+1);
+      const right = a.slice(m+1,r+1);
+      let i=0,j=0,k=l;
+      while (i<left.length && j<right.length){
+        comps++; counters.cmp.textContent = comps;
+        mark(barsList, k, 'bubble');
+        await sleep(stepDelay());
+        unmark(barsList, k, 'bubble');
+        if (left[i] <= right[j]){
+          a[k] = left[i++]; writes++; counters.swap.textContent = writes;
+        } else {
+          a[k] = right[j++]; writes++; counters.swap.textContent = writes;
+        }
+        setBarHeight(barsList,k,a[k]);
+        k++;
+        await sleep(stepDelay());
+        if (!controllers.merge) return;
+      }
+      while (i<left.length){
+        a[k] = left[i++]; writes++; counters.swap.textContent = writes;
+        setBarHeight(barsList,k,a[k]);
+        k++;
+        await sleep(stepDelay());
+        if (!controllers.merge) return;
+      }
+      while (j<right.length){
+        a[k] = right[j++]; writes++; counters.swap.textContent = writes;
+        setBarHeight(barsList,k,a[k]);
+        k++;
+        await sleep(stepDelay());
+        if (!controllers.merge) return;
+      }
+    }
+
+    async function mrec(a,l,r){
+      if (l>=r) return;
+      const m = Math.floor((l+r)/2);
+      await mrec(a,l,m);
+      if (!controllers.merge) return;
+      await mrec(a,m+1,r);
+      if (!controllers.merge) return;
+      await merge(a,l,m,r);
+    }
+
+    await mrec(arr,0,arr.length-1);
+    statusEl.textContent = 'done';
+  }
+
+  // Control functions
+  function stopAll() {
+    controllers.bubble = null;
+    controllers.quick = null;
+    controllers.merge = null;
+    statusBubble.textContent = 'stopped';
+    statusQuick.textContent = 'stopped';
+    statusMerge.textContent = 'stopped';
+  }
+
+  async function startAll() {
+    // ensure previous stopped
+    stopAll();
+    // create controllers as truthy objects to indicate running
+    controllers.bubble = {};
+    controllers.quick = {};
+    controllers.merge = {};
+    resetCounters();
+    // copy arrays to work on fresh copies for each algorithm
+    arrays.bubble = arrays.bubble.slice();
+    arrays.quick = arrays.quick.slice();
+    arrays.merge = arrays.merge.slice();
+    // kick off
+    const p1 = runBubble(arrays.bubble, bars.bubble, {cmp:cmpBubble, swap:swapBubble}, statusBubble);
+    const p2 = runQuick(arrays.quick, bars.quick, {cmp:cmpQuick, swap:swapQuick}, statusQuick);
+    const p3 = runMerge(arrays.merge, bars.merge, {cmp:cmpMerge, swap:swapMerge}, statusMerge);
+    try {
+      await Promise.all([p1,p2,p3]);
+    } catch(e){
+      // ignore
+    } finally {
+      controllers.bubble = controllers.quick = controllers.merge = null;
+    }
+  }
+
+  // Event bindings
+  sizeEl.addEventListener('input', (e)=>{
+    size = +e.target.value;
+    sizeLabel.textContent = size;
+    initArrays();
+    resetCounters();
+  });
+
+  speedEl.addEventListener('input', (e)=>{
+    speed = +e.target.value;
+    speedLabel.textContent = speed.toFixed(1) + 'x';
+  });
+
+  shuffleBtn.addEventListener('click', ()=>{
+    initArrays();
+    resetCounters();
+  });
+
+  startBtn.addEventListener('click', ()=>{
+    startAll();
+  });
+
+  stopBtn.addEventListener('click', stopAll);
+
+  // initialize
+  sizeLabel.textContent = size;
+  speedLabel.textContent = speed.toFixed(1) + 'x';
+  initArrays();
+
+  // accessibility: allow space to shuffle
+  document.addEventListener('keydown', (e)=>{
+    if (e.code === 'Space') { e.preventDefault(); initArrays(); resetCounters(); }
+  });
+
+  // Auto demo: if size > 60, start automatically to show slowness
+  // (disabled by default)
+})();
+</script>
+</body>
+</html>

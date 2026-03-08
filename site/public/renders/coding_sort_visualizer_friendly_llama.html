@@ -1,138 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorting Algorithm Comparison Tool</title>
+    <title>Sorting Algorithm Comparison</title>
     <style>
-        /* Add some basic styling to make the page look nicer */
         body {
             font-family: Arial, sans-serif;
         }
-        .algorithm-container {
-            display: inline-block;
-            margin: 10px;
-            width: 300px;
-            text-align: center;
-        }
-        .algorithm-container canvas {
+        canvas {
             border: 1px solid black;
         }
     </style>
 </head>
 <body>
-    <h1>Sorting Algorithm Comparison Tool</h1>
-    <div class="algorithm-container">
-        <h2>Bubble Sort (O(n^2))</h2>
-        <p>Time complexity: O(n^2)</p>
-        <p>Step counter: <span id="bubble-sort-steps">0</span></p>
-        <canvas id="bubble-sort-canvas" width="200" height="200"></canvas>
-    </div>
-    <div class="algorithm-container">
-        <h2>Quicksort (O(n log n) on average)</h2>
-        <p>Time complexity: O(n log n) on average, O(n^2) in worst case</p>
-        <p>Step counter: <span id="quicksort-steps">0</span></p>
-        <canvas id="quicksort-canvas" width="200" height="200"></canvas>
-    </div>
-    <div class="algorithm-container">
-        <h2>Mergesort (O(n log n))</h2>
-        <p>Time complexity: O(n log n)</p>
-        <p>Step counter: <span id="mergesort-steps">0</span></p>
-        <canvas id="mergesort-canvas" width="200" height="200"></canvas>
-    </div>
+    <h1>Sorting Algorithm Comparison</h1>
+    <p>Bubble Sort: O(n^2) - Not suitable for large datasets</p>
+    <p>Quicksort: O(n log n) on average, O(n^2) in worst case - Fast and efficient</p>
+    <p>Mergesort: O(n log n) - Stable and efficient</p>
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <button id="start-button">Start</button>
 
     <script>
-        // Get the canvas elements
-        const bubbleSortCanvas = document.getElementById('bubble-sort-canvas');
-        const quicksortCanvas = document.getElementById('quicksort-canvas');
-        const mergesortCanvas = document.getElementById('mergesort-canvas');
+        // Get the canvas element
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Get the step counter elements
-        const bubbleSortStepsElement = document.getElementById('bubble-sort-steps');
-        const quicksortStepsElement = document.getElementById('quicksort-steps');
-        const mergesortStepsElement = document.getElementById('mergesort-steps');
+        // Set the canvas dimensions
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
 
-        // Generate random data
-        const data = [];
-        for (let i = 0; i < 10; i++) {
-            data.push(Math.floor(Math.random() * 100));
+        // Define the algorithms
+        const algorithms = {
+            bubbleSort: bubbleSort,
+            quicksort: quicksort,
+            mergesort: mergesort
+        };
+
+        // Define the data
+        let data = [];
+        const dataSize = 20;
+
+        // Initialize the data
+        function initData() {
+            data = [];
+            for (let i = 0; i < dataSize; i++) {
+                data.push(Math.floor(Math.random() * 100));
+            }
         }
 
-        // Draw the initial data on the canvases
-        drawData(bubbleSortCanvas, data.slice());
-        drawData(quicksortCanvas, data.slice());
-        drawData(mergesortCanvas, data.slice());
-
-        // Perform the sorting algorithms
-        let bubbleSortData = data.slice();
-        let quicksortData = data.slice();
-        let mergesortData = data.slice();
+        // Draw the data
+        function drawData(data1, data2, data3) {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            const barWidth = canvasWidth / (3 * dataSize);
+            for (let i = 0; i < dataSize; i++) {
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(i * barWidth * 3, canvasHeight - data1[i], barWidth, data1[i]);
+                ctx.fillStyle = 'red';
+                ctx.fillRect(i * barWidth * 3 + barWidth, canvasHeight - data2[i], barWidth, data2[i]);
+                ctx.fillStyle = 'green';
+                ctx.fillRect(i * barWidth * 3 + barWidth * 2, canvasHeight - data3[i], barWidth, data3[i]);
+            }
+        }
 
         // Bubble sort
-        let bubbleSortSteps = 0;
-        async function bubbleSort() {
-            for (let i = 0; i < bubbleSortData.length; i++) {
-                for (let j = 0; j < bubbleSortData.length - i - 1; j++) {
-                    bubbleSortSteps++;
-                    if (bubbleSortData[j] > bubbleSortData[j + 1]) {
-                        [bubbleSortData[j], bubbleSortData[j + 1]] = [bubbleSortData[j + 1], bubbleSortData[j]];
+        async function bubbleSort(data, stepCounter) {
+            for (let i = 0; i < data.length; i++) {
+                for (let j = 0; j < data.length - i - 1; j++) {
+                    if (data[j] > data[j + 1]) {
+                        [data[j], data[j + 1]] = [data[j + 1], data[j]];
+                        stepCounter.textContent = `Bubble Sort Steps: ${i * (data.length - i - 1) + j}`;
+                        await new Promise(resolve => requestAnimationFrame(resolve));
+                        drawData(data, data2, data3);
                     }
-                    bubbleSortStepsElement.textContent = bubbleSortSteps;
-                    drawData(bubbleSortCanvas, bubbleSortData.slice());
-                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
             }
         }
 
         // Quicksort
-        let quicksortSteps = 0;
-        async function quicksort() {
-            quicksortSort(quicksortData, 0, quicksortData.length - 1);
-        }
-        function quicksortSort(data, low, high) {
+        async function quicksort(data, low, high, stepCounter) {
             if (low < high) {
-                const pivotIndex = quicksortPartition(data, low, high);
-                quicksortSort(data, low, pivotIndex - 1);
-                quicksortSort(data, pivotIndex + 1, high);
+                let pivotIndex = await partition(data, low, high, stepCounter);
+                await quicksort(data, low, pivotIndex - 1, stepCounter);
+                await quicksort(data, pivotIndex + 1, high, stepCounter);
             }
         }
-        function quicksortPartition(data, low, high) {
-            const pivot = data[high];
+
+        async function partition(data, low, high, stepCounter) {
+            let pivot = data[high];
             let i = low - 1;
             for (let j = low; j < high; j++) {
-                quicksortSteps++;
                 if (data[j] < pivot) {
                     i++;
                     [data[i], data[j]] = [data[j], data[i]];
+                    stepCounter.textContent = `Quicksort Steps: ${low}-${high}-${i}-${j}`;
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                    drawData(data1, data, data3);
                 }
             }
             [data[i + 1], data[high]] = [data[high], data[i + 1]];
-            quicksortStepsElement.textContent = quicksortSteps;
-            drawData(quicksortCanvas, quicksortData.slice());
+            stepCounter.textContent = `Quicksort Steps: ${low}-${high}-${i + 1}-${high}`;
+            await new Promise(resolve => requestAnimationFrame(resolve));
+            drawData(data1, data, data3);
             return i + 1;
         }
 
         // Mergesort
-        let mergesortSteps = 0;
-        async function mergesort() {
-            mergesortSort(mergesortData, 0, mergesortData.length - 1);
-        }
-        function mergesortSort(data, low, high) {
+        async function mergesort(data, low, high, stepCounter) {
             if (low < high) {
-                const mid = Math.floor((low + high) / 2);
-                mergesortSort(data, low, mid);
-                mergesortSort(data, mid + 1, high);
-                mergesortMerge(data, low, mid, high);
+                let mid = Math.floor((low + high) / 2);
+                await mergesort(data, low, mid, stepCounter);
+                await mergesort(data, mid + 1, high, stepCounter);
+                await merge(data, low, mid, high, stepCounter);
             }
         }
-        function mergesortMerge(data, low, mid, high) {
-            const left = data.slice(low, mid + 1);
-            const right = data.slice(mid + 1, high + 1);
+
+        async function merge(data, low, mid, high, stepCounter) {
+            let left = data.slice(low, mid + 1);
+            let right = data.slice(mid + 1, high + 1);
             let i = 0;
             let j = 0;
             let k = low;
             while (i < left.length && j < right.length) {
-                mergesortSteps++;
                 if (left[i] <= right[j]) {
                     data[k] = left[i];
                     i++;
@@ -141,36 +129,55 @@
                     j++;
                 }
                 k++;
+                stepCounter.textContent = `Mergesort Steps: ${low}-${high}-${i}-${j}`;
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                drawData(data1, data2, data);
             }
             while (i < left.length) {
                 data[k] = left[i];
                 i++;
                 k++;
+                stepCounter.textContent = `Mergesort Steps: ${low}-${high}-${i}-${j}`;
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                drawData(data1, data2, data);
             }
             while (j < right.length) {
                 data[k] = right[j];
                 j++;
                 k++;
-            }
-            mergesortStepsElement.textContent = mergesortSteps;
-            drawData(mergesortCanvas, mergesortData.slice());
-        }
-
-        // Draw the data on the canvas
-        function drawData(canvas, data) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const barWidth = canvas.width / data.length;
-            for (let i = 0; i < data.length; i++) {
-                ctx.fillStyle = 'blue';
-                ctx.fillRect(i * barWidth, canvas.height - data[i] * 2, barWidth, data[i] * 2);
+                stepCounter.textContent = `Mergesort Steps: ${low}-${high}-${i}-${j}`;
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                drawData(data1, data2, data);
             }
         }
 
-        // Start the sorting algorithms
-        bubbleSort();
-        quicksort();
-        mergesort();
+        // Start the sorting process
+        async function startSorting() {
+            initData();
+            let data1 = [...data];
+            let data2 = [...data];
+            let data3 = [...data];
+            drawData(data1, data2, data3);
+
+            let bubbleSortStepCounter = document.createElement('p');
+            bubbleSortStepCounter.textContent = 'Bubble Sort Steps: 0';
+            document.body.appendChild(bubbleSortStepCounter);
+
+            let quicksortStepCounter = document.createElement('p');
+            quicksortStepCounter.textContent = 'Quicksort Steps: 0-0-0-0';
+            document.body.appendChild(quicksortStepCounter);
+
+            let mergesortStepCounter = document.createElement('p');
+            mergesortStepCounter.textContent = 'Mergesort Steps: 0-0-0-0';
+            document.body.appendChild(mergesortStepCounter);
+
+            await bubbleSort(data1, bubbleSortStepCounter);
+            await quicksort(data2, 0, data2.length - 1, quicksortStepCounter);
+            await mergesort(data3, 0, data3.length - 1, mergesortStepCounter);
+        }
+
+        // Add event listener to the start button
+        document.getElementById('start-button').addEventListener('click', startSorting);
     </script>
 </body>
 </html>

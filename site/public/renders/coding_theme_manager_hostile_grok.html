@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singleton Theme Toggle Example</title>
+    <style>
+        /* Basic styles for light and dark themes */
+        body.light {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: Arial, sans-serif;
+        }
+        
+        body.dark {
+            background-color: #333333;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin: 20px;
+        }
+        
+        p {
+            margin: 10px 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button.light {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        
+        button.dark {
+            background-color: #ffffff;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body class="light"> <!-- Start with light theme -->
+    <h1 id="header">Welcome to the Singleton Theme Demo</h1>
+    <p id="paragraph1">This is the first paragraph. It should change themes with the toggle.</p>
+    <p id="paragraph2">This is the second paragraph. Notice how multiple elements are affected.</p>
+    <button id="toggleButton">Toggle Theme</button>
+
+    <script>
+        // Singleton Pattern for Theme Management
+        const ThemeManager = (function() {
+            // Private variables and functions
+            let instance;
+            let currentTheme = 'light';  // Default theme
+
+            function createInstance() {
+                return {
+                    getTheme: function() {
+                        return currentTheme;
+                    },
+                    
+                    toggleTheme: function() {
+                        currentTheme = (currentTheme === 'light') ? 'dark' : 'light';
+                        applyTheme();  // Apply the theme to the document
+                    }
+                };
+            }
+
+            function applyTheme() {
+                const body = document.body;
+                const header = document.getElementById('header');
+                const paragraph1 = document.getElementById('paragraph1');
+                const paragraph2 = document.getElementById('paragraph2');
+                const button = document.getElementById('toggleButton');
+
+                // Update classes for the body and elements
+                if (currentTheme === 'light') {
+                    body.className = 'light';
+                    button.className = 'light';
+                    // You could add more specific styles if needed
+                } else {
+                    body.className = 'dark';
+                    button.className = 'dark';
+                }
+
+                // Optionally, update text for demonstration
+                header.textContent = `Current Theme: ${currentTheme.toUpperCase()}`;
+            }
+
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = createInstance();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        // Usage: Get the Singleton instance and attach event listener
+        const themeManager = ThemeManager.getInstance();
+        
+        // Initial application of theme
+        themeManager.toggleTheme();  // This will apply the initial theme
+
+        // Add event listener to the button
+        document.getElementById('toggleButton').addEventListener('click', function() {
+            themeManager.toggleTheme();
+        });
+    </script>
+</body>
+</html>

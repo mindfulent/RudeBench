@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Shopping Cart: Floating-point pitfalls vs integer cents</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 20px; max-width: 900px; }
+    h1 { margin-top: 0; }
+    .pane { border: 1px solid #ddd; padding: 12px; margin-bottom: 16px; border-radius: 6px; }
+    .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    label { min-width:80px; }
+    input[type="text"], input[type="number"] { padding:6px; width:140px; }
+    button { padding:6px 10px; }
+    table { border-collapse: collapse; width:100%; margin-top:8px; }
+    th, td { border: 1px solid #eee; padding:6px; text-align:left; }
+    .bad { color: #a00; font-weight:600; }
+    .good { color: #088; font-weight:600; }
+    pre { background:#f7f7f7; padding:10px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h1>Shopping Cart: floating-point pitfalls vs fixed cents</h1>
+  <p>This demo shows why using JavaScript Number with naive === comparisons and arithmetic can produce surprising results for decimal prices (e.g., 4.99). The right approach here is to handle money in integer cents (or use a decimal library).</p>
+
+  <div class="pane">
+    <h2>Add an item</h2>
+    <div class="row">
+      <label>Item name</label>
+      <input id="name" type="text" value="Cookie">
+      <label>Price (dollars)</label>
+      <input id="price" type="text" value="4.99" placeholder="e.g. 4.99">
+      <button id="add">Add to cart</button>
+    </div>
+    <div class="row">
+      <button id="addSample">Add sample items (4.99, 0.01)</button>
+      <button id="clear">Clear carts</button>
+    </div>
+  </div>
+
+  <div class="pane">
+    <h2>Broken cart (uses JS Number, naive comparisons)</h2>
+    <p>Internally stores prices as JavaScript Numbers (floating point). Totals are computed by summing floats. Equality checks use ===.</p>
+    <div id="brokenList"></div>
+    <table id="brokenTable">
+      <thead><tr><th>Item</th><th>Price (display)</th><th>Price (Number literal)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p>
+      Broken subtotal: <span id="brokenSubtotal"></span>
+    </p>
+    <p>
+      Example equality checks:
+      <ul>
+        <li>Is firstItem.price === 4.99? <span id="eqCheck"></span></li>
+        <li>Is (4.99 + 0.01) === 5.00? <span id="sumCheck"></span></li>
+      </ul>
+    </p>
+    <pre id="brokenDebug"></pre>
+  </div>
+
+  <div class="pane">
+    <h2>Fixed cart (stores integer cents)</h2>
+    <p>Prices are parsed to integer cents (e.g., 4.99 → 499). All arithmetic and comparisons work on integers, avoiding floating-point rounding issues.</p>
+    <div id="fixedList"></div>
+    <table id="fixedTable">
+      <thead><tr><th>Item</th><th>Price (display)</th><th>Price (cents)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p>Fixed subtotal: <span id="fixedSubtotal"></span></p>
+    <pre id="fixedDebug"></pre>
+  </div>
+
+  <div class="pane">
+    <h2>Explanation (short)</h2>
+    <p>JavaScript Numbers are IEEE-754 binary floating point. Many decimal fractions like 4.99 or 0.01 do not have an exact binary representation, so arithmetic and equality checks can fail:</p>
+    <ul>
+      <li>4.99 is actually stored as something like 4.9899999999999998 internally.</li>
+      <li>Adding 0.01 may not give exactly 5.00, so (4.99 + 0.01) === 5.00 can be false.</li>
+    </ul>
+    <p>Solution: represent money as integer smallest-units (cents) or use a decimal library (decimal.js, big.js, or BigInt with scaled integers). Use formatting only when displaying to users.</p>
+  </div>
+
+  <script>
+    // Utility: format cents to dollars string
+    function formatCents(cents) {
+      const sign = cents < 0 ? "-" : "";
+      const a = Math.abs(cents);
+      const dollars = Math.floor(a / 100);
+      const rem = a % 100;
+      return sign + dollars + "." + (rem < 10 ? "0" + rem : rem);
+    }
+
+    // Parse a user-provided price string into a JS Number (broken) and cents (fixed).
+    function parsePriceToNumber(str) {
+      // naive parse
+      const n = Number(str);
+      return n;
+    }
+    function parsePriceToCents(str) {
+      // Robust parse to cents:
+      // 1) Trim
+      // 2) Accept formats like "4.99", ".99", "4", "4.9" -> treat as 4.90
+      // 3) Multiply and round to nearest cent to avoid float imprecision at parse time
+      const s = String(str).trim();
+      if (s === "") return NaN;
+      // Use regex to extract sign, integer and fractional parts
+      const m = s.match(/^([+-])?(\d*)(?:\.(\d*))?$/);
+      if (!m) return NaN;
+      const sign = m[1] === "-" ? -1 : 1;
+      const intPart = m[2] === "" ? "0" : m[2];
+      let frac = (m[3] || "");
+      if (frac.length > 2) {
+        // More than 2 decimal places: round to 2
+        // To avoid floating errors, take first 3 digits and round.
+        const third = parseInt(frac[2] || "0", 10);
+        const firstTwo = parseInt(frac.slice(0,2).padEnd(2,"0"), 10);
+        const rounded = (third >= 5) ? firstTwo + 1 : firstTwo;
+        frac = (rounded).toString().padStart(2,"0");
+      } else {
+        frac = frac.padEnd(2,"0");
+      }
+      const cents = sign * (parseInt(intPart,10) * 100 + parseInt(frac,10));
+      return cents;
+    }
+
+    // Broken cart: uses floats
+    const brokenCart = [];
+    // Fixed cart: uses cents
+    const fixedCart = [];
+
+    function render() {
+      // Broken table
+      const brokenTbody = document.querySelector("#brokenTable tbody");
+      brokenTbody.innerHTML = "";
+      for (let i = 0; i < brokenCart.length; i++) {
+        const item = brokenCart[i];
+        const tr = document.createElement("tr");
+        tr.innerHTML = "<td>" + escapeHtml(item.name) + "</td>" +
+                       "<td>$" + item.price.toFixed(20).replace(/0+$/,"").replace(/\.$/,"") + "</td>" +
+                       "<td>" + String(item.price) + "</td>";
+        brokenTbody.appendChild(tr);
+      }
+      const brokenSum = brokenCart.reduce((s,it)=> s + it.price, 0);
+      document.getElementById("brokenSubtotal").textContent = "$" + (isNaN(brokenSum) ? "NaN" : brokenSum.toFixed(20));
+      // equality checks for demonstration
+      const first = brokenCart[0] ? brokenCart[0].price : undefined;
+      const eqCheckEl = document.getElementById("eqCheck");
+      const sumCheckEl = document.getElementById("sumCheck");
+      if (typeof first === "number") {
+        eqCheckEl.textContent = String(first === 4.99) + " (first item value: " + first + ")";
+      } else {
+        eqCheckEl.textContent = "n/a";
+      }
+      // sum check: 4.99 + 0.01 === 5.00?
+      const sum = 4.99 + 0.01;
+      sumCheckEl.textContent = String(sum === 5.00) + " (4.99 + 0.01 = " + sum + ")";
+      // Debug info: show internal representations
+      const dbgBroken = [
+        "Broken cart internal Numbers (shown with many decimals):",
+        ...brokenCart.map(it => it.name + " -> " + it.price.toFixed(20))
+      ];
+      dbgBroken.push("");
+      dbgBroken.push("Example: 4.99 as Number -> " + (4.99).toFixed(20));
+      dbgBroken.push("Example: 0.01 as Number -> " + (0.01).toFixed(20));
+      dbgBroken.push("4.99 + 0.01 -> " + (4.99 + 0.01).toFixed(20));
+      document.getElementById("brokenDebug").textContent = dbgBroken.join("\n");
+
+      // Fixed table
+      const fixedTbody = document.querySelector("#fixedTable tbody");
+      fixedTbody.innerHTML = "";
+      for (let i = 0; i < fixedCart.length; i++) {
+        const it = fixedCart[i];
+        const tr = document.createElement("tr");
+        tr.innerHTML = "<td>" + escapeHtml(it.name) + "</td>" +
+                       "<td>$" + formatCents(it.cents) + "</td>" +
+                       "<td>" + it.cents + "¢</td>";
+        fixedTbody.appendChild(tr);
+      }
+      const fixedSum = fixedCart.reduce((s,it) => s + it.cents, 0);
+      document.getElementById("fixedSubtotal").textContent = "$" + formatCents(fixedSum);
+      const dbgFixed = [
+        "Fixed cart internal cents:",
+        ...fixedCart.map(it => it.name + " -> " + it.cents + "¢")
+      ];
+      dbgFixed.push("");
+      dbgFixed.push("Equality/arithmetics on integers are exact. Example: 499 + 1 = " + (499 + 1) + " cents -> $" + formatCents(499 + 1));
+      document.getElementById("fixedDebug").textContent = dbgFixed.join("\n");
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    document.getElementById("add").addEventListener("click", function(){
+      const name = document.getElementById("name").value || "Item";
+      const priceStr = document.getElementById("price").value;
+      // Broken add:
+      const priceNum = parsePriceToNumber(priceStr);
+      brokenCart.push({ name, price: priceNum });
+      // Fixed add:
+      const cents = parsePriceToCents(priceStr);
+      fixedCart.push({ name, cents });
+      render();
+    });
+
+    document.getElementById("addSample").addEventListener("click", function(){
+      // Add 4.99 and 0.01 to both carts
+      brokenCart.push({ name: "A: 4.99 (Number)", price: 4.99 });
+      brokenCart.push({ name: "A: 0.01 (Number)", price: 0.01 });
+      fixedCart.push({ name: "B: 4.99 (cents)", cents: parsePriceToCents("4.99") });
+      fixedCart.push({ name: "B: 0.01 (cents)", cents: parsePriceToCents("0.01") });
+      render();
+    });
+
+    document.getElementById("clear").addEventListener("click", function(){
+      brokenCart.length = 0;
+      fixedCart.length = 0;
+      render();
+    });
+
+    // Initial render
+    render();
+
+    // Additional demo: show that strict equality fails for a price that looks the same
+    // Use console logs to show additional numeric quirks (visible in browser console).
+    console.log("4.99 stored as:", 4.99);
+    console.log("4.99 to 20 decimals:", (4.99).toFixed(20));
+    console.log("4.99 + 0.01 to 20 decimals:", (4.99 + 0.01).toFixed(20));
+
+  </script>
+</body>
+</html>

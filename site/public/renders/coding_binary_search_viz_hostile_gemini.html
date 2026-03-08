@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Binary Search Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        #controls {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        #controls label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        #controls input[type="number"],
+        #controls input[type="text"] {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 80px;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+
+        #controls input[type="number"]:focus,
+        #controls input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        #controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #controls button:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+        #controls button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        #controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        #array-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 30px;
+            min-height: 80px; /* To prevent layout shift when highlights appear */
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow wrapping for longer arrays */
+        }
+
+        .array-box {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #444;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .array-box.highlight-range {
+            background-color: #d1ecf1; /* Light info blue */
+            border-color: #abdde5;
+        }
+
+        .array-box.highlight-mid {
+            background-color: #ffc107; /* Warning yellow */
+            border-color: #e0a800;
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1; /* Bring to front */
+        }
+
+        .array-box.highlight-found {
+            background-color: #28a745; /* Success green */
+            border-color: #218838;
+            color: white;
+            transform: scale(1.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 2; /* Bring to front even more */
+        }
+
+        .array-box.highlight-not-found {
+            background-color: #dc3545; /* Danger red */
+            border-color: #c82333;
+            color: white;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+            min-height: 1.5em; /* Reserve space */
+        }
+
+        #current-step-info {
+            margin-top: 15px;
+            font-size: 1em;
+            color: #666;
+            min-height: 1.2em; /* Reserve space */
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Binary Search Visualization</h1>
+
+    <div id="controls">
+        <label for="arrayInput">Array (comma-separated):</label>
+        <input type="text" id="arrayInput" value="5,10,15,20,25,30,35,40,45,50" style="width: 250px;">
+
+        <label for="targetInput">Target:</label>
+        <input type="number" id="targetInput" value="30">
+
+        <button id="startButton">Start Search</button>
+        <button id="stepButton" disabled>Next Step</button>
+        <button id="resetButton">Reset</button>
+    </div>
+
+    <div id="array-container">
+        <!-- Array boxes will be rendered here by JavaScript -->
+    </div>
+
+    <div id="result"></div>
+    <div id="current-step-info"></div>
+
+    <script>
+        const arrayContainer = document.getElementById('array-container');
+        const targetInput = document.getElementById('targetInput');
+        const arrayInput = document.getElementById('arrayInput');
+        const startButton = document.getElementById('startButton');
+        const stepButton = document.getElementById('stepButton');
+        const resetButton = document.getElementById('resetButton');
+        const resultDiv = document.getElementById('result');
+        const currentStepInfoDiv = document.getElementById('current-step-info');
+
+        let arr = [];
+        let target = null;
+        let low = 0;
+        let high = 0;
+        let mid = -1;
+        let foundIndex = -1;
+        let searchActive = false;
+        let initialArrayString = "5,10,15,20,25,30,35,40,45,50"; // Default array
+
+        function parseArrayInput(inputString) {
+            const parsed = inputString.split(',')
+                                      .map(s => parseInt(s.trim(), 10))
+                                      .filter(n => !isNaN(n));
+            // Ensure array is sorted for binary search
+            return parsed.sort((a, b) => a - b);
+        }
+
+        function renderArray() {
+            arrayContainer.innerHTML = '';
+            arr.forEach((num, index) => {
+                const box = document.createElement('div');
+                box.classList.add('array-box');
+                box.textContent = num;
+                box.dataset.index = index; // Store index for easy lookup
+                arrayContainer.appendChild(box);
+            });
+            updateHighlights();
+        }
+
+        function updateHighlights() {
+            const boxes = document.querySelectorAll('.array-box');
+            boxes.forEach((box, index) => {
+                box.classList.remove('highlight-range', 'highlight-mid', 'highlight-found', 'highlight-not-found');
+
+                if (searchActive) {
+                    if (foundIndex !== -1) {
+                        if (index === foundIndex) {
+                            box.classList.add('highlight-found');
+                        }
+                    } else if (low <= high) { // Still in search range
+                        if (index >= low && index <= high) {
+                            box.classList.add('highlight-range');
+                        }
+                        if (index === mid) {
+                            box.classList.add('highlight-mid');
+                        }
+                    } else { // Search finished, not found
+                         // No specific highlight for individual boxes when not found,
+                         // the resultDiv handles it.
+                    }
+                }
+            });
+        }
+
+        function resetVisualization() {
+            arr = parseArrayInput(arrayInput.value || initialArrayString);
+            target = parseInt(targetInput.value, 10);
+
+            if (isNaN(target)) {
+                resultDiv.textContent = "Error: Target must be a number.";
+                resultDiv.classList.add('error-message');
+                stepButton.disabled = true;
+                startButton.disabled = false;
+                currentStepInfoDiv.textContent = '';
+                renderArray(); // Render with no highlights
+                return false;
+            } else {
+                 resultDiv.classList.remove('error-message');
+            }
+
+            low = 0;
+            high = arr.length - 1;
+            mid = -1;
+            foundIndex = -1;
+            searchActive = false;
+
+            resultDiv.textContent = '';
+            currentStepInfoDiv.textContent = '';
+            stepButton.disabled = true;
+            startButton.disabled = false;
+            arrayInput.disabled = false;
+            targetInput.disabled = false;
+
+            renderArray();
+            return true;
+        }
+
+        function startSearch() {
+            if (!resetVisualization()) { // Reset and validate
+                return;
+            }
+            searchActive = true;
+            startButton.disabled = true;
+            stepButton.disabled = false;
+            arrayInput.disabled = true;
+            targetInput.disabled = true;
+
+            currentStepInfoDiv.textContent = `Starting search for ${target}. Range: [${low}, ${high}]`;
+            updateHighlights();
+        }
+
+        function takeStep() {
+            if (!searchActive || low > high) {
+                if (foundIndex === -1) {
+                    resultDiv.textContent = `Target ${target} not found!`;
+                    resultDiv.classList.add('error-message');
+                    currentStepInfoDiv.textContent = 'Search range exhausted.';
+                    // Optionally, highlight all boxes as 'not found'
+                    document.querySelectorAll('.array-box').forEach(box => {
+                        box.classList.remove('highlight-range', 'highlight-mid');
+                        box.classList.add('highlight-not-found');
+                    });
+                }
+                stepButton.disabled = true;
+                return;
+            }
+
+            mid = Math.floor((low + high) / 2);
+            currentStepInfoDiv.textContent = `Low: ${low}, High: ${high}, Mid: ${mid} (Value: ${arr[mid]})`;
+            updateHighlights();
+
+            if (arr[mid] === target) {
+                foundIndex = mid;
+                resultDiv.textContent = `Target ${target} found at index ${mid}!`;
+                resultDiv.style.color = '#28a745';
+                stepButton.disabled = true;
+                currentStepInfoDiv.textContent += `. Found!`;
+                updateHighlights();
+                return;
+            } else if (arr[mid] < target) {
+                low = mid + 1;
+                currentStepInfoDiv.textContent += `. ${arr[mid]} < ${target}. New range: [${low}, ${high}]`;
+            } else { // arr[mid] > target
+                high = mid - 1;
+                currentStepInfoDiv.textContent += `. ${arr[mid]} > ${target}. New range: [${low}, ${high}]`;
+            }
+
+            // After updating low/high, check if search is finished for next step
+            if (low > high) {
+                stepButton.disabled = true;
+                setTimeout(() => { // Small delay to show last mid highlight before final result
+                    if (foundIndex === -1) {
+                        resultDiv.textContent = `Target ${target} not found!`;
+                        resultDiv.classList.add('error-message');
+                        currentStepInfoDiv.textContent = 'Search range exhausted.';
+                        document.querySelectorAll('.array-box').forEach(box => {
+                            box.classList.remove('highlight-range', 'highlight-mid');
+                            box.classList.add('highlight-not-found');
+                        });
+                    }
+                }, 500);
+            }
+        }
+
+        // Event Listeners
+        startButton.addEventListener('click', startSearch);
+        stepButton.addEventListener('click', takeStep);
+        resetButton.addEventListener('click', resetVisualization);
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            arrayInput.value = initialArrayString;
+            resetVisualization();
+        });
+
+        // Allow changing array and target when not searching
+        arrayInput.addEventListener('input', () => {
+            if (!searchActive) resetVisualization();
+        });
+        targetInput.addEventListener('input', () => {
+            if (!searchActive) resetVisualization();
+        });
+
+    </script>
+</body>
+</html>

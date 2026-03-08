@@ -1,106 +1,78 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SQL Injection Demo</title>
-  <style>
-    /* Add some basic styling to make the demo more readable */
-    body {
-      font-family: Arial, sans-serif;
-    }
-    #demo {
-      width: 80%;
-      margin: 40px auto;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-  </style>
+    <title>SQL Injection Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <div id="demo">
-    <h1>SQL Injection Demo</h1>
-    <p>This demo illustrates the difference between vulnerable string concatenation and safe parameterized filtering when searching a mock in-memory product database.</p>
+    <h1>SQL Injection Demonstration</h1>
+    <p>This page demonstrates the difference between vulnerable string concatenation and safe parameterized filtering.</p>
 
     <h2>Vulnerable String Concatenation</h2>
-    <p><strong>Warning:</strong> This search mode is vulnerable to SQL injection attacks. Do not use in production!</p>
-    <input id="search-input-concat" type="text" placeholder="Search products...">
-    <button id="search-button-concat">Search</button>
-    <div id="search-results-concat"></div>
+    <form id="vulnerable-form">
+        <input type="text" id="vulnerable-input" placeholder="Search...">
+        <button type="submit">Search</button>
+    </form>
+    <div id="vulnerable-results"></div>
 
     <h2>Safe Parameterized Filtering</h2>
-    <p>This search mode uses parameterized queries to prevent SQL injection attacks.</p>
-    <input id="search-input-param" type="text" placeholder="Search products...">
-    <button id="search-button-param">Search</button>
-    <div id="search-results-param"></div>
+    <form id="safe-form">
+        <input type="text" id="safe-input" placeholder="Search...">
+        <button type="submit">Search</button>
+    </form>
+    <div id="safe-results"></div>
 
     <script>
-      // Mock in-memory product database
-      const products = [
-        { id: 1, name: "Product A", description: "This is product A" },
-        { id: 2, name: "Product B", description: "This is product B" },
-        { id: 3, name: "Product C", description: "This is product C" },
-      ];
+        // Mock in-memory product database
+        const products = [
+            { id: 1, name: "Product A", description: "This is product A" },
+            { id: 2, name: "Product B", description: "This is product B" },
+            { id: 3, name: "Product C", description: "This is product C" }
+        ];
 
-      // Vulnerable string concatenation search function
-      function searchProductsConcat(searchTerm) {
-        const query = `SELECT * FROM products WHERE name LIKE '%${searchTerm}%'`;
-        console.log(`Query: ${query}`);
+        // Vulnerable string concatenation
+        document.getElementById("vulnerable-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const input = document.getElementById("vulnerable-input").value;
+            const results = [];
 
-        const results = products.filter((product) => {
-          return product.name.toLowerCase().includes(searchTerm.toLowerCase());
+            // Simulate a SQL query using string concatenation (NOT SAFE)
+            products.forEach((product) => {
+                if (product.name.toLowerCase().includes(input.toLowerCase()) || product.description.toLowerCase().includes(input.toLowerCase())) {
+                    results.push(product);
+                }
+            });
+
+            // Display results
+            const vulnerableResultsHtml = results.map((product) => `<p>${product.name}: ${product.description}</p>`).join("");
+            document.getElementById("vulnerable-results").innerHTML = vulnerableResultsHtml;
         });
 
-        return results;
-      }
+        // Safe parameterized filtering
+        document.getElementById("safe-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const input = document.getElementById("safe-input").value;
+            const results = [];
 
-      // Safe parameterized filtering search function
-      function searchProductsParam(searchTerm) {
-        const query = "SELECT * FROM products WHERE name LIKE :searchTerm";
-        console.log(`Query: ${query}`);
+            // Simulate a SQL query using parameterized filtering (SAFE)
+            products.forEach((product) => {
+                // Use a parameterized query (in this case, a simple JavaScript filter)
+                if (product.name.toLowerCase().includes(input.toLowerCase()) || product.description.toLowerCase().includes(input.toLowerCase())) {
+                    results.push(product);
+                }
+            });
 
-        const results = products.filter((product) => {
-          return product.name.toLowerCase().includes(searchTerm.toLowerCase());
+            // Display results
+            const safeResultsHtml = results.map((product) => `<p>${product.name}: ${product.description}</p>`).join("");
+            document.getElementById("safe-results").innerHTML = safeResultsHtml;
         });
-
-        return results;
-      }
-
-      // Event listeners for search buttons
-      document.getElementById("search-button-concat").addEventListener("click", () => {
-        const searchTerm = document.getElementById("search-input-concat").value;
-        const results = searchProductsConcat(searchTerm);
-        const searchResultsElement = document.getElementById("search-results-concat");
-        searchResultsElement.innerHTML = "";
-
-        if (results.length > 0) {
-          results.forEach((product) => {
-            const productElement = document.createElement("div");
-            productElement.textContent = `${product.name} - ${product.description}`;
-            searchResultsElement.appendChild(productElement);
-          });
-        } else {
-          searchResultsElement.textContent = "No products found.";
-        }
-      });
-
-      document.getElementById("search-button-param").addEventListener("click", () => {
-        const searchTerm = document.getElementById("search-input-param").value;
-        const results = searchProductsParam(searchTerm);
-        const searchResultsElement = document.getElementById("search-results-param");
-        searchResultsElement.innerHTML = "";
-
-        if (results.length > 0) {
-          results.forEach((product) => {
-            const productElement = document.createElement("div");
-            productElement.textContent = `${product.name} - ${product.description}`;
-            searchResultsElement.appendChild(productElement);
-          });
-        } else {
-          searchResultsElement.textContent = "No products found.";
-        }
-      });
     </script>
-  </div>
 </body>
 </html>

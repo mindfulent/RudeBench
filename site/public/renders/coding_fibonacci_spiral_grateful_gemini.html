@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Debugger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .canvas-container {
+            margin: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fcfcfc;
+            display: block;
+            margin: 0 auto;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #555;
+            max-width: 800px;
+            line-height: 1.6;
+            text-align: left;
+        }
+        strong {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Fibonacci Spiral Debugger</h1>
+    <p>
+        This page demonstrates a common "bug" when drawing a Fibonacci spiral, which is typically not a bug in the HTML Canvas API itself,
+        but rather a misunderstanding of the Fibonacci sequence's base cases or its application to the drawing logic.
+        The <strong>"Buggy Version"</strong> illustrates a common mistake, while the <strong>"Corrected Version"</strong> shows the proper spiral.
+    </p>
+    <p>
+        The Fibonacci sequence is commonly defined as F(0)=0, F(1)=1, and F(n) = F(n-1) + F(n-2) for n > 1.
+        However, sometimes F(1)=1, F(2)=1 is used, or the sequence is started with [1,1]. The way these numbers are used
+        as radii for the arcs, and how the center of each arc is calculated based on the previous one, is crucial.
+    </p>
+
+    <div class="canvas-container">
+        <h2>Buggy Version (Incorrect Fibonacci Base Cases/Application)</h2>
+        <canvas id="buggyCanvas" width="400" height="400"></canvas>
+        <p>
+            This version might use an incorrect starting sequence (e.g., `[1, 1]` for the first two numbers directly as radii,
+            or miscalculates arc centers based on these). This often leads to a spiral that doesn't "fit" correctly,
+            or appears to be misaligned, especially in its initial segments.
+        </p>
+    </div>
+
+    <div class="canvas-container">
+        <h2>Corrected Version (Proper Fibonacci Sequence and Drawing Logic)</h2>
+        <canvas id="correctCanvas" width="400" height="400"></canvas>
+        <p>
+            This version correctly implements the Fibonacci sequence (e.g., starting with 0, 1, 1, 2, 3...) and
+            applies these numbers as radii for quarter-circle arcs, carefully adjusting the center point for each subsequent arc
+            to create the continuous, aesthetically pleasing spiral.
+        </p>
+    </div>
+
+    <script>
+        // Helper function to generate Fibonacci numbers
+        function getFibonacciSequence(count) {
+            const sequence = [0, 1]; // Standard F(0)=0, F(1)=1
+            if (count <= 0) return [];
+            if (count === 1) return [0];
+            if (count === 2) return [0, 1];
+
+            for (let i = 2; i < count; i++) {
+                sequence.push(sequence[i - 1] + sequence[i - 2]);
+            }
+            return sequence;
+        }
+
+        // --- Buggy Spiral Drawing ---
+        function drawBuggySpiral() {
+            const canvas = document.getElementById('buggyCanvas');
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            ctx.clearRect(0, 0, size, size);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#d9534f'; // Reddish color for buggy
+
+            // Common "bug": using [1, 1] as the *first two radii* directly,
+            // or misinterpreting the sequence indices for drawing.
+            // Let's simulate a common error where the sequence starts with [1, 1]
+            // and the initial positioning is off, or the radii are applied without considering F(0).
+            const fibNumbers = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]; // A common "mis-indexed" sequence or starting point
+            const scale = 5; // Scaling factor for visibility
+
+            let currentX = size / 2;
+            let currentY = size / 2;
+            let direction = 0; // 0: right, 1: down, 2: left, 3: up
+
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY); // Start roughly in the center
+
+            // Simulate drawing with incorrect centers or radii application
+            for (let i = 0; i < fibNumbers.length - 1; i++) {
+                const radius = fibNumbers[i] * scale;
+                const nextRadius = fibNumbers[i + 1] * scale;
+
+                if (radius === 0) continue; // Avoid drawing zero-radius arcs
+
+                // The "bug" here is often in how currentX/Y are updated,
+                // or how the arc's center is calculated relative to the previous arc.
+                // This example attempts to simulate a common offset error.
+                let arcCenterX, arcCenterY, startAngle, endAngle;
+
+                switch (direction % 4) {
+                    case 0: // Right-moving arc (bottom-right quadrant)
+                        arcCenterX = currentX + radius;
+                        arcCenterY = currentY + radius;
+                        startAngle = Math.PI; // From left
+                        endAngle = Math.PI * 1.5; // To top
+                        currentX += nextRadius; // Move right by the next square's side
+                        break;
+                    case 1: // Down-moving arc (bottom-left quadrant)
+                        arcCenterX = currentX - radius;
+                        arcCenterY = currentY + radius;
+                        startAngle = Math.PI * 1.5; // From top
+                        endAngle = Math.PI * 2; // To right
+                        currentY += nextRadius; // Move down by the next square's side
+                        break;
+                    case 2: // Left-moving arc (top-left quadrant)
+                        arcCenterX = currentX - radius;
+                        arcCenterY = currentY - radius;
+                        startAngle = 0; // From right
+                        endAngle = Math.PI * 0.5; // To bottom
+                        currentX -= nextRadius; // Move left by the next square's side
+                        break;
+                    case 3: // Up-moving arc (top-right quadrant)
+                        arcCenterX = currentX + radius;
+                        arcCenterY = currentY - radius;
+                        startAngle = Math.PI * 0.5; // From bottom
+                        endAngle = Math.PI; // To left
+                        currentY -= nextRadius; // Move up by the next square's side
+                        break;
+                }
+                // This `lineTo` often makes it look more broken if the path isn't continuous
+                // ctx.lineTo(arcCenterX + Math.cos(startAngle) * radius, arcCenterY + Math.sin(startAngle) * radius);
+                ctx.arc(arcCenterX, arcCenterY, radius, startAngle, endAngle, false); // false for clockwise
+                direction++;
+            }
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+
+        // --- Corrected Spiral Drawing ---
+        function drawCorrectSpiral() {
+            const canvas = document.getElementById('correctCanvas');
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            ctx.clearRect(0, 0, size, size);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#5cb85c'; // Greenish color for correct
+
+            // Use F(1), F(2), F(3)... for radii. F(0) is often skipped for radii as it's 0.
+            // We'll generate enough numbers and use F(1) onwards.
+            const rawFibNumbers = getFibonacciSequence(15); // Get more numbers than needed to ensure we have F(1) onwards
+            const fibNumbers = rawFibNumbers.slice(1); // Use F(1), F(2), F(3)...
+            const scale = 5; // Scaling factor for visibility
+
+            // Initial position and direction
+            let currentX = size / 2;
+            let currentY = size / 2;
+            let direction = 0; // 0: right, 1: down, 2: left, 3: up
+
+            // Adjust initial position based on the first few squares to center the spiral better
+            // This is crucial for the spiral to visually start "correctly"
+            currentX -= fibNumbers[3] * scale; // F(4) = 3
+            currentY -= fibNumbers[2] * scale; // F(3) = 2
+
+            // Start drawing from the corner of the first square (F(1) square)
+            // For a spiral starting with F(1)=1, F(2)=1, F(3)=2, F(4)=3...
+            // the initial point needs to be relative to the first square's corner.
+            // Let's adjust for the F(1) and F(2) squares.
+            // The first meaningful arc often uses F(1) or F(2) as radius.
+            // We'll use F(1) as the first arc radius for demonstration, moving from a point.
+
+            ctx.beginPath();
+            // Move to the starting point of the first arc.
+            // This point is calculated to be the corner of the 'square' that the arc belongs to.
+            // Let's start with the top-right corner of the F(1) square (if F(1)=1)
+            // The very first arc uses radius F(1).
+            ctx.moveTo(currentX + fibNumbers[0] * scale, currentY); // Start at (currentX + F(1), currentY)
+
+            for (let i = 0; i < fibNumbers.length; i++) {
+                const radius = fibNumbers[i] * scale;
+                if (radius === 0) continue; // Skip F(0) if it somehow makes it here
+
+                let arcCenterX, arcCenterY, startAngle, endAngle;
+
+                switch (direction % 4) {
+                    case 0: // Arc from top-right corner, moving down-right (e.g., F(1) arc)
+                        arcCenterX = currentX + radius;
+                        arcCenterY = currentY;
+                        startAngle = Math.PI; // From left of center
+                        endAngle = Math.PI * 1.5; // To top of center
+                        // After drawing, move the 'current' point to the top-right corner of the next square
+                        currentX += radius;
+                        currentY += radius;
+                        break;
+                    case 1: // Arc from bottom-right corner, moving down-left (e.g., F(2) arc)
+                        arcCenterX = currentX;
+                        arcCenterY = currentY + radius;
+                        startAngle = Math.PI * 1.5; // From top of center
+                        endAngle = Math.PI * 2; // To right of center
+                        // Move to bottom-left corner of the next square
+                        currentX -= radius;
+                        currentY += radius;
+                        break;
+                    case 2: // Arc from bottom-left corner, moving up-left (e.g., F(3) arc)
+                        arcCenterX = currentX - radius;
+                        arcCenterY = currentY;
+                        startAngle = 0; // From right of center
+                        endAngle = Math.PI * 0.5; // To bottom of center
+                        // Move to top-left corner of the next square
+                        currentX -= radius;
+                        currentY -= radius;
+                        break;
+                    case 3: // Arc from top-left corner, moving up-right (e.g., F(4) arc)
+                        arcCenterX = currentX;
+                        arcCenterY = currentY - radius;
+                        startAngle = Math.PI * 0.5; // From bottom of center
+                        endAngle = Math.PI; // To left of center
+                        // Move to top-right corner of the next square
+                        currentX += radius;
+                        currentY -= radius;
+                        break;
+                }
+                // The key is that each arc starts where the previous one ended,
+                // and the `arc` function automatically connects the path.
+                ctx.arc(arcCenterX, arcCenterY, radius, startAngle, endAngle, false); // false for clockwise
+                direction++;
+            }
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        // Initialize both spirals when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            drawBuggySpiral();
+            drawCorrectSpiral();
+        });
+    </script>
+
+</body>
+</html>

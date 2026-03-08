@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation Review</title>
+    <style>
+        /* Embedded CSS for professional styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        details {
+            margin-bottom: 20px;
+            border: 1px solid #ecf0f1;
+            border-radius: 5px;
+            background-color: #fafafa;
+            transition: all 0.3s ease;
+        }
+        
+        details summary {
+            padding: 10px;
+            background-color: #3498db;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        details summary:hover {
+            background-color: #2980b9;
+        }
+        
+        details[open] summary {
+            border-radius: 5px 5px 0 0;
+        }
+        
+        details p, details ul, details table {
+            padding: 10px 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: #fff;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .note {
+            background-color: #e67e22;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Documentation Review</h1>
+        <p>This page reviews the provided REST endpoints, identifies design problems, and suggests corrections based on REST best practices. The original endpoints are:</p>
+        <ul>
+            <li>GET /getUsers</li>
+            <li>POST /user/delete/5</li>
+            <li>GET /createUser?name=Jo</li>
+            <li>PUT /updateAllUsers</li>
+        </ul>
+        
+        <p>Expand the sections below for details.</p>
+        
+        <details>
+            <summary>1. Original Endpoints and Design Problems</summary>
+            <h2>Identified Design Problems</h2>
+            <p>Below is a list of issues found in the original endpoints. These violations make the API less intuitive, inconsistent, and non-compliant with REST principles such as using proper HTTP methods, resource-based naming, and idempotency.</p>
+            
+            <ul>
+                <li><strong>Redundant or verb-based paths:</strong> Endpoints like GET /getUsers and GET /createUser include verbs (e.g., "get" or "create") in the URL path. RESTful APIs should use nouns for resources (e.g., "/users") and let the HTTP method define the action.</li>
+                <li><strong>Incorrect HTTP methods:</strong> 
+                    <ul>
+                        <li>POST /user/delete/5 uses POST for deletion, but DELETE is the standard method for removing resources.</li>
+                        <li>GET /createUser?name=Jo uses GET for creating a resource, which is inappropriate since GET should only retrieve data. Creation should use POST.</li>
+                        <li>PUT /updateAllUsers might imply a bulk update, but PUT is typically for updating a specific resource; it's not ideal for "all" resources without proper design.</li>
+                    </ul>
+                </li>
+                <li><strong>Inconsistent naming conventions:</strong> 
+                    <ul>
+                        <li>Mixing singular and plural forms (e.g., /user vs. /users) leads to confusion. Use plural nouns for collections (e.g., /users for a list).</li>
+                        <li>Hardcoded values in paths (e.g., /user/delete/5) should be parameterized (e.g., /users/{id}) for reusability and flexibility.</li>
+                    </ul>
+                </li>
+                <li><strong>Improper use of query parameters:</strong> GET /createUser?name=Jo uses query parameters for data that could modify the server state, which violates the idempotent nature of GET. Resource creation should use a request body in a POST request.</li>
+                <li><strong>Lack of specificity and idempotency:</strong> PUT /updateAllUsers doesn't specify which resource is being updated and could lead to unintended side effects. PUT should be idempotent (e.g., updating a specific resource) and not target "all" without careful consideration.</li>
+                <li><strong>General omissions:</strong> The original endpoints don't specify expected status codes, which is crucial for API consumers to handle responses properly (e.g., 201 Created for successful creation).</li>
+            </ul>
+            
+            <p class="note">Note: These problems can lead to security issues, poor maintainability, and difficulties in scaling the API.</p>
+        </details>
+        
+        <details>
+            <summary>2. Corrected Endpoints</summary>
+            <h2>Corrected Endpoints Following REST Best Practices</h2>
+            <p>Here are the corrected versions of the endpoints. I've ensured:</p>
+            <ul>
+                <li>Proper HTTP methods: GET for retrieval, POST for creation, PUT for full updates, DELETE for deletion.</li>
+                <li>Consistent naming: Using plural nouns for collections (e.g., /users) and placeholders for dynamic values (e.g., {id}).</li>
+                <li>Inclusion of status codes: Suggested codes for common scenarios (e.g., success, errors).</li>
+            </ul>
+            
+            <p>The table below lists the original endpoints, their problems (summarized), and the corrected versions.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Original Endpoint</th>
+                        <th>Summary of Problems</th>
+                        <th>Corrected Endpoint</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GET /getUsers</td>
+                        <td>Redundant verb in path; paths should be nouns.</td>
+                        <td>GET /users</td>
+                        <td>
+                            <p><strong>Description:</strong> Retrieve a list of users.</p>
+                            <p><strong>HTTP Method:</strong> GET (correct for retrieval).</p>
+                            <p><strong>Path:</strong> /users (uses a noun for the resource collection).</p>
+                            <p><strong>Status Codes:</strong> 200 OK (successful retrieval), 404 Not Found (no users), 500 Internal Server Error (server issues).</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>POST /user/delete/5</td>
+                        <td>Incorrect method (should be DELETE); verb in path; inconsistent naming.</td>
+                        <td>DELETE /users/{id}</td>
+                        <td>
+                            <p><strong>Description:</strong> Delete a specific user by ID.</p>
+                            <p><strong>HTTP Method:</strong> DELETE (correct for removal).</p>
+                            <p><strong>Path:</strong> /users/{id} (e.g., /users/5; uses plural and parameterized ID).</p>
+                            <p><strong>Status Codes:</strong> 204 No Content (successful deletion), 404 Not Found (user not found), 400 Bad Request (invalid ID), 500 Internal Server Error.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>GET /createUser?name=Jo</td>
+                        <td>Incorrect method (should be POST); verb in path; misuse of query parameters.</td>
+                        <td>POST /users</td>
+                        <td>
+                            <p><strong>Description:</strong> Create a new user.</p>
+                            <p><strong>HTTP Method:</strong> POST (correct for creation).</p>
+                            <p><strong>Path:</strong> /users (send data in the request body, e.g., JSON: { "name": "Jo" }).</p>
+                            <p><strong>Status Codes:</strong> 201 Created (successful creation), 400 Bad Request (invalid data), 409 Conflict (user already exists), 500 Internal Server Error.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>PUT /updateAllUsers</td>
+                        <td>Incorrect for bulk operations; verb in path; lack of specificity.</td>
+                        <td>PUT /users/{id}</td>
+                        <td>
+                            <p><strong>Description:</strong> Update a specific user (assuming the original intent was for a single resource; for bulk, use a separate endpoint like POST /users/bulk-update).</p>
+                            <p><strong>HTTP Method:</strong> PUT (correct for full updates of a resource).</p>
+                            <p><strong>Path:</strong> /users/{id} (e.g., /users/5; send updated data in the body).</p>
+                            <p><strong>Status Codes:</strong> 200 OK (successful update), 404 Not Found (user not found), 400 Bad Request (invalid data), 500 Internal Server Error.</p>
+                            <p><strong>Note:</strong> If true bulk updates are needed, consider PATCH /users for partial updates or a custom endpoint, but ensure it's designed carefully for idempotency.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p class="note">These corrections promote a more maintainable, scalable, and standard RESTful API. Always document authentication, request/response bodies, and error handling in a full API spec.</p>
+        </details>
+    </div>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CSV to Table Converter</title>
+<style>
+  :root{
+    --bg:#f6f8fa;
+    --panel:#fff;
+    --accent:#0066cc;
+    --muted:#6b7280;
+    --border:#d1d5db;
+    --row-a:#ffffff;
+    --row-b:#f8fafc;
+    --maxw:1100px;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#111}
+  .wrap{max-width:var(--maxw);margin:28px auto;padding:20px}
+  header{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+  h1{font-size:18px;margin:0}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,0.02)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  textarea#csvIn{width:100%;min-height:160px;resize:vertical;padding:10px;border-radius:6px;border:1px solid var(--border);font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;font-size:13px;background:#fff;color:#111}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:linear-gradient(#fff,#fbfdff);cursor:pointer;font-weight:600;color:var(--accent);text-decoration:none}
+  .btn:active{transform:translateY(1px)}
+  .btn.secondary{color:#0f172a;background:transparent}
+  .btn.danger{color:#b91c1c}
+  .options{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  label small{color:var(--muted);display:block;font-weight:600;font-size:12px}
+  select,input[type="checkbox"]{margin-left:6px}
+  .outputWrap{margin-top:14px}
+  .tableWrap{overflow:auto;border-radius:6px;border:1px solid var(--border);background:linear-gradient(#fff,#fff);padding:8px}
+  table{border-collapse:collapse;width:100%;min-width:400px;font-size:13px}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f3f4f6;position:sticky;top:0;z-index:1}
+  tbody tr:nth-child(odd){background:var(--row-a)}
+  tbody tr:nth-child(even){background:var(--row-b)}
+  td.empty{color:var(--muted);font-style:italic}
+  .stats{margin-top:8px;color:var(--muted);font-size:13px}
+  .error{color:#b91c1c;margin-top:8px}
+  footer{margin-top:18px;color:var(--muted);font-size:12px}
+  @media (max-width:520px){
+    .controls{flex-direction:column;align-items:stretch}
+    header{flex-direction:column;align-items:flex-start;gap:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>CSV → Table Converter</h1>
+      <p class="lead">Paste CSV below, then click Parse. Handles quoted fields, escaped quotes (""), and newlines inside quotes.</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div style="margin-bottom:8px">
+      <div class="controls">
+        <button id="parseBtn" class="btn">Parse</button>
+        <button id="clearBtn" class="btn secondary">Clear</button>
+        <button id="downloadBtn" class="btn" title="Download normalized CSV">Download CSV</button>
+        <button id="copyHtmlBtn" class="btn" title="Copy HTML of table">Copy Table HTML</button>
+        <div style="flex:1"></div>
+        <div class="options" title="Choose delimiter">
+          <label style="display:flex;align-items:center;gap:6px"><small>Delimiter</small>
+            <select id="delimiter">
+              <option value=",">Comma (,)</option>
+              <option value=";">Semicolon (;)</option>
+              <option value="\t">Tab</option>
+              <option value="|">Pipe (|)</option>
+            </select>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px"><small>Has header</small>
+            <input id="hasHeader" type="checkbox" checked />
+          </label>
+          <label style="display:flex;align-items:center;gap:6px"><small>Trim whitespace</small>
+            <input id="trim" type="checkbox" checked />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <textarea id="csvIn" placeholder='Paste CSV here, e.g. "Name,Age\n\"Doe, John\",30"'></textarea>
+
+    <div class="outputWrap">
+      <div id="msg" class="stats"></div>
+      <div id="error" class="error" style="display:none"></div>
+      <div id="tableContainer" class="tableWrap" style="display:none;margin-top:10px"></div>
+    </div>
+  </div>
+
+  <footer>Created by CSV-to-Table converter. Safe to use locally — no network requests.</footer>
+</div>
+
+<script>
+/*
+ Robust CSV parser (RFC-like) that handles:
+ - Delimiters other than comma
+ - Quoted fields with escaped quotes ("")
+ - Newlines inside quoted fields
+ - Varying column counts across rows
+ - Optionally trims unquoted fields
+ Implementation: state machine streaming through characters.
+*/
+
+(function(){
+  const csvIn = document.getElementById('csvIn');
+  const parseBtn = document.getElementById('parseBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const copyHtmlBtn = document.getElementById('copyHtmlBtn');
+  const tableContainer = document.getElementById('tableContainer');
+  const msg = document.getElementById('msg');
+  const errorEl = document.getElementById('error');
+  const delimiterSelect = document.getElementById('delimiter');
+  const hasHeaderCheckbox = document.getElementById('hasHeader');
+  const trimCheckbox = document.getElementById('trim');
+
+  function parseCSV(text, delimiter=',', {trim=true} = {}) {
+    const rows = [];
+    let i = 0;
+    const N = text.length;
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    let fieldQuoted = false;
+    while (i < N) {
+      const ch = text[i];
+
+      if (inQuotes) {
+        if (ch === '"') {
+          // lookahead for escaped quote
+          if (i+1 < N && text[i+1] === '"') {
+            field += '"';
+            i += 2;
+            continue;
+          } else {
+            // end of quoted field
+            inQuotes = false;
+            i++;
+            continue;
+          }
+        } else {
+          // anything including newlines is part of field
+          field += ch;
+          i++;
+          continue;
+        }
+      } else {
+        // not in quotes
+        if (ch === '"') {
+          inQuotes = true;
+          fieldQuoted = true;
+          i++;
+          continue;
+        }
+        // check delimiter (note: delimiter could be tab)
+        if (ch === delimiter) {
+          let out = field;
+          if (!fieldQuoted && trim) out = out.trim();
+          row.push(out);
+          field = '';
+          fieldQuoted = false;
+          i++;
+          continue;
+        }
+        // newline handling: accept \r\n or \n or \r
+        if (ch === '\r' || ch === '\n') {
+          // push the current field and finish row
+          let out = field;
+          if (!fieldQuoted && trim) out = out.trim();
+          row.push(out);
+          field = '';
+          fieldQuoted = false;
+          rows.push(row);
+          row = [];
+          // consume potential \r\n
+          if (ch === '\r' && i+1 < N && text[i+1] === '\n') i+=2;
+          else i++;
+          continue;
+        }
+        // regular character
+        field += ch;
+        i++;
+        continue;
+      }
+    }
+
+    // end of input: push last field/row if any content or if last char was delimiter
+    if (inQuotes) {
+      // unmatched quote at EOF — still push what we have but mark as error externally
+      let out = field;
+      if (!fieldQuoted && trim) out = out.trim();
+      row.push(out);
+      rows.push(row);
+      return {rows, error: 'Unterminated quoted field at end of input'};
+    } else {
+      // push last field if there's any data or if last char was delimiter or if there is an empty final row
+      if (field !== '' || fieldQuoted || row.length > 0) {
+        let out = field;
+        if (!fieldQuoted && trim) out = out.trim();
+        row.push(out);
+        rows.push(row);
+      }
+    }
+    return {rows, error: null};
+  }
+
+  function normalizeRows(rows) {
+    // Determine max columns
+    let maxCols = rows.reduce((m,r)=> Math.max(m, r.length), 0);
+    return {rows: rows.map(r => {
+      const copy = r.slice();
+      while (copy.length < maxCols) copy.push('');
+      return copy;
+    }), maxCols};
+  }
+
+  function renderTable(parsed, options) {
+    const {rows, maxCols} = parsed;
+    const hasHeader = options.hasHeader;
+    // build table element
+    const tbl = document.createElement('table');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+
+    // header row
+    if (rows.length === 0) {
+      // empty
+    } else {
+      if (hasHeader) {
+        const headerRow = rows[0];
+        const tr = document.createElement('tr');
+        for (let c=0;c<maxCols;c++){
+          const th = document.createElement('th');
+          th.textContent = headerRow[c] !== undefined && headerRow[c] !== '' ? headerRow[c] : '';
+          tr.appendChild(th);
+        }
+        thead.appendChild(tr);
+      } else {
+        // generate generic headers: Col 1, Col 2...
+        const tr = document.createElement('tr');
+        for (let c=0;c<maxCols;c++){
+          const th = document.createElement('th');
+          th.textContent = 'Col ' + (c+1);
+          tr.appendChild(th);
+        }
+        thead.appendChild(tr);
+      }
+
+      // data rows
+      const start = hasHeader ? 1 : 0;
+      for (let r = start; r < rows.length; r++) {
+        const row = rows[r];
+        const tr = document.createElement('tr');
+        for (let c=0;c<maxCols;c++){
+          const td = document.createElement('td');
+          const val = row[c] !== undefined ? row[c] : '';
+          if (val === '') {
+            td.className = 'empty';
+            td.textContent = '';
+          } else {
+            td.textContent = val;
+          }
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+    }
+
+    if (thead.children.length) tbl.appendChild(thead);
+    tbl.appendChild(tbody);
+    return tbl;
+  }
+
+  function rowsToCsv(rows, delimiter=',') {
+    // produce CSV with quoted fields when necessary, escaping quotes.
+    return rows.map(row => row.map(cell => {
+      if (cell == null) return '';
+      const s = String(cell);
+      const mustQuote = s.includes(delimiter) || s.includes('"') || s.includes('\n') || s.includes('\r') || /^\s|\s$/.test(s);
+      if (mustQuote) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(delimiter)).join('\r\n');
+  }
+
+  function showError(text) {
+    errorEl.style.display = 'block';
+    errorEl.textContent = text;
+  }
+  function clearError() {
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+  }
+
+  parseBtn.addEventListener('click', () => {
+    clearError();
+    tableContainer.style.display = 'none';
+    tableContainer.innerHTML = '';
+    msg.textContent = 'Parsing...';
+
+    const raw = csvIn.value;
+    const delimiter = delimiterSelect.value === '\\t' ? '\t' : delimiterSelect.value;
+    const trim = trimCheckbox.checked;
+    const hasHeader = hasHeaderCheckbox.checked;
+
+    if (!raw || raw.trim() === '') {
+      msg.textContent = '';
+      showError('Please paste CSV data into the textarea first.');
+      return;
+    }
+
+    const res = parseCSV(raw, delimiter, {trim});
+    if (res.error) {
+      showError(res.error + ' — attempt produced a best-effort parse.');
+    }
+
+    const normalized = normalizeRows(res.rows);
+    const tableEl = renderTable(normalized, {hasHeader});
+    tableContainer.appendChild(tableEl);
+    tableContainer.style.display = 'block';
+
+    msg.textContent = `Rows: ${normalized.rows.length}  Columns: ${normalized.maxCols}  (${hasHeader ? 'first row used as header' : 'generated headers'})`;
+
+    // store last normalized CSV for download/copy
+    tableContainer._lastRows = normalized.rows;
+    tableContainer._lastDelimiter = delimiter;
+  });
+
+  clearBtn.addEventListener('click', () => {
+    csvIn.value = '';
+    tableContainer.style.display = 'none';
+    tableContainer.innerHTML = '';
+    msg.textContent = '';
+    clearError();
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    clearError();
+    if (!tableContainer._lastRows) { showError('No parsed data to download. Click Parse first.'); return; }
+    const csv = rowsToCsv(tableContainer._lastRows, tableContainer._lastDelimiter || ',');
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'export.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 5000);
+  });
+
+  copyHtmlBtn.addEventListener('click', async () => {
+    clearError();
+    if (!tableContainer._lastRows) { showError('No parsed data to copy. Click Parse first.'); return; }
+    // create a minimal table HTML string
+    const temp = renderTable({rows: tableContainer._lastRows, maxCols: tableContainer._lastRows[0] ? tableContainer._lastRows[0].length : 0}, {hasHeader: hasHeaderCheckbox.checked});
+    // apply inline minimal styles for readability when pasted
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(temp);
+    const html = wrapper.innerHTML;
+    try {
+      await navigator.clipboard.writeText(html);
+      msg.textContent = 'Table HTML copied to clipboard.';
+    } catch (e) {
+      showError('Unable to copy to clipboard: ' + (e && e.message ? e.message : String(e)));
+    }
+  });
+
+  // Example placeholder
+  csvIn.value = 'Name,Age,Notes\\n"Smith, John",30,"Likes \\\"pizza\\\" and\\nmultiline notes"\\nAlice,25,"Line1\\nLine2"\\nBob, "  40  ", "Has leading/trailing spaces"';
+})();
+</script>
+</body>
+</html>

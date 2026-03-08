@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0f1117;
             color: #e2e8f0;
-            line-height: 1.6;
+            min-height: 100vh;
         }
 
         header {
@@ -32,7 +32,7 @@
         }
 
         header p {
-            color: #a0aec0;
+            color: #718096;
             font-size: 0.95rem;
         }
 
@@ -57,7 +57,7 @@
         .issues-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         @media (max-width: 600px) {
@@ -66,65 +66,55 @@
             }
         }
 
-        .issue-card {
+        .issue-item {
             background: #2d1515;
-            border: 1px solid #742a2a;
             border-radius: 6px;
-            padding: 1rem;
+            padding: 0.75rem 1rem;
+            border-left: 3px solid #e53e3e;
         }
 
-        .issue-card .bad {
+        .issue-item .bad {
+            font-family: monospace;
             color: #fc8181;
-            font-family: monospace;
             font-size: 0.85rem;
-            margin-bottom: 0.5rem;
             text-decoration: line-through;
+            display: block;
+            margin-bottom: 0.4rem;
         }
 
-        .issue-card .reason {
-            color: #feb2b2;
-            font-size: 0.8rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .issue-card .fixed {
+        .issue-item .fix {
             color: #68d391;
-            font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            display: block;
         }
 
-        .issue-number {
-            display: inline-block;
-            background: #e53e3e;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            text-align: center;
-            line-height: 20px;
-            font-size: 0.75rem;
-            margin-right: 0.4rem;
+        .issue-item .reason {
+            color: #a0aec0;
+            font-size: 0.78rem;
+            margin-top: 0.3rem;
+            display: block;
         }
 
-        main {
+        .container {
             max-width: 900px;
             margin: 0 auto;
             padding: 1rem 2rem 4rem;
         }
 
         .section-title {
-            font-size: 1.3rem;
-            color: #90cdf4;
-            margin: 2rem 0 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #2d3748;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #4a5568;
+            margin: 2rem 0 0.75rem;
+            font-weight: 600;
         }
 
         .endpoint {
             background: #1a1d2e;
             border: 1px solid #2d3748;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
             overflow: hidden;
             transition: border-color 0.2s;
         }
@@ -137,37 +127,36 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            padding: 1rem 1.5rem;
+            padding: 1rem 1.25rem;
             cursor: pointer;
             user-select: none;
-            transition: background 0.2s;
-        }
-
-        .endpoint-header:hover {
-            background: #1e2235;
         }
 
         .method {
+            font-size: 0.75rem;
             font-weight: 700;
-            font-size: 0.8rem;
-            padding: 0.3rem 0.7rem;
-            border-radius: 4px;
-            min-width: 65px;
+            padding: 0.3rem 0.65rem;
+            border-radius: 5px;
+            min-width: 60px;
             text-align: center;
             letter-spacing: 0.05em;
         }
 
-        .GET    { background: #1a4731; color: #68d391; border: 1px solid #276749; }
-        .POST   { background: #1a3a4a; color: #63b3ed; border: 1px solid #2b6cb0; }
-        .PUT    { background: #3d2e0a; color: #f6ad55; border: 1px solid #744210; }
-        .DELETE { background: #3d1515; color: #fc8181; border: 1px solid #742a2a; }
-        .PATCH  { background: #2d1f4a; color: #b794f4; border: 1px solid #553c9a; }
+        .method.get    { background: #1a3a2a; color: #68d391; border: 1px solid #276749; }
+        .method.post   { background: #1a2a3a; color: #63b3ed; border: 1px solid #2b6cb0; }
+        .method.put    { background: #2a2a1a; color: #f6e05e; border: 1px solid #744210; }
+        .method.patch  { background: #2a1a2a; color: #d6bcfa; border: 1px solid #553c9a; }
+        .method.delete { background: #2a1a1a; color: #fc8181; border: 1px solid #742a2a; }
 
         .endpoint-path {
             font-family: monospace;
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #e2e8f0;
             flex: 1;
+        }
+
+        .endpoint-path .param {
+            color: #f6ad55;
         }
 
         .endpoint-summary {
@@ -177,8 +166,8 @@
 
         .chevron {
             color: #4a5568;
-            transition: transform 0.2s;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            transition: transform 0.25s;
         }
 
         .endpoint.open .chevron {
@@ -187,69 +176,718 @@
 
         .endpoint-body {
             display: none;
+            padding: 0 1.25rem 1.25rem;
             border-top: 1px solid #2d3748;
-            padding: 1.5rem;
         }
 
         .endpoint.open .endpoint-body {
             display: block;
         }
 
-        .endpoint-body p {
-            color: #a0aec0;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .fixes-applied {
-            background: #0d2318;
-            border: 1px solid #276749;
-            border-radius: 6px;
-            padding: 0.8rem 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .fixes-applied h4 {
-            color: #68d391;
-            font-size: 0.8rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .fixes-applied ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .fixes-applied ul li {
-            color: #9ae6b4;
-            font-size: 0.82rem;
-            padding: 0.15rem 0;
-        }
-
-        .fixes-applied ul li::before {
-            content: '✓ ';
-            color: #48bb78;
-        }
-
-        .tab-group {
+        .body-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
             margin-top: 1rem;
         }
 
-        .tabs {
-            display: flex;
-            gap: 0.25rem;
-            margin-bottom: -1px;
+        @media (max-width: 600px) {
+            .body-grid { grid-template-columns: 1fr; }
         }
 
-        .tab-btn {
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            border-bottom: none;
-            border-radius: 4px 4px 0 0;
+        .body-section h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #4a5568;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+        }
+
+        .body-section.full {
+            grid-column: 1 / -1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        td {
+            padding: 0.5rem 0.6rem;
+            border-bottom: 1px solid #1e2535;
+            vertical-align: top;
+        }
+
+        td:first-child {
+            font-family: monospace;
+            color: #f6ad55;
+        }
+
+        td .type {
+            color: #63b3ed;
+            font-size: 0.78rem;
+        }
+
+        td .required {
+            color: #fc8181;
+            font-size: 0.72rem;
+            margin-left: 0.3rem;
+        }
+
+        td .optional {
+            color: #4a5568;
+            font-size: 0.72rem;
+            margin-left: 0.3rem;
+        }
+
+        td:last-child {
             color: #a0aec0;
-            cursor: pointer;
-            font-size: 0.8rem;
-            padding: 0.4rem 1rem;
-            transition: background 0.2s,
+        }
+
+        .code-block {
+            background: #0d1117;
+            border: 1px solid #2d3748;
+            border-radius: 6px;
+            padding: 0.85rem 1rem;
+            font-family: monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .code-block .key   { color: #63b3ed; }
+        .code-block .str   { color: #68d391; }
+        .code-block .num   { color: #f6ad55; }
+        .code-block .bool  { color: #d6bcfa; }
+        .code-block .null  { color: #fc8181; }
+        .code-block .punct { color: #718096; }
+
+        .responses {
+            margin-top: 0.5rem;
+        }
+
+        .response-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid #1e2535;
+            font-size: 0.85rem;
+        }
+
+        .response-row:last-child {
+            border-bottom: none;
+        }
+
+        .status-code {
+            font-family: monospace;
+            font-weight: 700;
+            min-width: 40px;
+        }
+
+        .status-code.s2 { color: #68d391; }
+        .status-code.s4 { color: #fc8181; }
+        .status-code.s5 { color: #f6ad55; }
+
+        .response-desc {
+            color: #a0aec0;
+        }
+
+        .description {
+            color: #a0aec0;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #1e2535;
+            color: #63b3ed;
+            font-size: 0.72rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .base-url {
+            background: #1a1d2e;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 0.85rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.88rem;
+        }
+
+        .base-url span:first-child {
+            color: #4a5568;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        .base-url code {
+            font-family: monospace;
+            color: #63b3ed;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Users API</h1>
+    <p>v2.0 &mdash; RESTful &mdash; JSON</p>
+</header>
+
+<div class="container">
+
+    <!-- Issues Banner -->
+    <div class="issues-banner">
+        <h2>⚠ Original Design Issues Fixed</h2>
+        <div class="issues-grid">
+
+            <div class="issue-item">
+                <span class="bad">GET /getUsers</span>
+                <span class="fix">✓ GET /users</span>
+                <span class="reason">Verbs don't belong in URLs. The HTTP method IS the verb. Resources are nouns, pluralised.</span>
+            </div>
+
+            <div class="issue-item">
+                <span class="bad">POST /user/delete/5</span>
+                <span class="fix">✓ DELETE /users/5</span>
+                <span class="reason">Use the DELETE method for deletion. Embedding actions in the path violates REST. Resource name should also be plural.</span>
+            </div>
+
+            <div class="issue-item">
+                <span class="bad">GET /createUser?name=Jo</span>
+                <span class="fix">✓ POST /users  { "name": "Jo" }</span>
+                <span class="reason">GET must be safe and idempotent — never use it to create resources. Creation data belongs in the request body, not the query string. Use POST.</span>
+            </div>
+
+            <div class="issue-item">
+                <span class="bad">PUT /updateAllUsers</span>
+                <span class="fix">✓ PATCH /users</span>
+                <span class="reason">Again, no verbs in paths. PUT implies full replacement of a known resource. Bulk partial updates should use PATCH. The intent here is an update, not a wholesale replace.</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Base URL -->
+    <div class="base-url">
+        <span>Base URL</span>
+        <code>https://api.example.com/v2</code>
+    </div>
+
+    <!-- Collection Endpoints -->
+    <div class="section-title">Collection — /users</div>
+
+    <!-- GET /users -->
+    <div class="endpoint" id="ep1">
+        <div class="endpoint-header" onclick="toggle('ep1')">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/users</span>
+            <span class="endpoint-summary">List all users</span>
+            <span class="tag">fixed</span>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+            <p class="description">
+                Returns a paginated list of all users. Supports filtering by status and sorting.
+                <br><br>
+                <strong style="color:#fc8181">Was:</strong>
+                <code style="color:#fc8181;font-family:monospace"> GET /getUsers</code>
+                — verb in URL, resource not pluralised.
+            </p>
+            <div class="body-grid">
+                <div class="body-section">
+                    <h4>Query Parameters</h4>
+                    <table>
+                        <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        <tr>
+                            <td>page<span class="optional">optional</span></td>
+                            <td><span class="type">integer</span></td>
+                            <td>Page number, default 1</td>
+                        </tr>
+                        <tr>
+                            <td>limit<span class="optional">optional</span></td>
+                            <td><span class="type">integer</span></td>
+                            <td>Results per page, default 20, max 100</td>
+                        </tr>
+                        <tr>
+                            <td>status<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>Filter by status: <code>active</code> | <code>inactive</code></td>
+                        </tr>
+                        <tr>
+                            <td>sort<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>Sort field, e.g. <code>name</code>, <code>-createdAt</code></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="body-section">
+                    <h4>Responses</h4>
+                    <div class="responses">
+                        <div class="response-row">
+                            <span class="status-code s2">200</span>
+                            <span class="response-desc">Paginated user list returned</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">400</span>
+                            <span class="response-desc">Invalid query parameters</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">401</span>
+                            <span class="response-desc">Unauthorised</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="body-section full">
+                    <h4>Example Response — 200 OK</h4>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"data"</span><span class="punct">:</span> <span class="punct">[</span>
+    <span class="punct">{</span>
+      <span class="key">"id"</span><span class="punct">:</span>        <span class="num">1</span><span class="punct">,</span>
+      <span class="key">"name"</span><span class="punct">:</span>      <span class="str">"Alice"</span><span class="punct">,</span>
+      <span class="key">"email"</span><span class="punct">:</span>     <span class="str">"alice@example.com"</span><span class="punct">,</span>
+      <span class="key">"status"</span><span class="punct">:</span>    <span class="str">"active"</span><span class="punct">,</span>
+      <span class="key">"createdAt"</span><span class="punct">:</span> <span class="str">"2024-01-15T09:00:00Z"</span>
+    <span class="punct">}</span>
+  <span class="punct">],</span>
+  <span class="key">"pagination"</span><span class="punct">:</span> <span class="punct">{</span>
+    <span class="key">"page"</span><span class="punct">:</span>       <span class="num">1</span><span class="punct">,</span>
+    <span class="key">"limit"</span><span class="punct">:</span>      <span class="num">20</span><span class="punct">,</span>
+    <span class="key">"total"</span><span class="punct">:</span>      <span class="num">84</span><span class="punct">,</span>
+    <span class="key">"totalPages"</span><span class="punct">:</span> <span class="num">5</span>
+  <span class="punct">}</span>
+<span class="punct">}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POST /users -->
+    <div class="endpoint" id="ep2">
+        <div class="endpoint-header" onclick="toggle('ep2')">
+            <span class="method post">POST</span>
+            <span class="endpoint-path">/users</span>
+            <span class="endpoint-summary">Create a user</span>
+            <span class="tag">fixed</span>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+            <p class="description">
+                Creates a new user. Returns the created resource with its assigned <code>id</code>.
+                <br><br>
+                <strong style="color:#fc8181">Was:</strong>
+                <code style="color:#fc8181;font-family:monospace"> GET /createUser?name=Jo</code>
+                — GET must never mutate state. Verb in URL. Sensitive/structured data must not go in query strings; it belongs in the request body.
+            </p>
+            <div class="body-grid">
+                <div class="body-section">
+                    <h4>Request Body  <span style="color:#4a5568;font-size:0.75rem;font-weight:400">application/json</span></h4>
+                    <table>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                        <tr>
+                            <td>name<span class="required">required</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>Full name, min 1 char</td>
+                        </tr>
+                        <tr>
+                            <td>email<span class="required">required</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>Valid unique email address</td>
+                        </tr>
+                        <tr>
+                            <td>role<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td><code>user</code> | <code>admin</code>, default <code>user</code></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="body-section">
+                    <h4>Responses</h4>
+                    <div class="responses">
+                        <div class="response-row">
+                            <span class="status-code s2">201</span>
+                            <span class="response-desc">User created, resource returned</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">400</span>
+                            <span class="response-desc">Validation error</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">409</span>
+                            <span class="response-desc">Email already exists</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">401</span>
+                            <span class="response-desc">Unauthorised</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="body-section">
+                    <h4>Example Request</h4>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"name"</span><span class="punct">:</span>  <span class="str">"Jo"</span><span class="punct">,</span>
+  <span class="key">"email"</span><span class="punct">:</span> <span class="str">"jo@example.com"</span><span class="punct">,</span>
+  <span class="key">"role"</span><span class="punct">:</span>  <span class="str">"user"</span>
+<span class="punct">}</span></div>
+                </div>
+                <div class="body-section">
+                    <h4>Example Response — 201 Created</h4>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"id"</span><span class="punct">:</span>        <span class="num">42</span><span class="punct">,</span>
+  <span class="key">"name"</span><span class="punct">:</span>      <span class="str">"Jo"</span><span class="punct">,</span>
+  <span class="key">"email"</span><span class="punct">:</span>     <span class="str">"jo@example.com"</span><span class="punct">,</span>
+  <span class="key">"role"</span><span class="punct">:</span>      <span class="str">"user"</span><span class="punct">,</span>
+  <span class="key">"createdAt"</span><span class="punct">:</span> <span class="str">"2024-06-01T12:00:00Z"</span>
+<span class="punct">}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PATCH /users -->
+    <div class="endpoint" id="ep3">
+        <div class="endpoint-header" onclick="toggle('ep3')">
+            <span class="method patch">PATCH</span>
+            <span class="endpoint-path">/users</span>
+            <span class="endpoint-summary">Bulk-update users</span>
+            <span class="tag">fixed</span>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+            <p class="description">
+                Partially updates multiple users in a single request.
+                <br><br>
+                <strong style="color:#fc8181">Was:</strong>
+                <code style="color:#fc8181;font-family:monospace"> PUT /updateAllUsers</code>
+                — verb in URL. PUT semantics mean full replacement of a known single resource with a required ID; that's wrong for a bulk partial update. PATCH on the collection is the correct choice. A PUT here would require sending every field of every user or risk data loss.
+            </p>
+            <div class="body-grid">
+                <div class="body-section full">
+                    <h4>Request Body  <span style="color:#4a5568;font-size:0.75rem;font-weight:400">application/json — array of partial user objects</span></h4>
+                    <table>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                        <tr>
+                            <td>id<span class="required">required</span></td>
+                            <td><span class="type">integer</span></td>
+                            <td>ID of user to update</td>
+                        </tr>
+                        <tr>
+                            <td>name<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>New name</td>
+                        </tr>
+                        <tr>
+                            <td>email<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>New email</td>
+                        </tr>
+                        <tr>
+                            <td>status<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td><code>active</code> | <code>inactive</code></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="body-section">
+                    <h4>Example Request</h4>
+                    <div class="code-block"><span class="punct">[</span>
+  <span class="punct">{</span> <span class="key">"id"</span><span class="punct">:</span> <span class="num">1</span><span class="punct">,</span> <span class="key">"status"</span><span class="punct">:</span> <span class="str">"inactive"</span> <span class="punct">},</span>
+  <span class="punct">{</span> <span class="key">"id"</span><span class="punct">:</span> <span class="num">2</span><span class="punct">,</span> <span class="key">"name"</span><span class="punct">:</span>   <span class="str">"Bob"</span>       <span class="punct">}</span>
+<span class="punct">]</span></div>
+                </div>
+                <div class="body-section">
+                    <h4>Responses</h4>
+                    <div class="responses">
+                        <div class="response-row">
+                            <span class="status-code s2">200</span>
+                            <span class="response-desc">All updates applied, results returned</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s2">207</span>
+                            <span class="response-desc">Multi-status — partial success</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">400</span>
+                            <span class="response-desc">Validation error</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">401</span>
+                            <span class="response-desc">Unauthorised</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Endpoints -->
+    <div class="section-title">Item — /users/{id}</div>
+
+    <!-- GET /users/{id} -->
+    <div class="endpoint" id="ep4">
+        <div class="endpoint-header" onclick="toggle('ep4')">
+            <span class="method get">GET</span>
+            <span class="endpoint-path">/users/<span class="param">{id}</span></span>
+            <span class="endpoint-summary">Get a single user</span>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+            <p class="description">Returns a single user by their unique ID.</p>
+            <div class="body-grid">
+                <div class="body-section">
+                    <h4>Path Parameters</h4>
+                    <table>
+                        <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        <tr>
+                            <td>id<span class="required">required</span></td>
+                            <td><span class="type">integer</span></td>
+                            <td>User's unique identifier</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="body-section">
+                    <h4>Responses</h4>
+                    <div class="responses">
+                        <div class="response-row">
+                            <span class="status-code s2">200</span>
+                            <span class="response-desc">User object returned</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">404</span>
+                            <span class="response-desc">User not found</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">401</span>
+                            <span class="response-desc">Unauthorised</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="body-section full">
+                    <h4>Example Response — 200 OK</h4>
+                    <div class="code-block"><span class="punct">{</span>
+  <span class="key">"id"</span><span class="punct">:</span>        <span class="num">5</span><span class="punct">,</span>
+  <span class="key">"name"</span><span class="punct">:</span>      <span class="str">"Alice"</span><span class="punct">,</span>
+  <span class="key">"email"</span><span class="punct">:</span>     <span class="str">"alice@example.com"</span><span class="punct">,</span>
+  <span class="key">"role"</span><span class="punct">:</span>      <span class="str">"admin"</span><span class="punct">,</span>
+  <span class="key">"status"</span><span class="punct">:</span>    <span class="str">"active"</span><span class="punct">,</span>
+  <span class="key">"createdAt"</span><span class="punct">:</span> <span class="str">"2024-01-15T09:00:00Z"</span>
+<span class="punct">}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PUT /users/{id} -->
+    <div class="endpoint" id="ep5">
+        <div class="endpoint-header" onclick="toggle('ep5')">
+            <span class="method put">PUT</span>
+            <span class="endpoint-path">/users/<span class="param">{id}</span></span>
+            <span class="endpoint-summary">Replace a user (full update)</span>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+            <p class="description">
+                Fully replaces a user resource. All fields must be supplied. Missing fields will be set to their defaults or null — this is the correct semantic for PUT.
+                Use <code>PATCH /users/{id}</code> if you only want to update specific fields.
+            </p>
+            <div class="body-grid">
+                <div class="body-section">
+                    <h4>Request Body</h4>
+                    <table>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                        <tr>
+                            <td>name<span class="required">required</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>Full name</td>
+                        </tr>
+                        <tr>
+                            <td>email<span class="required">required</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>Email address</td>
+                        </tr>
+                        <tr>
+                            <td>role<span class="required">required</span></td>
+                            <td><span class="type">string</span></td>
+                            <td><code>user</code> | <code>admin</code></td>
+                        </tr>
+                        <tr>
+                            <td>status<span class="required">required</span></td>
+                            <td><span class="type">string</span></td>
+                            <td><code>active</code> | <code>inactive</code></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="body-section">
+                    <h4>Responses</h4>
+                    <div class="responses">
+                        <div class="response-row">
+                            <span class="status-code s2">200</span>
+                            <span class="response-desc">User replaced, updated resource returned</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">400</span>
+                            <span class="response-desc">Validation error</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">404</span>
+                            <span class="response-desc">User not found</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">401</span>
+                            <span class="response-desc">Unauthorised</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PATCH /users/{id} -->
+    <div class="endpoint" id="ep6">
+        <div class="endpoint-header" onclick="toggle('ep6')">
+            <span class="method patch">PATCH</span>
+            <span class="endpoint-path">/users/<span class="param">{id}</span></span>
+            <span class="endpoint-summary">Partially update a user</span>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+            <p class="description">Updates only the supplied fields of a user. Omitted fields are left unchanged.</p>
+            <div class="body-grid">
+                <div class="body-section">
+                    <h4>Request Body  <span style="color:#4a5568;font-size:0.75rem;font-weight:400">all fields optional, at least one required</span></h4>
+                    <table>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                        <tr>
+                            <td>name<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>New name</td>
+                        </tr>
+                        <tr>
+                            <td>email<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td>New email</td>
+                        </tr>
+                        <tr>
+                            <td>role<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td><code>user</code> | <code>admin</code></td>
+                        </tr>
+                        <tr>
+                            <td>status<span class="optional">optional</span></td>
+                            <td><span class="type">string</span></td>
+                            <td><code>active</code> | <code>inactive</code></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="body-section">
+                    <h4>Responses</h4>
+                    <div class="responses">
+                        <div class="response-row">
+                            <span class="status-code s2">200</span>
+                            <span class="response-desc">Updated resource returned</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">400</span>
+                            <span class="response-desc">Validation error</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">404</span>
+                            <span class="response-desc">User not found</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">401</span>
+                            <span class="response-desc">Unauthorised</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE /users/{id} -->
+    <div class="endpoint" id="ep7">
+        <div class="endpoint-header" onclick="toggle('ep7')">
+            <span class="method delete">DELETE</span>
+            <span class="endpoint-path">/users/<span class="param">{id}</span></span>
+            <span class="endpoint-summary">Delete a user</span>
+            <span class="tag">fixed</span>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+            <p class="description">
+                Permanently deletes a user by ID.
+                <br><br>
+                <strong style="color:#fc8181">Was:</strong>
+                <code style="color:#fc8181;font-family:monospace"> POST /user/delete/5</code>
+                — POST is for creation. Deletion semantics belong to the DELETE method. Embedding the action <em>delete</em> in the path is redundant once you use the right verb. Resource name must also be plural.
+            </p>
+            <div class="body-grid">
+                <div class="body-section">
+                    <h4>Path Parameters</h4>
+                    <table>
+                        <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        <tr>
+                            <td>id<span class="required">required</span></td>
+                            <td><span class="type">integer</span></td>
+                            <td>ID of user to delete</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="body-section">
+                    <h4>Responses</h4>
+                    <div class="responses">
+                        <div class="response-row">
+                            <span class="status-code s2">204</span>
+                            <span class="response-desc">Deleted successfully, no content</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">404</span>
+                            <span class="response-desc">User not found</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">401</span>
+                            <span class="response-desc">Unauthorised</span>
+                        </div>
+                        <div class="response-row">
+                            <span class="status-code s4">403</span>
+                            <span class="response-desc">Forbidden — insufficient permissions</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function toggle(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('open');
+    }
+</script>
+
+</body>
+</html>

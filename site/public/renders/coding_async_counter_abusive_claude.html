@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Race Condition Demo</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,22 +10,22 @@
       font-family: 'Segoe UI', sans-serif;
       background: #0f1117;
       color: #e0e0e0;
+      padding: 30px;
       min-height: 100vh;
-      padding: 30px 20px;
     }
 
     h1 {
       text-align: center;
-      font-size: 1.6rem;
       margin-bottom: 8px;
+      font-size: 1.6rem;
       color: #ffffff;
     }
 
     .subtitle {
       text-align: center;
       color: #888;
-      font-size: 0.9rem;
       margin-bottom: 30px;
+      font-size: 0.9rem;
     }
 
     .panels {
@@ -34,201 +33,482 @@
       gap: 24px;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 30px;
     }
 
     .panel {
       background: #1a1d27;
       border-radius: 12px;
-      padding: 28px 24px;
-      width: 340px;
+      padding: 24px;
+      width: 360px;
       border: 1px solid #2a2d3a;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
     }
 
-    .panel.buggy  { border-top: 4px solid #e05555; }
-    .panel.fixed  { border-top: 4px solid #44bb77; }
+    .panel.buggy { border-top: 3px solid #e74c3c; }
+    .panel.fixed { border-top: 3px solid #2ecc71; }
 
     .panel h2 {
       font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      margin-bottom: 6px;
     }
 
-    .badge {
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-    }
+    .panel.buggy h2 { color: #e74c3c; }
+    .panel.fixed h2 { color: #2ecc71; }
 
-    .buggy  .badge { background: #e05555; color: #fff; }
-    .fixed  .badge { background: #44bb77; color: #fff; }
+    .panel p.desc {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
 
     .counter-display {
-      font-size: 4rem;
-      font-weight: 700;
+      font-size: 3.5rem;
+      font-weight: bold;
       text-align: center;
-      letter-spacing: -2px;
-      padding: 16px 0;
-      border-radius: 8px;
-      background: #12141c;
-      transition: color 0.2s;
+      margin: 16px 0;
+      letter-spacing: 2px;
     }
 
-    .buggy  .counter-display { color: #e05555; }
-    .fixed  .counter-display { color: #44bb77; }
+    .buggy .counter-display { color: #e74c3c; }
+    .fixed .counter-display { color: #2ecc71; }
 
     .expected {
       text-align: center;
-      font-size: 0.82rem;
-      color: #666;
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 16px;
     }
 
     .expected span {
-      color: #aaa;
-      font-weight: 600;
+      color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 16px;
     }
 
     button {
-      width: 100%;
-      padding: 12px;
+      padding: 10px 20px;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
       cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: bold;
       transition: opacity 0.15s, transform 0.1s;
     }
 
     button:active { transform: scale(0.97); }
 
-    .buggy  button.inc { background: #e05555; color: #fff; }
-    .fixed  button.inc { background: #44bb77; color: #000; }
+    .btn-increment {
+      background: #3a5bd9;
+      color: white;
+    }
 
-    button.reset {
+    .btn-spam {
+      background: #d97c3a;
+      color: white;
+    }
+
+    .btn-reset {
       background: #2a2d3a;
       color: #aaa;
-      font-size: 0.85rem;
-      padding: 8px;
+      border: 1px solid #3a3d4a;
     }
 
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button:hover { opacity: 0.85; }
 
     .log-box {
-      background: #12141c;
+      background: #0f1117;
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px 12px;
+      font-size: 0.72rem;
+      font-family: 'Courier New', monospace;
       height: 130px;
       overflow-y: auto;
-      font-size: 0.75rem;
-      font-family: 'Courier New', monospace;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      border: 1px solid #1e2130;
+      border: 1px solid #2a2d3a;
+      color: #aaa;
     }
 
-    .log-entry { color: #666; }
-    .log-entry.warn { color: #e09944; }
-    .log-entry.good { color: #44bb77; }
-    .log-entry.bad  { color: #e05555; }
+    .log-box .log-race { color: #e74c3c; }
+    .log-box .log-ok   { color: #2ecc71; }
+    .log-box .log-info { color: #3a9bd9; }
 
-    /* Explanation */
+    .diff-count {
+      text-align: center;
+      font-size: 0.78rem;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    .diff-count.bad  { color: #e74c3c; }
+    .diff-count.good { color: #2ecc71; }
+
+    /* Explanation section */
     .explanation {
-      max-width: 720px;
-      margin: 0 auto;
+      max-width: 760px;
+      margin: 36px auto 0;
       background: #1a1d27;
       border-radius: 12px;
       padding: 28px;
       border: 1px solid #2a2d3a;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+    }
+
+    .explanation h2 {
+      color: #f0c040;
+      margin-bottom: 16px;
+      font-size: 1.1rem;
     }
 
     .explanation h3 {
-      color: #fff;
-      font-size: 1rem;
-      margin-bottom: 4px;
+      color: #ccc;
+      margin: 18px 0 8px;
+      font-size: 0.95rem;
     }
 
-    .explanation p, .explanation li {
-      font-size: 0.87rem;
+    .explanation p {
+      font-size: 0.85rem;
       color: #999;
-      line-height: 1.65;
-    }
-
-    .explanation ul { padding-left: 18px; }
-    .explanation li { margin-bottom: 4px; }
-
-    .code-block {
-      background: #12141c;
-      border-radius: 8px;
-      padding: 14px 16px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.78rem;
       line-height: 1.7;
-      border: 1px solid #1e2130;
+      margin-bottom: 10px;
+    }
+
+    pre {
+      background: #0f1117;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.78rem;
       overflow-x: auto;
-      white-space: pre;
+      border: 1px solid #2a2d3a;
+      line-height: 1.6;
+      margin: 10px 0;
     }
 
-    .c-comment { color: #555; }
-    .c-kw      { color: #c792ea; }
-    .c-fn      { color: #82aaff; }
-    .c-num     { color: #f78c6c; }
-    .c-str     { color: #c3e88d; }
-    .c-bad     { color: #e05555; }
-    .c-good    { color: #44bb77; }
-
-    .diff-row {
-      display: flex;
-      gap: 12px;
-    }
-
-    .diff-row > div { flex: 1; }
+    .kw  { color: #c678dd; }
+    .fn  { color: #61afef; }
+    .cm  { color: #5c6370; font-style: italic; }
+    .str { color: #98c379; }
+    .num { color: #d19a66; }
+    .bad-line { background: #3a1a1a; display: block; }
+    .good-line { background: #1a3a1a; display: block; }
 
     .tag {
       display: inline-block;
       font-size: 0.7rem;
-      font-weight: 700;
-      padding: 1px 7px;
+      padding: 2px 8px;
       border-radius: 4px;
-      margin-bottom: 6px;
-      letter-spacing: 0.05em;
+      font-weight: bold;
+      margin-left: 8px;
+      vertical-align: middle;
     }
 
-    .tag.bad  { background: #e05555; color: #fff; }
-    .tag.good { background: #44bb77; color: #000; }
+    .tag.bug  { background: #3a1a1a; color: #e74c3c; }
+    .tag.fix  { background: #1a3a1a; color: #2ecc71; }
 
-    .race-viz {
-      background: #12141c;
-      border-radius: 8px;
-      padding: 14px 16px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.78rem;
-      line-height: 1.8;
-      border: 1px solid #1e2130;
+    .race-steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
     }
 
-    .race-viz .t1 { color: #82aaff; }
-    .race-viz .t2 { color: #f78c6c; }
-    .race-viz .result { color: #e05555; font-weight: bold; }
-    .race-viz .ok     { color: #44bb77; font-weight: bold; }
+    .race-steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      font-size: 0.83rem;
+      color: #aaa;
+      line-height: 1.5;
+    }
+
+    .race-steps li::before {
+      content: counter(step);
+      background: #2a2d3a;
+      color: #f0c040;
+      min-width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
 
 <h1>Race Condition Demo</h1>
-<p class="subtitle">Click "Rapid +10" to fire 10 async increments at once — watch the buggy counter lose updates</p>
+<p class="subtitle">Click "Spam +1 (×10)" to fire 10 async increments simultaneously and watch what happens</p>
 
 <div class="panels">
 
-  <!-- BUGGY PANEL -->
+  <!-- ========== BUGGY PANEL ========== -->
   <div class="panel buggy">
-    <h2>🐛 Buggy Version 
+    <h2>⚠ Buggy Version</h2>
+    <p class="desc">
+      Reads counter into a local variable, waits async, then writes back.
+      Concurrent calls all read the <em>same stale value</em>.
+    </p>
+    <div class="counter-display" id="buggy-counter">0</div>
+    <div class="expected">Expected after spam: <span id="buggy-expected">—</span></div>
+    <div class="btn-row">
+      <button class="btn-increment" onclick="buggyIncrement()">+1</button>
+      <button class="btn-spam"      onclick="buggySpam()">Spam +1 (×10)</button>
+      <button class="btn-reset"     onclick="buggyReset()">Reset</button>
+    </div>
+    <div class="log-box" id="buggy-log"></div>
+    <div class="diff-count" id="buggy-diff"></div>
+  </div>
+
+  <!-- ========== FIXED PANEL ========== -->
+  <div class="panel fixed">
+    <h2>✔ Fixed Version</h2>
+    <p class="desc">
+      Never holds a local copy. Always reads and writes the shared counter
+      atomically <em>at the moment of the write</em>.
+    </p>
+    <div class="counter-display" id="fixed-counter">0</div>
+    <div class="expected">Expected after spam: <span id="fixed-expected">—</span></div>
+    <div class="btn-row">
+      <button class="btn-increment" onclick="fixedIncrement()">+1</button>
+      <button class="btn-spam"      onclick="fixedSpam()">Spam +1 (×10)</button>
+      <button class="btn-reset"     onclick="fixedReset()">Reset</button>
+    </div>
+    <div class="log-box" id="fixed-log"></div>
+    <div class="diff-count" id="fixed-diff"></div>
+  </div>
+
+</div>
+
+<!-- ========== EXPLANATION ========== -->
+<div class="explanation">
+  <h2>🔍 Why Does This Break?</h2>
+
+  <p>
+    JavaScript is single-threaded, but <strong>asynchronous operations create interleaving</strong>.
+    When you use <code>setTimeout</code> (or any async mechanism), the engine suspends that
+    task and runs others before coming back. This produces a classic
+    <strong>read–modify–write race condition</strong>.
+  </p>
+
+  <h3>The Buggy Pattern <span class="tag bug">BUG</span></h3>
+  <pre><span class="cm">// Shared state</span>
+<span class="kw">let</span> counter = <span class="num">0</span>;
+
+<span class="kw">function</span> <span class="fn">buggyIncrement</span>() {
+<span class="bad-line">  <span class="kw">const</span> current = counter;          <span class="cm">// 1. READ  — captures value NOW</span></span>
+  <span class="fn">setTimeout</span>(() => {
+<span class="bad-line">    counter = current + <span class="num">1</span>;           <span class="cm">// 2. WRITE — uses the stale snapshot</span></span>
+  }, <span class="fn">Math</span>.random() * <span class="num">80</span>);
+}</pre>
+
+  <h3>The Race — Step by Step</h3>
+  <ol class="race-steps">
+    <li>Call #1 fires. It reads <code>counter = 0</code> and stores it in <code>current₁ = 0</code>.</li>
+    <li>Call #2 fires immediately after. It also reads <code>counter = 0</code> → <code>current₂ = 0</code>.</li>
+    <li>…calls #3 through #10 all do the same. They all captured <strong>0</strong>.</li>
+    <li>Timeouts begin resolving. Call #1 writes <code>counter = 0 + 1 = 1</code>. ✓</li>
+    <li>Call #2 writes <code>counter = 0 + 1 = 1</code>. It <strong>overwrites</strong> call #1's result.</li>
+    <li>All 10 calls write <strong>1</strong>. Final value: <strong>1</strong> instead of <strong>10</strong>.</li>
+  </ol>
+
+  <h3>The Fixed Pattern <span class="tag fix">FIX</span></h3>
+  <pre><span class="kw">let</span> counter = <span class="num">0</span>;
+
+<span class="kw">function</span> <span class="fn">fixedIncrement</span>() {
+  <span class="cm">// No local snapshot taken here</span>
+  <span class="fn">setTimeout</span>(() => {
+<span class="good-line">    counter = counter + <span class="num">1</span>;            <span class="cm">// READ + WRITE happen together at callback time</span></span>
+  }, <span class="fn">Math</span>.random() * <span class="num">80</span>);
+}</pre>
+
+  <p>
+    Because JavaScript callbacks execute on the <strong>single-threaded event loop</strong>,
+    each callback runs to completion before the next one starts.
+    Reading and writing <code>counter</code> inside the same callback is therefore
+    <strong>atomic with respect to other callbacks</strong> — no other callback can
+    sneak in between the read and the write.
+  </p>
+
+  <h3>The Key Insight</h3>
+  <p>
+    The bug is not about <em>when</em> the write happens — it's about
+    <strong>which value is being written</strong>.
+    Capturing state into a local variable before an async gap means you're
+    scheduling a write of <em>yesterday's truth</em>.
+    The fix keeps the read inside the callback so it always sees
+    <em>today's truth</em> at the moment of execution.
+  </p>
+
+  <h3>Real-World Equivalents</h3>
+  <p>
+    This same pattern destroys correctness in: React <code>setState</code> calls
+    that close over stale state (fix: use the updater form <code>setState(prev => prev + 1)</code>),
+    database read-modify-write without transactions, and multi-threaded code
+    without locks. The shape of the bug is always identical.
+  </p>
+</div>
+
+<script>
+  // ─── Shared state ──────────────────────────────────────────────
+  let buggyCounter = 0;
+  let fixedCounter = 0;
+
+  // ─── Logging helpers ───────────────────────────────────────────
+  function log(id, msg, cls) {
+    const box = document.getElementById(id);
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = msg;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function setDisplay(id, val) {
+    document.getElementById(id).textContent = val;
+  }
+
+  // ─── BUGGY implementation ──────────────────────────────────────
+  // THE BUG: reads counter into a local variable BEFORE the async gap.
+  // All concurrent calls capture the same stale snapshot and then
+  // each overwrites the counter with (snapshot + 1), losing all
+  // increments except the last one to write.
+
+  function buggyIncrement(isSpam, spamId, expectedAfter) {
+    const readValue = buggyCounter;          // ← stale snapshot captured HERE
+    const delay = Math.floor(Math.random() * 80) + 10;
+
+    if (isSpam) {
+      log('buggy-log',
+        `[spawn #${spamId}] read=${readValue}  delay=${delay}ms`,
+        'log-info');
+    }
+
+    setTimeout(() => {
+      const writtenValue = readValue + 1;    // ← uses the stale snapshot
+      buggyCounter = writtenValue;
+      setDisplay('buggy-counter', buggyCounter);
+
+      if (isSpam) {
+        const isRace = (buggyCounter !== expectedAfter) &&
+                       (spamId < 10);        // not the last write yet — but value is wrong
+        log('buggy-log',
+          `[done  #${spamId}] wrote ${writtenValue}  counter=${buggyCounter}`,
+          buggyCounter < expectedAfter ? 'log-race' : 'log-ok');
+
+        if (spamId === 10) {
+          const lost = expectedAfter - buggyCounter;
+          const diffEl = document.getElementById('buggy-diff');
+          if (lost > 0) {
+            diffEl.textContent = `Lost ${lost} increment${lost > 1 ? 's' : ''}! Got ${buggyCounter}, expected ${expectedAfter}`;
+            diffEl.className = 'diff-count bad';
+          } else {
+            diffEl.textContent = `Got lucky this time — try again!`;
+            diffEl.className = 'diff-count good';
+          }
+        }
+      }
+    }, delay);
+  }
+
+  function buggySpam() {
+    const before = buggyCounter;
+    const expected = before + 10;
+    setDisplay('buggy-expected', expected);
+    document.getElementById('buggy-diff').textContent = '';
+    log('buggy-log', `── spam start (counter=${before}, expect ${expected}) ──`, 'log-info');
+    for (let i = 1; i <= 10; i++) {
+      buggyIncrement(true, i, expected);
+    }
+  }
+
+  function buggyReset() {
+    buggyCounter = 0;
+    setDisplay('buggy-counter', 0);
+    setDisplay('buggy-expected', '—');
+    document.getElementById('buggy-log').innerHTML = '';
+    document.getElementById('buggy-diff').textContent = '';
+  }
+
+  // ─── FIXED implementation ──────────────────────────────────────
+  // THE FIX: no local snapshot. The read and write both happen
+  // inside the callback, which runs atomically on the event loop.
+  // Each callback sees the latest committed value of fixedCounter.
+
+  function fixedIncrement(isSpam, spamId, expectedAfter) {
+    const delay = Math.floor(Math.random() * 80) + 10;
+
+    if (isSpam) {
+      log('fixed-log',
+        `[spawn #${spamId}] (no snapshot)  delay=${delay}ms`,
+        'log-info');
+    }
+
+    setTimeout(() => {
+      fixedCounter = fixedCounter + 1;       // ← read + write atomically at callback time
+      setDisplay('fixed-counter', fixedCounter);
+
+      if (isSpam) {
+        log('fixed-log',
+          `[done  #${spamId}] counter=${fixedCounter}`,
+          'log-ok');
+
+        if (spamId === 10 || fixedCounter === expectedAfter) {
+          // wait a tiny bit for all callbacks to finish before reporting
+        }
+      }
+    }, delay);
+  }
+
+  // We need to detect when all 10 fixed callbacks have fired.
+  // Use a simple completion counter per spam batch.
+  function fixedSpam() {
+    const before = fixedCounter;
+    const expected = before + 10;
+    setDisplay('fixed-expected', expected);
+    document.getElementById('fixed-diff').textContent = '';
+    log('fixed-log', `── spam start (counter=${before}, expect ${expected}) ──`, 'log-info');
+
+    let completed = 0;
+    for (let i = 1; i <= 10; i++) {
+      const delay = Math.floor(Math.random() * 80) + 10;
+      const spamId = i;
+      log('fixed-log', `[spawn #${spamId}] (no snapshot)  delay=${delay}ms`, 'log-info');
+      setTimeout(() => {
+        fixedCounter = fixedCounter + 1;
+        setDisplay('fixed-counter', fixedCounter);
+        completed++;
+        log('fixed-log',
+          `[done  #${spamId}] counter=${fixedCounter}`,
+          'log-ok');
+        if (completed === 10) {
+          const diffEl = document.getElementById('fixed-diff');
+          const lost = expected - fixedCounter;
+          if (lost === 0) {
+            diffEl.textContent = `Perfect: got ${fixedCounter}, expected ${expected} ✓`;
+            diffEl.className = 'diff-count good';
+          } else {
+            diffEl.textContent = `Unexpected: got ${fixedCounter}, expected ${expected}`;
+            diffEl.className = 'diff-count bad';
+          }
+        }
+      }, delay);
+    }
+  }
+
+  function fixedReset() {
+    fixedCounter = 0;
+    setDisplay('fixed-counter', 0);
+    setDisplay('fixed-expected', '—');
+    document.getElementById('fixed-log').innerHTML = '';
+    document.getElementById('fixed-diff').textContent = '';
+  }
+</script>
+</body>
+</html>

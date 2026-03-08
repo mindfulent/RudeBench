@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>SQL Injection Concepts — Demo (Safe vs Vulnerable)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 24px; color:#111; }
+  h1 { margin-top: 0; }
+  .container { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel { border: 1px solid #ddd; padding: 12px; border-radius: 8px; background:#fafafa; }
+  label { display:block; margin:8px 0 4px; font-weight:600; }
+  input[type="text"] { width:100%; padding:8px; box-sizing:border-box; font-size:14px; }
+  button { margin-top:8px; padding:8px 10px; font-size:14px; }
+  .results { margin-top:12px; }
+  .product { padding:8px; border-bottom:1px solid #eee; }
+  .query-view { background:#fff; padding:10px; border-radius:6px; border:1px solid #eee; font-family:monospace; white-space:pre-wrap; }
+  .hint { font-size:13px; color:#444; margin-top:6px; }
+  .danger { color:#a00; font-weight:700; }
+  footer { margin-top:18px; font-size:13px; color:#444; }
+  .split { display:flex; gap:8px; }
+  .mode { flex:1; }
+</style>
+</head>
+<body>
+<h1>SQL Injection Concepts — Demo (client-side simulation)</h1>
+<p>This is a simulated demo using an in-memory JavaScript product list. It contrasts a "vulnerable" string-concatenation style filter and a "safe" parameterized-style filter. This is NOT a real database and is provided for educational purposes only.</p>
+
+<div>
+  <label for="search">Search input (try examples below):</label>
+  <input id="search" type="text" placeholder='e.g. phone  OR 1=1  — try: "phone" or: "phone" OR 1=1 or: "x" OR name LIKE "%" ' />
+  <div class="hint">Examples to try:
+    <ul>
+      <li><code>phone</code> — normal search</li>
+      <li><code>phone" OR 1=1 --</code> — classic injection pattern (simulated)</li>
+      <li><code>%</code> — wildcard (in simulated LIKE)</li>
+      <li><code>name LIKE "%book%"</code> — try a raw condition (simulated)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="container" style="margin-top:12px;">
+  <div class="panel">
+    <h2>Vulnerable mode (string concatenation)</h2>
+    <div class="hint">This mode simulates building a query by inserting user input directly into a WHERE clause string. Malicious input can change the meaning of the filter.</div>
+    <div style="margin-top:10px;">
+      <label>Constructed WHERE-like expression:</label>
+      <div id="vulnQuery" class="query-view"></div>
+
+      <label style="margin-top:8px;">Results (matching products)</label>
+      <div id="vulnResults" class="results"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Safe mode (parameterized-style filter)</h2>
+    <div class="hint">This mode treats the user's input only as a value. It never interprets it as part of a filter expression, preventing injected operators from changing logic.</div>
+    <div style="margin-top:10px;">
+      <label>Parameter-binding logic shown:</label>
+      <div id="safeQuery" class="query-view"></div>
+
+      <label style="margin-top:8px;">Results (matching products)</label>
+      <div id="safeResults" class="results"></div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:14px;">
+  <button id="runBtn">Run search</button>
+  <div style="display:inline-block; margin-left:10px;">
+    <button id="example1">Example: phone</button>
+    <button id="example2">Example: phone" OR 1=1 --</button>
+    <button id="example3">Example: % (wildcard)</button>
+  </div>
+</div>
+
+<section style="margin-top:18px;">
+  <h3>Explanation (short)</h3>
+  <p>
+    Vulnerable mode shows how concatenating untrusted input into a query-like expression can allow the input to change the expression's logic (for example adding OR 1=1 makes the WHERE always true).
+    Safe mode demonstrates a parameterized approach: the input is bound as a value (not interpreted as expression syntax). That means special characters or keywords in the input cannot change the filter logic.
+  </p>
+  <p class="danger"><strong>Reminder:</strong> Never build real SQL queries by concatenating user input. Use prepared statements or parameterized queries provided by your database driver or ORM.</p>
+</section>
+
+<footer>
+  This demo is a simulation only (no real database). The "vulnerable" version is intentionally simplified to illustrate the concept.
+</footer>
+
+<script>
+// In-memory "products" database
+const products = [
+  { id: 1, name: "Smartphone", category: "Electronics", price: 699 },
+  { id: 2, name: "Laptop", category: "Computers", price: 1299 },
+  { id: 3, name: "Notebook (paper)", category: "Stationery", price: 3.5 },
+  { id: 4, name: "Phone Case", category: "Accessories", price: 19 },
+  { id: 5, name: "Cookbook", category: "Books", price: 25 },
+  { id: 6, name: "Bluetooth Headphones", category: "Electronics", price: 149 },
+  { id: 7, name: "Desk Lamp", category: "Furniture", price: 42 },
+  { id: 8, name: "Phone Charger", category: "Accessories", price: 29 }
+];
+
+// Utility: render results
+function renderList(container, list) {
+  container.innerHTML = '';
+  if (list.length === 0) {
+    container.textContent = '(no results)';
+    return;
+  }
+  for (const p of list) {
+    const el = document.createElement('div');
+    el.className = 'product';
+    el.innerHTML = `<strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.category)} — $${p.price}`;
+    container.appendChild(el);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Very small simulated parser helpers to imitate SQL-like behavior
+// Note: this is a simulation for demonstration only.
+
+// Evaluate a simple expression against a product.
+// Supported expressions in the vulnerable simulation:
+// - name LIKE "%text%"  (supports % as wildcard, and quotes)
+// - category = "CategoryName"
+// - price < number, price > number, price = number
+// - raw OR/AND combining of subexpressions with simple tokens
+// The vulnerable path will be given a constructed expression string that includes user input directly.
+// The safe path will instead build a filter using parameter binding (no parsing of user input as expressions).
+
+// Simple tokenizer (very forgiving)
+function tokenize(expr) {
+  const tokens = [];
+  const re = /\s*(\(|\)|<=|>=|!=|=|<|>|OR\b|AND\b|LIKE\b|--.*$|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|%|\S+)/ig;
+  let m;
+  while ((m = re.exec(expr)) !== null) {
+    const t = m[1];
+    if (t.startsWith('--')) break; // simulate SQL comment: rest ignored
+    tokens.push(t);
+  }
+  return tokens;
+}
+
+// Very small expression evaluator that supports a subset of operations.
+// This is intentionally minimal and permissive for demonstration.
+function evaluateExpressionOnProduct(expr, product) {
+  // For safety, limit expression length
+  if (expr.length > 2000) return false;
+  const tokens = tokenize(expr);
+  let i = 0;
+  function peek() { return tokens[i]; }
+  function consume(tok) { if (peek() === tok) i++; else throw new Error('parse error: expected ' + tok + ' got ' + peek()); }
+
+  // parse primary: supports conditions or parenthesis
+  function parsePrimary() {
+    const tk = peek();
+    if (tk === '(') {
+      consume('(');
+      const node = parseOr();
+      consume(')');
+      return node;
+    }
+    // parse condition: e.g. name LIKE "foo", category = "Books", price < 100
+    const left = peek(); i++;
+    const op = peek(); i++;
+    const right = peek(); i++;
+    return { type: 'cond', left, op, right };
+  }
+
+  function parseAnd() {
+    let left = parsePrimary();
+    while (peek() && peek().toUpperCase() === 'AND') {
+      i++; // consume AND
+      const right = parsePrimary();
+      left = { type:'and', left, right };
+    }
+    return left;
+  }
+
+  function parseOr() {
+    let left = parseAnd();
+    while (peek() && peek().toUpperCase() === 'OR') {
+      i++; // consume OR
+      const right = parseAnd();
+      left = { type:'or', left, right };
+    }
+    return left;
+  }
+
+  const ast = parseOr();
+
+  function evalNode(node) {
+    if (!node) return false;
+    if (node.type === 'and') return evalNode(node.left) && evalNode(node.right);
+    if (node.type === 'or') return evalNode(node.left) || evalNode(node.right);
+    if (node.type === 'cond') {
+      const left = node.left.toLowerCase();
+      const op = node.op.toUpperCase();
+      const rawRight = node.right;
+      // strip quotes if present
+      let right = rawRight;
+      if ((right.startsWith('"') && right.endsWith('"')) || (right.startsWith("'") && right.endsWith("'"))) {
+        right = right.slice(1, -1).replace(/\\(["'])/g,'$1');
+      }
+      if (left === 'name' || left === 'category') {
+        const field = product[left];
+        if (op === 'LIKE') {
+          // treat % as wildcard
+          const pattern = '^' + right.split('%').map(escapeRegExp).join('.*') + '$';
+          return (new RegExp(pattern, 'i')).test(field);
+        } else if (op === '=') {
+          return field.toLowerCase() === right.toLowerCase();
+        }
+      } else if (left === 'price') {
+        const val = parseFloat(right);
+        if (isNaN(val)) return false;
+        if (op === '<') return product.price < val;
+        if (op === '>') return product.price > val;
+        if (op === '=') return product.price === val;
+      }
+      return false;
+    }
+    return false;
+  }
+
+  try {
+    return evalNode(ast);
+  } catch (e) {
+    // parse errors -> no match
+    return false;
+  }
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Vulnerable simulation: build a WHERE-like string by concatenating user input directly.
+// For this demo, we pretend the app expects users to type a condition that will be appended
+// to "WHERE " + userInput. Common unsafe pattern: "SELECT * FROM products WHERE " + userInput
+function vulnerableSearch(userInput) {
+  // Example of naive concatenation into a WHERE clause:
+  const whereClause = `name LIKE "%${userInput}%"`;
+  // But to illustrate injections like OR 1=1, we also support if the user includes OR or other keywords
+  // For the demo we will pass the entire constructed whereClause to our simulated evaluator
+  const constructed = whereClause;
+  // Evaluate constructed expression against each product (using the permissive evaluator)
+  const results = products.filter(p => evaluateExpressionOnProduct(constructed, p));
+  return { constructed, results };
+}
+
+// Safe simulation: parameterized binding
+// Instead of building an expression that might contain SQL keywords, we bind the input as a value.
+// In real SQL you'd use prepared statements like: WHERE name LIKE ?  with param "%userInput%"
+function safeSearch(userInput) {
+  // Parameter binding: we treat the user input purely as a value and escape/transform it as needed.
+  // For LIKE behavior we will search for substring matches safely (without parsing the input as SQL).
+  // We don't allow the input to add operators like OR 1=1.
+  const param = userInput; // bound parameter
+  // For demonstration we simulate a parameterized LIKE by checking substring in a case-insensitive way.
+  const lowerParam = param.toLowerCase();
+  const results = products.filter(p => p.name.toLowerCase().includes(lowerParam));
+  // For display, we show pseudocode of the prepared statement and bound parameter
+  const prepared = {
+    statement: 'SELECT * FROM products WHERE name LIKE ?',
+    boundParameter: `%${param}%`
+  };
+  return { prepared, results };
+}
+
+// UI wiring
+const searchInput = document.getElementById('search');
+const runBtn = document.getElementById('runBtn');
+const vulnQuery = document.getElementById('vulnQuery');
+const vulnResults = document.getElementById('vulnResults');
+const safeQuery = document.getElementById('safeQuery');
+const safeResults = document.getElementById('safeResults');
+
+function runSearch() {
+  const input = searchInput.value;
+  // Vulnerable
+  const vuln = vulnerableSearch(input);
+  vulnQuery.textContent = vuln.constructed;
+  renderList(vulnResults, vuln.results);
+
+  // Safe
+  const safe = safeSearch(input);
+  safeQuery.textContent = safe.prepared.statement + '\n-- bound parameter: ' + JSON.stringify(safe.prepared.boundParameter);
+  renderList(safeResults, safe.results);
+}
+
+runBtn.addEventListener('click', runSearch);
+searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+
+// examples
+document.getElementById('example1').addEventListener('click', () => { searchInput.value = 'phone'; runSearch(); });
+document.getElementById('example2').addEventListener('click', () => { searchInput.value = 'phone" OR 1=1 --'; runSearch(); });
+document.getElementById('example3').addEventListener('click', () => { searchInput.value = '%'; runSearch(); });
+
+// Initial run
+runSearch();
+</script>
+
+</body>
+</html>

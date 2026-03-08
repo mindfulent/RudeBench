@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Async Interleaving Race Demo — Buggy vs Fixed</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 20px; }
+    .container { display:flex; gap:40px; }
+    .box { border:1px solid #ccc; padding:16px; width:320px; border-radius:8px; }
+    .title { font-weight:700; margin-bottom:8px; }
+    .counter { font-size: 32px; margin: 8px 0; }
+    button { padding:8px 12px; font-size:16px; }
+    .log { height:140px; overflow:auto; background:#f9f9f9; border-radius:6px; padding:8px; margin-top:8px; font-family:monospace; font-size:12px; }
+    .note { margin-top:8px; color:#555; font-size:13px; }
+  </style>
+</head>
+<body>
+  <h2>Async interleaving race demo (single-threaded JS event-loop)</h2>
+  <p>Click the "Rapid Click" button repeatedly on each side. The left (Buggy) counter can lose increments because overlapping async tasks read stale state. The right (Fixed) uses a functional update so each scheduled async increment applies to the latest state.</p>
+  <div class="container">
+    <div class="box" id="buggyBox">
+      <div class="title">Buggy (stale-read -> lost updates)</div>
+      <div>Shared counter: <span class="counter" id="buggyCount">0</span></div>
+      <button id="buggyClick">Rapid Click</button>
+      <button id="buggyReset">Reset</button>
+      <div class="note">Each click reads the counter, waits asynchronously, then writes back (read-modify-write). Overlapping ops use stale reads.</div>
+      <div class="log" id="buggyLog"></div>
+    </div>
+
+    <div class="box" id="fixedBox">
+      <div class="title">Fixed (apply update atomically)</div>
+      <div>Shared counter: <span class="counter" id="fixedCount">0</span></div>
+      <button id="fixedClick">Rapid Click</button>
+      <button id="fixedReset">Reset</button>
+      <div class="note">Each click schedules an async increment but the commit reads and updates from the current counter (no lost updates).</div>
+      <div class="log" id="fixedLog"></div>
+    </div>
+  </div>
+
+  <script>
+    // Shared state for each widget
+    let buggyState = { count: 0 };
+    let fixedState = { count: 0 };
+
+    // Helpers
+    function randDelay() {
+      // simulate variable async latency 0-120 ms
+      return Math.floor(Math.random() * 120);
+    }
+    function appendLog(el, msg) {
+      const node = document.createElement('div');
+      node.textContent = msg;
+      el.appendChild(node);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    // BUGGY: read-modify-write using a captured read
+    (function initBuggy() {
+      const countEl = document.getElementById('buggyCount');
+      const btn = document.getElementById('buggyClick');
+      const reset = document.getElementById('buggyReset');
+      const log = document.getElementById('buggyLog');
+
+      function render() { countEl.textContent = buggyState.count; }
+
+      btn.addEventListener('click', () => {
+        // Step 1: synchronous read of shared state
+        const readValue = buggyState.count;
+        appendLog(log, `click scheduled; read=${readValue}`);
+        // Step 2: async work (simulated)
+        setTimeout(() => {
+          // Step 3: compute based on stale read and write back (overwrites)
+          const newValue = readValue + 1;
+          buggyState.count = newValue;
+          appendLog(log, `callback ran; wrote=${newValue}`);
+          render();
+        }, randDelay());
+      });
+
+      reset.addEventListener('click', () => {
+        buggyState.count = 0;
+        log.innerHTML = '';
+        appendLog(log, 'reset');
+        render();
+      });
+
+      render();
+    })();
+
+    // FIXED: closure-less commit using current state at commit time
+    (function initFixed() {
+      const countEl = document.getElementById('fixedCount');
+      const btn = document.getElementById('fixedClick');
+      const reset = document.getElementById('fixedReset');
+      const log = document.getElementById('fixedLog');
+
+      function render() { countEl.textContent = fixedState.count; }
+
+      btn.addEventListener('click', () => {
+        appendLog(log, `click scheduled`);
+        // Simulate async work and then apply an atomic update at commit time
+        setTimeout(() => {
+          // Read current value at the moment of commit and increment
+          const current = fixedState.count;
+          const newValue = current + 1;
+          fixedState.count = newValue;
+          appendLog(log, `callback ran; readNow=${current} wrote=${newValue}`);
+          render();
+        }, randDelay());
+      });
+
+      reset.addEventListener('click', () => {
+        fixedState.count = 0;
+        log.innerHTML = '';
+        appendLog(log, 'reset');
+        render();
+      });
+
+      render();
+    })();
+  </script>
+
+Explanation of why the buggy version loses increments
+- In the buggy widget each click reads the shared counter immediately and stores that number in the callback closure (readValue). The callback later computes newValue = readValue + 1 and writes it back.
+- If two clicks happen in quick succession, both callbacks might capture the same readValue. Suppose count is 0, two callbacks both capture readValue = 0. When they run, each writes 1. The final count becomes 1 whereas two increments were intended — one increment is lost.
+- This is not because of parallel CPU threads but because of non-atomic read-modify-write across asynchronous tasks (interleaving/timing). It's a real concurrency bug pattern in event-loop-based systems too.
+
+Why the fixed version works
+- The fixed callback does not use a possibly-stale captured read. Instead it reads the current value at commit time and writes current+1. No matter how callbacks are interleaved, each commit observes the then-current value and increments it, preventing lost updates in this scenario.
+- This is analogous to using an atomic operation/update function (compare-and-swap or "functional update") rather than separate read and write.
+
+Notes and limitations
+- Even the "fixed" approach shown is not a general substitute for true atomic operations in multi-threaded environments (e.g., Web Workers with SharedArrayBuffer require Atomics). If you have background threads or cross-worker shared memory, you need proper synchronization primitives.
+- In real apps, other strategies include serializing updates through a single queue/actor, using transactions, or optimistic locking with retries. The right pattern depends on your environment and failure modes.
+
+If you want, I can:
+- Extend the demo to show how a compare-and-swap loop would behave (simulated) or how to implement a simple update queue/actor for guaranteed serial updates.
+- Add a version using Promises/async-await and show the same bug and fix.
+- Add an instrumented run that counts how often the buggy counter loses increments under heavy clicking.

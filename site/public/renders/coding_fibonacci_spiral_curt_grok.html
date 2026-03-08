@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debugging Fibonacci Spiral on Canvas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid black;
+            margin: 10px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debugging Fibonacci Spiral on Canvas</h1>
+    
+    <h2>Buggy Version (Wrong Base Case Handling)</h2>
+    <p>This version attempts to draw the Fibonacci spiral but fails because the starting point for each arc is not updated correctly. As a result, all arcs are drawn from the same center, leading to overlapping concentric circles instead of a proper spiral.</p>
+    <canvas id="buggyCanvas"></canvas>
+    
+    <h2>Corrected Version (Proper Spiral)</h2>
+    <p>This version correctly updates the starting point for each arc based on the end point of the previous one, resulting in a proper Fibonacci spiral where each arc's radius is a Fibonacci number.</p>
+    <canvas id="correctCanvas"></canvas>
+    
+    <h2>Explanation of the Bug</h2>
+    <p>
+        The real bug in the buggy version is a mishandling of the base cases for positioning the arcs. In a proper Fibonacci spiral, each arc should be drawn at the end point of the previous arc to form an outward spiral pattern. However, in the buggy version, the code does not update the center point after drawing each arc. Instead, it always starts from the initial center, causing all subsequent arcs to overlap at the same location.
+        
+        Specifically:
+        - Fibonacci sequence used: [1, 1, 2, 3, 5, 8, 13, 21] (generated starting from the standard base cases).
+        - In the buggy code, the center coordinates (<code>cx</code> and <code>cy</code>) are not modified after each arc, leading to concentric drawing.
+        - In the corrected code, the center is updated to the end point of the current arc, which ensures the spiral expands correctly.
+        
+        This issue might stem from an oversight in the original code's base case for the drawing loop, such as forgetting to account for the cumulative position offsets required for the spiral's geometry. To fix it, we simply add the logic to calculate and update the new center based on the arc's end point.
+    </p>
+    
+    <script>
+        // Function to generate Fibonacci sequence
+        function generateFibonacci(n) {
+            const fibSeq = [1, 1];  // Standard base cases: starts with 1 and 1
+            while (fibSeq.length < n) {
+                const next = fibSeq[fibSeq.length - 1] + fibSeq[fibSeq.length - 2];
+                fibSeq.push(next);
+            }
+            return fibSeq;
+        }
+        
+        // Function to draw the spiral on a canvas
+        function drawSpiral(canvasId, fibSeq, isBuggy) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            canvas.width = 500;  // Set canvas size
+            canvas.height = 500;
+            
+            let cx = 250;  // Initial center X (middle of canvas)
+            let cy = 250;  // Initial center Y
+            let angle = 0;  // Initial angle in radians
+            
+            fibSeq.forEach(radius => {
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, angle, angle + Math.PI / 2);  // Draw quarter-circle
+                ctx.strokeStyle = 'blue';  // Blue for visibility
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                if (!isBuggy) {
+                    // Correct version: Update center to the end point of the arc
+                    const endAngle = angle + Math.PI / 2;
+                    const endX = cx + radius * Math.cos(endAngle);
+                    const endY = cy + radius * Math.sin(endAngle);
+                    cx = endX;  // Update cx for next arc
+                    cy = endY;  // Update cy for next arc
+                    angle = endAngle;  // Update angle for next arc
+                }
+                // In buggy version, cx, cy, and angle are not updated here,
+                // so all arcs start from the same initial center and angle continues to increase
+            });
+        }
+        
+        // Generate Fibonacci sequence (e.g., 8 elements)
+        const fibSeq = generateFibonacci(8);  // [1, 1, 2, 3, 5, 8, 13, 21]
+        
+        // Draw the spirals
+        drawSpiral('buggyCanvas', fibSeq, true);   // Buggy version
+        drawSpiral('correctCanvas', fibSeq, false);  // Correct version
+    </script>
+</body>
+</html>

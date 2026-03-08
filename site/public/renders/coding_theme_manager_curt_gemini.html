@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Singleton State</title>
+    <style>
+        /* Basic Reset & Box-Sizing */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Default Light Theme Variables */
+        :root {
+            --bg-color: #f4f4f4;
+            --text-color: #333;
+            --header-bg: #e0e0e0;
+            --link-color: #007bff;
+            --link-hover-color: #0056b3;
+            --border-color: #ccc;
+            --card-bg: #fff;
+            --code-bg: #eee;
+            --code-text: #d63384; /* Bootstrap's pink for code */
+            --button-bg: #007bff;
+            --button-text: #fff;
+            --button-hover-bg: #0056b3;
+            --blockquote-border: #ced4da;
+            --blockquote-text: #6c757d;
+            --table-header-bg: #e9ecef;
+            --table-border: #dee2e6;
+            --highlight-bg: #fff3cd; /* Light warning yellow */
+            --highlight-text: #664d03; /* Darker yellow text */
+        }
+
+        /* Dark Theme Variables */
+        body.dark-theme {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --header-bg: #2d2d2d;
+            --link-color: #8ab4f8; /* Google Blue equivalent */
+            --link-hover-color: #6a9ce7;
+            --border-color: #444;
+            --card-bg: #2d2d2d;
+            --code-bg: #3c3c3c;
+            --code-text: #ff79c6; /* Dracula pink */
+            --button-bg: #8ab4f8;
+            --button-text: #1a1a1a;
+            --button-hover-bg: #6a9ce7;
+            --blockquote-border: #6c757d;
+            --blockquote-text: #b0b0b0;
+            --table-header-bg: #3c3c3c;
+            --table-border: #555;
+            --highlight-bg: #494529; /* Darker warning yellow */
+            --highlight-text: #ffe08a; /* Lighter yellow text */
+        }
+
+        /* General Body Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-radius: 8px 8px 0 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        header h1 {
+            color: var(--text-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle label {
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        /* Toggle Switch Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--button-bg);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--button-bg);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+
+        /* Content Styling */
+        h2, h3, h4 {
+            color: var(--text-color);
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        p {
+            margin-bottom: 1em;
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: var(--link-hover-color);
+            text-decoration: underline;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 1em;
+        }
+
+        li {
+            margin-bottom: 0.5em;
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        blockquote {
+            border-left: 4px solid var(--blockquote-border);
+            margin: 1.5em 0;
+            padding: 0.5em 1em;
+            color: var(--blockquote-text);
+            background-color: var(--bg-color); /* Use general background for blockquote */
+            border-radius: 4px;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1em;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            color: var(--code-text);
+            font-size: 0.9em;
+        }
+
+        pre code {
+            display: block;
+            padding: 0;
+            color: var(--code-text);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5em;
+            border: 1px solid var(--table-border);
+            transition: border-color 0.3s ease;
+        }
+
+        th, td {
+            border: 1px solid var(--table-border);
+            padding: 8px;
+            text-align: left;
+            transition: border-color 0.3s ease;
+        }
+
+        th {
+            background-color: var(--table-header-bg);
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .highlight {
+            background-color: var(--highlight-bg);
+            color: var(--highlight-text);
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            margin-bottom: 1em;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        footer {
+            margin-top: auto; /* Pushes footer to the bottom */
+            padding: 20px;
+            text-align: center;
+            color: var(--text-color);
+            background-color: var(--header-bg);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9em;
+            border-radius: 0 0 8px 8px;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Theme Toggle Example</h1>
+            <div class="theme-toggle">
+                <label for="theme-switch">Dark Theme</label>
+                <label class="switch">
+                    <input type="checkbox" id="theme-switch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </header>
+
+        <main>
+            <section>
+                <h2>Welcome to Our Themed Page!</h2>
+                <p>
+                    This page demonstrates a dark and light theme toggle using a JavaScript singleton for state management.
+                    Observe how various elements, including text, links, buttons, code blocks, and tables,
+                    dynamically adjust their appearance when you switch themes.
+                </p>
+                <p>
+                    Here's a standard paragraph of text. It should change its color based on the selected theme.
+                    We also have an <a href="#">inline link example</a> which will adapt its color.
+                </p>
+                <button id="actionButton">Click Me!</button>
+            </section>
+
+            <section>
+                <h2>Different Content Types</h2>
+
+                <h3>Lists</h3>
+                <p>Here's an unordered list:</p>
+                <ul>
+                    <li>Item One: A simple list item.</li>
+                    <li>Item Two: Another item, perhaps with a <a href="#">nested link</a>.</li>
+                    <li>Item Three: The final item in this list.</li>
+                </ul>
+                <p>And an ordered list:</p>
+                <ol>
+                    <li>First Step</li>
+                    <li>Second Step</li>
+                    <li>Third Step, which could be quite long to demonstrate line wrapping.</li>
+                </ol>
+
+                <h3>Code Snippets</h3>
+                <p>Inline code example: <code>const theme = 'dark';</code></p>
+                <p>Block code example:</p>
+                <pre><code>function applyTheme(themeName) {
+    document.body.classList.remove('light-theme', 'dark-theme');
+    document.body.classList.add(themeName);
+    localStorage.setItem('theme', themeName);
+}
+
+// Singleton usage example
+ThemeManager.getInstance().setTheme('dark-theme');
+</code></pre>
+
+                <h3>Blockquotes</h3>
+                <blockquote>
+                    <p>"The only way to do great work is to love what you do."</p>
+                    <footer>— Steve Jobs</footer>
+                </blockquote>
+                <p>This quote block changes its border and text color with the theme.</p>
+
+                <h3>Tables</h3>
+                <p>A simple data table:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Light Theme</th>
+                            <th>Dark Theme</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Background</td>
+                            <td>Light Gray</td>
+                            <td>Dark Gray</td>
+                        </tr>
+                        <tr>
+                            <td>Text Color</td>
+                            <td>Dark Gray</td>
+                            <td>Light Gray</td>
+                        </tr>
+                        <tr>
+                            <td>Links</td>
+                            <td>Blue</td>
+                            <td>Light Blue</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section>
+                <h2>Understanding the Singleton Pattern</h2>
+                <p>
+                    The Singleton pattern ensures that a class has only one instance and provides a global point of access to it.
+                    In this example, our <code>ThemeManager</code> is implemented as a singleton to manage the current theme state.
+                    This means that no matter how many times we try to get an instance of <code>ThemeManager</code>, we will always
+                    receive the same single instance, ensuring consistent theme state across the application.
+                </p>
+
+                <h3>Pros of the Singleton Pattern:</h3>
+                <ul>
+                    <li>
+                        <strong>Guaranteed Single Instance:</strong> Ensures that a class has only one instance, which is useful for
+                        objects like configuration managers, loggers, or (as here) theme managers, where a single, centralized point of control is desired.
+                    </li>
+                    <li>
+                        <strong>Global Access:</strong> Provides a global access point to that instance, making it easy for different parts of the application
+                        to interact with it without passing the instance around.
+                    </li>
+                    <li>
+                        <strong>Lazy Initialization:</strong> The instance can be created only when it's first needed, saving resources if the instance is
+                        not always used.
+                    </li>
+                </ul>
+
+                <h3>Cons of the Singleton Pattern:</h3>
+                <ul>
+                    <li>
+                        <strong>Global State:</strong> Introduces global state, which can make testing difficult (due to tightly coupled components and
+                        hard-to-isolate tests) and lead to unforeseen side effects.
+                    </li>
+                    <li>
+                        <strong>Tight Coupling:</strong> Components that directly call <code>Singleton.getInstance()</code> become tightly coupled to the
+                        Singleton class, reducing flexibility and reusability.
+                    </li>
+                    <li>
+                        <strong>Violates Single Responsibility Principle:</strong> A singleton class often takes on more than one responsibility:
+                        managing its own instance and performing its core business logic.
+                    </li>
+                    <li>
+                        <strong>Hard to Mock/Test:</strong> Because you can't easily swap out a singleton instance for a mock during testing,
+                        it can complicate unit testing.
+                    </li>
+                    <li>
+                        <strong>Scalability Issues:</strong> In multi-threaded environments (though less common in client-side JS),
+                        extra care is needed to ensure thread safety during instance creation.
+                    </li>
+                </ul>
+
+                <div class="highlight">
+                    <h4>When to use (and when not to use) Singletons:</h4>
+                    <p>
+                        Use singletons sparingly and for truly global, unique resources like a core configuration service or, as shown here,
+                        a simple theme manager in a small application.
+                        <strong>Avoid them for managing application state that could vary or for services that might need different implementations.</strong>
+                    </p>
+                    <p>
+                        For more complex applications, or when testability and flexibility are paramount, alternatives like
+                        <strong>Dependency Injection (DI)</strong> are generally preferred.
+                    </p>
+                </div>
+
+                <h3>Alternatives: Dependency Injection</h3>
+                <p>
+                    <strong>Dependency Injection (DI)</strong> is a design pattern in which a class receives its dependencies from an external source,
+                    rather than creating them itself. Instead of a component directly calling <code>ThemeManager.getInstance()</code>,
+                    a <code>ThemeManager</code> instance would be "injected" into the component (e.g., via its constructor or a setter method).
+                </p>
+                <p>
+                    <strong>Why DI is often better:</strong>
+                </p>
+                <ul>
+                    <li>
+                        <strong>Improved Testability:</strong> You can easily inject mock or stub implementations of dependencies during testing,
+                        isolating the component under test.
+                    </li>
+                    <li>
+                        <strong>Reduced Coupling:</strong> Components don't know how their dependencies are created, only that they exist.
+                        This makes them more reusable and easier to refactor.
+                    </li>
+                    <li>
+                        <strong>Increased Flexibility:</strong> It's easier to swap out different implementations of a service without changing
+                        the consuming components.
+                    </li>
+                    <li>
+                        <strong>Clearer Dependencies:</strong> Dependencies are explicitly declared, making it clearer what a component needs to function.
+                    </li>
+                </ul>
+                <p>
+                    While the Singleton pattern is simple for this small example, understanding its limitations and knowing when to opt for more robust
+                    patterns like Dependency Injection is crucial for building maintainable and scalable applications.
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2023 Theme Toggle Example. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Singleton ThemeManager Implementation ---
+        class ThemeManager {
+            constructor() {
+                if (ThemeManager.instance) {
+                    return ThemeManager.instance;
+                }
+
+                this.themeKey = 'theme';
+                this.defaultTheme = 'light-theme';
+                this.currentTheme = localStorage.getItem(this.themeKey) || this.defaultTheme;
+
+                // Apply initial theme immediately
+                document.body.classList.add(this.currentTheme);
+                this._updateToggleState();
+
+                ThemeManager.instance = this;
+            }
+
+            static getInstance() {
+                if (!ThemeManager.instance) {
+                    ThemeManager.instance = new ThemeManager();
+                }
+                return ThemeManager.instance;
+            }
+
+            setTheme(themeName) {
+                if (this.currentTheme === themeName) {
+                    return; // No change needed
+                }
+
+                document.body.classList.remove('light-theme', 'dark-theme');
+                document.body.classList.add(themeName);
+                localStorage.setItem(this.themeKey, themeName);
+                this.currentTheme = themeName;
+                this._updateToggleState();
+                console.log(`Theme switched to: ${themeName}`);
+            }
+
+            toggleTheme() {
+                const newTheme = this.currentTheme === 'dark-theme' ? 'light-theme' : 'dark-theme';
+                this.setTheme(newTheme);
+            }
+
+            getTheme() {
+                return this.currentTheme;
+            }
+
+            _updateToggleState() {
+                const themeSwitch = document.getElementById('theme-switch');
+                if (themeSwitch) {
+                    themeSwitch.checked = (this.currentTheme === 'dark-theme');
+                }
+            }
+        }
+
+        // --- Event Listeners and Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeManager = ThemeManager.getInstance(); // Get the singleton instance
+            const themeSwitch = document.getElementById('theme-switch');
+            const actionButton = document.getElementById('actionButton');
+
+            // Set initial toggle state based on loaded theme
+            themeManager._updateToggleState();
+
+            // Event listener for the theme switch
+            if (themeSwitch) {
+                themeSwitch.addEventListener('change', () => {
+                    themeManager.toggleTheme();
+                });
+            }
+
+            // Example of another element interacting with the theme state (optional)
+            if (actionButton) {
+                actionButton.addEventListener('click', () => {
+                    alert(`Current theme is: ${themeManager.getTheme()}`);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Regex Validation (Flawed by Design)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            text-align: left;
+        }
+        input[type="email"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #888;
+        }
+        input[type="email"].valid {
+            border-color: #4CAF50; /* Green */
+        }
+        input[type="email"].invalid {
+            border-color: #F44336; /* Red */
+        }
+        .message {
+            margin-top: -10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #888;
+            text-align: left;
+        }
+        .explanation-link {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .explanation-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Validation (The Regex Fallacy)</h1>
+        <p>
+            Enter an email address below. This form uses a common, albeit flawed, regular expression for real-time validation.
+            Observe how it responds to different inputs.
+        </p>
+        <label for="emailInput">Email Address:</label>
+        <input type="email" id="emailInput" placeholder="e.g., test@example.com">
+        <p class="message">
+            Try "test@example.com" (valid), "invalid-email" (invalid), "user@sub.domain" (valid),
+            "user+tag@domain.com" (valid), "user@[192.168.1.1]" (should be valid, might fail).
+        </p>
+        <a href="#explanation" class="explanation-link">Why is regex fundamentally flawed for this? Click to find out!</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const emailInput = document.getElementById('emailInput');
+
+            // A common, "reasonably good" but ultimately flawed regex for email validation.
+            // This regex tries to cover many common cases but is far from RFC compliant.
+            const emailRegex = new RegExp(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+
+            emailInput.addEventListener('input', () => {
+                const email = emailInput.value;
+                if (email.length === 0) {
+                    emailInput.classList.remove('valid', 'invalid');
+                    return;
+                }
+
+                if (emailRegex.test(email)) {
+                    emailInput.classList.remove('invalid');
+                    emailInput.classList.add('valid');
+                } else {
+                    emailInput.classList.remove('valid');
+                    emailInput.classList.add('invalid');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

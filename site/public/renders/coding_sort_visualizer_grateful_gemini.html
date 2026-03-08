@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison: Bubble Sort vs. Faster Algorithms</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+
+        .intro, .complexity-section {
+            background-color: #e8f0f8;
+            border-left: 5px solid #3498db;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .intro p {
+            margin: 0;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            align-items: center;
+        }
+
+        .controls label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .controls input[type="number"],
+        .controls input[type="range"],
+        .controls select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .controls button:hover {
+            transform: translateY(-1px);
+        }
+
+        .controls button:active {
+            transform: translateY(0);
+        }
+
+        .controls button.start {
+            background-color: #28a745;
+            color: white;
+        }
+        .controls button.start:hover { background-color: #218838; }
+
+        .controls button.reset {
+            background-color: #007bff;
+            color: white;
+        }
+        .controls button.reset:hover { background-color: #0056b3; }
+
+        .controls button.pause {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .controls button.pause:hover { background-color: #e0a800; }
+
+        .controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            color: #666;
+        }
+
+        .comparison-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .algorithm-panel {
+            flex: 1;
+            min-width: 300px; /* Adjust as needed */
+            max-width: 450px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .algorithm-panel h3 {
+            margin-top: 0;
+            color: #34495e;
+            text-align: center;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            width: 100%;
+            height: 200px;
+            border-bottom: 2px solid #ccc;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            overflow: hidden; /* Prevent bars from exceeding container */
+            position: relative;
+        }
+
+        .bar {
+            flex-grow: 1;
+            background-color: #3498db;
+            margin: 0 1px;
+            transition: height 0.05s ease-out, background-color 0.05s ease-out;
+            border-radius: 2px 2px 0 0;
+            min-width: 2px; /* Ensure bars are visible even with many elements */
+        }
+
+        .bar.comparing { background-color: #e74c3c; } /* Red for elements being compared */
+        .bar.swapping { background-color: #f39c12; }  /* Orange for elements being swapped */
+        .bar.sorted { background-color: #2ecc71; }    /* Green for sorted elements */
+        .bar.pivot { background-color: #9b59b6; }     /* Purple for pivot in Quick Sort */
+        .bar.partitioning { background-color: #1abc9c; } /* Teal for elements in current partition */
+
+        .stats {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .stats p {
+            margin: 5px 0;
+        }
+
+        .complexity-section {
+            margin-top: 40px;
+            background-color: #f8fcfd;
+            border-left: 5px solid #2980b9;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .complexity-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .complexity-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .complexity-section li {
+            background-color: #ecf0f1;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+
+        .complexity-section li strong {
+            color: #2c3e50;
+        }
+
+        .complexity-section li span {
+            font-family: monospace;
+            background-color: #dbe4eb;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .algorithm-panel {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Algorithm Comparison</h1>
+
+    <div class="intro">
+        <p>Your colleague believes Bubble Sort is the best for all cases. This visualization aims to demonstrate the performance differences between Bubble Sort and two generally faster algorithms: Merge Sort and Quick Sort.</p>
+        <p>Watch them sort the same initial data side-by-side. Pay attention to the step counters (comparisons and swaps) and the speed at which they complete the task.</p>
+    </div>
+
+    <div class="controls">
+        <label for="numElements">Number of Elements:</label>
+        <input type="number" id="numElements" value="50" min="10" max="200" step="10">
+
+        <label for="animationSpeed">Animation Speed:</label>
+        <input type="range" id="animationSpeed" min="1" max="100" value="50">
+        <span>(Faster: Left, Slower: Right)</span>
+
+        <select id="initialDataType">
+            <option value="random">Random</option>
+            <option value="nearlySorted">Nearly Sorted</option>
+            <option value="reversed">Reversed</option>
+        </select>
+
+        <button class="start" id="startButton">Start Sorting</button>
+        <button class="pause" id="pauseButton" disabled>Pause</button>
+        <button class="reset" id="resetButton">Reset</button>
+    </div>
+
+    <div class="comparison-container">
+        <div class="algorithm-panel">
+            <h3>Bubble Sort</h3>
+            <div class="bar-chart" id="bubbleSortChart"></div>
+            <div class="stats">
+                <p>Status: <span id="bubbleSortStatus">Ready</span></p>
+                <p>Comparisons: <span id="bubbleSortComparisons">0</span></p>
+                <p>Swaps: <span id="bubbleSortSwaps">0</span></p>
+            </div>
+        </div>
+
+        <div class="algorithm-panel">
+            <h3>Merge Sort</h3>
+            <div class="bar-chart" id="mergeSortChart"></div>
+            <div class="stats">
+                <p>Status: <span id="mergeSortStatus">Ready</span></p>
+                <p>Comparisons: <span id="mergeSortComparisons">0</span></p>
+                <p>Swaps: <span id="mergeSortSwaps">0</span></p>
+            </div>
+        </div>
+
+        <div class="algorithm-panel">
+            <h3>Quick Sort</h3>
+            <div class="bar-chart" id="quickSortChart"></div>
+            <div class="stats">
+                <p>Status: <span id="quickSortStatus">Ready</span></p>
+                <p>Comparisons: <span id="quickSortComparisons">0</span></p>
+                <p>Swaps: <span id="quickSortSwaps">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="complexity-section">
+        <h2>Understanding Algorithm Complexity</h2>
+        <p>Algorithm complexity describes how the running time or space requirements of an algorithm grow as the input size increases. It's usually expressed using Big O notation (O).</p>
+        <ul>
+            <li>
+                <strong>Bubble Sort:</strong>
+                <br>
+                <span>Best Case: O(n)</span> (If array is already sorted)
+                <br>
+                <span>Average Case: O(n<sup>2</sup>)</span>
+                <br>
+                <span>Worst Case: O(n<sup>2</sup>)</span> (If array is reverse sorted)
+                <br>
+                <em>Explanation:</em> Bubble Sort iterates through the list repeatedly, comparing adjacent elements and swapping them if they are in the wrong order. In the worst and average cases, it performs approximately n<sup>2</sup> comparisons and swaps. Even in the best case, it needs to make one full pass to confirm the array is sorted.
+            </li>
+            <li>
+                <strong>Merge Sort:</strong>
+                <br>
+                <span>Best Case: O(n log n)</span>
+                <br>
+                <span>Average Case: O(n log n)</span>
+                <br>
+                <span>Worst Case: O(n log n)</span>
+                <br>
+                <em>Explanation:</em> Merge Sort is a "divide and conquer" algorithm. It recursively divides the array into halves until individual elements are reached, then merges those halves back together in sorted order. The "log n" comes from the halving, and "n" from the merging step. Its performance is consistent regardless of the initial order.
+            </li>
+            <li>
+                <strong>Quick Sort:</strong>
+                <br>
+                <span>Best Case: O(n log n)</span>
+                <br>
+                <span>Average Case: O(n log n)</span>
+                <br>
+                <span>Worst Case: O(n<sup>2</sup>)</span> (When pivot selection is consistently bad, e.g., already sorted array and always picking first/last element)
+                <br>
+                <em>Explanation:</em> Quick Sort is also a "divide and conquer" algorithm. It picks an element as a pivot and partitions the array around the pivot, placing all smaller elements before the pivot and all greater elements after it. It then recursively sorts the sub-arrays. Its average case is excellent due to fewer swaps in memory (in-place sorting), but a poor pivot choice can lead to O(n<sup>2</sup>) in the worst case.
+            </li>
+        </ul>
+        <h3>Why O(n log n) is generally much better than O(n<sup>2</sup>):</h3>
+        <p>Let's consider an array with <code>n = 1000</code> elements:</p>
+        <ul>
+            <li><span>O(n<sup>2</sup>)</span> would mean roughly 1,000 * 1,000 = <strong>1,000,000</strong> operations.</li>
+            <li><span>O(n log n)</span> (using log base 2) would mean roughly 1,000 * log<sub>2</sub>(1000) &approx; 1,000 * 10 = <strong>10,000</strong> operations.</li>
+        </ul>
+        <p>As you can see, for larger datasets, the difference between a quadratic (n<sup>2</sup>) algorithm and a linearithmic (n log n) algorithm is enormous. This is why Merge Sort and Quick Sort are preferred for general-purpose sorting.</p>
+    </div>
+
+    <script>
+        // --- Configuration and Global Variables ---
+        const NUM_ELEMENTS_DEFAULT = 50;
+        const MAX_ELEMENTS = 200;
+        const ANIMATION_DELAY_BASE = 5; // Base delay in ms, adjusted by slider
+        let animationDelay = ANIMATION_DELAY_BASE;
+
+        let originalData = [];
+        let animations = {
+            bubbleSort: [],
+            mergeSort: [],
+            quickSort: []
+        };
+        let currentSteps = {
+            bubbleSort: 0,
+            mergeSort: 0,
+            quickSort: 0
+        };
+        let timeouts = [];
+        let isSorting = false;
+        let isPaused = false;
+
+        // --- DOM Elements ---
+        const numElementsInput = document.getElementById('numElements');
+        const animationSpeedInput = document.getElementById('animationSpeed');
+        const initialDataTypeSelect = document.getElementById('initialDataType');
+        const startButton = document.getElementById('startButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const resetButton = document.getElementById('resetButton');
+
+        const bubbleSortChart = document.getElementById('bubbleSortChart');
+        const mergeSortChart = document.getElementById('mergeSortChart');
+        const quickSortChart = document.getElementById('quickSortChart');
+
+        const bubbleSortStatus = document.getElementById('bubbleSortStatus');
+        const mergeSortStatus = document.getElementById('mergeSortStatus');
+        const quickSortStatus = document.getElementById('quickSortStatus');
+
+        const bubbleSortComparisons = document.getElementById('bubbleSortComparisons');
+        const mergeSortComparisons = document.getElementById('mergeSortComparisons');
+        const quickSortComparisons = document.getElementById('quickSortComparisons');
+
+        const bubbleSortSwaps = document.getElementById('bubbleSortSwaps');
+        const mergeSortSwaps = document.getElementById('mergeSortSwaps');
+        const quickSortSwaps = document.getElementById('quickSortSwaps');
+
+        const MAX_BAR_HEIGHT = 200; // Corresponds to the height of .bar-chart
+
+        // --- Helper Functions ---
+        function generateData(count, type) {
+            let arr = Array.from({ length: count }, (_, i) => i + 1); // Values from 1 to count
+            if (type === 'random') {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]]; // Shuffle
+                }
+            } else if (type === 'nearlySorted') {
+                // Introduce a few swaps
+                for (let k = 0; k < Math.floor(count / 10); k++) {
+                    const i = Math.floor(Math.random() * count);
+                    const j = Math.floor(Math.random() * count);
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+            } else if (type === 'reversed') {
+                arr.reverse();
+            }
+            return arr;
+        }
+
+        function createBars(data, chartElement) {
+            chartElement.innerHTML = ''; // Clear existing bars
+            const maxVal = Math.max(...data);
+            data.forEach((val, index) => {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = `${(val / maxVal) * MAX_BAR_HEIGHT}px`;
+                bar.dataset.value = val;
+                chartElement.appendChild(bar);
+            });
+        }
+
+        function updateBarDisplay(chartElement, data, activeIndices = [], pivotIndex = -1, partitioningIndices = []) {
+            const bars = chartElement.children;
+            const maxVal = Math.max(...originalData[0]); // Use max from original for consistent scaling
+            for (let i = 0; i < bars.length; i++) {
+                const bar = bars[i];
+                bar.style.height = `${(data[i] / maxVal) * MAX_BAR_HEIGHT}px`;
+                bar.dataset.value = data[i];
+
+                bar.classList.remove('comparing', 'swapping', 'sorted', 'pivot', 'partitioning');
+                if (activeIndices.includes(i)) {
+                    bar.classList.add('comparing');
+                }
+                if (pivotIndex === i) {
+                    bar.classList.add('pivot');
+                }
+                if (partitioningIndices.includes(i)) {
+                    bar.classList.add('partitioning');
+                }
+            }
+        }
+
+        function markSorted(chartElement, index) {
+            if (index >= 0 && index < chartElement.children.length) {
+                chartElement.children[index].classList.add('sorted');
+            }
+        }
+
+        function markRangeSorted(chartElement, startIndex, endIndex) {
+            const bars = chartElement.children;
+            for (let i = startIndex; i <= endIndex; i++) {
+                if (i >= 0 && i < bars.length) {
+                    bars[i].classList.add('sorted');
+                }
+            }
+        }
+
+        function resetCharts() {
+            clearTimeouts();
+            isSorting = false;
+            isPaused = false;
+            pauseButton.textContent = 'Pause';
+            pauseButton.disabled = true;
+            startButton.disabled = false;
+            numElementsInput.disabled = false;
+            initialDataTypeSelect.disabled = false;
+
+            originalData = [];
+            animations = { bubbleSort: [], mergeSort: [], quickSort: [] };
+            currentSteps = { bubbleSort: 0, mergeSort: 0, quickSort: 0 };
+
+            // Reset UI for all algorithms
+            const algorithms = ['bubbleSort', 'mergeSort', 'quickSort'];
+            algorithms.forEach(algo => {
+                const chart = document.getElementById(`${algo}Chart`);
+                const status = document.getElementById(`${algo}Status`);
+                const comparisons = document.getElementById(`${algo}Comparisons`);
+                const swaps = document.getElementById(`${algo}Swaps`);
+
+                chart.innerHTML = ''; // Clear bars
+                status.textContent = 'Ready';
+                comparisons.textContent = '0';
+                swaps.textContent = '0';
+            });
+        }
+
+        function clearTimeouts() {
+            timeouts.forEach(clearTimeout);
+            timeouts = [];
+        }
+
+        function updateAnimationSpeed() {
+            // Invert the slider value for intuitive speed control: higher slider value = slower animation
+            const sliderValue = parseInt(animationSpeedInput.value);
+            animationDelay = ANIMATION_DELAY_BASE + (100 - sliderValue) * 2; // Adjust multiplier for desired range
+        }
+
+
+        // --- Sorting Algorithms (with animation recording) ---
+
+        // Bubble Sort
+        function bubbleSort(arr) {
+            const N = arr.length;
+            let a = [...arr]; // Clone array for this algorithm
+            let steps = [];
+            let comparisons = 0;
+            let swaps = 0;
+            let sortedCount = 0;
+
+            for (let i = 0; i < N - 1; i++) {
+                let swappedInPass = false;
+                for (let j = 0; j < N - 1 - i; j++) {
+                    comparisons++;
+                    steps.push({ type: 'compare', array: [...a], indices: [j, j + 1], comparisons, swaps });
+
+                    if (a[j] > a[j + 1]) {
+                        swaps++;
+                        [a[j], a[j + 1]] = [a[j + 1], a[j]]; // Swap
+                        swappedInPass = true;
+                        steps.push({ type: 'swap', array: [...a], indices: [j, j + 1], comparisons, swaps });
+                    }
+                }
+                steps.push({ type: 'markSorted', array: [...a], index: N - 1 - i, comparisons, swaps });
+                sortedCount++;
+
+                if (!swappedInPass) {
+                    // Optimization: If no swaps occurred in a pass, the array is sorted
+                    for(let k = 0; k < N - sortedCount; k++) {
+                         steps.push({ type: 'markSorted', array: [...a], index: k, comparisons, swaps });
+                    }
+                    break;
+                }
+            }
+            // Mark the last element if it wasn't marked by the loop
+            if (sortedCount < N) {
+                steps.push({ type: 'markSorted', array: [...a], index: 0, comparisons, swaps });
+            }
+            return steps;
+        }
+
+        // Merge Sort
+        function mergeSort(arr) {
+            let a = [...arr];
+            let steps = [];
+            let comparisons = 0;
+            let swaps = 0; // Merge sort doesn't perform swaps in the traditional sense, but we track data movement
+
+            function merge(left, right, originalArray, startIdx) {
+                let result = [];
+                let i = 0;
+                let j = 0;
+
+                while (i < left.length && j < right.length) {
+                    comparisons++;
+                    steps.push({ type: 'compare', array: [...originalArray], indices: [startIdx + i, startIdx + left.length + j], comparisons, swaps, partitioning: [startIdx, startIdx + left.length + right.length -1] });
+
+                    if (left[i] < right[j]) {
+                        result.push(left[i]);
+                        i++;
+                    } else {
+                        result.push(right[j]);
+                        j++;
+                    }
+                }
+                result = result.concat(left.slice(i)).concat(right.slice(j));
+
+                // Update originalArray for animation
+                for (let k = 0; k < result.length; k++) {
+                    if (originalArray[startIdx + k] !== result[k]) {
+                        swaps++; // Count as data movement
+                    }
+                    originalArray[startIdx + k] = result[k];
+                }
+                steps.push({ type: 'mergeUpdate', array: [...originalArray], indices: [], comparisons, swaps, partitioning: [startIdx, startIdx + result.length -1] });
+                return result;
+            }
+
+            function sort(currentArray, startIndex) {
+                if (currentArray.length <= 1) {
+                    return currentArray;
+                }
+
+                const mid = Math.floor(currentArray.length / 2);
+                const left = currentArray.slice(0, mid);
+                const right = currentArray.slice(mid);
+
+                const sortedLeft = sort(left, startIndex);
+                const sortedRight = sort(right, startIndex + mid);
+
+                return merge(sortedLeft, sortedRight, a, startIndex);
+            }
+
+            sort(a, 0); // Start the recursive sort
+            // Mark all sorted at the end
+            for(let i = 0; i < a.length; i++) {
+                steps.push({ type: 'markSorted', array: [...a], index: i, comparisons, swaps });
+            }
+            return steps;
+        }
+
+        // Quick Sort
+        function quickSort(arr) {
+            let a = [...arr];
+            let steps = [];
+            let comparisons = 0;
+            let swaps = 0;
+
+            function partition(low, high) {
+                let pivot = a[high];
+                let i = (low - 1); // Index of smaller element
+
+                steps.push({ type: 'pivot', array: [...a], index: high, low: low, high: high, comparisons, swaps, partitioning: Array.from({length: high - low + 1}, (_, k) => low + k) });
+
+                for (let j = low; j < high; j++) {
+                    comparisons++;
+                    steps.push({ type: 'compare', array: [...a], indices: [j, high], comparisons, swaps, pivot: high, partitioning: Array.from({length: high - low + 1}, (_, k) => low + k) });
+
+                    if (a[j] < pivot) {
+                        i++;
+                        swaps++;
+                        [a[i], a[j]] = [a[j], a[i]];
+                        steps.push({ type: 'swap', array: [...a], indices: [i, j], comparisons, swaps, pivot: high, partitioning: Array.from({length: high - low + 1}, (_, k) => low + k) });
+                    }
+                }
+
+                swaps++;
+                [a[i + 1], a[high]] = [a[high], a[i + 1]];
+                steps.push({ type: 'swap', array: [...a], indices: [i + 1, high], comparisons, swaps, pivot: i+1, partitioning: Array.from({length: high - low + 1}, (_, k) => low + k) });
+
+                return i + 1;
+            }
+
+            function sort(low, high) {
+                if (low < high) {
+                    let pi = partition(low, high);
+                    steps.push({ type: 'markSorted', array: [...a], index: pi, comparisons, swaps }); // Pivot is in its final place
+                    sort(low, pi - 1);
+                    sort(pi + 1, high);
+                } else if (low === high) { // Single element is sorted
+                    steps.push({ type: 'markSorted', array: [...a], index: low, comparisons, swaps });
+                }
+            }
+
+            sort(0, a.length - 1);
+            return steps;
+        }
+
+
+        // --- Animation Playback ---
+        async function animateAlgorithm(algoName, chartElement, statusElement, comparisonsElement, swapsElement, animationSteps) {
+            statusElement.textContent = 'Sorting...';
+            currentSteps[algoName] = 0;
+
+            for (let i = 0; i < animationSteps.length; i++) {
+                if (isPaused) {
+                    await new Promise(resolve => {
+                        const checkPause = setInterval(() => {
+                            if (!isPaused) {
+                                clearInterval(checkPause);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                }
+
+                const step = animationSteps[i];
+                comparisonsElement.textContent = step.comparisons;
+                swapsElement.textContent = step.swaps;
+
+                let activeIndices = [];
+                let pivotIndex = -1;
+                let partitioningIndices = [];
+
+                if (step.type === 'compare' || step.type === 'swap') {
+                    activeIndices = step.indices;
+                }
+                if (step.pivot !== undefined) {
+                    pivotIndex = step.pivot;
+                }
+                if (step.partitioning) {
+                    partitioningIndices = step.partitioning;
+                }
+
+                updateBarDisplay(chartElement, step.array, activeIndices, pivotIndex, partitioningIndices);
+
+                if (step.type === 'markSorted') {
+                    markSorted(chartElement, step.index);
+                } else if (step.type === 'mergeUpdate') {
+                    // Specific handling for merge sort to show the updated segment
+                    // The main updateBarDisplay already does this, but we might want a visual cue for the merged section
+                    // For now, updateBarDisplay handles it.
+                }
+
+                await new Promise(resolve => {
+                    const timeoutId = setTimeout(() => {
+                        timeouts = timeouts.filter(id => id !== timeoutId); // Remove from list once executed
+                        resolve();
+                    }, animationDelay);
+                    timeouts.push(timeoutId);
+                });
+            }
+
+            statusElement.textContent = 'Sorted!';
+            // Final mark all sorted (Quick Sort might not mark all if last recursion is single element)
+            markRangeSorted(chartElement, 0, chartElement.children.length - 1);
+        }
+
+        function startSorting() {
+            if (isSorting) return; // Prevent multiple clicks
+            isSorting = true;
+            isPaused = false;
+            startButton.disabled = true;
+            pauseButton.disabled = false;
+            pauseButton.textContent = 'Pause';
+            numElementsInput.disabled = true;
+            initialDataTypeSelect.disabled = true;
+
+            const numElements = parseInt(numElementsInput.value);
+            const dataType = initialDataTypeSelect.value;
+            const data = generateData(numElements, dataType);
+
+            originalData = [data, [...data], [...data]]; // Create copies for each algorithm
+
+            createBars(originalData[0], bubbleSortChart);
+            createBars(originalData[1], mergeSortChart);
+            createBars(originalData[2], quickSortChart);
+
+            // Generate animation steps for each algorithm
+            animations.bubbleSort = bubbleSort([...originalData[0]]);
+            animations.mergeSort = mergeSort([...originalData[1]]);
+            animations.quickSort = quickSort([...originalData[2]]);
+
+            // Start animation for all simultaneously
+            animateAlgorithm('bubbleSort', bubbleSortChart, bubbleSortStatus, bubbleSortComparisons, bubbleSortSwaps, animations.bubbleSort);
+            animateAlgorithm('mergeSort', mergeSortChart, mergeSortStatus, mergeSortComparisons, mergeSortSwaps, animations.mergeSort);
+            animateAlgorithm('quickSort', quickSortChart, quickSortStatus, quickSortComparisons, quickSortSwaps, animations.quickSort);
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            pauseButton.textContent = isPaused ? 'Resume' : 'Pause';
+            if (!isPaused) {
+                // If resuming, re-trigger the animation flow (the `await new Promise` handles this)
+                // No explicit action needed here as the await will resolve and continue the loops
+            }
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startSorting);
+        pauseButton.addEventListener('click', togglePause);
+        resetButton.addEventListener('click', () => {
+            resetCharts();
+            // Re-initialize bars with default or current settings
+            const numElements = parseInt(numElementsInput.value);
+            const dataType = initialDataTypeSelect.value;
+            const data = generateData(numElements, dataType);
+            originalData = [data, [...data], [...data]];
+            createBars(originalData[0], bubbleSortChart);
+            createBars(originalData[1], mergeSortChart);
+            createBars(originalData[2], quickSortChart);
+        });
+        animationSpeedInput.addEventListener('input', updateAnimationSpeed);
+
+        // Initial setup on load
+        document.addEventListener('DOMContentLoaded', () => {
+            resetCharts(); // Clear any previous state
+            const numElements = parseInt(numElementsInput.value);
+            const dataType = initialDataTypeSelect.value;
+            const data = generateData(numElements, dataType);
+            originalData = [data, [...data], [...data]]; // Initialize originalData
+            createBars(originalData[0], bubbleSortChart);
+            createBars(originalData[1], mergeSortChart);
+            createBars(originalData[2], quickSortChart);
+            updateAnimationSpeed(); // Set initial speed
+        });
+
+    </script>
+</body>
+</html>
