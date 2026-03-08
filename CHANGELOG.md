@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.1] - 2026-03-07
+
+### Added
+- **Coding render comparison viewer** (`scripts/extract_renders.py`): Generates a self-contained HTML page (`analysis/coding_review.html`) that renders all coding task completions side-by-side in iframes across 6 tone conditions. Supports task/model/run selection via dropdowns, keyboard navigation (arrow keys, M/R/S), source code toggle, finish_reason badges, and empty states for missing/refused completions. Base64-encodes HTML to prevent `</script>` injection. Follows the same pattern as `generate_review.py`.
+
 ## [v0.7.0] - 2026-03-07
 
 ### Changed
