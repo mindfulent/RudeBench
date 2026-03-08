@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>String Reverser</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .title h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .title p {
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      margin: 28px 0;
+    }
+
+    .input-section label {
+      display: block;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    #inputText {
+      width: 100%;
+      padding: 16px 50px 16px 18px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      color: #fff;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+      caret-color: #a78bfa;
+    }
+
+    #inputText::placeholder {
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    #inputText:focus {
+      border-color: #a78bfa;
+      background: rgba(167, 139, 250, 0.08);
+      box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.15);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      border-radius: 50%;
+      transition: color 0.2s, background 0.2s;
+      display: none;
+      line-height: 1;
+    }
+
+    .clear-btn:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat-badge {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .stat-badge span {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+
+    .output-section {
+      margin-top: 28px;
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .output-header label {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .copy-btn {
+      background: rgba(167, 139, 250, 0.15);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      color: #a78bfa;
+      padding: 5px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .copy-btn:hover {
+      background: rgba(167, 139, 250, 0.3);
+      border-color: #a78bfa;
+    }
+
+    .copy-btn.copied {
+      background: rgba(52, 211, 153, 0.2);
+      border-color: #34d399;
+      color: #34d399;
+    }
+
+    .output-box {
+      min-height: 80px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      align-items: flex-start;
+      align-content: flex-start;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .output-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(167,139,250,0.03), rgba(96,165,250,0.03));
+      pointer-events: none;
+    }
+
+    .placeholder-text {
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 1rem;
+      font-style: italic;
+      align-self: center;
+      width: 100%;
+    }
+
+    .char-span {
+      display: inline-block;
+      font-size: 1.05rem;
+      font-weight: 500;
+      border-radius: 4px;
+      padding: 1px 1px;
+      animation: charPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+      transform: translateY(10px) scale(0.7);
+      white-space: pre;
+    }
+
+    @keyframes charPop {
+      0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.

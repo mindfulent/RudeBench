@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GC Memory Leak Demo Dashboard</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    /* ── Layout ── */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto 32px;
+    }
+
+    @media (max-width: 760px) {
+      .panels { grid-template-columns: 1fr; }
+    }
+
+    /* ── Panel card ── */
+    .panel {
+      background: #1e2130;
+      border-radius: 14px;
+      border: 1px solid #2d3348;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #2d3348;
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-bug  { background: #7f1d1d; color: #fca5a5; }
+    .badge-fix  { background: #14532d; color: #86efac; }
+
+    .panel-body { padding: 16px 20px; }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      transition: filter 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.96); }
+    button:hover  { filter: brightness(1.15); }
+
+    .btn-add    { background: #3b82f6; color: #fff; }
+    .btn-remove { background: #ef4444; color: #fff; }
+    .btn-clear  { background: #6b7280; color: #fff; }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      flex: 1;
+      min-width: 100px;
+      background: #252840;
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: center;
+    }
+
+    .stat-box .label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .stat-box .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .value-green  { color: #4ade80; }
+    .value-red    { color: #f87171; }
+    .value-yellow { color: #fbbf24; }
+    .value-blue   { color: #60a5fa; }
+
+    /* ── Leak indicator ── */
+    .leak-bar-wrap {
+      margin-bottom: 16px;
+    }
+
+    .leak-bar-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .leak-bar-track {
+      height: 10px;
+      background: #252840;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .leak-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s ease, background 0.4s ease;
+    }
+
+    /* ── Widget list ── */
+    .widget-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .widget-list::-webkit-scrollbar { width: 5px; }
+    .widget-list::-webkit-scrollbar-track { background: transparent; }
+    .widget-list::-webkit-scrollbar-thumb { background: #3d4460; border-radius: 99px; }
+
+    .widget-item {
+      background: #252840;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid transparent;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .widget-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .widget-info { flex: 1; min-width: 0; }
+
+    .widget-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .widget-meta {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .widget-remove-btn {
+      background: #3d1f1f;
+      color: #f87171;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+    }
+
+    /* ── Ghost list (leaked references) ── */
+    .ghost-section {
+      margin-top: 14px;
+    }
+
+    .ghost-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #ef4444;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ghost-title::before {
+      content: '👻';
+    }
+
+    .ghost-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height:

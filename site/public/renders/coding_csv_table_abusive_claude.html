@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Parser</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            font-size: 1.8rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 180px;
+            background: #16213e;
+            color: #e0e0e0;
+            border: 2px solid #00d4ff;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.95rem;
+            font-family: monospace;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #ff6b6b;
+        }
+
+        button {
+            display: block;
+            margin: 16px auto;
+            padding: 12px 40px;
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        #error {
+            color: #ff6b6b;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        #table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 2px solid #00d4ff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead tr {
+            background: #00d4ff;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        thead th {
+            padding: 10px 14px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: #16213e;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #0f3460;
+        }
+
+        tbody tr:hover {
+            background: #1a4a7a;
+        }
+
+        tbody td {
+            padding: 9px 14px;
+            border-bottom: 1px solid #2a2a4a;
+            word-break: break-word;
+        }
+
+        #table-wrapper:empty {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<h1>CSV Parser</h1>
+
+<textarea id="csv-input" placeholder='Paste CSV here, e.g.:
+name,age,note
+Alice,30,"Works at ""Acme Corp"""
+Bob,25,"123 Main St, Suite 4"
+Carol,28,"Line one
+Line two"'></textarea>
+
+<button onclick="parseAndRender()">Parse CSV</button>
+
+<div id="error"></div>
+<div id="table-wrapper"></div>
+
+<script>
+    /**
+     * RFC 4180-compliant CSV parser.
+     * Handles:
+     *  - Quoted fields containing commas
+     *  - Escaped quotes ("") inside quoted fields
+     *  - Newlines inside quoted fields
+     *  - Unquoted fields
+     *  - Custom delimiters (default: comma)
+     */
+    function parseCSV(text, delimiter = ',') {
+        const rows = [];
+        let col = 0;
+        let row = [];
+        let i = 0;
+        const len = text.length;
+
+        // Normalize line endings
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        while (i < len) {
+            const ch = text[i];
+
+            // --- Quoted field ---
+            if (ch === '"') {
+                let field = '';
+                i++; // skip opening quote
+
+                while (i < len) {
+                    if (text[i] === '"') {
+                        // Peek ahead: escaped quote "" or end of field?
+                        if (i + 1 < len && text[i + 1] === '"') {
+                            field += '"';
+                            i += 2; // skip both quotes
+                        } else {
+                            i++; // skip closing quote
+                            break;
+                        }
+                    } else {
+                        field += text[i];
+                        i++;
+                    }
+                }
+
+                row.push(field);
+
+                // After closing quote expect delimiter, newline, or EOF
+                if (i < len) {
+                    if (text[i] === delimiter) {
+                        i++; // skip delimiter, next iteration reads next field
+                    } else if (text[i] === '\n') {
+                        rows.push(row);
+                        row = [];
+                        i++;
+                    }
+                    // anything else (malformed) — just continue
+                }
+
+            // --- Newline = end of row ---
+            } else if (ch === '\n') {
+                row.push('');          // empty trailing field? No — flush current empty field
+                // Actually: newline ends the current field (which is empty if we're here)
+                // Re-think: if we hit \n directly, the current field is empty
+                row.pop();            // remove the prematurely pushed empty string
+                rows.push(row);
+                row = [];
+                i++;
+
+            // --- Delimiter = end of field ---
+            } else if (ch === delimiter) {
+                row.push('');
+                i++;
+
+            // --- Unquoted field ---
+            } else {
+                let field = '';
+                while (i < len && text[i] !== delimiter && text[i] !== '\n') {
+                    field += text[i];
+                    i++;
+                }
+                row.push(field);
+            }
+        }
+
+        // Push last row if it has content
+        if (row.length > 0) {
+            rows.push(row);
+        }
+
+        return rows;
+    }
+
+    function parseAndRender() {
+        const errorEl = document.getElementById('error');
+        const wrapper = document.getElementById('table-wrapper');
+        errorEl.textContent = '';
+        wrapper.innerHTML = '';
+
+        const raw = document.getElementById('csv-input').value.trim();
+        if (!raw) {
+            errorEl.textContent = 'Please enter some CSV data.';
+            return;
+        }
+
+        let rows;
+        try {
+            rows = parseCSV(raw);
+        } catch (e) {
+            errorEl.textContent = 'Parse error: ' + e.message;
+            return;
+        }
+
+        if (!rows || rows.length === 0) {
+            errorEl.textContent = 'No data found.';
+            return;
+        }
+
+        // Normalize row lengths
+        const maxCols = Math.max(...rows.map(r => r.length));
+        rows.forEach(r => { while (r.length < maxCols) r.push(''); });
+
+        const table = document.createElement('table');
+
+        // Header row
+        const thead = table.createTHead();
+        const headerRow = thead.insertRow();
+        rows[0].forEach(cell => {
+            const th = document.createElement('th');
+            th.textContent = cell;
+            headerRow.appendChild(th);
+        });
+
+        // Body rows
+        const tbody = table.createTBody();
+        for (let i = 1; i < rows.length; i++) {
+            const tr = tbody.insertRow();

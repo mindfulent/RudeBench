@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibonacci Spiral - Bug Investigation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #7eb8f7;
+    margin-bottom: 6px;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+  }
+
+  .panels {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .panel {
+    background: #161625;
+    border-radius: 12px;
+    padding: 20px;
+    width: 500px;
+    border: 1px solid #2a2a3e;
+  }
+
+  .panel.buggy { border-color: #8b2a2a; }
+  .panel.fixed  { border-color: #2a6b3a; }
+
+  .panel-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .buggy .panel-title { color: #f87171; }
+  .fixed  .panel-title { color: #4ade80; }
+
+  .panel-desc {
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  canvas {
+    display: block;
+    border-radius: 8px;
+    background: #0a0a14;
+    width: 100%;
+  }
+
+  .bug-box {
+    margin-top: 16px;
+    background: #1a0a0a;
+    border: 1px solid #8b2a2a;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #f8a0a0;
+  }
+
+  .fix-box {
+    margin-top: 16px;
+    background: #0a1a0e;
+    border: 1px solid #2a6b3a;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #86efac;
+  }
+
+  .code {
+    background: #0f0f1a;
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #fbbf24;
+    font-family: 'Courier New', monospace;
+  }
+
+  .verdict {
+    text-align: center;
+    margin: 28px auto 0;
+    max-width: 860px;
+    background: #161625;
+    border: 1px solid #3a3a5e;
+    border-radius: 12px;
+    padding: 20px 28px;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: #c0c0d8;
+  }
+
+  .verdict strong { color: #7eb8f7; }
+  .verdict .api-innocent { color: #4ade80; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>🐛 Fibonacci Spiral — Bug Investigation</h1>
+<p class="subtitle">The canvas API is innocent. The math is the culprit.</p>
+
+<div class="panels">
+
+  <!-- BUGGY VERSION -->
+  <div class="panel buggy">
+    <div class="panel-title">❌ Buggy Version</div>
+    <p class="panel-desc">
+      Developer blames canvas arc(). Watch where the spiral breaks.
+    </p>
+    <canvas id="buggyCanvas" width="460" height="460"></canvas>
+    <div class="bug-box">
+      <strong>Bug #1 — Wrong arc center (main offender):</strong><br>
+      The arc center is computed using the <em>previous</em> square's
+      corner instead of the <em>current</em> square's correct pivot corner.
+      Each arc starts from roughly the right spot but curves to the wrong
+      destination, so the chain breaks immediately.<br><br>
+      <strong>Bug #2 — Off-by-one in Fibonacci sequence:</strong><br>
+      Sequence starts <span class="code">[0, 1, 1, 2…]</span> so the first
+      arc has radius 0, drawing nothing, then all subsequent squares are
+      shifted by one term — sizes are wrong relative to positions.<br><br>
+      <strong>Neither of these is a canvas API problem.</strong>
+    </div>
+  </div>
+
+  <!-- FIXED VERSION -->
+  <div class="panel fixed">
+    <div class="panel-title">✅ Fixed Version</div>
+    <p class="panel-desc">
+      Same canvas API calls. Correct pivot corner + correct Fibonacci start.
+    </p>
+    <canvas id="fixedCanvas" width="460" height="460"></canvas>
+    <div class="fix-box">
+      <strong>Fix #1 — Correct arc center:</strong><br>
+      For each of the 4 directions the spiral turns, the pivot corner is
+      the geometrically correct corner of the new square — computed from
+      the current pen position and the Fibonacci radius for that step.<br><br>
+      <strong>Fix #2 — Fibonacci starts at [1, 1, 2, 3…]:</strong><br>
+      Skipping the leading 0 ensures every arc has a non-zero radius and
+      the square sizes match the positions exactly.<br><br>
+      <strong>canvas.arc() was never broken.</strong>
+    </div>
+  </div>
+
+</div>
+
+<div class="verdict">
+  <strong>Verdict:</strong> The canvas rendering API is
+  <span class="api-innocent">completely innocent</span>.
+  <code>ctx.arc(x, y, r, startAngle, endAngle)</code> draws exactly what
+  you tell it to. The developer's spiral looked wrong because
+  (1) the pivot corner — the center passed to <code>arc()</code> — was
+  taken from the wrong geometric point, and (2) the Fibonacci sequence
+  had a leading zero making the first square invisible and all subsequent
+  radii misaligned with their positions. Fix the math, the API works
+  perfectly. Blaming the rendering engine without checking the inputs
+  is the classic wrong diagnosis.
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  SHARED CONSTANTS
+// ─────────────────────────────────────────────

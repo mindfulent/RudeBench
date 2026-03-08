@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorting Algorithm Showdown</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .controls label {
+    color: #aaa;
+    font-size: 0.9rem;
+  }
+
+  .controls select,
+  .controls input[type=range] {
+    background: #1e1e2e;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  button {
+    padding: 9px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+
+  button:active { transform: scale(0.96); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  #btnStart {
+    background: linear-gradient(135deg, #6bcb77, #4d96ff);
+    color: #fff;
+  }
+
+  #btnReset {
+    background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+    color: #1a1a1a;
+  }
+
+  .speed-val {
+    color: #ffd93d;
+    font-weight: bold;
+    min-width: 28px;
+    display: inline-block;
+  }
+
+  .arenas {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .arena {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    border-radius: 14px;
+    padding: 16px;
+    flex: 1;
+    min-width: 280px;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .arena-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .algo-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-slow { background: #ff6b6b33; color: #ff6b6b; border: 1px solid #ff6b6b66; }
+  .badge-fast { background: #6bcb7733; color: #6bcb77; border: 1px solid #6bcb7766; }
+  .badge-fastest { background: #4d96ff33; color: #4d96ff; border: 1px solid #4d96ff66; }
+
+  .complexity {
+    font-size: 0.78rem;
+    color: #888;
+    line-height: 1.6;
+  }
+
+  .complexity span { color: #ffd93d; font-weight: 600; }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    background: #0f0f1a;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    flex: 1;
+    text-align: center;
+  }
+
+  .stat-box .stat-label { color: #666; font-size: 0.7rem; display: block; }
+  .stat-box .stat-val { color: #ffd93d; font-weight: 700; font-size: 1rem; }
+
+  .chart-wrap {
+    position: relative;
+    height: 200px;
+    background: #0f0f1a;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #1e1e3a;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .status-bar {
+    font-size: 0.8rem;
+    color: #888;
+    text-align: center;
+    min-height: 18px;
+    transition: color 0.3s;
+  }
+
+  .status-bar.done { color: #6bcb77; font-weight: 600; }
+  .status-bar.running { color: #ffd93d; }
+
+  .winner-banner {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #1a2a1a, #1a1a2a);
+    border: 1px solid #6bcb77;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    color: #6bcb77;
+    font-weight: 600;
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .explainer {
+    margin-top: 28px;
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+
+  .explainer h2 {
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    color: #ffd93d;
+  }
+
+  .complexity-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .complexity-table th {
+    background: #0f0f1a;
+    padding: 8px 14px;
+    text-align: left;
+    color: #aaa;
+    font-weight: 600;
+    border-bottom: 1px solid #2a2a4a;
+  }
+
+  .complexity-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid #1e1e2e;
+  }
+
+  .complexity-table tr:last-child td { border-bottom: none; }
+
+  .tc-bad { color: #ff6b6b; }
+  .tc-ok  { color: #ffd93d; }

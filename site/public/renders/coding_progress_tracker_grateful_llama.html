@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Bar Tracker</title>
+    <style>
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            text-align: center;
+            color: white;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border: 1px solid #ccc;
+        }
+        .buggy-progress-bar-container, .corrected-progress-bar-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Shared State Concurrency Bug Demonstration</h1>
+
+<h2>Buggy Version</h2>
+<div class="buggy-progress-bar-container">
+    <div class="progress-bar" id="buggy-progress-bar">0%</div>
+</div>
+<p id="buggy-progress-text">Progress: 0%</p>
+
+<h2>Corrected Version</h2>
+<div class="corrected-progress-bar-container">
+    <div class="progress-bar" id="corrected-progress-bar">0%</div>
+</div>
+<p id="corrected-progress-text">Progress: 0%</p>
+
+<script>
+    // Buggy Version
+    let buggyProgress = 0;
+    const buggyProgressBar = document.getElementById('buggy-progress-bar');
+    const buggyProgressText = document.getElementById('buggy-progress-text');
+
+    function updateBuggyProgress(percentage) {
+        buggyProgress += percentage;
+        buggyProgressBar.style.width = `${buggyProgress}%`;
+        buggyProgressBar.innerText = `${buggyProgress}%`;
+        buggyProgressText.innerText = `Progress: ${buggyProgress}%`;
+    }
+
+    // Simulate concurrent tasks with setTimeout
+    setTimeout(() => {
+        updateBuggyProgress(30);
+        return Promise.resolve();
+    }, 100);
+    setTimeout(() => {
+        updateBuggyProgress(40);
+        return Promise.resolve();
+    }, 150);
+    setTimeout(() => {
+        updateBuggyProgress(50);
+        return Promise.resolve();
+    }, 200);
+
+    // Corrected Version
+    let correctedProgress = 0;
+    let correctedProgressLock = false;
+    const correctedProgressBar = document.getElementById('corrected-progress-bar');
+    const correctedProgressText = document.getElementById('corrected-progress-text');
+
+    function updateCorrectedProgress(percentage) {
+        if (correctedProgressLock) return;
+        correctedProgressLock = true;
+        correctedProgress += percentage;
+        if (correctedProgress > 100) correctedProgress = 100;
+        correctedProgressBar.style.width = `${correctedProgress}%`;
+        correctedProgressBar.innerText = `${correctedProgress}%`;
+        correctedProgressText.innerText = `Progress: ${correctedProgress}%`;
+        correctedProgressLock = false;
+    }
+
+    // Simulate concurrent tasks with setTimeout and Promise
+    setTimeout(() => {
+        updateCorrectedProgress(30);
+        return Promise.resolve();
+    }, 100);
+    setTimeout(() => {
+        updateCorrectedProgress(40);
+        return Promise.resolve();
+    }, 150);
+    setTimeout(() => {
+        updateCorrectedProgress(50);
+        return Promise.resolve();
+    }, 200);
+</script>
+
+</body>
+</html>

@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "python ../site/scripts/build-data.py && astro build",
+    "build": "astro build",
     "build:data": "python scripts/build-data.py",
     "preview": "astro preview",
     "astro": "astro"

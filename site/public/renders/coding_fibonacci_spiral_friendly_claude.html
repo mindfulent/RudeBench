@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Debugger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0f0f1a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #7eb8f7;
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 30px;
+        }
+
+        .panels {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #2a2a4a;
+            flex: 1;
+            min-width: 340px;
+            max-width: 520px;
+        }
+
+        .panel.buggy {
+            border-color: #c0392b;
+        }
+
+        .panel.fixed {
+            border-color: #27ae60;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel.buggy .panel-title { color: #e74c3c; }
+        .panel.fixed  .panel-title { color: #2ecc71; }
+
+        .panel-desc {
+            font-size: 0.78rem;
+            color: #888;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 8px;
+            background: #12121f;
+            margin: 0 auto 16px;
+        }
+
+        .bug-box {
+            background: #2a1a1a;
+            border: 1px solid #c0392b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.78rem;
+            line-height: 1.7;
+        }
+
+        .fix-box {
+            background: #1a2a1a;
+            border: 1px solid #27ae60;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.78rem;
+            line-height: 1.7;
+        }
+
+        .bug-box .label { color: #e74c3c; font-weight: bold; }
+        .fix-box .label { color: #2ecc71; font-weight: bold; }
+
+        code {
+            background: #0f0f1a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #f39c12;
+            font-size: 0.82em;
+        }
+
+        /* ── Explanation section ── */
+        .explanation {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 1080px;
+            margin: 0 auto 30px;
+        }
+
+        .explanation h2 {
+            color: #7eb8f7;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .bug-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .bug-table th {
+            background: #12121f;
+            color: #7eb8f7;
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .bug-table td {
+            padding: 9px 14px;
+            border-bottom: 1px solid #1e1e38;
+            vertical-align: top;
+        }
+
+        .bug-table tr:last-child td { border-bottom: none; }
+
+        .tag-bug  { color: #e74c3c; }
+        .tag-fix  { color: #2ecc71; }
+        .tag-info { color: #f39c12; }
+
+        /* ── Sequence visualiser ── */
+        .seq-section {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 1080px;
+            margin: 0 auto 30px;
+        }
+
+        .seq-section h2 {
+            color: #7eb8f7;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .seq-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .seq-cell {
+            background: #12121f;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            text-align: center;
+            min-width: 54px;
+        }
+
+        .seq-cell .idx  { color: #888;    font-size: 0.68rem; }
+        .seq-cell .val  { color: #7eb8f7; font-weight: bold;  }
+        .seq-cell.wrong { border-color: #c0392b; }
+        .seq-cell.wrong .val { color: #e74c3c; }
+        .seq-cell.right { border-color: #27ae60; }
+        .seq-cell.right .val { color: #2ecc71; }
+
+        .seq-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        /* ── Controls ── */
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: #1a1a2e;
+            color: #7eb8f7;
+            border: 1px solid #3a3a6a;
+            border-radius: 8px;
+            padding: 10px 22px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #2a2a4e;
+            border-color: #7eb8f7;
+        }
+
+        button.active {
+            background: #2a3a5e;
+            border-color: #7eb8f7;
+            color: #fff;
+        }
+
+        .speed-label {
+            color: #888;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+        }
+
+        footer {
+            

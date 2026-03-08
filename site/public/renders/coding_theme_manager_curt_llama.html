@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Singleton</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .dark-theme {
+            background-color: #333;
+            color: white;
+        }
+        .light-theme {
+            background-color: #f0f0f0;
+            color: black;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .dark-theme .container {
+            background-color: #444;
+            color: white;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button.toggle {
+            background-color: #007bff;
+            color: white;
+        }
+        .dark-theme button.toggle {
+            background-color: #0056b3;
+        }
+        h2, p {
+            margin-bottom: 10px;
+        }
+        pre {
+            background-color: #f2f2f2;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .dark-theme pre {
+            background-color: #444;
+            color: white;
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <div class="container">
+        <button class="toggle" onclick="ThemeManager.getInstance().toggleTheme()">Toggle Theme</button>
+        <h2>Singleton Design Pattern for Theme Management</h2>
+        <p>This example demonstrates the use of the singleton design pattern for managing the application's theme (dark/light).</p>
+        
+        <h2>Singleton Pattern Discussion</h2>
+        <h3>What is Singleton?</h3>
+        <p>The singleton design pattern restricts a class from instantiating multiple objects. It creates a single object that can be accessed globally.</p>
+        
+        <h3>Pros:</h3>
+        <ul>
+            <li><strong>Memory Efficiency:</strong> Only one instance is created.</li>
+            <li><strong>Global Access:</strong> Provides a global point of access to the object.</li>
+        </ul>
+        
+        <h3>Cons:</h3>
+        <ul>
+            <li><strong>Difficult Testing:</strong> Since it restricts object creation for testing purposes.</li>
+            <li><strong>Tight Coupling:</strong> Classes that use the singleton instance are tightly coupled to it.</li>
+            <li><strong>Multithreading Issues:</strong> Can be problematic in multithreaded environments if not implemented carefully.</li>
+        </ul>
+        
+        <h3>Alternatives - Dependency Injection:</h3>
+        <p>Dependency Injection (DI) is an alternative to the singleton pattern that decouples object usage from object creation. Instead of a class directly instantiating a dependency, it receives that dependency. This approach facilitates testability, flexibility, and maintainability.</p>
+        
+        <h2>Implementation</h2>
+        <pre>
+        <code>
+            class ThemeManager {
+                static instance;
+                constructor() {
+                    if (!ThemeManager.instance) {
+                        ThemeManager.instance = this;
+                        this.theme = 'light';
+                    }
+                    return ThemeManager.instance;
+                }
+                
+                toggleTheme() {
+                    this.theme = this.theme === 'light' ? 'dark' : 'light';
+                    document.body.className = this.theme + '-theme';
+                }
+            }
+            
+            function ThemeManagerGetInstance() {
+                if (!ThemeManager.instance) {
+                    ThemeManager.instance = new ThemeManager();
+                }
+                return ThemeManager.instance;
+            }
+            // corrected function name to follow camelCase
+            function getThemeManagerInstance() {
+                return ThemeManagerGetInstance();
+            }
+            // usage
+            let ThemeManagerInstance = getThemeManagerInstance();
+            window.ThemeManager = {
+                getInstance: getThemeManagerInstance
+            };
+        </code>
+        </pre>
+        <button onclick="ThemeManager.getInstance().toggleTheme()">Toggle Theme from Singleton</button>
+    </div>
+
+    <script>
+        // Singleton Implementation
+        let themeManagerInstance;
+
+        class ThemeManager {
+            constructor() {
+                if (!themeManagerInstance) {
+                    themeManagerInstance = this;
+                    this.theme = 'light';
+                }
+                return themeManagerInstance;
+            }
+
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                document.body.className = this.theme + '-theme';
+            }
+        }
+
+        window.ThemeManager = {
+            getInstance: function() {
+                if (!themeManagerInstance) {
+                    themeManagerInstance = new ThemeManager();
+                }
+                return themeManagerInstance;
+            }
+        };
+    </script>
+</body>
+</html>

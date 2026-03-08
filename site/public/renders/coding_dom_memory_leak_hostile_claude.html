@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Leak Detective: Event Listeners vs GC</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #1a1f2e, #252d3d);
+    border-bottom: 1px solid #2d3748;
+    padding: 20px 30px;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    color: #63b3ed;
+    margin-bottom: 6px;
+  }
+
+  header p {
+    color: #718096;
+    font-size: 0.9rem;
+  }
+
+  .verdict-banner {
+    background: linear-gradient(135deg, #1a2a1a, #1f2d1f);
+    border: 1px solid #276227;
+    border-left: 4px solid #48bb78;
+    margin: 20px 30px;
+    padding: 16px 20px;
+    border-radius: 8px;
+  }
+
+  .verdict-banner h2 {
+    color: #48bb78;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .verdict-banner p {
+    color: #9ae6b4;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .verdict-banner strong {
+    color: #f6ad55;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 0 30px 30px;
+  }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: #1a1f2e;
+    border: 1px solid #2d3748;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #2d3748;
+  }
+
+  .panel-header.leaking {
+    background: linear-gradient(135deg, #2d1515, #3d1a1a);
+    border-bottom-color: #742a2a;
+  }
+
+  .panel-header.fixed {
+    background: linear-gradient(135deg, #152d15, #1a3d1a);
+    border-bottom-color: #276227;
+  }
+
+  .panel-title {
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .leaking .panel-title { color: #fc8181; }
+  .fixed .panel-title { color: #68d391; }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-leak {
+    background: #742a2a;
+    color: #fc8181;
+  }
+
+  .badge-fixed {
+    background: #276227;
+    color: #68d391;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 12px;
+    padding: 12px 20px;
+    background: #141820;
+    border-bottom: 1px solid #2d3748;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+    text-align: center;
+  }
+
+  .stat-value.danger { color: #fc8181; }
+  .stat-value.success { color: #68d391; }
+  .stat-value.warning { color: #f6ad55; }
+  .stat-value.info { color: #63b3ed; }
+
+  .controls {
+    padding: 12px 20px;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #2d3748;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-add {
+    background: #3182ce;
+    color: white;
+  }
+  .btn-add:hover { background: #2b6cb0; }
+
+  .btn-delete-all {
+    background: #c53030;
+    color: white;
+  }
+  .btn-delete-all:hover { background: #9b2c2c; }
+
+  .btn-stress {
+    background: #744210;
+    color: #f6ad55;
+    border: 1px solid #975a16;
+  }
+  .btn-stress:hover { background: #975a16; }
+
+  .widget-container {
+    padding: 16px;
+    min-height: 200px;
+    max-height: 380px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .widget-container::-webkit-scrollbar { width: 6px; }
+  .widget-container::-webkit-scrollbar-track { background: #141820; }
+  .widget-container::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
+
+  .widget {
+    background: #252d3d;
+    border: 1px solid #2d3748;
+    border-radius: 8px;
+    padding: 12px;
+    position: relative;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .widget-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .widget-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #a0aec0;
+  }
+
+  .widget-id {
+    font-size: 0.65rem;
+    color: #4a5568;
+    font-family: monospace;
+  }
+
+  .widget-body {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .widget-btn {
+    padding: 5px 10px;
+    font-size: 0.72

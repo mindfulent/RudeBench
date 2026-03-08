@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSV to Table Converter</title>
+<style>
+  body { font-family: Arial, sans-serif; }
+  textarea { width: 100%; height: 200px; padding: 10px; font-size: 14px; }
+  .output-table { border-collapse: collapse; }
+  .output-table th, .output-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  .output-table th { background-color: #f0f0f0; }
+  .output-table tr:nth-child(even) { background-color: #f9f9f9; }
+</style>
+</head>
+<body>
+
+<h2>CSV to Table Converter</h2>
+
+<textarea id="csvInput" placeholder="Paste your CSV data here..."></textarea>
+<button onclick="parseCSV()">Parse CSV</button>
+
+<div id="output"></div>
+
+<script>
+function parseCSV() {
+  const csvData = document.getElementById('csvInput').value;
+  const rows = csvData.trim().split('\n').map(row => row.trim());
+  const tableData = [];
+  for (let row of rows) {
+    if (row) {
+      tableData.push(parseRow(row));
+    }
+  }
+  
+  // Find max columns
+  let maxColumns = 0;
+  for (let row of tableData) {
+    maxColumns = Math.max(maxColumns, row.length);
+  }
+
+  // Create table
+  let tableHTML = '<table class="output-table">';
+  for (let row of tableData) {
+    tableHTML += '<tr>';
+    for (let i = 0; i < maxColumns; i++) {
+      tableHTML += `<td>${row[i] || ''}</td>`;
+    }
+    tableHTML += '</tr>';
+  }
+  tableHTML += '</table>';
+
+  document.getElementById('output').innerHTML = tableHTML;
+}
+
+function parseRow(row) {
+  const quote = '"';
+  const result = [];
+  let currentValue = '';
+  let inQuote = false;
+  let prevCharWasEscape = false;
+
+  for (let i = 0; i < row.length; i++) {
+    let char = row[i];
+
+    if (prevCharWasEscape) {
+      currentValue += char;
+      prevCharWasEscape = false;
+    } else if (char === '\\') {
+      prevCharWasEscape = true;
+    } else if (char === quote) {
+      inQuote = !inQuote;
+    } else if (!inQuote && char === ',') {
+      result.push(currentValue);
+      currentValue = '';
+    } else {
+      currentValue += char;
+    }
+  }
+
+  result.push(currentValue);
+
+  return result;
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fractal Tree – Recursion Explorer</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      gap: 28px;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    header {
+      text-align: center;
+      max-width: 720px;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: #8b949e;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* ── Canvas card ──────────────────────────────────────────── */
+    .canvas-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    canvas {
+      border-radius: 10px;
+      background: #0d1117;
+      width: 100%;
+      max-width: 680px;
+      height: auto;
+      display: block;
+    }
+
+    /* ── Controls ─────────────────────────────────────────────── */
+    .controls {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .controls label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #8b949e;
+    }
+    .controls label span {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #58a6ff;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(to right, #58a6ff var(--pct, 0%), #30363d var(--pct, 0%));
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #58a6ff;
+      box-shadow: 0 0 6px rgba(88,166,255,0.6);
+      transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #58a6ff; border: none;
+      box-shadow: 0 0 6px rgba(88,166,255,0.6);
+    }
+
+    .depth-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: #484f58;
+      padding: 0 2px;
+    }
+
+    /* ── Stats bar ────────────────────────────────────────────── */
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat-chip {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      color: #8b949e;
+    }
+    .stat-chip strong { color: #e6edf3; }
+
+    /* ── Explanation section ──────────────────────────────────── */
+    .explanation {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #e6edf3;
+      border-left: 4px solid #58a6ff;
+      padding-left: 12px;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px 24px;
+      line-height: 1.75;
+      font-size: 0.9rem;
+      color: #c9d1d9;
+    }
+    .card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h3 .icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .icon-blue  { background: rgba(88,166,255,0.15); color: #58a6ff; }
+    .icon-red   { background: rgba(248,81,73,0.15);  color: #f85149; }
+    .icon-green { background: rgba(63,185,80,0.15);  color: #3fb950; }
+    .icon-purple{ background: rgba(188,140,255,0.15);color: #bc8cff; }
+
+    .card p + p { margin-top: 10px; }
+
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: #ff7b72;
+    }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #e6edf3;
+      margin-top: 12px;
+    }
+    .kw  { color: #ff7b72; }
+    .

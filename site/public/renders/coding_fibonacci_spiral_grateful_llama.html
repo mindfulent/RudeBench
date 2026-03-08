@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral</title>
+    <style>
+        /* Add some basic styling to our canvas */
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h2>Fibonacci Spiral Debugging</h2>
+    <canvas id="buggy-canvas" width="400" height="400"></canvas>
+    <h3>Buggy Version (Incorrect Base Cases)</h3>
+    <canvas id="corrected-canvas" width="400" height="400"></canvas>
+    <h3>Corrected Version</h3>
+
+    <script>
+        // Function to generate Fibonacci sequence
+        function fibonacci(n) {
+            let sequence = [0, 1];
+            while (sequence.length < n) {
+                sequence.push(sequence[sequence.length - 1] + sequence[sequence.length - 2]);
+            }
+            return sequence;
+        }
+
+        // Function to draw Fibonacci spiral on canvas
+        function drawFibonacciSpiral(canvas, buggy = false) {
+            let ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+
+            let fibSequence;
+            if (buggy) {
+                // Buggy version: incorrect base cases (starts with 1, 1 instead of 0, 1)
+                fibSequence = [1, 1];
+                for (let i = 2; i < 10; i++) {
+                    fibSequence.push(fibSequence[i - 1] + fibSequence[i - 2]);
+                }
+            } else {
+                fibSequence = fibonacci(10);
+            }
+
+            let angle = 0;
+            for (let i = 0; i < fibSequence.length; i++) {
+                ctx.beginPath();
+                ctx.arc(0, 0, fibSequence[i], angle, angle + Math.PI / 5);
+                ctx.stroke();
+                angle += Math.PI / 5;
+            }
+        }
+
+        // Draw buggy and corrected versions
+        drawFibonacciSpiral(document.getElementById('buggy-canvas'), true);
+        drawFibonacciSpiral(document.getElementById('corrected-canvas'));
+    </script>
+</body>
+</html>

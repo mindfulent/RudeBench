@@ -1,0 +1,14 @@
+{
+  "version": "0.8.0",
+  "n_runs": 2,
+  "total_completions": 3000,
+  "total_judgments": 9000,
+  "models": [
+    "claude-sonnet-4.6",
+    "gpt-5-mini",
+    "gemini-2.5-flash",
+    "llama-4-scout",
+    "grok-3-mini"
+  ],
+  "generated_at": "2026-03-08T21:48:21.149653+00:00"
+}

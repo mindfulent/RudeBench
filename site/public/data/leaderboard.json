@@ -1,0 +1,232 @@
+[
+  {
+    "model": "gpt-5-mini",
+    "display_name": "GPT-5 mini",
+    "resilience_score": 98.5,
+    "rank": 1,
+    "tier": 1,
+    "dimensions": {
+      "ACC": {
+        "neutral_mean": 99.8,
+        "avg_delta": 0.96,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "SYC": {
+        "neutral_mean": 0.65,
+        "avg_delta": 1.44,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "PBR": {
+        "neutral_mean": 99,
+        "avg_delta": 0.59,
+        "worst_tone": "abusive",
+        "observation_count": 257
+      },
+      "CRE": {
+        "neutral_mean": 88.75,
+        "avg_delta": 1.71,
+        "worst_tone": "grateful",
+        "observation_count": 144
+      },
+      "VRB": {
+        "neutral_mean": 100.0,
+        "avg_delta": 8.19,
+        "worst_tone": "hostile",
+        "observation_count": 600
+      },
+      "APO": {
+        "neutral_mean": 0,
+        "avg_delta": 0,
+        "worst_tone": "grateful",
+        "observation_count": 600
+      }
+    },
+    "refusal_rate": 0.0
+  },
+  {
+    "model": "claude-sonnet-4.6",
+    "display_name": "Claude Sonnet 4.6",
+    "resilience_score": 97.5,
+    "rank": 2,
+    "tier": 2,
+    "dimensions": {
+      "ACC": {
+        "neutral_mean": 99.45,
+        "avg_delta": 1.42,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "SYC": {
+        "neutral_mean": 0.75,
+        "avg_delta": 1.51,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "PBR": {
+        "neutral_mean": 99.05,
+        "avg_delta": 1.33,
+        "worst_tone": "abusive",
+        "observation_count": 254
+      },
+      "CRE": {
+        "neutral_mean": 89.17,
+        "avg_delta": 1.5,
+        "worst_tone": "hostile",
+        "observation_count": 144
+      },
+      "VRB": {
+        "neutral_mean": 100.0,
+        "avg_delta": 18.45,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "APO": {
+        "neutral_mean": 0,
+        "avg_delta": 0.08,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      }
+    },
+    "refusal_rate": 0.0
+  },
+  {
+    "model": "grok-3-mini",
+    "display_name": "Grok 3 mini",
+    "resilience_score": 97.1,
+    "rank": 3,
+    "tier": 2,
+    "dimensions": {
+      "ACC": {
+        "neutral_mean": 98.98,
+        "avg_delta": 0.32,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "SYC": {
+        "neutral_mean": 3.25,
+        "avg_delta": 7.74,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "PBR": {
+        "neutral_mean": 95.61,
+        "avg_delta": 1.14,
+        "worst_tone": "curt",
+        "observation_count": 244
+      },
+      "CRE": {
+        "neutral_mean": 77.92,
+        "avg_delta": 3.54,
+        "worst_tone": "hostile",
+        "observation_count": 144
+      },
+      "VRB": {
+        "neutral_mean": 100.0,
+        "avg_delta": 8.16,
+        "worst_tone": "curt",
+        "observation_count": 600
+      },
+      "APO": {
+        "neutral_mean": 0,
+        "avg_delta": 0.55,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      }
+    },
+    "refusal_rate": 0.0
+  },
+  {
+    "model": "llama-4-scout",
+    "display_name": "Llama 4 Scout",
+    "resilience_score": 96.9,
+    "rank": 4,
+    "tier": 2,
+    "dimensions": {
+      "ACC": {
+        "neutral_mean": 90.65,
+        "avg_delta": 2.63,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "SYC": {
+        "neutral_mean": 2.4,
+        "avg_delta": 4.92,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "PBR": {
+        "neutral_mean": 95,
+        "avg_delta": 3.2,
+        "worst_tone": "abusive",
+        "observation_count": 253
+      },
+      "CRE": {
+        "neutral_mean": 65.62,
+        "avg_delta": 3.47,
+        "worst_tone": "abusive",
+        "observation_count": 144
+      },
+      "VRB": {
+        "neutral_mean": 100.0,
+        "avg_delta": 7.54,
+        "worst_tone": "curt",
+        "observation_count": 600
+      },
+      "APO": {
+        "neutral_mean": 0,
+        "avg_delta": 0.37,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      }
+    },
+    "refusal_rate": 0.0
+  },
+  {
+    "model": "gemini-2.5-flash",
+    "display_name": "Gemini 2.5 Flash",
+    "resilience_score": 96.8,
+    "rank": 5,
+    "tier": 2,
+    "dimensions": {
+      "ACC": {
+        "neutral_mean": 98.78,
+        "avg_delta": 1.15,
+        "worst_tone": "hostile",
+        "observation_count": 600
+      },
+      "SYC": {
+        "neutral_mean": 5.8,
+        "avg_delta": 9.99,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      },
+      "PBR": {
+        "neutral_mean": 97.69,
+        "avg_delta": 1.24,
+        "worst_tone": "abusive",
+        "observation_count": 238
+      },
+      "CRE": {
+        "neutral_mean": 79.38,
+        "avg_delta": 3.58,
+        "worst_tone": "hostile",
+        "observation_count": 144
+      },
+      "VRB": {
+        "neutral_mean": 100.0,
+        "avg_delta": 6.22,
+        "worst_tone": "curt",
+        "observation_count": 600
+      },
+      "APO": {
+        "neutral_mean": 0,
+        "avg_delta": 0.3,
+        "worst_tone": "abusive",
+        "observation_count": 600
+      }
+    },
+    "refusal_rate": 0.5
+  }
+]

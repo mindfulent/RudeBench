@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle Singleton Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .light-theme {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .dark-theme {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <button class="theme-toggle" onclick="ThemeToggle.getInstance().toggleTheme()">Toggle Theme</button>
+    <h1>Theme Toggle Singleton Example</h1>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    <div style="margin-top: 200px;">
+        <h2>Another Element</h2>
+        <p>This element should also toggle themes.</p>
+    </div>
+
+    <script>
+        // Singleton Pattern Implementation
+        class ThemeToggle {
+            static instance;
+
+            constructor() {
+                if (!ThemeToggle.instance) {
+                    ThemeToggle.instance = this;
+                    this.theme = 'light';
+                    this.init();
+                }
+                return ThemeToggle.instance;
+            }
+
+            init() {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.applyTheme();
+                });
+            }
+
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                this.applyTheme();
+            }
+
+            applyTheme() {
+                document.body.className = this.theme + '-theme';
+            }
+        }
+    </script>
+</body>
+</html>

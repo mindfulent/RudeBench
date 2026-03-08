@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shared State Concurrency Bugs - Buggy vs Fixed</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Courier New', monospace;
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    color: #ff6b6b;
+    margin-bottom: 8px;
+    font-size: 1.4em;
+  }
+  .subtitle {
+    text-align: center;
+    color: #8b949e;
+    margin-bottom: 30px;
+    font-size: 0.85em;
+  }
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .panel {
+    background: #161b22;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #30363d;
+  }
+  .panel.buggy { border-color: #ff4444; }
+  .panel.fixed { border-color: #44ff88; }
+  .panel h2 {
+    font-size: 1em;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #30363d;
+  }
+  .panel.buggy h2 { color: #ff4444; }
+  .panel.fixed h2 { color: #44ff88; }
+
+  .task-list {
+    margin-bottom: 16px;
+    min-height: 120px;
+  }
+  .task {
+    margin-bottom: 10px;
+  }
+  .task-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78em;
+    margin-bottom: 4px;
+    color: #8b949e;
+  }
+  .task-label span:last-child {
+    font-weight: bold;
+  }
+  .bar-track {
+    background: #21262d;
+    border-radius: 4px;
+    height: 18px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .buggy .bar-fill { background: linear-gradient(90deg, #ff4444, #ff8800); }
+  .fixed  .bar-fill { background: linear-gradient(90deg, #00cc66, #44ff88); }
+
+  .total-bar-section {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #30363d;
+  }
+  .total-label {
+    font-size: 0.8em;
+    color: #c9d1d9;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .total-bar-track {
+    background: #21262d;
+    border-radius: 4px;
+    height: 26px;
+    overflow: hidden;
+    position: relative;
+  }
+  .total-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    position: absolute;
+    left: 0; top: 0;
+  }
+  .buggy .total-bar-fill { background: linear-gradient(90deg, #ff2222, #ffaa00); }
+  .fixed  .total-bar-fill { background: linear-gradient(90deg, #0088ff, #00ffcc); }
+
+  .anomaly-log {
+    margin-top: 14px;
+    background: #0d1117;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 0.72em;
+    height: 90px;
+    overflow-y: auto;
+    border: 1px solid #30363d;
+  }
+  .anomaly-log .entry { margin-bottom: 3px; }
+  .anomaly-log .bug  { color: #ff4444; }
+  .anomaly-log .ok   { color: #44ff88; }
+  .anomaly-log .info { color: #8b949e; }
+
+  .controls {
+    text-align: center;
+    margin: 24px auto;
+    max-width: 1100px;
+  }
+  button {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    cursor: pointer;
+    margin: 0 8px;
+    transition: background 0.15s;
+  }
+  button:hover { background: #30363d; }
+  button.primary { border-color: #58a6ff; color: #58a6ff; }
+  button.danger  { border-color: #ff4444; color: #ff4444; }
+
+  .explanation {
+    max-width: 1100px;
+    margin: 0 auto 30px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 20px;
+    font-size: 0.82em;
+    line-height: 1.7;
+    color: #8b949e;
+  }
+  .explanation h3 { color: #c9d1d9; margin-bottom: 10px; font-size: 0.95em; }
+  .explanation code {
+    background: #0d1117;
+    color: #79c0ff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.95em;
+  }
+  .highlight { color: #ff6b6b; font-weight: bold; }
+  .good { color: #44ff88; font-weight: bold; }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: #0d1117;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.75em;
+    border: 1px solid #30363d;
+  }
+  .stat span { font-weight: bold; }
+  .stat.bad  span { color: #ff4444; }
+  .stat.good span { color: #44ff88; }
+
+  @media (max-width: 700px) {
+    .panels { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>⚠ Shared State Concurrency Bugs in JS</h1>
+<p class="subtitle">setTimeout-based async tasks racing on shared mutable state — buggy vs fixed, side by side</p>
+
+<div class="explanation">
+  <h3>What's actually happening here</h3>
+  <p>
+    <span class="highlight">The bug:</span> Multiple async tasks each read a shared <code>progress</code> object,
+    compute an update based on the value they read, then write back — but between the read and the write,
+    other tasks have already mutated the same object. Classic <strong>read-modify-write race</strong>.
+    In the buggy version, tasks also capture <code>taskProgress[i]</code> in a closure at scheduling time,
+    so stale values get written back, <strong>over

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibonacci Spiral - Bug vs Fixed</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #ff6b6b;
+    font-size: 1.4em;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.8em;
+    margin-bottom: 24px;
+  }
+
+  .panels {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .panel {
+    background: #1a1a2e;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid #2a2a4a;
+    max-width: 520px;
+    width: 100%;
+  }
+
+  .panel.buggy {
+    border-color: #ff4444;
+  }
+
+  .panel.fixed {
+    border-color: #44ff88;
+  }
+
+  .panel-title {
+    font-size: 1em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .buggy .panel-title { color: #ff4444; }
+  .fixed  .panel-title { color: #44ff88; }
+
+  canvas {
+    display: block;
+    border-radius: 6px;
+    background: #0a0a14;
+    width: 100%;
+    height: auto;
+  }
+
+  .bug-report {
+    margin-top: 14px;
+    background: #0a0a14;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 0.72em;
+    line-height: 1.7;
+  }
+
+  .bug-report .label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .buggy  .bug-report .label { color: #ff6b6b; }
+  .fixed  .bug-report .label { color: #6bffaa; }
+
+  .bug-line {
+    color: #ff8888;
+    background: #2a0a0a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: block;
+    margin: 3px 0;
+    font-family: 'Courier New', monospace;
+  }
+
+  .fix-line {
+    color: #88ffbb;
+    background: #0a2a1a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: block;
+    margin: 3px 0;
+    font-family: 'Courier New', monospace;
+  }
+
+  .note {
+    color: #aaa;
+    margin-top: 6px;
+    display: block;
+  }
+
+  .fib-sequence {
+    text-align: center;
+    margin: 18px auto 0;
+    font-size: 0.78em;
+    color: #888;
+    max-width: 1060px;
+  }
+
+  .fib-sequence span {
+    color: #a0c4ff;
+    font-weight: bold;
+  }
+
+  .arrow {
+    color: #555;
+    margin: 0 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🐛 FIBONACCI SPIRAL — BUG HUNT</h1>
+<p class="subtitle">The canvas API is fine. The math is broken. Here's proof.</p>
+
+<div class="panels">
+
+  <!-- BUGGY PANEL -->
+  <div class="panel buggy">
+    <div class="panel-title">❌ BUGGY VERSION</div>
+    <canvas id="buggyCanvas" width="480" height="480"></canvas>
+    <div class="bug-report">
+      <span class="label">🐛 BUGS FOUND (3 total):</span>
+
+      <span class="bug-line">BUG 1 — Wrong start angle per direction</span>
+      <span class="note">
+        All arcs use startAngle=0, endAngle=Math.PI/2.<br>
+        Each quarter-turn must rotate 90° in the correct direction.
+      </span>
+
+      <span class="bug-line">BUG 2 — Pivot point never updated</span>
+      <span class="note">
+        cx/cy stays fixed at canvas center for every arc.<br>
+        Each arc pivots from a different corner of its square.
+      </span>
+
+      <span class="bug-line">BUG 3 — Fibonacci index starts at 0</span>
+      <span class="note">
+        fib[0]=0 gives a zero-radius arc — invisible first step,<br>
+        throwing every subsequent radius off by one position.
+      </span>
+    </div>
+  </div>
+
+  <!-- FIXED PANEL -->
+  <div class="panel fixed">
+    <div class="panel-title">✅ FIXED VERSION</div>
+    <canvas id="fixedCanvas" width="480" height="480"></canvas>
+    <div class="bug-report">
+      <span class="label">✅ FIXES APPLIED:</span>
+
+      <span class="fix-line">FIX 1 — Correct start/end angles per direction step</span>
+      <span class="note">
+        Direction cycle maps each step to the right<br>
+        startAngle so arcs connect seamlessly end-to-end.
+      </span>
+
+      <span class="fix-line">FIX 2 — Pivot recalculated after every arc</span>
+      <span class="note">
+        After drawing each arc the pivot corner advances<br>
+        by the current Fibonacci radius in the right axis.
+      </span>
+
+      <span class="fix-line">FIX 3 — Fibonacci sequence starts at index 1</span>
+      <span class="note">
+        fib[1]=1 is the correct first radius. No invisible<br>
+        zero-step, every arc has the right proportional size.
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<p class="fib-sequence">
+  Fibonacci radii used (px, scaled):
+  <span>1</span><span class="arrow">→</span>
+  <span>1</span><span class="arrow">→</span>
+  <span>2</span><span class="arrow">→</span>
+  <span>3</span><span class="arrow">→</span>
+  <span>5</span><span class="arrow">→</span>
+  <span>8</span><span class="arrow">→</span

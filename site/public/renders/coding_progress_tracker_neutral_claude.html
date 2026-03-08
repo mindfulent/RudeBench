@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Concurrency Bug: Progress Bar Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0f0;
+      min-height: 100vh;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      color: #a78bfa;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 30px;
+    }
+
+    .panels {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .panel {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid #2d2d4e;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .panel.buggy {
+      border-color: #ef4444;
+    }
+
+    .panel.fixed {
+      border-color: #22c55e;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel.buggy .panel-title { color: #f87171; }
+    .panel.fixed .panel-title { color: #4ade80; }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.bug { background: #7f1d1d; color: #fca5a5; }
+    .badge.ok  { background: #14532d; color: #86efac; }
+
+    .panel-desc {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+      color: #cbd5e1;
+    }
+
+    .progress-wrap {
+      background: #0f0f1a;
+      border-radius: 50px;
+      height: 22px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      border: 1px solid #2d2d4e;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 50px;
+      transition: width 0.15s ease, background 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .panel.buggy .progress-bar { background: linear-gradient(90deg, #dc2626, #f97316); }
+    .panel.fixed  .progress-bar { background: linear-gradient(90deg, #16a34a, #22d3ee); }
+
+    .overflow-bar {
+      background: linear-gradient(90deg, #7c3aed, #ec4899) !important;
+    }
+
+    .task-log {
+      background: #0a0a14;
+      border-radius: 10px;
+      padding: 12px;
+      height: 180px;
+      overflow-y: auto;
+      font-size: 0.75rem;
+      font-family: 'Courier New', monospace;
+      border: 1px solid #1e1e3a;
+      margin-bottom: 16px;
+    }
+
+    .log-entry {
+      padding: 2px 0;
+      border-bottom: 1px solid #1a1a2e;
+      line-height: 1.6;
+    }
+
+    .log-entry.warn  { color: #fbbf24; }
+    .log-entry.error { color: #f87171; }
+    .log-entry.info  { color: #60a5fa; }
+    .log-entry.ok    { color: #4ade80; }
+    .log-entry.dim   { color: #475569; }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .panel.buggy .btn { background: linear-gradient(90deg, #dc2626, #f97316); color: #fff; }
+    .panel.fixed  .btn { background: linear-gradient(90deg, #16a34a, #22d3ee); color: #fff; }
+
+    /* Explanation box */
+    .explanation {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 984px;
+      margin: 0 auto 30px;
+      border: 1px solid #2d2d4e;
+    }
+
+    .explanation h2 {
+      color: #a78bfa;
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+    }
+
+    .exp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 640px) {
+      .exp-grid { grid-template-columns: 1fr; }
+    }
+
+    .exp-block h3 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .exp-block.bug h3 { color: #f87171; }
+    .exp-block.fix h3 { color: #4ade80; }
+
+    .exp-block p {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      line-height: 1.7;
+    }
+
+    pre {
+      background: #0a0a14;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.72rem;
+      overflow-x: auto;
+      margin-top: 10px;
+      border: 1px solid #1e1e3a;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .str { color: #86efac; }
+    .cm  { color: #475569

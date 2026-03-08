@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral - Bug Debug</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0f0f1a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #7eb8f7;
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 30px;
+        }
+
+        .panels {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            width: 460px;
+            border: 1px solid #2a2a4a;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+
+        .panel.buggy {
+            border-color: #6b2737;
+        }
+
+        .panel.fixed {
+            border-color: #1e5c3a;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel.buggy .panel-title { color: #f87171; }
+        .panel.fixed  .panel-title { color: #4ade80; }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: normal;
+        }
+
+        .panel.buggy .badge { background: #6b2737; color: #fca5a5; }
+        .panel.fixed  .badge { background: #1e5c3a; color: #86efac; }
+
+        .panel-desc {
+            font-size: 0.75rem;
+            color: #777;
+            margin-bottom: 14px;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 8px;
+            background: #0d0d1a;
+            width: 100%;
+        }
+
+        /* ── Fibonacci sequence display ── */
+        .fib-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .fib-chip {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #252545;
+            color: #aaa;
+        }
+
+        .fib-chip.wrong { background: #4a1a22; color: #f87171; }
+        .fib-chip.right { background: #1a3a28; color: #4ade80; }
+
+        /* ── Code blocks ── */
+        .code-section {
+            background: #13131f;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #2a2a4a;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .code-section h2 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            color: #7eb8f7;
+            letter-spacing: 1px;
+        }
+
+        .code-compare {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .code-block {
+            flex: 1;
+            min-width: 280px;
+            background: #0d0d1a;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 0.78rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            border: 1px solid #222240;
+        }
+
+        .code-block.buggy-code { border-color: #6b2737; }
+        .code-block.fixed-code { border-color: #1e5c3a; }
+
+        .code-label {
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .buggy-code .code-label { background: #6b2737; color: #fca5a5; }
+        .fixed-code .code-label { background: #1e5c3a; color: #86efac; }
+
+        .kw  { color: #c792ea; }
+        .fn  { color: #82aaff; }
+        .num { color: #f78c6c; }
+        .str { color: #c3e88d; }
+        .cm  { color: #546e7a; font-style: italic; }
+        .hl  { background: rgba(248,113,113,0.15); border-left: 3px solid #f87171;
+               padding-left: 6px; margin-left: -6px; display: block; border-radius: 2px; }
+        .hlg { background: rgba(74,222,128,0.12); border-left: 3px solid #4ade80;
+               padding-left: 6px; margin-left: -6px; display: block; border-radius: 2px; }
+
+        /* ── Explanation ── */
+        .explanation {
+            background: #13131f;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 960px;
+            margin: 0 auto 24px;
+            border: 1px solid #2a2a4a;
+        }
+
+        .explanation h2 {
+            color: #7eb8f7;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        .bug-card {
+            background: #1a0d0d;
+            border: 1px solid #6b2737;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .bug-card h3 {
+            color: #f87171;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .fix-card {
+            background: #0d1a10;
+            border: 1px solid #1e5c3a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .fix-card h3 {
+            color: #4ade80;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .explanation p, .explanation li {
+            font-size: 0.8rem;
+            color: #aaa;
+            line-height: 1.7;
+        }
+
+        .explanation ul {
+            padding-left: 18px;
+        }
+
+        .explanation li { margin-bottom: 4px; }
+
+        .highlight-text { color: #fbbf24; font-weight: bold; }
+
+        /* ── Animation controls ── */
+        

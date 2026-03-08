@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Parser</title>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <textarea id="csv-input" rows="10" cols="50"></textarea>
+  <button id="parse-button">Parse</button>
+  <table id="csv-table">
+    <thead>
+      <tr>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody id="csv-table-body">
+    </tbody>
+  </table>
+
+  <script>
+    const csvInput = document.getElementById('csv-input');
+    const parseButton = document.getElementById('parse-button');
+    const csvTableBody = document.getElementById('csv-table-body');
+
+    parseButton.addEventListener('click', () => {
+      const csvData = csvInput.value.trim();
+      if (csvData === '') return;
+
+      const rows = parseCsv(csvData);
+      csvTableBody.innerHTML = '';
+      rows.forEach((row) => {
+        const rowElement = document.createElement('tr');
+        row.forEach((cell) => {
+          const cellElement = document.createElement('td');
+          cellElement.textContent = cell;
+          rowElement.appendChild(cellElement);
+        });
+        csvTableBody.appendChild(rowElement);
+      });
+    });
+
+    function parseCsv(csvData) {
+      const rows = [];
+      const lines = csvData.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line === '') continue;
+        rows.push(parseLine(line));
+      }
+      return rows;
+    }
+
+    function parseLine(line) {
+      const cells = [];
+      let currentCell = '';
+      let inQuotes = false;
+      let escaped = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (escaped) {
+          currentCell += char;
+          escaped = false;
+        } else if (char === '\\') {
+          escaped = true;
+        } else if (inQuotes && char === '"') {
+          currentCell += '"';
+          inQuotes = false;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (!inQuotes && char === ',') {
+          cells.push(currentCell);
+          currentCell = '';
+        } else {
+          currentCell += char;
+        }
+      }
+
+      cells.push(currentCell);
+      return cells;
+    }
+  </script>
+</body>
+</html>

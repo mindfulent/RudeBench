@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>REST API Design Review</title>
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3352;
+      --accent:    #6c63ff;
+      --accent2:   #a78bfa;
+      --danger:    #f87171;
+      --success:   #34d399;
+      --warning:   #fbbf24;
+      --info:      #60a5fa;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --get:       #34d399;
+      --post:      #60a5fa;
+      --put:       #fbbf24;
+      --patch:     #a78bfa;
+      --delete:    #f87171;
+      --radius:    12px;
+      --radius-sm: 6px;
+      --shadow:    0 4px 24px rgba(0,0,0,.4);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(108,99,255,.18), transparent);
+      pointer-events: none;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -.5px;
+      background: linear-gradient(135deg, #fff 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: var(--muted);
+      margin-top: .5rem;
+      font-size: .95rem;
+    }
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+    }
+    .badge {
+      padding: .25rem .75rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .badge-problems { background: rgba(248,113,113,.15); color: var(--danger); border: 1px solid rgba(248,113,113,.3); }
+    .badge-endpoints { background: rgba(52,211,153,.15); color: var(--success); border: 1px solid rgba(52,211,153,.3); }
+    .badge-version { background: rgba(108,99,255,.15); color: var(--accent2); border: 1px solid rgba(108,99,255,.3); }
+
+    /* ── Layout ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Section headings ── */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 2.5rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Summary cards ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: .5rem;
+    }
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1rem;
+      text-align: center;
+    }
+    .summary-card .num {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .summary-card .label { font-size: .8rem; color: var(--muted); margin-top: .35rem; text-transform: uppercase; letter-spacing: .5px; }
+    .num-red   { color: var(--danger); }
+    .num-green { color: var(--success); }
+    .num-blue  { color: var(--info); }
+    .num-purple{ color: var(--accent2); }
+
+    /* ── Accordion card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card.open  { border-color: var(--accent); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.2rem;
+      cursor: pointer;
+      user-select: none;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      color: var(--text);
+    }
+    .card-header:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .method-pill {
+      padding: .25rem .7rem;
+      border-radius: var(--radius-sm);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .5px;
+      min-width: 60px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .pill-GET    { background: rgba(52,211,153,.15);  color: var(--get);    border: 1px solid rgba(52,211,153,.35); }
+    .pill-POST   { background: rgba(96,165,250,.15);  color: var(--post);   border: 1px solid rgba(96,165,250,.35); }
+    .pill-PUT    { background: rgba(251,191,36,.15);  color: var(--put);    border: 1px solid rgba(251,191,36,.35); }
+    .pill-PATCH  { background: rgba(167,139,250,.15); color: var(--patch);  border: 1px solid rgba(167,139,250,.35); }
+    .pill-DELETE { background: rgba(248,113,113,.15); color: var(--delete); border: 1px solid rgba(248,113,113,.35); }
+
+    .endpoint-path {
+      font-family: 'Cascadia Code', '

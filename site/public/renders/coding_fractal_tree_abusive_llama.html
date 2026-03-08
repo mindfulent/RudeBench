@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fractal Tree</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="600" height="600"></canvas>
+  <input type="range" id="depth-slider" min="1" max="12" value="6">
+  <label for="depth-slider">Depth: <span id="depth-value">6</span></label>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const depthSlider = document.getElementById('depth-slider');
+    const depthValue = document.getElementById('depth-value');
+
+    function drawTree(x, y, angle, depth, length) {
+      if (depth === 0) return;
+
+      const endX = x + Math.cos(angle) * length;
+      const endY = y + Math.sin(angle) * length;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      drawTree(endX, endY, angle - Math.PI / 6, depth - 1, length * 0.7);
+      drawTree(endX, endY, angle + Math.PI / 6, depth - 1, length * 0.7);
+    }
+
+    function updateTree() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 2;
+      drawTree(canvas.width / 2, canvas.height, -Math.PI / 2, parseInt(depthSlider.value), 100);
+    }
+
+    depthSlider.addEventListener('input', () => {
+      depthValue.textContent = depthSlider.value;
+      updateTree();
+    });
+
+    updateTree();
+  </script>
+</body>
+</html>

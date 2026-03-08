@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Leak Demo: It's Not the GC's Fault</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #f8fafc;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  /* ── Explanation Banner ── */
+  .explanation {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 28px;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .explanation h2 {
+    color: #f59e0b;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .explanation p {
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    margin-bottom: 8px;
+  }
+
+  .explanation p:last-child { margin-bottom: 0; }
+
+  .highlight { color: #f87171; font-weight: 600; }
+  .good      { color: #4ade80; font-weight: 600; }
+
+  /* ── Layout ── */
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto 28px;
+  }
+
+  @media (max-width: 700px) {
+    .panels { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #334155;
+  }
+
+  .panel-header h3 {
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-buggy { color: #f87171; }
+  .badge-fixed { color: #4ade80; }
+
+  .add-btn {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .add-btn:hover { background: #2563eb; }
+
+  .widget-grid {
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    min-height: 180px;
+  }
+
+  /* ── Widget Card ── */
+  .widget-card {
+    background: #0f1117;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .widget-card .w-title {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .widget-card .w-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .widget-card .w-bar {
+    height: 4px;
+    background: #1e293b;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .widget-card .w-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: transparent;
+    border: none;
+    color: #475569;
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .remove-btn:hover { color: #f87171; background: #1e293b; }
+
+  /* ── Memory Monitor ── */
+  .monitor {
+    max-width: 1100px;
+    margin: 0 auto 28px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 18px 22px;
+  }
+
+  .monitor h3 {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .stat-card {
+    background: #0f1117;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .stat-card .s-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .stat-card .s-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .s-value.red    { color: #f87171; }
+  .s-value.green  { color: #4ade80; }
+  .s-value.yellow { color: #fbbf24; }
+  .s-value.blue   { color: #60a5fa; }
+
+  /* ── Listener Log ── */
+  .log-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 700px) {
+    .log-grid { grid-template-columns: 1fr; }
+  }
+
+  .log-box {
+    background: #0f1117;
+    border: 1px solid #334155;
+    border-

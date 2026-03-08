@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Singleton</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .dark-theme {
+            background-color: #333;
+            color: #fff;
+        }
+        .light-theme {
+            background-color: #fff;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .dark-theme .container {
+            background-color: #444;
+            border-color: #555;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .dark-theme button {
+            background-color: #666;
+            color: #fff;
+        }
+        .light-theme button {
+            background-color: #4CAF50;
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <div class="container">
+        <h1>Theme Toggle with Singleton</h1>
+        <button id="theme-toggle">Toggle Theme</button>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <ul>
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
+        </ul>
+        <h2>Discussion: Singleton Design Pattern</h2>
+        <h3>Advantages:</h3>
+        <ul>
+            <li><strong>Global Access:</strong> The singleton pattern provides a global point of access to the theme state, making it easily accessible throughout the application.</li>
+            <li><strong>Memory Efficiency:</strong> Since only one instance of the theme state exists, it can be more memory-efficient than creating multiple instances.</li>
+        </ul>
+        <h3>Disadvantages:</h3>
+        <ul>
+            <li><strong>Tight Coupling:</strong> The singleton pattern can lead to tight coupling between classes, making it harder to test and maintain.</li>
+            <li><strong>Testing Challenges:</strong> Singletons can make unit testing more difficult due to their global state.</li>
+            <li><strong>Multithreading Issues:</strong> In multithreaded environments, singletons can lead to issues if not implemented carefully.</li>
+        </ul>
+        <h3>Alternatives:</h3>
+        <ul>
+            <li><strong>Dependency Injection:</strong> Instead of using a singleton, you can use dependency injection to provide the theme state to classes that need it.</li>
+            <li><strong>Observer Pattern:</strong> The observer pattern can be used to notify classes of theme changes, reducing the need for a global theme state.</li>
+        </ul>
+    </div>
+
+    <script>
+        // ThemeState Singleton
+        let ThemeState = (function() {
+            let instance;
+
+            function createInstance() {
+                let theme = localStorage.getItem('theme') || 'light';
+                document.body.classList.add(theme + '-theme');
+                return {
+                    theme,
+                    toggleTheme: function() {
+                        let newTheme = this.theme === 'light' ? 'dark' : 'light';
+                        document.body.classList.remove(this.theme + '-theme');
+                        document.body.classList.add(newTheme + '-theme');
+                        this.theme = newTheme;
+                        localStorage.setItem('theme', newTheme);
+                    }
+                };
+            }
+
+            return {
+                getInstance: function() {
+                    if (!instance) {
+                        instance = createInstance();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        // Get the theme state instance
+        let themeState = ThemeState.getInstance();
+
+        // Add event listener to theme toggle button
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            themeState.toggleTheme();
+        });
+    </script>
+</body>
+</html>

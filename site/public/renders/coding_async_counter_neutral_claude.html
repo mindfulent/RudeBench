@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Race Condition Counter Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      color: #ffffff;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Layout ── */
+    .panels {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .panel {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 340px;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+
+    .panel.buggy  { border-color: #e74c3c; }
+    .panel.fixed  { border-color: #2ecc71; }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel.buggy .panel-title { color: #e74c3c; }
+    .panel.fixed .panel-title { color: #2ecc71; }
+
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    /* ── Counter display ── */
+    .counter-display {
+      background: #0f0f1a;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .count-value {
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1;
+      transition: transform 0.1s ease, color 0.3s;
+    }
+
+    .panel.buggy  .count-value { color: #e74c3c; }
+    .panel.fixed  .count-value { color: #2ecc71; }
+
+    .count-value.bump {
+      animation: bump 0.15s ease;
+    }
+
+    @keyframes bump {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    .count-label {
+      font-size: 0.75rem;
+      color: #555;
+      margin-top: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Pending indicator ── */
+    .pending-bar {
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pending-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.2s ease;
+    }
+
+    .panel.buggy .pending-fill { background: #e74c3c; }
+    .panel.fixed .pending-fill { background: #2ecc71; }
+
+    .pending-label {
+      font-size: 0.75rem;
+      color: #555;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 8px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s, filter 0.2s;
+    }
+
+    button:active { transform: scale(0.95); }
+
+    .btn-inc-buggy  { background: #c0392b; color: #fff; }
+    .btn-inc-fixed  { background: #27ae60; color: #fff; }
+    .btn-spam       { background: #8e44ad; color: #fff; }
+    .btn-reset      { background: #2c3e50; color: #aaa; }
+
+    button:hover { filter: brightness(1.15); }
+
+    /* ── Stats ── */
+    .stats {
+      background: #0f0f1a;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      color: #777;
+      line-height: 1.8;
+    }
+
+    .stats span { color: #bbb; font-weight: 600; }
+
+    .error-flash {
+      color: #e74c3c;
+      font-weight: 700;
+      animation: flash 0.5s ease infinite alternate;
+    }
+
+    @keyframes flash {
+      from { opacity: 1; }
+      to   { opacity: 0.3; }
+    }
+
+    /* ── Log ── */
+    .log-box {
+      background: #0f0f1a;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 12px;
+      height: 90px;
+      overflow-y: auto;
+      font-size: 0.72rem;
+      font-family: 'Courier New', monospace;
+      color: #555;
+      border: 1px solid #1e1e3a;
+    }
+
+    .log-box .log-entry { margin-bottom: 2px; }
+    .log-box .log-entry.warn { color: #e74c3c; }
+    .log-box .log-entry.ok   { color: #2ecc71; }
+
+    /* ── Explanation section ── */
+    .explanation {
+      max-width: 720px;
+      margin: 0 auto 32px;
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid #2a2a4a;
+    }
+
+    .explanation h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      color: #fff;
+      border-bottom: 1px solid #2a2a4a;
+      padding-bottom: 8px;
+    }
+
+    .exp-block {
+      margin-bottom: 20px;
+    }
+
+    .exp-block h3 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .exp-block.bug  h3 { color: #e74c3c; }
+    .exp-block.fix  h3 { color: #2ecc71; }
+    .exp-block.why  h3 { color: #f39c12; }
+
+    .exp-block p, .exp-block li {
+      font-size: 0.82rem

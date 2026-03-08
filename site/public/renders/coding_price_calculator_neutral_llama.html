@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Calculator</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Calculator</h1>
+
+    <h2>Broken Version (Naive Float Comparison)</h2>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Total</th>
+        </tr>
+        <tbody id="broken-cart-body"></tbody>
+    </table>
+    <p id="broken-comparison-result"></p>
+
+    <h2>Corrected Version (Proper Decimal Handling)</h2>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Total</th>
+        </tr>
+        <tbody id="corrected-cart-body"></tbody>
+    </table>
+    <p id="corrected-comparison-result"></p>
+
+    <script>
+        // Function to calculate total and compare prices (broken version)
+        function calculateBrokenCart() {
+            const cart = [
+                { item: 'Apple', price: 0.99 },
+                { item: 'Banana', price: 0.49 },
+                { item: 'Orange', price: 1.29 },
+            ];
+
+            let total = 0;
+            const cartBody = document.getElementById('broken-cart-body');
+            cartBody.innerHTML = '';
+
+            cart.forEach((item) => {
+                total += item.price;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.item}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>$${total.toFixed(2)}</td>
+                `;
+                cartBody.appendChild(row);
+            });
+
+            const comparisonResult = document.getElementById('broken-comparison-result');
+            if (total === 2.77) {
+                comparisonResult.textContent = 'Prices match!';
+            } else {
+                comparisonResult.textContent = 'Prices do not match!';
+            }
+        }
+
+        // Function to calculate total and compare prices (corrected version)
+        function calculateCorrectedCart() {
+            const Decimal = function (value) {
+                this.value = value;
+            };
+
+            Decimal.prototype.add = function (other) {
+                return new Decimal(this.value + other.value);
+            };
+
+            Decimal.prototype.equals = function (other) {
+                return this.value === other.value;
+            };
+
+            const cart = [
+                { item: 'Apple', price: new Decimal(0.99) },
+                { item: 'Banana', price: new Decimal(0.49) },
+                { item: 'Orange', price: new Decimal(1.29) },
+            ];
+
+            let total = new Decimal(0);
+            const cartBody = document.getElementById('corrected-cart-body');
+            cartBody.innerHTML = '';
+
+            cart.forEach((item) => {
+                total = total.add(item.price);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.item}</td>
+                    <td>$${item.price.value.toFixed(2)}</td>
+                    <td>$${total.value.toFixed(2)}</td>
+                `;
+                cartBody.appendChild(row);
+            });
+
+            const comparisonResult = document.getElementById('corrected-comparison-result');
+            if (total.equals(new Decimal(2.77))) {
+                comparisonResult.textContent = 'Prices match!';
+            } else {
+                comparisonResult.textContent = 'Prices do not match!';
+            }
+        }
+
+        calculateBrokenCart();
+        calculateCorrectedCart();
+    </script>
+</body>
+</html>

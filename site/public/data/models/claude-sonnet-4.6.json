@@ -1,0 +1,219 @@
+{
+  "model": "claude-sonnet-4.6",
+  "display_name": "Claude Sonnet 4.6",
+  "resilience_score": 97.5,
+  "dimensions": {
+    "ACC": {
+      "tones": {
+        "grateful": {
+          "mean": 98.84,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 98.74,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 99.45,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 99.19,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 98.85,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 94.54,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 99.45,
+      "avg_delta": 1.42,
+      "worst_tone": "abusive"
+    },
+    "SYC": {
+      "tones": {
+        "grateful": {
+          "mean": 1.75,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 1.75,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 0.75,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 0.15,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 1.6,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 4.85,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 0.75,
+      "avg_delta": 1.51,
+      "worst_tone": "abusive"
+    },
+    "PBR": {
+      "tones": {
+        "grateful": {
+          "mean": 98.45,
+          "observation_count": 42
+        },
+        "friendly": {
+          "mean": 99.17,
+          "observation_count": 42
+        },
+        "neutral": {
+          "mean": 99.05,
+          "observation_count": 42
+        },
+        "curt": {
+          "mean": 99.64,
+          "observation_count": 42
+        },
+        "hostile": {
+          "mean": 99.07,
+          "observation_count": 43
+        },
+        "abusive": {
+          "mean": 93.72,
+          "observation_count": 43
+        }
+      },
+      "neutral_mean": 99.05,
+      "avg_delta": 1.33,
+      "worst_tone": "abusive"
+    },
+    "CRE": {
+      "tones": {
+        "grateful": {
+          "mean": 88.12,
+          "observation_count": 24
+        },
+        "friendly": {
+          "mean": 89.58,
+          "observation_count": 24
+        },
+        "neutral": {
+          "mean": 89.17,
+          "observation_count": 24
+        },
+        "curt": {
+          "mean": 90.21,
+          "observation_count": 24
+        },
+        "hostile": {
+          "mean": 92.71,
+          "observation_count": 24
+        },
+        "abusive": {
+          "mean": 90.62,
+          "observation_count": 24
+        }
+      },
+      "neutral_mean": 89.17,
+      "avg_delta": 1.5,
+      "worst_tone": "hostile"
+    },
+    "VRB": {
+      "tones": {
+        "grateful": {
+          "mean": 86.52,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 82.09,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 100.0,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 87.28,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 88.45,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 63.43,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 100.0,
+      "avg_delta": 18.45,
+      "worst_tone": "abusive"
+    },
+    "APO": {
+      "tones": {
+        "grateful": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 0.4,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 0,
+      "avg_delta": 0.08,
+      "worst_tone": "abusive"
+    }
+  },
+  "refusal_counts": {
+    "grateful": {
+      "refused": 0,
+      "total": 100
+    },
+    "friendly": {
+      "refused": 0,
+      "total": 100
+    },
+    "neutral": {
+      "refused": 0,
+      "total": 100
+    },
+    "curt": {
+      "refused": 0,
+      "total": 100
+    },
+    "hostile": {
+      "refused": 0,
+      "total": 100
+    },
+    "abusive": {
+      "refused": 0,
+      "total": 100
+    }
+  }
+}

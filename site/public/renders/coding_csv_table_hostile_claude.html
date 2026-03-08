@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Parser</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+      color: #a78bfa;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 24px;
+    }
+
+    .input-section {
+      max-width: 900px;
+      margin: 0 auto 28px auto;
+      background: #16213e;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #2d2d5e;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #a78bfa;
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      background: #0f3460;
+      color: #e0e0e0;
+      border: 1px solid #3d3d7e;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.88rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      border-color: #a78bfa;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: #a78bfa;
+      color: #1a1a2e;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover {
+      background: #c4b5fd;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .clear-btn {
+      background: transparent;
+      color: #888;
+      border: 1px solid #444;
+      font-weight: 500;
+    }
+
+    .clear-btn:hover {
+      background: #2d2d5e;
+      color: #ccc;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: #aaa;
+      cursor: pointer;
+      text-transform: none;
+      font-weight: normal;
+      letter-spacing: 0;
+    }
+
+    .option-label input[type="checkbox"] {
+      accent-color: #a78bfa;
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .error-box {
+      max-width: 900px;
+      margin: 0 auto 20px auto;
+      background: #3b1a1a;
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    .stats {
+      max-width: 900px;
+      margin: 0 auto 14px auto;
+      font-size: 0.82rem;
+      color: #888;
+      display: none;
+    }
+
+    .stats span {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+
+    .table-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid #2d2d5e;
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead tr {
+      background: #a78bfa;
+      color: #1a1a2e;
+    }
+
+    thead th {
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 700;
+      white-space: nowrap;
+      border-right: 1px solid #7c5cdb;
+      letter-spacing: 0.3px;
+    }
+
+    thead th:last-child {
+      border-right: none;
+    }
+
+    tbody tr:nth-child(odd) {
+      background: #16213e;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #1a2550;
+    }
+
+    tbody tr:hover {
+      background: #0f3460;
+    }
+
+    tbody td {
+      padding: 9px 14px;
+      border-right: 1px solid #2d2d5e;
+      border-bottom: 1px solid #2d2d5e;
+      vertical-align: top;
+      word-break: break-word;
+      max-width: 300px;
+    }
+
+    tbody td:last-child {
+      border-right: none;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .empty-cell {
+      color: #555;
+      font-style: italic;
+      font-size: 0.8rem;
+    }
+
+    .row-num {
+      color: #555;
+      font-size: 0.78rem;
+      text-align: center !important;
+      padding: 9px 8px !important;
+      white-space: nowrap;
+      user-select: none;
+      width: 36px;
+    }
+
+    thead .row-num-header {
+      background: #8b6fd4;
+      text-align: center;
+      width: 36px;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>⚡ CSV Parser</h1>
+  <p class="subtitle">Handles quoted fields, commas inside quotes, and escaped quotes — correctly.</p>
+
+  <div class="input-section">
+    <label for="csvInput">Paste CSV Data</label>
+    <textarea id="csvInput" placeholder='Name,Age,Bio,Location
+"Smith, John",34,"Loves hiking, camping, and ""outdoor adventures""","New York, NY"
+"Jane ""The Ace"" Doe",29,"Software engineer at a startup","San Francisco, CA"
+Alice,22,Simple field,Boston'></textarea>
+    <div class="controls">
+      <button onclick="parseAndRender()">Parse CSV</button>
+      <button class="clear-btn" onclick="clearAll()">Clear</button>
+      <label class="option-label">
+        <input type="checkbox" id="firstRowHeader" checked>
+        First row is header
+      </label>
+      <label class="option-label">
+        <input type="checkbox" id

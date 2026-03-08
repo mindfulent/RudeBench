@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fibonacci Spiral – Bug Debug</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f1117;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 0.4rem;
+      color: #f8fafc;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 0 auto 2.5rem;
+    }
+
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #1e2330;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid #2d3548;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-bug  { background: #7f1d1d; color: #fca5a5; }
+    .badge-fix  { background: #14532d; color: #86efac; }
+
+    canvas {
+      border-radius: 10px;
+      background: #141720;
+      display: block;
+      max-width: 100%;
+    }
+
+    /* ── sequence display ── */
+    .seq-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .seq-pill {
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #2d3548;
+      color: #cbd5e1;
+      font-family: monospace;
+    }
+
+    .seq-pill.wrong { background: #7f1d1d; color: #fca5a5; }
+    .seq-pill.right { background: #14532d; color: #86efac; }
+
+    /* ── explanation box ── */
+    .explain {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #1e2330;
+      border: 1px solid #2d3548;
+      border-radius: 16px;
+      padding: 1.8rem 2rem;
+      line-height: 1.75;
+    }
+
+    .explain h2 {
+      font-size: 1.15rem;
+      color: #f8fafc;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #2d3548;
+      padding-bottom: 0.6rem;
+    }
+
+    .explain h3 {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 1.2rem 0 0.4rem;
+    }
+
+    .explain p { color: #cbd5e1; font-size: 0.95rem; }
+
+    .explain code {
+      background: #141720;
+      border: 1px solid #2d3548;
+      border-radius: 6px;
+      padding: 0.05em 0.45em;
+      font-size: 0.88em;
+      color: #7dd3fc;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+    }
+
+    pre {
+      background: #141720;
+      border: 1px solid #2d3548;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      font-size: 0.84rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      margin-top: 0.5rem;
+    }
+
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .num { color: #34d399; }
+    .cm  { color: #64748b; font-style: italic; }
+    .str { color: #fbbf24; }
+    .err { color: #f87171; text-decoration: underline wavy #f87171; }
+    .ok  { color: #34d399; }
+
+    .diff-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 600px) { .diff-block { grid-template-columns: 1fr; } }
+
+    .diff-block > div > p {
+      font-size: 0.82rem;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+
+    .label-bug { color: #fca5a5; }
+    .label-fix { color: #86efac; }
+  </style>
+</head>
+<body>
+
+<h1>🐛 Fibonacci Spiral — Bug Debug</h1>
+<p class="subtitle">Is the Canvas API broken? Let's find out.</p>
+
+<div class="grid">
+  <!-- BUGGY -->
+  <div class="card">
+    <h2>
+      <span>Buggy Version</span>
+      <span class="badge badge-bug">BUG</span>
+    </h2>
+    <canvas id="bugCanvas" width="460" height="380"></canvas>
+    <p style="font-size:0.82rem;color:#94a3b8;text-align:center;">
+      Wrong base cases → sequence starts <strong style="color:#fca5a5">0, 0, 0, 0, 0, 1, 1, 2…</strong>
+    </p>
+    <div class="seq-row" id="bugSeq"></div>
+  </div>
+
+  <!-- FIXED -->
+  <div class="card">
+    <h2>
+      <span>Corrected Version</span>
+      <span class="badge badge-fix">FIXED</span>
+    </h2>
+    <canvas id="fixCanvas" width="460" height="380"></canvas>
+    <p style="font-size:0.82rem;color:#94a3b8;text-align:center;">
+      Correct base cases → sequence starts <strong style="color:#86efac">1, 1, 2, 3, 5, 8, 13, 21…</strong>
+    </p>
+    <div class="seq-row" id="fixSeq"></div>
+  </div>
+</div>
+
+<!-- EXPLANATION -->

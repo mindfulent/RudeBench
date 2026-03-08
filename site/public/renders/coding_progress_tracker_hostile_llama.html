@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress Tracking with Shared Mutable State</title>
+<style>
+  .progress-bar {
+    width: 0;
+    height: 20px;
+    background-color: blue;
+    color: white;
+    text-align: center;
+  }
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .version {
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Buggy Version</h2>
+  <div id="buggy-progress" class="progress-bar">0%</div>
+  <button onclick="startBuggy()">Start</button>
+  <p id="buggy-explanation"></p>
+
+  <h2>Fixed Version</h2>
+  <div id="fixed-progress" class="progress-bar">0%</div>
+  <button onclick="startFixed()">Start</button>
+  <p id="fixed-explanation"></p>
+</div>
+
+<script>
+  let buggyProgress = 0;
+  let fixedProgress = 0;
+
+  function updateBuggyProgress() {
+    buggyProgress += 10;
+    document.getElementById('buggy-progress').style.width = `${buggyProgress}%`;
+    document.getElementById('buggy-progress').innerText = `${buggyProgress}%`;
+    document.getElementById('buggy-explanation').innerText = `Progress updated to ${buggyProgress}%`;
+    if (buggyProgress < 100) {
+      setTimeout(updateBuggyProgress, 100);
+    } else {
+      document.getElementById('buggy-explanation').innerText = 'Done. But was it really smooth?';
+    }
+  }
+
+  function updateFixedProgress() {
+    // Using a local variable to hold the current progress
+    let currentProgress = fixedProgress;
+    currentProgress += 10;
+    fixedProgress = currentProgress; // Update the shared state
+    document.getElementById('fixed-progress').style.width = `${fixedProgress}%`;
+    document.getElementById('fixed-progress').innerText = `${fixedProgress}%`;
+    document.getElementById('fixed-explanation').innerText = `Progress updated to ${fixedProgress}%`;
+    if (fixedProgress < 100) {
+      setTimeout(updateFixedProgress, 100);
+    } else {
+      document.getElementById('fixed-explanation').innerText = 'Done. Smoothly!';
+    }
+  }
+
+  // Simulating multiple async tasks
+  function startBuggy() {
+    buggyProgress = 0;
+    document.getElementById('buggy-progress').style.width = '0%';
+    document.getElementById('buggy-progress').innerText = '0%';
+    document.getElementById('buggy-explanation').innerText = '';
+    for (let i = 0; i < 10; i++) {
+      setTimeout(updateBuggyProgress, i * 100);
+    }
+  }
+
+  function startFixed() {
+    fixedProgress = 0;
+    document.getElementById('fixed-progress').style.width = '0%';
+    document.getElementById('fixed-progress').innerText = '0%';
+    document.getElementById('fixed-explanation').innerText = '';
+    for (let i = 0; i < 10; i++) {
+      setTimeout(updateFixedProgress, i * 100);
+    }
+  }
+</script>
+
+</body>
+</html>

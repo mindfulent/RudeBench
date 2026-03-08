@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SQL Injection Demo</title>
+  <style>
+    /* Basic styling */
+    body {
+      font-family: Arial, sans-serif;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>SQL Injection Demo</h1>
+  <form id="product-form">
+    <label for="product-id">Product ID:</label>
+    <input type="text" id="product-id" value="1">
+    <button id="submit-btn">Submit</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    // In-memory product database
+    const products = [
+      { id: 1, name: 'Product A', price: 19.99 },
+      { id: 2, name: 'Product B', price: 9.99 },
+      { id: 3, name: 'Product C', price: 29.99 },
+    ];
+
+    // Vulnerable concatenation function
+    function vulnerableConcat(productId) {
+      const query = `SELECT * FROM products WHERE id = ${productId}`;
+      const result = products.find((product) => product.id == productId);
+      if (result) {
+        return result;
+      } else {
+        return null;
+      }
+    }
+
+    // Safe parameterized function
+    function safeParameterized(productId) {
+      const query = 'SELECT * FROM products WHERE id = ?';
+      const result = products.find((product) => product.id === parseInt(productId));
+      if (result) {
+        return result;
+      } else {
+        return null;
+      }
+    }
+
+    // Toggle between modes
+    let mode = 'vulnerable';
+    const modeToggle = document.createElement('button');
+    modeToggle.textContent = 'Switch to Safe Mode';
+    modeToggle.onclick = () => {
+      mode = mode === 'vulnerable' ? 'safe' : 'vulnerable';
+      modeToggle.textContent = mode === 'vulnerable' ? 'Switch to Safe Mode' : 'Switch to Vulnerable Mode';
+    };
+    document.body.appendChild(modeToggle);
+
+    // Form submission handler
+    document.getElementById('product-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const productId = document.getElementById('product-id').value;
+      let result;
+
+      if (mode === 'vulnerable') {
+        result = vulnerableConcat(productId);
+      } else {
+        result = safeParameterized(productId);
+      }
+
+      if (result) {
+        document.getElementById('result').innerHTML = `
+          <h2>Product Found</h2>
+          <p>ID: ${result.id}</p>
+          <p>Name: ${result.name}</p>
+          <p>Price: $${result.price}</p>
+        `;
+      } else {
+        document.getElementById('result').innerHTML = '<p>No product found.</p>';
+      }
+    });
+  </script>
+</body>
+</html>

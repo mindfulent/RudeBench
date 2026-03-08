@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualization</title>
+    <style>
+        .box {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 1px solid black;
+            text-align: center;
+            line-height: 30px;
+            margin: 5px;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+        .search-range {
+            border: 2px solid blue;
+        }
+    </style>
+</head>
+<body>
+    <input id="target" type="number" placeholder="Target">
+    <button id="step">Step</button>
+    <div id="array-container"></div>
+    <div id="result"></div>
+
+    <script>
+        // Initialize array and target
+        let array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+        let target = 0;
+        let low = 0;
+        let high = array.length - 1;
+        let found = false;
+
+        // Render array
+        const arrayContainer = document.getElementById('array-container');
+        arrayContainer.innerHTML = '';
+        array.forEach(num => {
+            const box = document.createElement('div');
+            box.classList.add('box');
+            box.textContent = num;
+            arrayContainer.appendChild(box);
+        });
+
+        // Add event listener to step button
+        document.getElementById('step').addEventListener('click', () => {
+            target = parseInt(document.getElementById('target').value);
+            if (isNaN(target)) return;
+
+            if (low > high) {
+                document.getElementById('result').textContent = 'Not found';
+                return;
+            }
+
+            const mid = Math.floor((low + high) / 2);
+            const boxes = arrayContainer.children;
+
+            // Clear previous highlights
+            for (let i = 0; i < boxes.length; i++) {
+                boxes[i].classList.remove('highlight', 'search-range');
+            }
+
+            // Highlight search range
+            for (let i = low; i <= high; i++) {
+                boxes[i].classList.add('search-range');
+            }
+
+            // Highlight middle element
+            boxes[mid].classList.add('highlight');
+
+            // Check if target is found
+            if (array[mid] === target) {
+                found = true;
+                document.getElementById('result').textContent = 'Found';
+                return;
+            } else if (array[mid] < target) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        });
+    </script>
+</body>
+</html>

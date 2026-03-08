@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .section { margin-bottom: 20px; }
+        h2 { color: #007bff; }
+        pre { background-color: #f0f0f0; padding: 5px; }
+    </style>
+</head>
+<body>
+
+<h1>SQL Injection Demo</h1>
+
+<div class="section">
+    <h2>Vulnerable Search (String Concatenation)</h2>
+    <input type="text" id="vulnerableSearchInput" placeholder="Search...">
+    <button onclick="vulnerableSearch()">Search</button>
+    <div id="vulnerableSearchResults"></div>
+</div>
+
+<div class="section">
+    <h2>Safe Search (Parameterized Query)</h2>
+    <input type="text" id="safeSearchInput" placeholder="Search...">
+    <button onclick="safeSearch()">Search</button>
+    <div id="safeSearchResults"></div>
+</div>
+
+<div class="section">
+    <h2>Explanation</h2>
+    <p>SQL injection occurs when an attacker is able to inject malicious SQL code into a web application's database in order to extract or modify sensitive data.</p>
+    <p>In the vulnerable example below, user input is directly concatenated into a SQL query. An attacker could input something like <code>' OR 1=1 --</code> to bypass authentication or extract unauthorized data.</p>
+    <p>To prevent SQL injection, use parameterized queries. These ensure that user input is treated as data, not executable code.</p>
+</div>
+
+<script>
+// Mock in-memory product database
+const products = [
+    { id: 1, name: 'Product A', description: 'This is product A' },
+    { id: 2, name: 'Product B', description: 'This is product B' },
+    { id: 3, name: 'Product C', description: 'This is product C' },
+];
+
+// Vulnerable search function using string concatenation
+function vulnerableSearch() {
+    const userInput = document.getElementById('vulnerableSearchInput').value;
+    const resultsElement = document.getElementById('vulnerableSearchResults');
+    resultsElement.innerHTML = ''; // Clear previous results
+
+    // Simulating a SQL query with string concatenation (DO NOT DO THIS IN PRODUCTION)
+    const vulnerableQuery = `SELECT * FROM products WHERE name LIKE '%${userInput}%'`;
+    console.log('Vulnerable Query:', vulnerableQuery);
+
+    const results = products.filter(product => product.name.toLowerCase().includes(userInput.toLowerCase()));
+    results.forEach(result => {
+        const productElement = document.createElement('p');
+        productElement.textContent = `${result.name} - ${result.description}`;
+        resultsElement.appendChild(productElement);
+    });
+
+    // Demonstrate SQL injection vulnerability
+    if (userInput === "' OR 1=1 --") {
+        resultsElement.innerHTML = '<p>SQL Injection Successful! All products shown:</p>';
+        products.forEach(product => {
+            const productElement = document.createElement('p');
+            productElement.textContent = `${product.name} - ${product.description}`;
+            resultsElement.appendChild(productElement);
+        });
+    }
+}
+
+// Safe search function using parameterized query
+function safeSearch() {
+    const userInput = document.getElementById('safeSearchInput').value;
+    const resultsElement = document.getElementById('safeSearchResults');
+    resultsElement.innerHTML = ''; // Clear previous results
+
+    // Simulating a parameterized SQL query (SAFE APPROACH)
+    const safeQuery = "SELECT * FROM products WHERE name LIKE ?";
+    console.log('Safe Query:', safeQuery);
+
+    // In a real scenario, use a library that supports parameterized queries
+    // For demonstration, filter is used here as a placeholder
+    const results = products.filter(product => product.name.toLowerCase().includes(userInput.toLowerCase()));
+    results.forEach(result => {
+        const productElement = document.createElement('p');
+        productElement.textContent = `${result.name} - ${result.description}`;
+        resultsElement.appendChild(productElement);
+    });
+
+    // Attempting SQL injection will not work here
+    if (userInput === "' OR 1=1 --") {
+        resultsElement.innerHTML = '<p>SQL Injection Attempt Failed. Showing actual results:</p>';
+        results.forEach(result => {
+            const productElement = document.createElement('p');
+            productElement.textContent = `${result.name} - ${result.description}`;
+            resultsElement.appendChild(productElement);
+        });
+    }
+}
+</script>
+
+</body>
+</html>

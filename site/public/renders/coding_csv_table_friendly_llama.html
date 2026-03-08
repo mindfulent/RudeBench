@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to Table Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+<textarea id="csvInput" rows="10" cols="50"></textarea>
+<button id="parseBtn">Parse CSV</button>
+<div id="output"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/dist/papaparse.min.js"></script>
+<script>
+    document.getElementById('parseBtn').addEventListener('click', function() {
+        var csvInput = document.getElementById('csvInput').value;
+        if (csvInput.trim() === '') return; // Don't parse empty input
+
+        Papa.parse(csvInput, {
+            header: true, // Assume the first row is a header
+            dynamicTyping: true, // Automatically convert types (e.g., numbers, dates)
+            complete: function(results) {
+                var data = results.data;
+                if (data.length === 0) {
+                    document.getElementById('output').innerHTML = 'No data to display.';
+                    return;
+                }
+
+                var table = document.createElement('table');
+                // Create header
+                var thead = document.createElement('thead');
+                var tr = document.createElement('tr');
+                for (var key in data[0]) {
+                    var th = document.createElement('th');
+                    th.textContent = key;
+                    tr.appendChild(th);
+                }
+                thead.appendChild(tr);
+                table.appendChild(thead);
+
+                // Create body
+                var tbody = document.createElement('tbody');
+                data.forEach(function(row) {
+                    var tr = document.createElement('tr');
+                    for (var key in row) {
+                        var td = document.createElement('td');
+                        td.textContent = row[key];
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+
+                document.getElementById('output').innerHTML = '';
+                document.getElementById('output').appendChild(table);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree with Recursion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #canvas {
+            border: 1px solid black;
+        }
+        #slider {
+            margin-top: 10px;
+        }
+        #explanation {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <input type="range" id="slider" min="1" max="12" value="6">
+    <label for="slider">Recursion Depth: <span id="depth">6</span></label>
+    <div id="explanation">
+        <h2>Recursion Depth Explanation</h2>
+        <p>The recursion depth in the fractal tree drawing refers to how many times the function calls itself to draw the tree branches.</p>
+        <p>Deep recursion can cause <b>stack overflow errors</b> because each recursive call adds a layer to the system's call stack. If the recursion is too deep, it exceeds the maximum size of the call stack, leading to a crash.</p>
+        <p>Practical solutions to handle deep recursion include:</p>
+        <ul>
+            <li><b>Iterative approaches</b>: Converting recursive algorithms into iterative ones can avoid stack overflow errors.</li>
+            <li><b>Increasing the stack size</b>: Some environments allow increasing the stack size, but this is not a universal solution and can still lead to crashes.</li>
+            <li><b>Tail recursion optimization</b>: Some programming languages optimize tail recursion, which can mitigate but not eliminate the issue.</li>
+        </ul>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('slider');
+        const depthSpan = document.getElementById('depth');
+
+        slider.addEventListener('input', drawTree);
+
+        function drawTree() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            depthSpan.textContent = slider.value;
+            drawBranch(canvas.width / 2, canvas.height, 100, -Math.PI / 2, slider.value);
+        }
+
+        function drawBranch(x, y, length, angle, depth) {
+            if (depth === 0) return;
+            const endX = x + Math.cos(angle) * length;
+            const endY = y + Math.sin(angle) * length;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Draw left branch
+            drawBranch(endX, endY, length * 0.7, angle - Math.PI / 6, depth - 1);
+
+            // Draw right branch
+            drawBranch(endX, endY, length * 0.7, angle + Math.PI / 6, depth - 1);
+        }
+
+        // Initial draw
+        drawTree();
+    </script>
+</body>
+</html>

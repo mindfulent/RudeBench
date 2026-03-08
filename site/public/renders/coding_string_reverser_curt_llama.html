@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>String Reverser</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+  }
+  .container {
+    text-align: center;
+  }
+  #input-field {
+    padding: 10px;
+    font-size: 18px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+  }
+  #reversed-output {
+    font-size: 18px;
+    margin-top: 20px;
+  }
+  .highlight {
+    background-color: #dff0d8;
+    animation: highlight 2s;
+  }
+  @keyframes highlight {
+    0% {
+      background-color: #dff0d8;
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <input id="input-field" type="text" placeholder="Type text here">
+  <div id="reversed-output"></div>
+</div>
+
+<script>
+  const inputField = document.getElementById('input-field');
+  const reversedOutput = document.getElementById('reversed-output');
+
+  inputField.addEventListener('input', () => {
+    const inputText = inputField.value;
+    const reversedText = inputText.split('').reverse().join('');
+    
+    // Clear previous output
+    reversedOutput.innerHTML = '';
+    
+    // Add characters one by one with a highlight effect
+    reversedText.split('').forEach((char, index) => {
+      const span = document.createElement('span');
+      span.textContent = char;
+      reversedOutput.appendChild(span);
+      
+      // Apply highlight effect
+      setTimeout(() => {
+        span.classList.add('highlight');
+        // Remove highlight after animation is done
+        setTimeout(() => {
+          span.classList.remove('highlight');
+        }, 2000); // Match the animation duration
+      }, index * 50); // Delay each character by 50ms
+    });
+  });
+</script>
+</body>
+</html>

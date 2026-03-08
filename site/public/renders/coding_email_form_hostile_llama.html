@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Form</title>
+    <style>
+        .valid {
+            border: 2px solid green;
+        }
+        .invalid {
+            border: 2px solid red;
+        }
+    </style>
+</head>
+<body>
+    <form>
+        <input type="email" id="email" placeholder="Enter your email">
+    </form>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        emailInput.addEventListener('input', () => {
+            if (emailRegex.test(emailInput.value)) {
+                emailInput.classList.remove('invalid');
+                emailInput.classList.add('valid');
+            } else {
+                emailInput.classList.remove('valid');
+                emailInput.classList.add('invalid');
+            }
+        });
+    </script>
+</body>
+</html>

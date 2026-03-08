@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singly Linked List Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00d2ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 30px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group label {
+            font-size: 0.8rem;
+            color: #aaa;
+            white-space: nowrap;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="number"] {
+            width: 80px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: #00d2ff;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            letter-spacing: 0.3px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-head {
+            background: linear-gradient(135deg, #00d2ff, #0080ff);
+            color: #fff;
+        }
+
+        .btn-tail {
+            background: linear-gradient(135deg, #7b2ff7, #c850c0);
+            color: #fff;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: #fff;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+        }
+
+        .btn-clear {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .canvas-container {
+            max-width: 1100px;
+            margin: 0 auto 24px auto;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: auto;
+        }
+
+        #listCanvas {
+            display: block;
+        }
+
+        .message-box {
+            max-width: 900px;
+            margin: 0 auto 20px auto;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .msg-info {
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            color: #00d2ff;
+        }
+
+        .msg-success {
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            color: #00e676;
+        }
+
+        .msg-error {
+            background: rgba(255, 65, 108, 0.1);
+            border: 1px solid rgba(255, 65, 108, 0.3);
+            color: #ff416c;
+        }
+
+        .msg-warning {
+            background: rgba(255, 210, 0, 0.1);
+            border: 1px solid rgba(255, 210, 0, 0.3);
+            color: #ffd200;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+
+        .dot-normal { background: linear-gradient(135deg, #1e3a5f, #2d5986); border: 2px solid #4a9eff; }
+        .dot-head { background: linear-gradient(135deg, #003d7a, #0066cc); border: 2px solid #00d2ff; }
+        .dot-found { background: linear-gradient(135deg, #7a5200, #cc8800); border: 2px solid #ffd200; }
+        .dot-null { background: rgba(255,255,255,0.05); border: 2px dashed #555; }
+    </style>
+</head>
+<body>
+
+<h1>Singly Linked List</h1>
+<p class="subtitle">Visualizer — Insert, Delete, Search with animations</p>
+
+<div class="controls">
+    <div class="control-group">

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Leak Example</title>
+    <style>
+        .widget {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Leak Example</h1>
+    <button id="add-widget-btn">Add Widget</button>
+    <button id="remove-widget-btn">Remove Widget</button>
+    <button id="gc-btn">Force GC (not applicable)</button>
+    <div id="widgets-container"></div>
+    <p id="widget-count"></p>
+
+    <script>
+        let widgetCount = 0;
+        let widgets = [];
+
+        // Leaking version
+        function createLeakingWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Widget ${widgetCount}`;
+
+            const button = document.createElement('button');
+            button.textContent = 'Click me';
+            widget.appendChild(button);
+
+            // Uncleaned event listener
+            button.addEventListener('click', () => {
+                console.log(`Widget ${widgetCount} clicked`);
+            });
+
+            // Stored DOM reference
+            widgets.push(widget);
+
+            return widget;
+        }
+
+        // Fixed version
+        function createFixedWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Widget ${widgetCount}`;
+
+            const button = document.createElement('button');
+            button.textContent = 'Click me';
+            widget.appendChild(button);
+
+            // Cleaned event listener
+            const clickHandler = () => {
+                console.log(`Widget ${widgetCount} clicked`);
+            };
+            button.addEventListener('click', clickHandler);
+
+            // Remove event listener and DOM reference on removal
+            widget.dataset.removeHandler = clickHandler;
+
+            return widget;
+        }
+
+        document.getElementById('add-widget-btn').addEventListener('click', () => {
+            const widget = createFixedWidget(); // Switch to createLeakingWidget() to see the leak
+            document.getElementById('widgets-container').appendChild(widget);
+            widgetCount++;
+            document.getElementById('widget-count').textContent = `Widget count: ${widgetCount}`;
+        });
+
+        document.getElementById('remove-widget-btn').addEventListener('click', () => {
+            if (widgetCount > 0) {
+                const widgetsContainer = document.getElementById('widgets-container');
+                const widget = widgetsContainer.lastChild;
+                if (widget) {
+                    // Remove event listener
+                    widget.querySelector('button').removeEventListener('click', widget.dataset.removeHandler);
+                    widgetsContainer.removeChild(widget);
+                    widgetCount--;
+                    document.getElementById('widget-count').textContent = `Widget count: ${widgetCount}`;
+                }
+            }
+        });
+
+        document.getElementById('gc-btn').addEventListener('click', () => {
+            // Note: The GC cannot be manually triggered in a browser.
+            // This button is a placeholder to illustrate that manual GC invocation is not applicable here.
+            console.log('GC button clicked (not applicable)');
+        });
+    </script>
+</body>
+</html>

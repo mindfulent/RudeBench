@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorting Algorithm Smackdown</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, #ff4d4d, #ffaa00, #00e5ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+  }
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .controls label { color: #aaa; font-size: 0.9rem; }
+  select, input[type=range] {
+    background: #1e1e30;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  button {
+    padding: 9px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  button:active { transform: scale(0.97); }
+  #btnStart {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: #fff;
+  }
+  #btnReset {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: #fff;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #speedLabel { color: #aaa; font-size: 0.85rem; min-width: 90px; }
+
+  .arena {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  @media(max-width:900px) {
+    .arena { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: #16162a;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #2a2a45;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .algo-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .badge {
+    font-size: 0.72rem;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge-bad  { background: #ff4d4d33; color: #ff6b6b; border: 1px solid #ff4d4d55; }
+  .badge-good { background: #00e57633; color: #00e576; border: 1px solid #00e57655; }
+  .badge-great{ background: #00c6ff33; color: #00c6ff; border: 1px solid #00c6ff55; }
+
+  .complexity {
+    font-size: 0.78rem;
+    color: #777;
+    font-style: italic;
+  }
+
+  .stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    background: #1e1e35;
+    border-radius: 8px;
+    padding: 8px 14px;
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .stat-lbl {
+    font-size: 0.7rem;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 220px;
+    background: #0f0f1a;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    padding: 6px 6px 0;
+    gap: 2px;
+  }
+  .bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.05s ease;
+    min-width: 2px;
+  }
+
+  .status-line {
+    font-size: 0.82rem;
+    color: #666;
+    min-height: 18px;
+    text-align: center;
+  }
+  .done-banner {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 6px;
+    border-radius: 8px;
+    display: none;
+  }
+  .done-bubble { background: #ff4d4d22; color: #ff6b6b; border: 1px solid #ff4d4d55; }
+  .done-good   { background: #00e57622; color: #00e576; border: 1px solid #00e57655; }
+
+  .winner-tag {
+    display: none;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #ffcc00;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .progress-bar-wrap {
+    height: 4px;
+    background: #2a2a45;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    transition: width 0.1s;
+  }
+
+  .roast {
+    max-width: 1300px;
+    margin: 24px auto 0;
+    background: #1a1a10;
+    border: 1px solid #ffaa0044;
+    border-radius: 12px;
+    padding: 16px 22px;
+    color: #ffcc66;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    display: none;
+  }
+  .roast strong { color: #ffaa00; }
+</style>
+</head>
+<body>
+
+<h1>⚔️ Sorting Algorithm Smackdown</h1>
+<p class="subtitle">Watch Bubble Sort get absolutely demolished in real time</p>
+
+<div class="controls">
+  <label>Array size:
+    <select id="sizeSelect">
+      <option value="30">30 elements</option>
+      <option value="60" selected>60 elements</option>
+      <option value="100">100 elements

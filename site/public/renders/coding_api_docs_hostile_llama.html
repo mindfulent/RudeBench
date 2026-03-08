@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>REST API Design Review</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .issue {
+      background-color: #f2dede;
+      padding: 10px;
+      border: 1px solid #ebcccc;
+    }
+    .correction {
+      background-color: #dff0d8;
+      padding: 10px;
+      border: 1px solid #8bc34a;
+    }
+  </style>
+</head>
+<body>
+  <h1>REST API Design Review</h1>
+
+  <h2>Endpoints Analysis</h2>
+
+  <h3>1. GET /getUsers</h3>
+  <div class="issue">
+    <strong>Problem:</strong> The endpoint should not have a verb ("get") in its path. RESTful APIs use HTTP methods to indicate the action.
+  </div>
+  <div class="correction">
+    <strong>Correction:</strong> Use <code>GET /users</code> to retrieve a list of users.
+  </div>
+
+  <h3>2. POST /user/delete/5</h3>
+  <div class="issue">
+    <strong>Problems:</strong>
+    <ul>
+      <li>The HTTP method is incorrect. DELETE should be used for deleting resources.</li>
+      <li>The endpoint should not have a verb ("delete") in its path.</li>
+    </ul>
+  </div>
+  <div class="correction">
+    <strong>Correction:</strong> Use <code>DELETE /users/5</code> to delete a user with ID 5.
+  </div>
+
+  <h3>3. GET /createUser?name=Jo</h3>
+  <div class="issue">
+    <strong>Problems:</strong>
+    <ul>
+      <li>The HTTP method is incorrect. POST or PUT should be used for creating resources.</li>
+      <li>The endpoint should not have a verb ("create") in its path.</li>
+    </ul>
+  </div>
+  <div class="correction">
+    <strong>Correction:</strong> Use <code>POST /users</code> with a JSON body containing the user data (e.g., <code>{"name": "Jo"}</code>) to create a new user.
+  </div>
+
+  <h3>4. PUT /updateAllUsers</h3>
+  <div class="issue">
+    <strong>Problems:</strong>
+    <ul>
+      <li>The endpoint is too broad and implies updating all users at once.</li>
+      <li>The HTTP method is correct (PUT), but the endpoint could be improved.</li>
+    </ul>
+  </div>
+  <div class="correction">
+    <strong>Correction:</strong> Use <code>PATCH /users</code> or <code>PUT /users/{id}</code> to update a specific user or a subset of users. For example, <code>PUT /users/5</code> with a JSON body containing the updated user data.
+  </div>
+
+  <h2>Summary of Corrections</h2>
+
+  <ul>
+    <li>Use resource-based endpoint paths (e.g., <code>/users</code> instead of <code>/getUsers</code>)</li>
+    <li>Use correct HTTP methods:
+      <ul>
+        <li>GET: retrieve resources</li>
+        <li>POST: create resources</li>
+        <li>PUT/PATCH: update resources</li>
+        <li>DELETE: delete resources</li>
+      </ul>
+    </li>
+    <li>Avoid verbs in endpoint paths</li>
+  </ul>
+</body>
+</html>

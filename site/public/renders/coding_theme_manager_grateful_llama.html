@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle Singleton Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .dark-theme {
+            background-color: #333;
+            color: white;
+        }
+        .light-theme {
+            background-color: #f0f0f0;
+            color: black;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .dark-theme .container {
+            background-color: #444;
+            color: white;
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <button id="theme-toggle">Toggle Theme</button>
+    <div class="container">
+        <h1>Welcome to My Page</h1>
+        <p>This is a sample page with varied content to demonstrate the theme toggle functionality.</p>
+        <section>
+            <h2>About Us</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam at turpis mi.</p>
+        </section>
+        <section>
+            <h2>Our Mission</h2>
+            <p>Nullam elementum magna quis urna mollis, et pulvinar sapien imperdiet.</p>
+        </section>
+    </div>
+
+    <script>
+        // Singleton Pattern for Theme State Management
+        class ThemeManager {
+            static instance;
+
+            static getInstance() {
+                if (!ThemeManager.instance) {
+                    ThemeManager.instance = new ThemeManager();
+                }
+                return ThemeManager.instance;
+            }
+
+            constructor() {
+                if (ThemeManager.instance) {
+                    throw new Error("This class is a singleton!");
+                }
+                this.theme = 'light';
+                this.init();
+            }
+
+            init() {
+                const storedTheme = localStorage.getItem('theme');
+                if (storedTheme) {
+                    this.theme = storedTheme;
+                    document.body.classList.add(storedTheme + '-theme');
+                    document.body.classList.remove(storedTheme === 'light' ? 'dark-theme' : 'light-theme');
+                }
+            }
+
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                document.body.classList.add(this.theme + '-theme');
+                document.body.classList.remove(this.theme === 'light' ? 'dark-theme' : 'light-theme');
+                localStorage.setItem('theme', this.theme);
+            }
+        }
+
+        // Usage
+        const themeManager = ThemeManager.getInstance();
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            themeManager.toggleTheme();
+        });
+    </script>
+</body>
+</html>

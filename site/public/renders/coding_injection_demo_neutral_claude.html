@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SQL Injection Demo</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent-blue: #4f8ef7;
+      --accent-green: #3ecf8e;
+      --accent-red: #f7614f;
+      --accent-yellow: #f7c94f;
+      --text: #e8eaf6;
+      --text-muted: #8892b0;
+      --text-dim: #4a5280;
+      --font-mono: 'Courier New', Courier, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    header h1 span.vuln { color: var(--accent-red); }
+    header h1 span.safe { color: var(--accent-green); }
+
+    header p {
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-size: 0.95rem;
+      max-width: 600px;
+      margin-inline: auto;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-red  { background: rgba(247,97,79,0.18); color: var(--accent-red); border: 1px solid rgba(247,97,79,0.35); }
+    .badge-green{ background: rgba(62,207,142,0.15); color: var(--accent-green); border: 1px solid rgba(62,207,142,0.3); }
+    .badge-yellow{ background: rgba(247,201,79,0.15); color: var(--accent-yellow); border: 1px solid rgba(247,201,79,0.3); }
+    .badge-blue { background: rgba(79,142,247,0.15); color: var(--accent-blue); border: 1px solid rgba(79,142,247,0.3); }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto 32px;
+    }
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .panel-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── Search input ── */
+    .search-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent-blue); }
+    .search-input.vuln-input:focus { border-color: var(--accent-red); }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-red   { background: var(--accent-red);   color: #fff; }
+    .btn-green { background: var(--accent-green);  color: #0f1117; }
+    .btn:hover { opacity: 0.88; }
+
+    /* ── Query display ── */
+    .query-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      word-break: break-all;
+    }
+
+    .query-box .label {
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .ql-keyword { color: #c792ea; font-weight: 700; }
+    .ql-string  { color: var(--accent-yellow); }
+    .ql-injected{ color: var(--accent-red); background: rgba(247,97,79,0.15); border-radius: 3px; padding: 0 2px; }
+    .ql-param   { color: var(--accent-green); }
+    .ql-normal  { color: var(--text); }
+
+    /* ── Alert banner ── */
+    .alert {
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.83rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.5;
+    }
+    .alert-danger  { background: rgba(247,97,79,0.12); border: 1px solid rgba(247,97,79,0.35); color: #ffa99e; }
+    .alert-success { background: rgba(62,207,142,0.10); border: 1px solid rgba(62,207,142,0.3); color: #7eefc4; }
+    .alert-info    { background: rgba(79,142,247,0.10); border: 1px solid rgba(79,142,247,0.3); color: #9fc5fb; }
+    .alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Results table ── */
+    .results-wrap {
+      flex: 1;
+      overflow-x: auto;
+    }
+
+    .results-count {
+      font-size: 0.78rem;
+      color: var(--text-

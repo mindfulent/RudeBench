@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci Spiral Animation</title>
+    <style>
+        /* Add some basic styling to the canvas elements */
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Buggy Fibonacci Spiral</h1>
+    <canvas id="buggy-canvas" width="400" height="400"></canvas>
+
+    <h1>Corrected Fibonacci Spiral</h1>
+    <canvas id="corrected-canvas" width="400" height="400"></canvas>
+
+    <script>
+        // Function to generate Fibonacci sequence
+        function generateFibonacci(n) {
+            let fibSequence = [0, 1];
+            while (fibSequence.length < n) {
+                fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
+            }
+            return fibSequence;
+        }
+
+        // Buggy Fibonacci spiral function
+        function drawBuggyFibonacciSpiral(ctx) {
+            let fibSequence = generateFibonacci(20);
+            // Incorrect base cases: start with radius 0 and angle 0
+            let radius = 0;
+            let angle = 0;
+            for (let i = 0; i < fibSequence.length; i++) {
+                ctx.beginPath();
+                ctx.arc(200, 200, radius, angle, angle + Math.PI / 2);
+                ctx.stroke();
+                // Incorrectly increment radius and angle
+                radius += 1; // Should be fibSequence[i]
+                angle += Math.PI / 4; // Should be cumulative angle
+            }
+        }
+
+        // Corrected Fibonacci spiral function
+        function drawCorrectedFibonacciSpiral(ctx) {
+            let fibSequence = generateFibonacci(20);
+            let cumulativeAngle = 0;
+            for (let i = 0; i < fibSequence.length; i++) {
+                ctx.beginPath();
+                ctx.arc(200, 200, fibSequence[i], cumulativeAngle, cumulativeAngle + Math.PI / 2);
+                ctx.stroke();
+                cumulativeAngle += Math.PI / 2; // Increment cumulative angle
+            }
+        }
+
+        // Get canvas elements
+        let buggyCanvas = document.getElementById('buggy-canvas');
+        let correctedCanvas = document.getElementById('corrected-canvas');
+
+        // Get 2D drawing contexts
+        let buggyCtx = buggyCanvas.getContext('2d');
+        let correctedCtx = correctedCanvas.getContext('2d');
+
+        // Draw buggy Fibonacci spiral
+        drawBuggyFibonacciSpiral(buggyCtx);
+
+        // Draw corrected Fibonacci spiral
+        drawCorrectedFibonacciSpiral(correctedCtx);
+    </script>
+</body>
+</html>

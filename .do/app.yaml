@@ -1,0 +1,16 @@
+name: rudebench
+region: sfo
+domains:
+  - domain: rudebench.com
+    type: PRIMARY
+static_sites:
+  - name: site
+    github:
+      repo: mindfulent/RudeBench
+      branch: main
+      deploy_on_push: true
+    source_dir: /site
+    build_command: npm install && npm run build
+    output_dir: dist
+    environment_slug: node-js
+    catchall_document: index.html

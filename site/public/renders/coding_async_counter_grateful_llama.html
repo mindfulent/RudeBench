@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Condition Demo</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .version {
+            margin-bottom: 20px;
+        }
+        .explanation {
+            font-size: 14px;
+            color: gray;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="version">
+            <h2>Buggy Version</h2>
+            <p id="buggy-count">Count: 0</p>
+            <button id="buggy-button">Increment</button>
+            <div class="explanation">
+                <p>Race Condition Explanation:</p>
+                <p>When rapidly clicking the button, multiple <code>setTimeout</code> calls are made.</p>
+                <p>However, these asynchronous updates read the current count, increment it, and then write it back.</p>
+                <p>If one <code>setTimeout</code> call reads the count before another writes it back, the count can fall behind or show wrong values.</p>
+            </div>
+        </div>
+
+        <div class="version">
+            <h2>Corrected Version</h2>
+            <p id="corrected-count">Count: 0</p>
+            <button id="corrected-button">Increment</button>
+            <div class="explanation">
+                <p>Fix Explanation:</p>
+                <p>Instead of reading, modifying, and then writing the shared count variable asynchronously,</p>
+                <p>the corrected version directly updates the count display using a synchronous operation.</p>
+                <p>This ensures that each button click updates the count correctly, even with rapid clicks.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Buggy Version
+        let buggyCount = 0;
+        document.getElementById('buggy-button').addEventListener('click', () => {
+            setTimeout(() => {
+                buggyCount++;
+                document.getElementById('buggy-count').innerText = `Count: ${buggyCount}`;
+            }, 100); // Simulate asynchronous delay
+        });
+
+        // Corrected Version
+        let correctedCount = 0;
+        document.getElementById('corrected-button').addEventListener('click', () => {
+            correctedCount++;
+            document.getElementById('corrected-count').innerText = `Count: ${correctedCount}`;
+        });
+    </script>
+</body>
+</html>

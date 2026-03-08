@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chart-container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .chart {
+            width: 30%;
+            text-align: center;
+        }
+        .bar {
+            display: inline-block;
+            width: 10px;
+            background-color: blue;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Algorithm Comparison</h1>
+    <div class="chart-container">
+        <div class="chart">
+            <h2>Bubble Sort</h2>
+            <div id="bubble-sort-bars"></div>
+            <p id="bubble-sort-steps">Steps: 0</p>
+        </div>
+        <div class="chart">
+            <h2>Merge Sort</h2>
+            <div id="merge-sort-bars"></div>
+            <p id="merge-sort-steps">Steps: 0</p>
+        </div>
+        <div class="chart">
+            <h2>Quick Sort</h2>
+            <div id="quick-sort-bars"></div>
+            <p id="quick-sort-steps">Steps: 0</p>
+        </div>
+    </div>
+
+    <script>
+        // Generate random data
+        const data = Array(20).fill(0).map(() => Math.floor(Math.random() * 100));
+
+        // Bubble sort
+        let bubbleSortData = [...data];
+        let bubbleSortSteps = 0;
+        const bubbleSortBars = document.getElementById('bubble-sort-bars');
+        const bubbleSortStepsText = document.getElementById('bubble-sort-steps');
+
+        function bubbleSort() {
+            const intervalId = setInterval(() => {
+                if (bubbleSortData.length > 1) {
+                    for (let i = 0; i < bubbleSortData.length - 1; i++) {
+                        if (bubbleSortData[i] > bubbleSortData[i + 1]) {
+                            [bubbleSortData[i], bubbleSortData[i + 1]] = [bubbleSortData[i + 1], bubbleSortData[i]];
+                            bubbleSortSteps++;
+                            renderBars(bubbleSortBars, bubbleSortData);
+                            bubbleSortStepsText.textContent = `Steps: ${bubbleSortSteps}`;
+                        }
+                    }
+                    bubbleSortData.pop();
+                } else {
+                    clearInterval(intervalId);
+                }
+            }, 500);
+        }
+
+        // Merge sort
+        let mergeSortData = [...data];
+        let mergeSortSteps = 0;
+        const mergeSortBars = document.getElementById('merge-sort-bars');
+        const mergeSortStepsText = document.getElementById('merge-sort-steps');
+
+        function mergeSort(arr) {
+            if (arr.length <= 1) {
+                return arr;
+            }
+            const mid = Math.floor(arr.length / 2);
+            const left = mergeSort(arr.slice(0, mid));
+            const right = mergeSort(arr.slice(mid));
+            return merge(left, right);
+        }
+
+        function merge(left, right) {
+            const result = [];
+            let i = 0;
+            let j = 0;
+            while (i < left.length && j < right.length) {
+                if (left[i] < right[j]) {
+                    result.push(left[i]);
+                    i++;
+                } else {
+                    result.push(right[j]);
+                    j++;
+                }
+                mergeSortSteps++;
+                renderBars(mergeSortBars, mergeSortData);
+                mergeSortStepsText.textContent = `Steps: ${mergeSortSteps}`;
+            }
+            return result.concat(left.slice(i)).concat(right.slice(j));
+        }
+
+        function startMergeSort() {
+            mergeSortData = mergeSort(data);
+            renderBars(mergeSortBars, mergeSortData);
+        }
+
+        // Quick sort
+        let quickSortData = [...data];
+        let quickSortSteps = 0;
+        const quickSortBars = document.getElementById('quick-sort-bars');
+        const quickSortStepsText = document.getElementById('quick-sort-steps');
+
+        function quickSort(arr) {
+            if (arr.length <= 1) {
+                return arr;
+            }
+            const pivot = arr[0];
+            const less = [];
+            const greater = [];
+            for (let i = 1; i < arr.length; i++) {
+                if (arr[i] < pivot) {
+                    less.push(arr[i]);
+                } else {
+                    greater.push(arr[i]);
+                }
+                quickSortSteps++;
+                renderBars(quickSortBars, quickSortData);
+                quickSortStepsText.textContent = `Steps: ${quickSortSteps}`;
+            }
+            return quickSort(less).concat([pivot], quickSort(greater));
+        }
+
+        function startQuickSort() {
+            quickSortData = quickSort(data);
+            renderBars(quickSortBars, quickSortData);
+        }
+
+        // Render bars
+        function renderBars(element, data) {
+            element.innerHTML = '';
+            data.forEach((value) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${value}px`;
+                element.appendChild(bar);
+            });
+        }
+
+        // Start sorting
+        renderBars(bubbleSortBars, bubbleSortData);
+        renderBars(mergeSortBars, mergeSortData);
+        renderBars(quickSortBars, quickSortData);
+        bubbleSort();
+        startMergeSort();
+        startQuickSort();
+    </script>
+</body>
+</html>

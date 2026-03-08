@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linked List Visualizer</title>
+<style>
+  .node {
+    fill: lightblue;
+    stroke: black;
+  }
+  .node:hover {
+    fill: yellow;
+  }
+  .highlight {
+    fill: green;
+  }
+  .arrow {
+    stroke: black;
+    stroke-width: 2;
+  }
+</style>
+</head>
+<body>
+<svg id="linkedListSvg" width="800" height="200"></svg>
+<div>
+  <input id="valueInput" type="number" placeholder="Value">
+  <button id="insertHeadBtn">Insert at Head</button>
+  <button id="insertTailBtn">Insert at Tail</button>
+  <button id="deleteBtn">Delete by Value</button>
+  <button id="searchBtn">Search</button>
+</div>
+
+<script>
+  class Node {
+    constructor(value) {
+      this.value = value;
+      this.next = null;
+    }
+  }
+
+  class LinkedList {
+    constructor() {
+      this.head = null;
+      this.tail = null;
+      this.svg = document.getElementById('linkedListSvg');
+      this.nodes = [];
+      this.draw();
+    }
+
+    insertAtHead(value) {
+      const node = new Node(value);
+      if (!this.head) {
+        this.head = node;
+        this.tail = node;
+      } else {
+        node.next = this.head;
+        this.head = node;
+      }
+      this.draw();
+    }
+
+    insertAtTail(value) {
+      const node = new Node(value);
+      if (!this.tail) {
+        this.head = node;
+        this.tail = node;
+      } else {
+        this.tail.next = node;
+        this.tail = node;
+      }
+      this.draw();
+    }
+
+    deleteByValue(value) {
+      if (!this.head) return;
+
+      if (this.head.value === value) {
+        this.head = this.head.next;
+        if (!this.head) this.tail = null;
+        this.draw();
+        return;
+      }
+
+      let current = this.head;
+      while (current.next) {
+        if (current.next.value === value) {
+          current.next = current.next.next;
+          if (!current.next) this.tail = current;
+          this.draw();
+          return;
+        }
+        current = current.next;
+      }
+    }
+
+    search(value) {
+      let current = this.head;
+      let found = false;
+      while (current) {
+        if (current.value === value) {
+          found = true;
+          break;
+        }
+        current = current.next;
+      }
+
+      this.draw();
+      if (found) {
+        const node = this.nodes.find(node => node.value === value);
+        if (node) node.classList.add('highlight');
+      }
+    }
+
+    draw() {
+      this.svg.innerHTML = '';
+      this.nodes = [];
+
+      let x = 50;
+      let y = 50;
+      let current = this.head;
+
+      while (current) {
+        const node = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        node.setAttribute('x', x);
+        node.setAttribute('y', y);
+        node.setAttribute('width', 30);
+        node.setAttribute('height', 30);
+        node.classList.add('node');
+        this.nodes.push(node);
+        this.svg.appendChild(node);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x + 15);
+        text.setAttribute('y', y + 20);
+        text.textContent = current.value;
+        this.svg.appendChild(text);
+
+        if (current.next) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', x + 30);
+          line.setAttribute('y1', y + 15);
+          line.setAttribute('x2', x + 60);
+          line.setAttribute('y2', y + 15);
+          line.classList.add('arrow');
+          this.svg.appendChild(line);
+        }
+
+        x += 60;
+        current = current.next;
+      }
+
+      // Remove highlight on redraw
+      this.nodes.forEach(node => node.classList.remove('highlight'));
+    }
+  }
+
+  const list = new LinkedList();
+
+  document.getElementById('insertHeadBtn').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('valueInput').value);
+    list.insertAtHead(value);
+  });
+
+  document.getElementById('insertTailBtn').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('valueInput').value);
+    list.insertAtTail(value);
+  });
+
+  document.getElementById('deleteBtn').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('valueInput').value);
+    list.deleteByValue(value);
+  });
+
+  document.getElementById('searchBtn').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('valueInput').value);
+    list.search(value);
+  });
+</script>
+</body>
+</html>

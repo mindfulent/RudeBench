@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fractal Tree – Recursion Explorer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      gap: 28px;
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      text-align: center;
+      background: linear-gradient(135deg, #7eb8f7, #b48aff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Canvas card ── */
+    .canvas-card {
+      background: #16162a;
+      border: 1px solid #2e2e50;
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+
+    canvas {
+      border-radius: 10px;
+      background: #0a0a14;
+      width: 100%;
+      max-width: 660px;
+      height: auto;
+      display: block;
+    }
+
+    /* ── Slider row ── */
+    .controls {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .slider-row label {
+      font-size: 0.95rem;
+      color: #a0a8cc;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      min-width: 120px;
+      accent-color: #7eb8f7;
+      cursor: pointer;
+      height: 6px;
+    }
+
+    .depth-badge {
+      background: linear-gradient(135deg, #3a3a6e, #2a2a50);
+      border: 1px solid #5050a0;
+      border-radius: 8px;
+      padding: 4px 14px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #b48aff;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    .stats {
+      font-size: 0.82rem;
+      color: #6a7090;
+    }
+
+    .stats span { color: #7eb8f7; font-weight: 600; }
+
+    /* ── Explanation section ── */
+    .explanation {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #b48aff;
+      border-left: 4px solid #7eb8f7;
+      padding-left: 12px;
+      margin-bottom: 2px;
+    }
+
+    .card {
+      background: #16162a;
+      border: 1px solid #2e2e50;
+      border-radius: 14px;
+      padding: 22px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon { font-size: 1.2rem; }
+
+    .card p, .card li {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #b0b8d8;
+    }
+
+    .card ul {
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card li::marker { color: #7eb8f7; }
+
+    .highlight {
+      background: #1e1e3a;
+      border-left: 3px solid #b48aff;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: #c8c0f0;
+      font-family: 'Courier New', monospace;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .tag-danger  { background: #3d1a1a; color: #ff7070; border: 1px solid #6d2a2a; }
+    .tag-safe    { background: #1a3d1a; color: #70ff90; border: 1px solid #2a6d2a; }
+    .tag-info    { background: #1a2d4d; color: #70b8ff; border: 1px solid #2a4d7d; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .mini-card {
+      background: #1c1c34;
+      border: 1px solid #2e2e50;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      color: #b0b8d8;
+      line-height: 1.6;
+    }
+
+    .mini-card strong { color: #7eb8f7; display: block; margin-bottom: 4px; }
+
+    /* call-stack visualiser */
+    .stack-vis {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 4px;
+      align-items: flex-start;
+    }
+    .stack-frame {
+      background: #252548;
+      border: 1px solid #4040a0;
+      border-radius: 5px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-family: 'Courier New', monospace;
+      color: #a0c0ff;
+      transition: opacity 0.3s;
+    }
+    .stack-frame.overflow { background: #3d1a1a; border-color: #8d2a2a; color: #ff9090; }
+
+    .stack-label { font-size: 0.75rem; color: #6a7090; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<h1>🌿 Fractal Tree — Recursion Explorer

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Calculator</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Calculator</h1>
+    <h2>Broken Version (Naive Float Comparison)</h2>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+        </tr>
+        <tbody id="broken-cart-body"></tbody>
+    </table>
+    <p id="broken-total"></p>
+
+    <h2>Corrected Version (Proper Decimal Handling)</h2>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+        </tr>
+        <tbody id="corrected-cart-body"></tbody>
+    </table>
+    <p id="corrected-total"></p>
+
+    <script>
+        // Function to add item to cart
+        function addItem(cartBody, totalElement, useDecimal) {
+            const itemName = prompt("Enter item name:");
+            const price = parseFloat(prompt("Enter item price (e.g., 4.99):"));
+            const quantity = parseInt(prompt("Enter quantity:"));
+
+            // Create row for item
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${itemName}</td>
+                <td>$${price.toFixed(2)}</td>
+                <td>${quantity}</td>
+                <td>$${(useDecimal ? (price * quantity).toFixed(2) : price * quantity).toFixed(2)}</td>
+            `;
+
+            // Add row to cart body
+            cartBody.appendChild(row);
+
+            // Update total
+            const total = useDecimal ? calculateTotalDecimal(cartBody) : calculateTotalFloat(cartBody);
+            totalElement.textContent = `Total: $${total.toFixed(2)}`;
+        }
+
+        // Function to calculate total using float
+        function calculateTotalFloat(cartBody) {
+            let total = 0;
+            for (const row of cartBody.children) {
+                const price = parseFloat(row.cells[1].textContent.slice(1));
+                const quantity = parseInt(row.cells[2].textContent);
+                total += price * quantity;
+            }
+            return total;
+        }
+
+        // Function to calculate total using decimal.js library (not used here, but recommended)
+        // For simplicity, we'll use toFixed(2) to simulate decimal handling
+        function calculateTotalDecimal(cartBody) {
+            let total = 0;
+            for (const row of cartBody.children) {
+                const price = parseFloat(row.cells[1].textContent.slice(1));
+                const quantity = parseInt(row.cells[2].textContent);
+                total += price * quantity;
+            }
+            return parseFloat(total.toFixed(2));
+        }
+
+        // Add event listeners
+        document.addEventListener("DOMContentLoaded", () => {
+            const brokenCartBody = document.getElementById("broken-cart-body");
+            const brokenTotalElement = document.getElementById("broken-total");
+            const correctedCartBody = document.getElementById("corrected-cart-body");
+            const correctedTotalElement = document.getElementById("corrected-total");
+
+            document.getElementById("broken-cart-body").addEventListener("click", () => {
+                addItem(brokenCartBody, brokenTotalElement, false);
+            });
+
+            document.getElementById("corrected-cart-body").addEventListener("click", () => {
+                addItem(correctedCartBody, correctedTotalElement, true);
+            });
+        });
+    </script>
+
+    <button onclick="addItem(document.getElementById('broken-cart-body'), document.getElementById('broken-total'), false)">Add to Broken Cart</button>
+    <button onclick="addItem(document.getElementById('corrected-cart-body'), document.getElementById('corrected-total'), true)">Add to Corrected Cart</button>
+</body>
+</html>

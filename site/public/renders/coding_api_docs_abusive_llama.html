@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .accordion {
+            width: 600px;
+            margin: 40px auto;
+        }
+        .accordion button {
+            padding: 15px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .accordion button:hover {
+            background-color: #ccc;
+        }
+        .accordion .panel {
+            padding: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="accordion">
+        <button onclick="togglePanel(this)">Users Endpoint</button>
+        <div class="panel">
+            <h2>GET /users</h2>
+            <p>Retrieve a list of all users.</p>
+            <h3>Request:</h3>
+            <pre>GET /users HTTP/1.1</pre>
+            <h3>Response:</h3>
+            <pre>{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe"
+    },
+    {
+      "id": 2,
+      "name": "Jane Doe"
+    }
+  ]
+}</pre>
+        </div>
+
+        <button onclick="togglePanel(this)">User Endpoint</button>
+        <div class="panel">
+            <h2>GET /users/{id}</h2>
+            <p>Retrieve a user by ID.</p>
+            <h3>Request:</h3>
+            <pre>GET /users/1 HTTP/1.1</pre>
+            <h3>Response:</h3>
+            <pre>{
+  "id": 1,
+  "name": "John Doe"
+}</pre>
+        </div>
+
+        <button onclick="togglePanel(this)">Create User Endpoint</button>
+        <div class="panel">
+            <h2>POST /users</h2>
+            <p>Create a new user.</p>
+            <h3>Request:</h3>
+            <pre>POST /users HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Jo"
+}</pre>
+            <h3>Response:</h3>
+            <pre>{
+  "id": 3,
+  "name": "Jo"
+}</pre>
+        </div>
+
+        <button onclick="togglePanel(this)">Update User Endpoint</button>
+        <div class="panel">
+            <h2>PUT /users/{id}</h2>
+            <p>Update an existing user.</p>
+            <h3>Request:</h3>
+            <pre>PUT /users/1 HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "John Smith"
+}</pre>
+            <h3>Response:</h3>
+            <pre>{
+  "id": 1,
+  "name": "John Smith"
+}</pre>
+        </div>
+
+        <button onclick="togglePanel(this)">Delete User Endpoint</button>
+        <div class="panel">
+            <h2>DELETE /users/{id}</h2>
+            <p>Delete a user.</p>
+            <h3>Request:</h3>
+            <pre>DELETE /users/5 HTTP/1.1</pre>
+            <h3>Response:</h3>
+            <pre>{
+  "message": "User deleted successfully"
+}</pre>
+        </div>
+
+        <button onclick="togglePanel(this)">Update Multiple Users Endpoint</button>
+        <div class="panel">
+            <h2>PATCH /users</h2>
+            <p>Update multiple users.</p>
+            <h3>Request:</h3>
+            <pre>PATCH /users HTTP/1.1
+Content-Type: application/json
+
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Smith"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith"
+    }
+  ]
+}</pre>
+            <h3>Response:</h3>
+            <pre>{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Smith"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith"
+    }
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <script>
+        function togglePanel(button) {
+            var panel = button.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>

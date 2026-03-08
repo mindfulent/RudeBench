@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Race Condition Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 8px;
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(100, 160, 255, 0.5);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+
+    .panels {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 1100px;
+      margin: 0 auto 30px auto;
+    }
+
+    .panel {
+      flex: 1;
+      min-width: 300px;
+      max-width: 480px;
+      border-radius: 16px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .panel.buggy {
+      background: linear-gradient(145deg, #1e1a2e, #2a1a1a);
+      border: 1.5px solid #7f2a2a;
+      box-shadow: 0 0 30px rgba(200, 50, 50, 0.15);
+    }
+
+    .panel.fixed {
+      background: linear-gradient(145deg, #1a1e2e, #1a2a1a);
+      border: 1.5px solid #2a7f4a;
+      box-shadow: 0 0 30px rgba(50, 200, 100, 0.15);
+    }
+
+    .panel-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel.buggy .panel-title { color: #ff6b6b; }
+    .panel.fixed  .panel-title { color: #6bffaa; }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .panel.buggy .badge {
+      background: #7f2a2a;
+      color: #ffaaaa;
+    }
+
+    .panel.fixed .badge {
+      background: #1a5c34;
+      color: #aaffcc;
+    }
+
+    .counter-display {
+      text-align: center;
+      padding: 24px 16px;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel.buggy .counter-display {
+      background: rgba(200, 50, 50, 0.08);
+      border: 1px solid rgba(200, 50, 50, 0.2);
+    }
+
+    .panel.fixed .counter-display {
+      background: rgba(50, 200, 100, 0.08);
+      border: 1px solid rgba(50, 200, 100, 0.2);
+    }
+
+    .count-number {
+      font-size: 5rem;
+      font-weight: 800;
+      line-height: 1;
+      transition: transform 0.1s ease;
+    }
+
+    .panel.buggy .count-number { color: #ff6b6b; }
+    .panel.fixed  .count-number { color: #6bffaa; }
+
+    .count-number.bump {
+      transform: scale(1.2);
+    }
+
+    .count-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 6px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .expected-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      font-size: 0.88rem;
+    }
+
+    .expected-label { color: #888; }
+
+    .expected-value {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .panel.buggy .expected-value { color: #ffaaaa; }
+    .panel.fixed  .expected-value { color: #aaffcc; }
+
+    .drift-indicator {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .panel.buggy .drift-indicator {
+      background: rgba(200, 50, 50, 0.12);
+      color: #ff9999;
+    }
+
+    .panel.fixed .drift-indicator {
+      background: rgba(50, 200, 100, 0.12);
+      color: #99ffcc;
+    }
+
+    .drift-value { font-size: 1rem; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .panel.buggy .btn {
+      background: linear-gradient(135deg, #c0392b, #e74c3c);
+      color: white;
+      box-shadow: 0 4px 20px rgba(200, 50, 50, 0.3);
+    }
+
+    .panel.buggy .btn:hover {
+      box-shadow: 0 6px 28px rgba(200, 50, 50, 0.5);
+    }
+
+    .panel.fixed .btn {
+      background: linear-gradient(135deg, #1a7a45, #27ae60);
+      color: white;
+      box-shadow: 0 4px 20px rgba(50, 200, 100, 0.3);
+    }
+
+    .panel.fixed .btn:hover {
+      box-shadow: 0 6px 28px rgba(50, 200, 100, 0.5);
+    }
+
+    .reset-btn {
+      background: rgba(255,255,255,0.07);
+      color: #aaa;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 8px;
+      font-size: 0.82rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+
+    .reset-btn:hover {
+      background: rgba(255,255,255,0.12);
+      color: #ddd;
+    }
+
+    .log-box {
+      background: rgba(0,0,0,

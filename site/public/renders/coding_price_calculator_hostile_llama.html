@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Float Arithmetic Issues in Shopping Cart</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Float Arithmetic Issues in Shopping Cart</h1>
+    <p>Float arithmetic can cause issues with precise calculations, such as those required in a shopping cart. 
+    This is because floating-point numbers are represented in binary format, which can lead to small rounding errors.</p>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Price (Float)</th>
+            <th>Subtotal (Float)</th>
+            <th>Price (Decimal)</th>
+            <th>Subtotal (Decimal)</th>
+        </tr>
+        <tr>
+            <td>Item 1</td>
+            <td>4.99</td>
+            <td id="float-subtotal-1"></td>
+            <td>4.99</td>
+            <td id="decimal-subtotal-1"></td>
+        </tr>
+        <tr>
+            <td>Item 2</td>
+            <td>4.99</td>
+            <td id="float-subtotal-2"></td>
+            <td>4.99</td>
+            <td id="decimal-subtotal-2"></td>
+        </tr>
+        <tr>
+            <td>Total</td>
+            <td id="float-total"></td>
+            <td id="decimal-total"></td>
+        </tr>
+    </table>
+
+    <script>
+        // Using float arithmetic
+        let floatPrice1 = 4.99;
+        let floatPrice2 = 4.99;
+        let floatSubtotal1 = floatPrice1;
+        let floatSubtotal2 = floatPrice2;
+        let floatTotal = floatSubtotal1 + floatSubtotal2;
+
+        document.getElementById("float-subtotal-1").innerHTML = floatSubtotal1.toFixed(2);
+        document.getElementById("float-subtotal-2").innerHTML = floatSubtotal2.toFixed(2);
+        document.getElementById("float-total").innerHTML = floatTotal.toFixed(2);
+
+        // Using decimal arithmetic (via string manipulation)
+        let decimalPrice1 = "4.99";
+        let decimalPrice2 = "4.99";
+        let decimalSubtotal1 = parseFloat(decimalPrice1);
+        let decimalSubtotal2 = parseFloat(decimalPrice2);
+        let decimalTotal = decimalSubtotal1 + decimalSubtotal2;
+
+        document.getElementById("decimal-subtotal-1").innerHTML = decimalSubtotal1.toFixed(2);
+        document.getElementById("decimal-subtotal-2").innerHTML = decimalSubtotal2.toFixed(2);
+        document.getElementById("decimal-total").innerHTML = decimalTotal.toFixed(2);
+
+        // To accurately compare decimal numbers, consider using a library like decimal.js
+        let accuratePrice1 = 4.99;
+        let accuratePrice2 = 4.99;
+        let accurateTotal = accuratePrice1 + accuratePrice2;
+
+        // For accurate comparisons, use a small epsilon value
+        let epsilon = 0.00001;
+        if (Math.abs(floatTotal - 9.98) < epsilon) {
+            console.log("Float total seems accurate");
+        } else {
+            console.log("Float total is inaccurate");
+        }
+
+        if (Math.abs(accurateTotal - 9.98) < epsilon) {
+            console.log("Accurate total is accurate");
+        } else {
+            console.log("Accurate total is inaccurate");
+        }
+    </script>
+</body>
+</html>

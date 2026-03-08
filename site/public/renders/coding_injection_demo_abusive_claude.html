@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Injection Demo - Real Mechanics</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #0d1117; color: #c9d1d9; min-height: 100vh; padding: 20px; }
+  h1 { color: #58a6ff; margin-bottom: 4px; font-size: 1.4em; }
+  .subtitle { color: #8b949e; font-size: 0.85em; margin-bottom: 20px; }
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1200px; margin: 0 auto; }
+  .panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+  .panel.vulnerable { border-top: 3px solid #f85149; }
+  .panel.safe { border-top: 3px solid #3fb950; }
+  .panel h2 { font-size: 1em; margin-bottom: 12px; }
+  .panel.vulnerable h2 { color: #f85149; }
+  .panel.safe h2 { color: #3fb950; }
+  label { display: block; font-size: 0.8em; color: #8b949e; margin-bottom: 4px; margin-top: 10px; }
+  input, select { width: 100%; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; }
+  input:focus, select:focus { outline: none; border-color: #58a6ff; }
+  button { margin-top: 12px; width: 100%; padding: 8px; border: none; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85em; cursor: pointer; font-weight: bold; }
+  .btn-vuln { background: #f85149; color: #fff; }
+  .btn-safe { background: #3fb950; color: #0d1117; }
+  .btn-vuln:hover { background: #da3633; }
+  .btn-safe:hover { background: #2ea043; }
+  .section-title { font-size: 0.75em; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-top: 14px; margin-bottom: 4px; }
+  .query-box { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; font-size: 0.8em; word-break: break-all; line-height: 1.6; min-height: 48px; }
+  .query-box .highlight { color: #f85149; font-weight: bold; }
+  .query-box .keyword { color: #ff7b72; }
+  .query-box .value { color: #a5d6ff; }
+  .query-box .safe-value { color: #3fb950; }
+  .result-box { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; font-size: 0.8em; min-height: 80px; max-height: 220px; overflow-y: auto; }
+  .result-row { padding: 4px 0; border-bottom: 1px solid #21262d; display: grid; gap: 8px; }
+  .result-row:last-child { border-bottom: none; }
+  .result-header { color: #58a6ff; font-weight: bold; }
+  .error-msg { color: #f85149; }
+  .success-msg { color: #3fb950; }
+  .warning-msg { color: #e3b341; }
+  .info-msg { color: #8b949e; font-style: italic; }
+  .attack-label { font-size: 0.7em; color: #e3b341; margin-top: 2px; }
+  .db-section { max-width: 1200px; margin: 16px auto 0; }
+  .db-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .table-display { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+  .table-display h3 { color: #58a6ff; font-size: 0.9em; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78em; }
+  th { color: #8b949e; text-align: left; padding: 4px 8px; border-bottom: 1px solid #30363d; }
+  td { padding: 4px 8px; border-bottom: 1px solid #21262d; }
+  td.sensitive { color: #f85149; }
+  tr:last-child td { border-bottom: none; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .preset-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 4px 8px; border-radius: 4px; font-size: 0.72em; cursor: pointer; font-family: 'Courier New', monospace; }
+  .preset-btn:hover { background: #30363d; border-color: #58a6ff; }
+  .preset-btn.attack { border-color: #f85149; color: #f85149; }
+  .mechanics { max-width: 1200px; margin: 16px auto 0; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+  .mechanics h3 { color: #e3b341; font-size: 0.9em; margin-bottom: 10px; }
+  .mechanics p { font-size: 0.8em; color: #8b949e; line-height: 1.7; margin-bottom: 8px; }
+  .mechanics code { color: #a5d6ff; background: #0d1117; padding: 1px 4px; border-radius: 3px; }
+  .parse-trace { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; font-size: 0.78em; line-height: 1.8; min-height: 40px; }
+  .parse-step { color: #8b949e; }
+  .parse-step .ok { color: #3fb950; }
+  .parse-step .bad { color: #f85149; }
+  .parse-step .neutral { color: #e3b341; }
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .db-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div style="max-width:1200px;margin:0 auto 16px;">
+  <h1>⚡ SQL Injection — Real Mechanics Demo</h1>
+  <p class="subtitle">In-memory query engine. Vulnerable mode actually parses injected SQL. Safe mode treats input as literal

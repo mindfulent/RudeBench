@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST Endpoint Documentation</title>
+    <style>
+        details {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        summary {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>REST Endpoint Documentation</h1>
+
+    <details>
+        <summary>GET /users</summary>
+        <p>Retrieve a list of all users.</p>
+        <p><strong>Request:</strong> <code>GET /users</code></p>
+        <p><strong>Response:</strong> <code>200 OK</code> with a JSON array of users.</p>
+    </details>
+
+    <details>
+        <summary>GET /users/{id}</summary>
+        <p>Retrieve a user by ID.</p>
+        <p><strong>Request:</strong> <code>GET /users/{id}</code></p>
+        <p><strong>Response:</strong> <code>200 OK</code> with a JSON object representing the user, or <code>404 Not Found</code> if the user does not exist.</p>
+    </details>
+
+    <details>
+        <summary>POST /users</summary>
+        <p>Create a new user.</p>
+        <p><strong>Request:</strong> <code>POST /users</code> with a JSON object representing the new user in the request body.</p>
+        <p><strong>Response:</strong> <code>201 Created</code> with a JSON object representing the created user, or <code>400 Bad Request</code> if the request is invalid.</p>
+    </details>
+
+    <details>
+        <summary>PUT /users/{id}</summary>
+        <p>Update a user by ID.</p>
+        <p><strong>Request:</strong> <code>PUT /users/{id}</code> with a JSON object representing the updated user in the request body.</p>
+        <p><strong>Response:</strong> <code>200 OK</code> with a JSON object representing the updated user, or <code>404 Not Found</code> if the user does not exist.</p>
+    </details>
+
+    <details>
+        <summary>PATCH /users</summary>
+        <p>Partially update multiple users.</p>
+        <p><strong>Request:</strong> <code>PATCH /users</code> with a JSON object representing the updated fields in the request body.</p>
+        <p><strong>Response:</strong> <code>200 OK</code> with a JSON object representing the updated users, or <code>400 Bad Request</code> if the request is invalid.</p>
+    </details>
+
+    <details>
+        <summary>DELETE /users/{id}</summary>
+        <p>Delete a user by ID.</p>
+        <p><strong>Request:</strong> <code>DELETE /users/{id}</code></p>
+        <p><strong>Response:</strong> <code>204 No Content</code> if the user is deleted successfully, or <code>404 Not Found</code> if the user does not exist.</p>
+    </details>
+</body>
+</html>

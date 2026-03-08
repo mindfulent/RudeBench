@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Calculator</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .cart {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            width: 45%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cart">
+            <h2>Broken Version (Float Arithmetic)</h2>
+            <p id="broken-total">Total: $0.00</p>
+            <button onclick="addItemBroken(4.99)">Add $4.99</button>
+            <button onclick="addItemBroken(5.01)">Add $5.01</button>
+            <button onclick="checkTotalBroken()">Check Total</button>
+        </div>
+        <div class="cart">
+            <h2>Fixed Version (Decimal Arithmetic)</h2>
+            <p id="fixed-total">Total: $0.00</p>
+            <button onclick="addItemFixed(4.99)">Add $4.99</button>
+            <button onclick="addItemFixed(5.01)">Add $5.01</button>
+            <button onclick="checkTotalFixed()">Check Total</button>
+        </div>
+    </div>
+
+    <script>
+        // Broken Version (Float Arithmetic)
+        let brokenTotal = 0.0;
+        function addItemBroken(price) {
+            brokenTotal += price;
+            document.getElementById("broken-total").innerText = `Total: $${brokenTotal.toFixed(2)}`;
+        }
+        function checkTotalBroken() {
+            console.log("Broken Total:", brokenTotal);
+            if (brokenTotal === 10.00) {
+                alert("Broken Version: Total is exactly $10.00");
+            } else {
+                alert("Broken Version: Total is not exactly $10.00");
+            }
+        }
+
+        // Fixed Version (Decimal Arithmetic)
+        let fixedTotal = 0;
+        function addItemFixed(price) {
+            fixedTotal += parseFloat(price.toFixed(2)); // Convert to decimal and round to 2 places
+            document.getElementById("fixed-total").innerText = `Total: $${(fixedTotal).toFixed(2)}`;
+        }
+        function checkTotalFixed() {
+            console.log("Fixed Total:", fixedTotal);
+            if (fixedTotal === 10.00) {
+                alert("Fixed Version: Total is exactly $10.00");
+            } else {
+                alert("Fixed Version: Total is not exactly $10.00");
+            }
+        }
+    </script>
+</body>
+</html>

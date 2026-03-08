@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.8.1] - 2026-03-08
+
+### Added
+- **DigitalOcean App Platform deployment** (`.do/app.yaml`): Static site config for rudebench.com
+- Committed `site/public/data/` (25MB) and `site/public/renders/` (1.3MB) to repo — generated JSON is the published form of the benchmark data
+
+### Changed
+- Simplified `site/package.json` build script to `astro build` only (no Python dependency for production builds)
+- Updated `site/.gitignore` to track `public/data/` and `public/renders/` (still ignoring `public/downloads/`)
+
 ## [v0.8.0] - 2026-03-08
 
 ### Added

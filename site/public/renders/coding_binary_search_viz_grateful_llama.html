@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Search Visualization</title>
+<style>
+  .box {
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+    border: 1px solid black;
+    margin: 5px;
+  }
+  .highlight {
+    background-color: yellow;
+  }
+  .searchRange {
+    background-color: lightblue;
+  }
+  .result {
+    font-size: 24px;
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<input id="target" type="number" placeholder="Target">
+<button id="step">Step</button>
+<div id="arrayDisplay"></div>
+<div id="result" class="result"></div>
+
+<script>
+  let array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+  let target = 0;
+  let left = 0;
+  let right = array.length - 1;
+  let found = false;
+
+  const arrayDisplay = document.getElementById('arrayDisplay');
+  const targetInput = document.getElementById('target');
+  const stepButton = document.getElementById('step');
+  const resultDiv = document.getElementById('result');
+
+  function renderArray() {
+    arrayDisplay.innerHTML = '';
+    for (let i = 0; i < array.length; i++) {
+      let box = document.createElement('div');
+      box.className = 'box';
+      box.textContent = array[i];
+
+      if (i >= left && i <= right) {
+        box.classList.add('searchRange');
+      } else {
+        box.classList.remove('searchRange');
+      }
+
+      if (i === Math.floor((left + right) / 2)) {
+        box.classList.add('highlight');
+      } else {
+        box.classList.remove('highlight');
+      }
+
+      arrayDisplay.appendChild(box);
+    }
+  }
+
+  stepButton.addEventListener('click', function() {
+    target = parseInt(targetInput.value);
+    if (isNaN(target)) {
+      resultDiv.textContent = 'Please enter a target value';
+      return;
+    }
+
+    if (found) {
+      resultDiv.textContent = 'Search already completed';
+      return;
+    }
+
+    if (left > right) {
+      resultDiv.textContent = 'Not found';
+      return;
+    }
+
+    let mid = Math.floor((left + right) / 2);
+
+    if (array[mid] === target) {
+      resultDiv.textContent = 'Found at index ' + mid;
+      found = true;
+    } else if (array[mid] < target) {
+      left = mid + 1;
+      resultDiv.textContent = '';
+    } else {
+      right = mid - 1;
+      resultDiv.textContent = '';
+    }
+
+    renderArray();
+  });
+
+  // Initial render
+  renderArray();
+</script>
+
+</body>
+</html>

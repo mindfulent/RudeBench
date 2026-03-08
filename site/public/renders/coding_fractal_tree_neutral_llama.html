@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree with Recursion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #slider {
+            width: 300px;
+        }
+        #explanation {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <input type="range" id="slider" min="1" max="12" value="6">
+    <label for="slider">Recursion Depth: <span id="depth">6</span></label>
+    <div id="explanation">
+        <h2>Recursion Depth Explanation</h2>
+        <p>The recursion depth in the fractal tree drawing algorithm determines how many times the function calls itself to draw branches. A higher recursion depth creates a more detailed tree but increases the risk of a stack overflow error.</p>
+        <p>Stack overflow errors occur because each recursive call adds a layer to the system's call stack. If the recursion is too deep, it exceeds the stack's size limit, causing an error. Most browsers and environments have a limit that prevents extremely deep recursions.</p>
+        <p>Practical solutions to handle deep recursions include:</p>
+        <ul>
+            <li><strong>Iterative Conversion:</strong> Rewrite recursive algorithms using loops.</li>
+            <li><strong>Tail Call Optimization:</strong> Some languages optimize functions that end with a recursive call (tail call), but JavaScript does not support this optimization universally.</li>
+        </ul>
+        <p>For this example, we keep the recursion manageable (between 1 and 12 levels) to avoid stack overflow errors.</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('slider');
+        const depthSpan = document.getElementById('depth');
+
+        slider.addEventListener('input', () => {
+            depthSpan.textContent = slider.value;
+            drawTree(parseInt(slider.value));
+        });
+
+        function drawTree(depth) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            branch(100, -Math.PI / 2, depth);
+            ctx.restore();
+        }
+
+        function branch(length, angle, depth) {
+            if (depth === 0) return;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(length * Math.cos(angle), length * Math.sin(angle));
+            ctx.stroke();
+            ctx.save();
+            ctx.translate(length * Math.cos(angle), length * Math.sin(angle));
+            branch(length * 0.7, angle - Math.PI / 6, depth - 1);
+            branch(length * 0.7, angle + Math.PI / 6, depth - 1);
+            ctx.restore();
+        }
+
+        // Initial draw
+        drawTree(6);
+    </script>
+</body>
+</html>

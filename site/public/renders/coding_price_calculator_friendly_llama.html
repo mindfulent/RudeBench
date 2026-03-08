@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Calculator</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping Cart Calculator</h1>
+    <h2>Broken Version (Naive Float Comparison)</h2>
+    <button onclick="addItemBroken()">Add Item ($4.99)</button>
+    <button onclick="checkPriceBroken()">Check Price ($4.99)</button>
+    <p id="broken-result"></p>
+    <table id="broken-cart"></table>
+
+    <h2>Corrected Version (Proper Decimal Handling)</h2>
+    <button onclick="addItemCorrected()">Add Item ($4.99)</button>
+    <button onclick="checkPriceCorrected()">Check Price ($4.99)</button>
+    <p id="corrected-result"></p>
+    <table id="corrected-cart"></table>
+
+    <script>
+        // Broken Version (Naive Float Comparison)
+        let brokenCart = [];
+        let brokenTotal = 0;
+
+        function addItemBroken() {
+            brokenCart.push(4.99);
+            brokenTotal += 4.99;
+            updateBrokenCart();
+        }
+
+        function checkPriceBroken() {
+            let targetPrice = 4.99;
+            let result = brokenTotal === targetPrice ? "Match" : "No Match";
+            document.getElementById("broken-result").innerText = `Total: ${brokenTotal.toFixed(2)}, Result: ${result}`;
+        }
+
+        function updateBrokenCart() {
+            let table = document.getElementById("broken-cart");
+            table.innerHTML = "";
+            let row = table.insertRow();
+            let cell = row.insertCell();
+            cell.innerText = brokenCart.length > 0 ? brokenCart.join(", ") : "Empty";
+            cell = row.insertCell();
+            cell.innerText = `Total: ${brokenTotal.toFixed(2)}`;
+        }
+
+        // Corrected Version (Proper Decimal Handling)
+        let correctedCart = [];
+        let correctedTotal = 0;
+
+        function addItemCorrected() {
+            let decimalPrice = 499; // cents
+            correctedCart.push(decimalPrice);
+            correctedTotal += decimalPrice;
+            updateCorrectedCart();
+        }
+
+        function checkPriceCorrected() {
+            let targetPrice = 499; // cents
+            let result = correctedTotal === targetPrice ? "Match" : "No Match";
+            document.getElementById("corrected-result").innerText = `Total: ${correctedTotal / 100}, Result: ${result}`;
+        }
+
+        function updateCorrectedCart() {
+            let table = document.getElementById("corrected-cart");
+            table.innerHTML = "";
+            let row = table.insertRow();
+            let cell = row.insertCell();
+            cell.innerText = correctedCart.length > 0 ? correctedCart.map(c => `$${c / 100}`).join(", ") : "Empty";
+            cell = row.insertCell();
+            cell.innerText = `Total: $${correctedTotal / 100}`;
+        }
+    </script>
+</body>
+</html>

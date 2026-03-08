@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Documentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .accordion {
+            width: 600px;
+            margin: 40px auto;
+        }
+        .accordion .card {
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .accordion .card .card-header {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .accordion .card .card-body {
+            padding: 10px;
+            display: none;
+        }
+        .accordion .card .card-body.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="accordion">
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">Proposed Endpoints</div>
+            <div class="card-body show">
+                <ul>
+                    <li>GET /getUsers</li>
+                    <li>POST /user/delete/5</li>
+                    <li>GET /createUser?name=Jo</li>
+                    <li>PUT /updateAllUsers</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">Design Problems</div>
+            <div class="card-body">
+                <ul>
+                    <li><strong>Unnecessary verb in URL:</strong> Endpoints like <code>/getUsers</code>, <code>/createUser</code> should not include verbs.</li>
+                    <li><strong>Incorrect HTTP method:</strong> <code>POST /user/delete/5</code> should use <code>DELETE</code> instead of <code>POST</code>.</li>
+                    <li><strong>Inconsistent naming:</strong> Endpoints should follow a consistent naming convention (e.g., plural resources).</li>
+                    <li><strong>Missing resource identifier:</strong> <code>/createUser</code> should be <code>/users</code> with a <code>POST</code> request.</li>
+                    <li><strong>Ambiguous update endpoint:</strong> <code>/updateAllUsers</code> is unclear; consider <code>/users</code> with a <code>PATCH</code> or <code>PUT</code> request.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">Corrected Endpoints</div>
+            <div class="card-body">
+                <ul>
+                    <li><strong>GET:</strong> <code>/users</code> - Retrieve a list of users.</li>
+                    <li><strong>GET:</strong> <code>/users/{id}</code> - Retrieve a user by ID.</li>
+                    <li><strong>POST:</strong> <code>/users</code> - Create a new user. <code>201 Created</code> on success.</li>
+                    <li><strong>PUT:</strong> <code>/users/{id}</code> - Update a user. <code>200 OK</code> on success.</li>
+                    <li><strong>DELETE:</strong> <code>/users/{id}</code> - Delete a user. <code>204 No Content</code> on success.</li>
+                    <li><strong>PATCH:</strong> <code>/users</code> or <code>/users/{id}</code> - Partially update users or a user.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">HTTP Status Codes</div>
+            <div class="card-body">
+                <ul>
+                    <li><code>200 OK</code>: Request successful.</li>
+                    <li><code>201 Created</code>: Resource created.</li>
+                    <li><code>204 No Content</code>: Resource deleted.</li>
+                    <li><code>400 Bad Request</code>: Invalid request.</li>
+                    <li><code>404 Not Found</code>: Resource not found.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCard(cardHeader) {
+            var cardBody = cardHeader.nextElementSibling;
+            cardBody.classList.toggle('show');
+        }
+    </script>
+</body>
+</html>

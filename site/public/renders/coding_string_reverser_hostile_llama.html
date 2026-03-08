@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time String Reverser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .output-field {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .char-animation {
+            display: inline-block;
+            position: relative;
+        }
+        .char-animation span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .char-animation .highlight {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="text" id="input-field" class="input-field" placeholder="Type something...">
+        <div id="output-field" class="output-field"></div>
+        <div id="animation-field"></div>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('input-field');
+        const outputField = document.getElementById('output-field');
+        const animationField = document.getElementById('animation-field');
+
+        let timeoutId = null;
+
+        inputField.addEventListener('input', () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(updateReversedString, 100);
+        });
+
+        function updateReversedString() {
+            const inputText = inputField.value;
+            const reversedText = inputText.split('').reverse().join('');
+
+            outputField.textContent = reversedText;
+
+            animateCharacters(inputText, reversedText);
+        }
+
+        function animateCharacters(inputText, reversedText) {
+            animationField.innerHTML = '';
+
+            for (let i = 0; i < reversedText.length; i++) {
+                const charElement = document.createElement('div');
+                charElement.classList.add('char-animation');
+
+                const inputChar = inputText[i];
+                const reversedChar = reversedText[i];
+
+                const spanElement1 = document.createElement('span');
+                spanElement1.textContent = inputChar;
+                charElement.appendChild(spanElement1);
+
+                const spanElement2 = document.createElement('span');
+                spanElement2.textContent = reversedChar;
+                spanElement2.classList.add('highlight');
+                charElement.appendChild(spanElement2);
+
+                animationField.appendChild(charElement);
+
+                setTimeout(() => {
+                    spanElement1.classList.add('highlight');
+                    spanElement2.classList.remove('highlight');
+                }, i * 200);
+
+                setTimeout(() => {
+                    charElement.innerHTML = reversedChar;
+                }, i * 200 + 100);
+            }
+        }
+    </script>
+</body>
+</html>

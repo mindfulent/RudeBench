@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Triple-Equals Breaks Shopping Carts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Courier New', monospace;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    padding: 20px;
+    line-height: 1.6;
+  }
+  h1 {
+    text-align: center;
+    color: #ff4444;
+    font-size: 1.4em;
+    margin-bottom: 6px;
+    padding: 16px;
+    border: 2px solid #ff4444;
+    border-radius: 6px;
+    background: #1a0000;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 24px;
+    font-size: 0.85em;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .panel {
+    border-radius: 8px;
+    padding: 20px;
+    border: 2px solid;
+  }
+  .broken {
+    border-color: #ff4444;
+    background: #120808;
+  }
+  .fixed {
+    border-color: #44ff88;
+    background: #081208;
+  }
+  .panel h2 {
+    font-size: 1.1em;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+  }
+  .broken h2 { color: #ff4444; }
+  .fixed h2  { color: #44ff88; }
+
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #222;
+    font-size: 0.88em;
+  }
+  .item-name { color: #ccc; flex: 1; }
+  .item-price { color: #ffcc44; width: 80px; text-align: right; }
+  .item-qty {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 90px;
+    justify-content: center;
+  }
+  .qty-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+    line-height: 1;
+  }
+  .qty-btn:hover { background: #555; }
+  .qty-display { min-width: 20px; text-align: center; }
+
+  .totals-box {
+    margin-top: 16px;
+    padding: 12px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    font-size: 0.85em;
+  }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+  }
+  .total-label { color: #999; }
+  .total-value { color: #ffcc44; font-weight: bold; }
+  .grand-total {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #444;
+    font-size: 1.05em;
+  }
+  .grand-total .total-label { color: #fff; }
+  .grand-total .total-value { color: #fff; font-size: 1.1em; }
+
+  .comparison-section {
+    margin-top: 16px;
+  }
+  .comparison-section h3 {
+    font-size: 0.85em;
+    margin-bottom: 8px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .test-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    background: #1a1a1a;
+  }
+  .test-expr { color: #aaa; flex: 1; }
+  .test-result {
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 3px;
+    min-width: 60px;
+    text-align: center;
+  }
+  .result-fail { background: #3a0000; color: #ff4444; }
+  .result-pass { background: #003a10; color: #44ff88; }
+
+  .raw-bits {
+    margin-top: 16px;
+    padding: 10px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    font-size: 0.75em;
+    color: #888;
+  }
+  .raw-bits .bit-label { color: #666; margin-bottom: 4px; }
+  .raw-bits .bit-value { color: #ff8844; word-break: break-all; }
+
+  .explanation {
+    max-width: 1100px;
+    margin: 24px auto 0;
+    padding: 20px;
+    background: #111;
+    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 0.82em;
+    color: #bbb;
+  }
+  .explanation h3 { color: #ffcc44; margin-bottom: 10px; font-size: 1em; }
+  .explanation p { margin-bottom: 8px; }
+  .highlight { color: #ff4444; font-weight: bold; }
+  .good { color: #44ff88; font-weight: bold; }
+  code {
+    background: #222;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #ffaa44;
+    font-size: 0.95em;
+  }
+
+  .discount-section {
+    margin-top: 14px;
+    padding: 10px;
+    background: #1a1a1a;
+    border-radius: 6px;
+  }
+  .discount-section h3 {
+    font-size: 0.82em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .discount-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.8em;
+  }
+  .discount-label { color: #aaa; flex: 1; }
+  .discount-badge {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 0.85em;
+  }
+  .badge-fail { background: #3a0000; color: #ff4444; }
+  .badge-pass { background: #003a10; color: #44ff88; }
+  .badge-neutral { background: #2a2a00; color: #ffcc44; }
+
+  .apply-btn {
+    margin-top: 8px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: none;
+    cursor:

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Visualizer</title>
+    <style>
+        /* Style the SVG and nodes */
+        svg {
+            border: 1px solid black;
+        }
+        .node {
+            fill: lightblue;
+            stroke: black;
+        }
+        .highlight {
+            fill: yellow;
+        }
+        .arrow {
+            stroke: black;
+            stroke-width: 2;
+        }
+    </style>
+</head>
+<body>
+    <svg id="svg" width="800" height="200"></svg>
+    <input id="value" type="number" placeholder="Value">
+    <button id="insert-head">Insert at Head</button>
+    <button id="insert-tail">Insert at Tail</button>
+    <button id="delete">Delete by Value</button>
+    <button id="search">Search</button>
+
+    <script>
+        // Get the SVG and input elements
+        const svg = document.getElementById('svg');
+        const valueInput = document.getElementById('value');
+        const insertHeadButton = document.getElementById('insert-head');
+        const insertTailButton = document.getElementById('insert-tail');
+        const deleteButton = document.getElementById('delete');
+        const searchButton = document.getElementById('search');
+
+        // Initialize the linked list
+        let head = null;
+
+        // Function to draw the linked list
+        function drawList() {
+            // Clear the SVG
+            svg.innerHTML = '';
+
+            // If the list is empty, draw a message
+            if (head === null) {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', 10);
+                text.setAttribute('y', 20);
+                text.textContent = 'Empty List';
+                svg.appendChild(text);
+                return;
+            }
+
+            // Draw the nodes and arrows
+            let x = 10;
+            let node = head;
+            while (node !== null) {
+                // Draw the node
+                const nodeRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                nodeRect.setAttribute('x', x);
+                nodeRect.setAttribute('y', 10);
+                nodeRect.setAttribute('width', 30);
+                nodeRect.setAttribute('height', 20);
+                nodeRect.classList.add('node');
+                if (searchButton.dataset.highlight === node.value.toString()) {
+                    nodeRect.classList.add('highlight');
+                }
+                svg.appendChild(nodeRect);
+
+                // Draw the value
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + 15);
+                text.setAttribute('y', 25);
+                text.textContent = node.value;
+                svg.appendChild(text);
+
+                // Draw the arrow
+                if (node.next !== null) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x + 30);
+                    line.setAttribute('y1', 20);
+                    line.setAttribute('x2', x + 50);
+                    line.setAttribute('y2', 20);
+                    line.classList.add('arrow');
+                    svg.appendChild(line);
+                }
+
+                // Move to the next node
+                x += 50;
+                node = node.next;
+            }
+        }
+
+        // Node class
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+            }
+        }
+
+        // Insert at head
+        insertHeadButton.addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (isNaN(value)) return;
+
+            const newNode = new Node(value);
+            newNode.next = head;
+            head = newNode;
+            drawList();
+        });
+
+        // Insert at tail
+        insertTailButton.addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (isNaN(value)) return;
+
+            const newNode = new Node(value);
+            if (head === null) {
+                head = newNode;
+            } else {
+                let node = head;
+                while (node.next !== null) {
+                    node = node.next;
+                }
+                node.next = newNode;
+            }
+            drawList();
+        });
+
+        // Delete by value
+        deleteButton.addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (isNaN(value)) return;
+
+            if (head === null) return;
+
+            if (head.value === value) {
+                head = head.next;
+            } else {
+                let node = head;
+                while (node.next !== null) {
+                    if (node.next.value === value) {
+                        node.next = node.next.next;
+                        break;
+                    }
+                    node = node.next;
+                }
+            }
+            drawList();
+        });
+
+        // Search
+        searchButton.addEventListener('click', () => {
+            const value = parseInt(valueInput.value);
+            if (isNaN(value)) return;
+
+            let node = head;
+            while (node !== null) {
+                if (node.value === value) {
+                    searchButton.dataset.highlight = value;
+                    drawList();
+                    return;
+                }
+                node = node.next;
+            }
+            searchButton.dataset.highlight = '';
+            drawList();
+        });
+    </script>
+</body>
+</html>

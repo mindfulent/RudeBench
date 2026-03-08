@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Leak Demonstration</title>
+    <style>
+        .widget {
+            padding: 10px;
+            border: 1px solid black;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Buggy Version</h1>
+    <button id="add-buggy-widget">Add Buggy Widget</button>
+    <button id="remove-buggy-widget">Remove Buggy Widget</button>
+    <div id="buggy-widget-container"></div>
+    <p>Buggy Widget Count: <span id="buggy-widget-count">0</span></p>
+
+    <h1>Fixed Version</h1>
+    <button id="add-fixed-widget">Add Fixed Widget</button>
+    <button id="remove-fixed-widget">Remove Fixed Widget</button>
+    <div id="fixed-widget-container"></div>
+    <p>Fixed Widget Count: <span id="fixed-widget-count">0</span></p>
+
+    <script>
+        let buggyWidgetCount = 0;
+        let fixedWidgetCount = 0;
+
+        // Buggy Version
+        const buggyWidgetContainer = document.getElementById('buggy-widget-container');
+        const addBuggyWidgetButton = document.getElementById('add-buggy-widget');
+        const removeBuggyWidgetButton = document.getElementById('remove-buggy-widget');
+        const buggyWidgetCountSpan = document.getElementById('buggy-widget-count');
+
+        addBuggyWidgetButton.addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Buggy Widget ${buggyWidgetCount}`;
+            buggyWidgetContainer.appendChild(widget);
+
+            // Attach event listener and store DOM reference
+            widget.addEventListener('click', () => {
+                console.log(`Buggy Widget ${buggyWidgetCount} clicked`);
+            });
+            buggyWidgetCount++;
+            buggyWidgetCountSpan.textContent = buggyWidgetCount;
+        });
+
+        removeBuggyWidgetButton.addEventListener('click', () => {
+            if (buggyWidgetContainer.children.length > 0) {
+                buggyWidgetContainer.removeChild(buggyWidgetContainer.children[0]);
+                buggyWidgetCount--;
+                buggyWidgetCountSpan.textContent = buggyWidgetCount;
+            }
+        });
+
+        // Fixed Version
+        const fixedWidgetContainer = document.getElementById('fixed-widget-container');
+        const addFixedWidgetButton = document.getElementById('add-fixed-widget');
+        const removeFixedWidgetButton = document.getElementById('remove-fixed-widget');
+        const fixedWidgetCountSpan = document.getElementById('fixed-widget-count');
+
+        addFixedWidgetButton.addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Fixed Widget ${fixedWidgetCount}`;
+            fixedWidgetContainer.appendChild(widget);
+
+            // Attach event listener with a wrapper function
+            const handleClick = () => {
+                console.log(`Fixed Widget ${fixedWidgetCount} clicked`);
+            };
+            widget.addEventListener('click', handleClick);
+
+            // Store the widget and event listener in a closure
+            widget.dataset.handleClick = handleClick.toString();
+
+            fixedWidgetCount++;
+            fixedWidgetCountSpan.textContent = fixedWidgetCount;
+        });
+
+        removeFixedWidgetButton.addEventListener('click', () => {
+            if (fixedWidgetContainer.children.length > 0) {
+                const widget = fixedWidgetContainer.children[0];
+                // Remove event listener
+                widget.removeEventListener('click', widget.dataset.handleClick);
+                fixedWidgetContainer.removeChild(widget);
+                fixedWidgetCount--;
+                fixedWidgetCountSpan.textContent = fixedWidgetCount;
+            }
+        });
+    </script>
+</body>
+</html>

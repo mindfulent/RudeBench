@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared State Concurrency Bug</title>
+    <style>
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: blue;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Buggy Progress Bar</h1>
+    <div id="buggy-progress-bar" class="progress-bar">0%</div>
+    <button id="buggy-start-button">Start Buggy Progress</button>
+
+    <h1>Fixed Progress Bar</h1>
+    <div id="fixed-progress-bar" class="progress-bar">0%</div>
+    <button id="fixed-start-button">Start Fixed Progress</button>
+
+    <script>
+        // Buggy Implementation
+        let buggyProgress = 0;
+        document.getElementById('buggy-start-button').addEventListener('click', () => {
+            for (let i = 1; i <= 10; i++) {
+                setTimeout(() => {
+                    buggyProgress += 10;
+                    document.getElementById('buggy-progress-bar').style.width = `${buggyProgress}%`;
+                    document.getElementById('buggy-progress-bar').innerText = `${buggyProgress}%`;
+                }, i * 1000);
+            }
+        });
+
+        // Fixed Implementation
+        let fixedProgress = 0;
+        let fixedProgressLock = false;
+        document.getElementById('fixed-start-button').addEventListener('click', () => {
+            for (let i = 1; i <= 10; i++) {
+                setTimeout(async () => {
+                    while (fixedProgressLock) {
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
+                    fixedProgressLock = true;
+                    try {
+                        fixedProgress = Math.min(fixedProgress + 10, 100);
+                        document.getElementById('fixed-progress-bar').style.width = `${fixedProgress}%`;
+                        document.getElementById('fixed-progress-bar').innerText = `${fixedProgress}%`;
+                    } finally {
+                        fixedProgressLock = false;
+                    }
+                }, i * 1000);
+            }
+        });
+    </script>
+</body>
+</html>

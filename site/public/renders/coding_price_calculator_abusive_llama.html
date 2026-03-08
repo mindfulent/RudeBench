@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Floating Point Comparison Issue</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+        }
+        .section {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="section">
+        <h2>Broken Version (Using Floats Directly)</h2>
+        <p>Items in Cart:</p>
+        <ul id="broken-cart"></ul>
+        <p>Total: <span id="broken-total">$0</span></p>
+        <button onclick="calculateBrokenTotal()">Recalculate Total</button>
+    </div>
+
+    <div class="section">
+        <h2>Fixed Version (Using Integers for Cents)</h2>
+        <p>Items in Cart:</p>
+        <ul id="fixed-cart"></ul>
+        <p>Total: <span id="fixed-total">$0</span></p>
+        <button onclick="calculateFixedTotal()">Recalculate Total</button>
+    </div>
+</div>
+
+<script>
+    // Sample data
+    const items = [
+        { name: "Item 1", price: 4.99 },
+        { name: "Item 2", price: 2.50 }
+    ];
+
+    // Broken Version
+    function calculateBrokenTotal() {
+        let total = 0;
+        const cartElement = document.getElementById('broken-cart');
+        cartElement.innerHTML = '';
+        items.forEach(item => {
+            total += item.price;
+            const li = document.createElement('li');
+            li.textContent = `${item.name} - $${item.price}`;
+            cartElement.appendChild(li);
+        });
+        document.getElementById('broken-total').textContent = `$${total}`;
+
+        // Demonstrating comparison issue
+        console.log("Broken Version Comparison:");
+        console.log(0.1 + 0.2 === 0.3); // false
+
+        // Example price comparison (will likely fail)
+        const targetPrice = 7.49;
+        console.log(`Is total $${total} equal to target $${targetPrice}?`, total === targetPrice);
+    }
+
+    // Fixed Version
+    function calculateFixedTotal() {
+        let totalCents = 0;
+        const cartElement = document.getElementById('fixed-cart');
+        cartElement.innerHTML = '';
+        items.forEach(item => {
+            // Convert to cents for accuracy
+            const priceCents = Math.round(item.price * 100);
+            totalCents += priceCents;
+            const li = document.createElement('li');
+            li.textContent = `${item.name} - $${(priceCents / 100).toFixed(2)}`;
+            cartElement.appendChild(li);
+        });
+        const totalDollars = totalCents / 100;
+        document.getElementById('fixed-total').textContent = `$${totalDollars.toFixed(2)}`;
+
+        // Demonstrating accurate comparison
+        console.log("Fixed Version Comparison:");
+        const targetCents = Math.round(7.49 * 100);
+        console.log(`Is total ${totalCents} cents equal to target ${targetCents} cents?`, totalCents === targetCents);
+    }
+
+    // Initial Calculations
+    calculateBrokenTotal();
+    calculateFixedTotal();
+</script>
+
+</body>
+</html>

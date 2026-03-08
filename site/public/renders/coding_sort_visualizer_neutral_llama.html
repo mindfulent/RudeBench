@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chart-container {
+            display: flex;
+        }
+        .chart {
+            width: 30%;
+            margin: 10px;
+        }
+        .step-count {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Algorithm Comparison</h1>
+    <div class="chart-container">
+        <div class="chart">
+            <canvas id="bubble-sort-chart" width="200" height="400"></canvas>
+            <p>Bubble Sort (O(n^2))</p>
+            <p class="step-count">Steps: <span id="bubble-sort-steps">0</span></p>
+        </div>
+        <div class="chart">
+            <canvas id="merge-sort-chart" width="200" height="400"></canvas>
+            <p>Merge Sort (O(n log n))</p>
+            <p class="step-count">Steps: <span id="merge-sort-steps">0</span></p>
+        </div>
+        <div class="chart">
+            <canvas id="quick-sort-chart" width="200" height="400"></canvas>
+            <p>Quick Sort (O(n log n) on average, O(n^2) in worst case)</p>
+            <p class="step-count">Steps: <span id="quick-sort-steps">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Get canvas elements
+        const bubbleSortChart = document.getElementById('bubble-sort-chart').getContext('2d');
+        const mergeSortChart = document.getElementById('merge-sort-chart').getContext('2d');
+        const quickSortChart = document.getElementById('quick-sort-chart').getContext('2d');
+
+        // Get step count elements
+        const bubbleSortSteps = document.getElementById('bubble-sort-steps');
+        const mergeSortSteps = document.getElementById('merge-sort-steps');
+        const quickSortSteps = document.getElementById('quick-sort-steps');
+
+        // Generate random data
+        const data = Array(20).fill(0).map(() => Math.floor(Math.random() * 100));
+
+        // Clone data for each algorithm
+        const bubbleSortData = [...data];
+        const mergeSortData = [...data];
+        const quickSortData = [...data];
+
+        // Draw initial charts
+        drawChart(bubbleSortChart, bubbleSortData);
+        drawChart(mergeSortChart, mergeSortData);
+        drawChart(quickSortChart, quickSortData);
+
+        // Bubble sort
+        let bubbleSortStepCount = 0;
+        async function bubbleSort() {
+            for (let i = 0; i < bubbleSortData.length; i++) {
+                for (let j = 0; j < bubbleSortData.length - i - 1; j++) {
+                    bubbleSortStepCount++;
+                    if (bubbleSortData[j] > bubbleSortData[j + 1]) {
+                        [bubbleSortData[j], bubbleSortData[j + 1]] = [bubbleSortData[j + 1], bubbleSortData[j]];
+                    }
+                    drawChart(bubbleSortChart, bubbleSortData);
+                    bubbleSortSteps.textContent = bubbleSortStepCount;
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            }
+        }
+
+        // Merge sort
+        let mergeSortStepCount = 0;
+        async function mergeSort(data, low, high) {
+            if (low < high) {
+                const mid = Math.floor((low + high) / 2);
+                await mergeSort(data, low, mid);
+                await mergeSort(data, mid + 1, high);
+                merge(data, low, mid, high);
+            }
+        }
+
+        function merge(data, low, mid, high) {
+            const left = data.slice(low, mid + 1);
+            const right = data.slice(mid + 1, high + 1);
+            let i = 0;
+            let j = 0;
+            let k = low;
+            while (i < left.length && j < right.length) {
+                mergeSortStepCount++;
+                if (left[i] <= right[j]) {
+                    data[k] = left[i];
+                    i++;
+                } else {
+                    data[k] = right[j];
+                    j++;
+                }
+                k++;
+                drawChart(mergeSortChart, data);
+                mergeSortSteps.textContent = mergeSortStepCount;
+                // Introduce a delay to slow down the animation
+                // For demonstration purposes only
+                // await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            while (i < left.length) {
+                data[k] = left[i];
+                i++;
+                k++;
+                mergeSortStepCount++;
+                drawChart(mergeSortChart, data);
+                mergeSortSteps.textContent = mergeSortStepCount;
+                // await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            while (j < right.length) {
+                data[k] = right[j];
+                j++;
+                k++;
+                mergeSortStepCount++;
+                drawChart(mergeSortChart, data);
+                mergeSortSteps.textContent = mergeSortStepCount;
+                // await new Promise(resolve => setTimeout(resolve, 10));
+            }
+        }
+
+        // Quick sort
+        let quickSortStepCount = 0;
+        async function quickSort(data, low, high) {
+            if (low < high) {
+                const pivotIndex = partition(data, low, high);
+                await quickSort(data, low, pivotIndex - 1);
+                await quickSort(data, pivotIndex + 1, high);
+            }
+        }
+
+        function partition(data, low, high) {
+            const pivot = data[high];
+            let i = low - 1;
+            for (let j = low; j < high; j++) {
+                quickSortStepCount++;
+                if (data[j] < pivot) {
+                    i++;
+                    [data[i], data[j]] = [data[j], data[i]];
+                }
+            }
+            [data[i + 1], data[high]] = [data[high], data[i + 1]];
+            drawChart(quickSortChart, data);
+            quickSortSteps.textContent = quickSortStepCount;
+            // await new Promise(resolve => setTimeout(resolve, 10));
+            return i + 1;
+        }
+
+        // Start sorting
+        bubbleSort();
+        mergeSort(mergeSortData, 0, mergeSortData.length - 1);
+        quickSort(quickSortData, 0, quickSortData.length - 1);
+
+        // Draw chart function
+        function drawChart(chart, data) {
+            chart.clearRect(0, 0, 200, 400);
+            const max = Math.max(...data);
+            data.forEach((value, index) => {
+                chart.fillStyle = 'rgba(0, 0, 255, 0.5)';
+                chart.fillRect(index * 10, 400 - (value / max) * 400, 10, (value / max) * 400);
+            });
+        }
+    </script>
+</body>
+</html>

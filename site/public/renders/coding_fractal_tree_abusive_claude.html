@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fractal Tree - Recursion Deep Dive</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0f;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    color: #7eb8f7;
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    color: #556;
+    font-size: 0.75rem;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .main-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .canvas-panel {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  canvas {
+    border: 1px solid #1e2a3a;
+    border-radius: 4px;
+    background: #050508;
+    display: block;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    background: #0d0d18;
+    border: 1px solid #1a1a2e;
+    border-radius: 6px;
+    padding: 14px;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .control-row label {
+    color: #7eb8f7;
+    font-size: 0.78rem;
+    min-width: 120px;
+    letter-spacing: 0.5px;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    min-width: 140px;
+    accent-color: #7eb8f7;
+    cursor: pointer;
+  }
+
+  .val-badge {
+    background: #1a2a3a;
+    color: #7eb8f7;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 0.82rem;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    color: #556;
+  }
+
+  .stat { display: flex; gap: 5px; }
+  .stat span { color: #9ecfff; }
+
+  /* ---- Explanation Panel ---- */
+  .explanation {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 620px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .explanation::-webkit-scrollbar { width: 5px; }
+  .explanation::-webkit-scrollbar-track { background: #0a0a0f; }
+  .explanation::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 3px; }
+
+  .card {
+    background: #0d0d18;
+    border: 1px solid #1a1a2e;
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .card h2 {
+    color: #7eb8f7;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #1a1a2e;
+    padding-bottom: 6px;
+  }
+
+  .card p, .card li {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #b0b8c8;
+  }
+
+  .card ul { padding-left: 16px; }
+  .card li { margin-bottom: 4px; }
+
+  .highlight { color: #f7c948; font-weight: bold; }
+  .danger    { color: #f76e6e; font-weight: bold; }
+  .good      { color: #6ef7a0; font-weight: bold; }
+  .code-word { color: #c792ea; background: #1a1030; padding: 1px 5px; border-radius: 3px; font-size: 0.75rem; }
+
+  pre {
+    background: #07070f;
+    border: 1px solid #1a1a2e;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    color: #c0c8d8;
+    margin-top: 8px;
+  }
+
+  .kw  { color: #c792ea; }
+  .fn  { color: #82aaff; }
+  .cm  { color: #546e7a; font-style: italic; }
+  .num { color: #f78c6c; }
+  .str { color: #c3e88d; }
+  .warn-box {
+    background: #1a0a0a;
+    border: 1px solid #5a1a1a;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #f0a0a0;
+    line-height: 1.6;
+  }
+  .good-box {
+    background: #0a1a0f;
+    border: 1px solid #1a5a2a;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #90e0a8;
+    line-height: 1.6;
+  }
+
+  .stack-viz {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 3px;
+    margin-top: 10px;
+    align-items: flex-start;
+  }
+
+  .stack-frame {
+    background: #1a2a3a;
+    border: 1px solid #2a4a6a;
+    border-radius: 3px;
+    padding: 3px 10px;
+    font-size: 0.68rem;
+    color: #9ecfff;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .stack-frame.active { background: #2a3a1a; border-color: #4a6a2a; color: #9effa8; }
+
+  .method-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    border: 1px solid #2a3a4a;
+    background: #

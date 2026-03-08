@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>String Reverser</title>
+<style>
+  body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to bottom, #f7f7f7, #eaeaea);
+  }
+  .container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 400px;
+    text-align: center;
+  }
+  #input-field {
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  #output-field {
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .char {
+    display: inline-block;
+    position: relative;
+  }
+  .fadeIn {
+    animation: fadeIn 0.5s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.1); }
+    to { opacity: 1; transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <input id="input-field" type="text" placeholder="Type something..." oninput="updateReversedText(this.value)">
+  <div id="output-field"></div>
+</div>
+
+<script>
+  function updateReversedText(text) {
+    const outputField = document.getElementById('output-field');
+    outputField.innerHTML = ''; // Clear previous output
+
+    const reversedText = text.split('').reverse().join('');
+    for (let i = 0; i < reversedText.length; i++) {
+      const span = document.createElement('span');
+      span.classList.add('char');
+      span.textContent = reversedText[i];
+      outputField.appendChild(span);
+      
+      // Trigger animation by adding class after a tiny delay
+      setTimeout(() => {
+        span.classList.add('fadeIn');
+      }, i * 50); // Adjust speed here
+    }
+  }
+</script>
+
+</body>
+</html>

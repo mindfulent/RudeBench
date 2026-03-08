@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fractal Tree – Recursion Explorer</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      gap: 28px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      max-width: 720px;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: #8b949e;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* ── Control panel ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 14px;
+      padding: 18px 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 720px;
+    }
+    .controls label {
+      font-size: 0.95rem;
+      color: #c9d1d9;
+      white-space: nowrap;
+    }
+    .controls label span {
+      font-weight: 700;
+      color: #58a6ff;
+      font-size: 1.1rem;
+      margin-left: 6px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 260px;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(to right, #58a6ff var(--pct,50%), #30363d var(--pct,50%));
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #58a6ff;
+      border: 3px solid #0d1117;
+      box-shadow: 0 0 8px #58a6ff88;
+      transition: box-shadow 0.2s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 14px #58a6ffcc;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #58a6ff;
+      border: 3px solid #0d1117;
+      cursor: pointer;
+    }
+
+    /* ── Canvas wrapper ── */
+    .canvas-wrapper {
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #010409;
+      box-shadow: 0 8px 32px #00000088;
+      width: 100%;
+      max-width: 720px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 720px;
+    }
+    .stat-card {
+      flex: 1 1 160px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 14px 20px;
+      text-align: center;
+    }
+    .stat-card .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #58a6ff;
+    }
+    .stat-card .label {
+      font-size: 0.78rem;
+      color: #8b949e;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Explanation section ── */
+    .explanation {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .explanation h2 {
+      font-size: 1.3rem;
+      color: #c9d1d9;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 10px;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 14px;
+      padding: 22px 26px;
+      line-height: 1.75;
+    }
+    .card h3 {
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card h3 .icon {
+      font-size: 1.3rem;
+    }
+    .card p, .card li {
+      color: #8b949e;
+      font-size: 0.9rem;
+    }
+    .card ul {
+      padding-left: 20px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card li strong {
+      color: #c9d1d9;
+    }
+
+    /* colour accents per card */
+    .card.green  h3 { color: #3fb950; }
+    .card.yellow h3 { color: #d29922; }
+    .card.red    h3 { color: #f85149; }
+    .card.blue   h3 { color: #58a6ff; }
+    .card.purple h3 { color: #bc8cff; }
+
+    .card.green  { border-color: #3fb95033; }
+    .card.yellow { border-color: #d2992233; }
+    .card.red    { border-color: #f8514933; }
+    .card.blue   { border-color: #58a6ff33; }
+    .card.purple { border-color: #bc8cff33; }
+
+    /* ── Code block ── */
+    pre {
+      background: #010409;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #c9d1d9;
+      margin-top: 12px;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .cm  { color: #8b949e; font-style: italic; }
+    .nm  

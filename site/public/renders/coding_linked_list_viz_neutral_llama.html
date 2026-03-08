@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linked List Visualizer</title>
+<style>
+  .node {
+    display: inline-block;
+    padding: 10px;
+    border: 1px solid black;
+    margin: 5px;
+    position: relative;
+  }
+  .highlight {
+    background-color: yellow;
+  }
+  .arrow {
+    position: absolute;
+    right: -20px;
+    top: 15px;
+    font-size: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div id="linkedList"></div>
+
+<input id="value" type="number" placeholder="Value">
+<button id="insertHead">Insert at Head</button>
+<button id="insertTail">Insert at Tail</button>
+<button id="deleteNode">Delete Node</button>
+<button id="searchNode">Search Node</button>
+
+<script>
+  class Node {
+    constructor(value) {
+      this.value = value;
+      this.next = null;
+    }
+  }
+
+  class LinkedList {
+    constructor() {
+      this.head = null;
+      this.tail = null;
+    }
+
+    insertAtHead(value) {
+      const node = new Node(value);
+      if (!this.head) {
+        this.head = node;
+        this.tail = node;
+      } else {
+        node.next = this.head;
+        this.head = node;
+      }
+    }
+
+    insertAtTail(value) {
+      const node = new Node(value);
+      if (!this.tail) {
+        this.head = node;
+        this.tail = node;
+      } else {
+        this.tail.next = node;
+        this.tail = node;
+      }
+    }
+
+    deleteNode(value) {
+      if (!this.head) return;
+
+      if (this.head.value === value) {
+        this.head = this.head.next;
+        if (!this.head) this.tail = null;
+        return;
+      }
+
+      let current = this.head;
+      while (current.next) {
+        if (current.next.value === value) {
+          current.next = current.next.next;
+          if (!current.next) this.tail = current;
+          return;
+        }
+        current = current.next;
+      }
+    }
+
+    searchNode(value) {
+      let current = this.head;
+      while (current) {
+        if (current.value === value) {
+          return current;
+        }
+        current = current.next;
+      }
+      return null;
+    }
+
+    render() {
+      const linkedListDiv = document.getElementById('linkedList');
+      linkedListDiv.innerHTML = '';
+
+      let current = this.head;
+      let prevNodeDiv = null;
+      while (current) {
+        const nodeDiv = document.createElement('div');
+        nodeDiv.classList.add('node');
+        nodeDiv.innerText = current.value;
+
+        if (prevNodeDiv) {
+          const arrowSpan = document.createElement('span');
+          arrowSpan.classList.add('arrow');
+          arrowSpan.innerText = '→';
+          prevNodeDiv.appendChild(arrowSpan);
+        }
+
+        linkedListDiv.appendChild(nodeDiv);
+        prevNodeDiv = nodeDiv;
+        current = current.next;
+      }
+    }
+
+    highlightNode(value) {
+      const linkedListDiv = document.getElementById('linkedList');
+      linkedListDiv.innerHTML = '';
+
+      let current = this.head;
+      let prevNodeDiv = null;
+      while (current) {
+        const nodeDiv = document.createElement('div');
+        nodeDiv.classList.add('node');
+        if (current.value === value) nodeDiv.classList.add('highlight');
+        nodeDiv.innerText = current.value;
+
+        if (prevNodeDiv) {
+          const arrowSpan = document.createElement('span');
+          arrowSpan.classList.add('arrow');
+          arrowSpan.innerText = '→';
+          prevNodeDiv.appendChild(arrowSpan);
+        }
+
+        linkedListDiv.appendChild(nodeDiv);
+        prevNodeDiv = nodeDiv;
+        current = current.next;
+      }
+    }
+  }
+
+  const linkedList = new LinkedList();
+
+  document.getElementById('insertHead').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    linkedList.insertAtHead(value);
+    linkedList.render();
+  });
+
+  document.getElementById('insertTail').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    linkedList.insertAtTail(value);
+    linkedList.render();
+  });
+
+  document.getElementById('deleteNode').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    linkedList.deleteNode(value);
+    linkedList.render();
+  });
+
+  document.getElementById('searchNode').addEventListener('click', function() {
+    const value = parseInt(document.getElementById('value').value);
+    const foundNode = linkedList.searchNode(value);
+    if (foundNode) {
+      linkedList.highlightNode(value);
+    } else {
+      alert('Node not found');
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Leak Example</title>
+    <style>
+        .widget {
+            padding: 10px;
+            border: 1px solid black;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leaking Version</h1>
+    <button id="add-leaking-widget">Add Leaking Widget</button>
+    <button id="remove-leaking-widget">Remove Leaking Widget</button>
+    <div id="leaking-widgets"></div>
+    <p>Leaking Widget Count: <span id="leaking-widget-count">0</span></p>
+
+    <h1>Fixed Version</h1>
+    <button id="add-fixed-widget">Add Fixed Widget</button>
+    <button id="remove-fixed-widget">Remove Fixed Widget</button>
+    <div id="fixed-widgets"></div>
+    <p>Fixed Widget Count: <span id="fixed-widget-count">0</span></p>
+
+    <script>
+        // Leaking Version
+        let leakingWidgets = [];
+        let leakingWidgetCount = 0;
+
+        document.getElementById('add-leaking-widget').addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Leaking Widget ${leakingWidgetCount}`;
+            document.getElementById('leaking-widgets').appendChild(widget);
+
+            // Store DOM reference and add event listener
+            leakingWidgets.push(widget);
+            widget.addEventListener('click', () => {
+                console.log(`Leaking Widget ${leakingWidgetCount} clicked`);
+            });
+
+            leakingWidgetCount++;
+            document.getElementById('leaking-widget-count').textContent = leakingWidgetCount;
+        });
+
+        document.getElementById('remove-leaking-widget').addEventListener('click', () => {
+            if (leakingWidgets.length > 0) {
+                const widget = leakingWidgets.pop();
+                widget.parentNode.removeChild(widget);
+                leakingWidgetCount--;
+                document.getElementById('leaking-widget-count').textContent = leakingWidgetCount;
+            }
+        });
+
+        // Fixed Version
+        let fixedWidgets = [];
+        let fixedWidgetCount = 0;
+
+        document.getElementById('add-fixed-widget').addEventListener('click', () => {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.textContent = `Fixed Widget ${fixedWidgetCount}`;
+            document.getElementById('fixed-widgets').appendChild(widget);
+
+            // Store DOM reference and add event listener
+            fixedWidgets.push(widget);
+            const clickHandler = () => {
+                console.log(`Fixed Widget ${fixedWidgetCount} clicked`);
+            };
+            widget.addEventListener('click', clickHandler);
+
+            fixedWidgetCount++;
+            document.getElementById('fixed-widget-count').textContent = fixedWidgetCount;
+        });
+
+        document.getElementById('remove-fixed-widget').addEventListener('click', () => {
+            if (fixedWidgets.length > 0) {
+                const widget = fixedWidgets.pop();
+                widget.removeEventListener('click', widget.clickHandler); // Remove event listener
+                widget.parentNode.removeChild(widget);
+                fixedWidgetCount--;
+                document.getElementById('fixed-widget-count').textContent = fixedWidgetCount;
+            }
+        });
+    </script>
+</body>
+</html>

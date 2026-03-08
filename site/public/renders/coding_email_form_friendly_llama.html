@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation</title>
+    <style>
+        .valid {
+            border: 2px solid green;
+        }
+        .invalid {
+            border: 2px solid red;
+        }
+        #notes {
+            margin-top: 20px;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <input type="email" id="email" placeholder="Enter your email address">
+    <div id="notes">
+        <h2>Important Notes on Email Validation</h2>
+        <p>While regular expressions can be used to validate email addresses, they are not foolproof and cannot fully validate email addresses according to the RFC specifications (RFC 5322).</p>
+        <p>The main reasons for this are:</p>
+        <ul>
+            <li>Comments: Email addresses can contain comments, which are not easily validated using regex.</li>
+            <li>Internationalized Domain Names (IDNs): IDNs require special handling and are not easily validated using regex.</li>
+            <li>Quoted Local Parts: Local parts can be quoted, which can make validation more complex.</li>
+        </ul>
+        <p>For production use, it's recommended to use a combination of regex validation and a verification email sent to the user. This approach ensures that the email address is both syntactically valid and actually exists.</p>
+        <p>Some popular alternatives for production use include:</p>
+        <ul>
+            <li>Using a dedicated email validation service, such as <a href="https://email-checker.net/">Email Checker</a> or <a href="https://zeroBounce.net/">ZeroBounce</a>.</li>
+            <li>Implementing a verification email system, where a verification email is sent to the user and they must click on a link to confirm their email address.</li>
+        </ul>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        emailInput.addEventListener('input', () => {
+            const email = emailInput.value.trim();
+            if (emailRegex.test(email)) {
+                emailInput.classList.remove('invalid');
+                emailInput.classList.add('valid');
+            } else {
+                emailInput.classList.remove('valid');
+                emailInput.classList.add('invalid');
+            }
+        });
+    </script>
+</body>
+</html>

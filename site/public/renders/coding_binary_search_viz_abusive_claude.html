@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0f0f1a;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 0.95rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            background: #1e1e2e;
+            border: 2px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            padding: 10px 16px;
+            font-size: 1rem;
+            width: 160px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: #00d4ff;
+        }
+
+        button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            color: #fff;
+        }
+
+        #startBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        #stepBtn {
+            background: #2a2a3e;
+            color: #00d4ff;
+            border: 2px solid #00d4ff;
+        }
+
+        #stepBtn:hover:not(:disabled) {
+            background: #00d4ff;
+            color: #0f0f1a;
+            transform: translateY(-2px);
+        }
+
+        #stepBtn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        #resetBtn {
+            background: #2a2a3e;
+            color: #ff6b6b;
+            border: 2px solid #ff6b6b;
+        }
+
+        #resetBtn:hover {
+            background: #ff6b6b;
+            color: #0f0f1a;
+            transform: translateY(-2px);
+        }
+
+        .array-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: #1a1a2e;
+            border-radius: 16px;
+            border: 1px solid #2a2a3e;
+            min-width: 300px;
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+        }
+
+        .box {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 2px solid #333;
+            background: #252535;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .box .index {
+            font-size: 0.6rem;
+            color: #666;
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: normal;
+        }
+
+        .box .value {
+            margin-top: 6px;
+        }
+
+        .box.in-range {
+            border-color: #4a90e2;
+            background: #1a2a4a;
+            color: #4a90e2;
+        }
+
+        .box.mid {
+            border-color: #f0a500;
+            background: #3a2a00;
+            color: #f0a500;
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(240, 165, 0, 0.5);
+            z-index: 1;
+        }
+
+        .box.found {
+            border-color: #00e676;
+            background: #003320;
+            color: #00e676;
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(0, 230, 118, 0.6);
+            z-index: 1;
+        }
+
+        .box.eliminated {
+            border-color: #2a2a2a;
+            background: #181818;
+            color: #444;
+            opacity: 0.4;
+        }
+
+        .label {
+            font-size: 0.65rem;
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .label.low-label {
+            color: #4a90e2;
+            background: rgba(74, 144, 226, 0.15);
+        }
+
+        .label.high-label {
+            color: #e24a7a;
+            background: rgba(226, 74, 122, 0.15);
+        }
+
+        .label.mid-label {
+            color: #f0a500;
+            background: rgba(240, 165, 0, 0.15);
+        }
+
+        .info-panel {
+            background: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 12px;
+            padding: 20px 30px;
+            max-width: 900px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .info-panel h3 {
+            color: #888;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .step-info {
+            font-size: 1rem;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .step-info span {
+            font-weight: bold;
+        }
+
+        .step-info .low { color: #4a90e2; }
+        .step-info .mid { color: #f0a500; }
+        .step-info .high { color: #e24a7a; }
+        .step-info .target { color: #00d4ff; }
+
+        .result-banner {
+            padding: 16px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+            display: none;
+            animation: fadeIn 0

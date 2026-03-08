@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Regex Validation — Why It Lies To You</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: #f1f5f9;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Input area ── */
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    input[type="email-fake"] ,
+    input.email-input {
+      width: 100%;
+      padding: 0.85rem 3rem 0.85rem 1rem;
+      border-radius: 10px;
+      border: 2px solid #2d3148;
+      background: #0f1117;
+      color: #f1f5f9;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      font-family: 'Courier New', monospace;
+    }
+
+    input.email-input::placeholder { color: #475569; }
+
+    input.email-input.pristine   { border-color: #2d3148; box-shadow: none; }
+    input.email-input.valid      { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    input.email-input.invalid    { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+
+    .status-icon {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2rem;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    /* ── Status message ── */
+    .status-msg {
+      min-height: 1.4rem;
+      font-size: 0.82rem;
+      margin-bottom: 1.5rem;
+      padding-left: 0.25rem;
+      transition: color 0.2s;
+    }
+    .status-msg.valid   { color: #22c55e; }
+    .status-msg.invalid { color: #ef4444; }
+    .status-msg.neutral { color: #64748b; }
+
+    /* ── Test cases table ── */
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 0.75rem;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #2d3148;
+      margin-bottom: 1.5rem;
+      font-size: 0.82rem;
+    }
+
+    .test-grid .col-head {
+      background: #12151f;
+      padding: 0.5rem 0.75rem;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 1px solid #2d3148;
+    }
+
+    .test-row {
+      display: contents;
+      cursor: pointer;
+    }
+
+    .test-row > div {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid #1e2235;
+      background: #0f1117;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .test-row:last-child > div { border-bottom: none; }
+    .test-row:hover > div { background: #161929; }
+
+    .test-row .email-cell {
+      font-family: 'Courier New', monospace;
+      color: #cbd5e1;
+      cursor: pointer;
+      text-decoration: underline dotted #475569;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .badge.pass   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .badge.fail   { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .badge.warn   { background: rgba(234,179,8,0.15);  color: #eab308; }
+    .badge.center { justify-content: center; }
+
+    /* ── Regex display ── */
+    .regex-box {
+      background: #0a0c14;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: #7dd3fc;
+      word-break: break-all;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .regex-box .re-label {
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 0.7rem;
+      color: #475569;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── Score bar ── */
+    .score-section { margin-bottom: 0; }
+
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+
+    .score-label { font-size: 0.82rem; color: #94a3b8; }
+    .score-value { font-size: 0.82rem; font-weight: 700; }
+    .score-value.good { color: #22c55e; }
+    .score-value.bad  { color: #ef4444; }
+    .score-value.meh  { color: #eab308; }
+
+    .bar-track {
+      height: 6px;
+      background: #1e2235;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      

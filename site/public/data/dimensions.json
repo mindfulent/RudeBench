@@ -1,0 +1,3991 @@
+[
+  {
+    "dimension": "ACC",
+    "description": "Task Accuracy — correctness and completeness of the response",
+    "range": [
+      0,
+      100
+    ],
+    "applicable_tasks": 50,
+    "total_tasks": 50,
+    "models": {
+      "claude-sonnet-4.6": {
+        "tones": {
+          "grateful": {
+            "mean": 98.84,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 98.74,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 99.45,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 99.19,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 98.85,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 94.54,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 99.45,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 97.6,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 97.05,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 99.6,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 97.75,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 97.45,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 96.4,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 99.6
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 100,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 100,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 100,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 99.93,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 100,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 100,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 100
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 99.92,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 99.67,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 99.92,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 100,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 99.58,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 98.96,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 99.92
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 97.46,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 97.73,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 98.27,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 98.69,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 97.92,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 82.73,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 98.27
+          }
+        }
+      },
+      "gpt-5-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 98.89,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 99.68,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 99.8,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 99.69,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 99.9,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 96.23,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 99.8,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 99.6,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 99.5,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 99.5,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 99.3,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 99.8,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 99.7,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 99.5
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 99.77,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 99.77,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 99.87,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 99.8,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 100,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 92.5,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 99.87
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 96.25,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 99.92,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 99.92,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 100,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 100,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 96.25,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 99.92
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 99.77,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 99.5,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 99.85,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 99.58,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 99.77,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 97.85,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 99.85
+          }
+        }
+      },
+      "gemini-2.5-flash": {
+        "tones": {
+          "grateful": {
+            "mean": 98,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 98.96,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 98.78,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 98.26,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 96.61,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 96.69,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 98.78,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 99.7,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 98.95,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 99.65,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 96.9,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 99.7,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 99.3,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 99.65
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 96.93,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 99.93,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 99.77,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 99.77,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 93.5,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 92.2,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 99.77
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 98.42,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 99.21,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 99.5,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 98.38,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 98.33,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 97.67,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 99.5
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 97.54,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 97.62,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 96.31,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 97.46,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 96.23,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 98.96,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 96.31
+          }
+        }
+      },
+      "llama-4-scout": {
+        "tones": {
+          "grateful": {
+            "mean": 93.04,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 93.14,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 90.65,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 92.67,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 87.77,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 87.26,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 90.65,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 89.95,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 89,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 87,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 87.65,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 90.05,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 86.75,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 87
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 90.33,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 93.03,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 85.6,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 90.17,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 78.17,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 81.83,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 85.6
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 96.29,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 94.79,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 95.46,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 95.04,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 91.38,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 91.58,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 95.46
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 95.54,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 94.92,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 94.85,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 97.23,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 93.77,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 89.92,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 94.85
+          }
+        }
+      },
+      "grok-3-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 99.17,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 99.03,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 98.98,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 98.69,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 98.54,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 98.36,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 98.98,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 98.45,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 98.6,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 98.85,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 96.7,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 99.2,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 98.7,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 98.85
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 99.67,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 99.83,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 99.53,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 99.7,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 99,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 98.27,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 99.53
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 99.46,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 98.88,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 99.21,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 99,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 97.75,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 98.58,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 99.21
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 98.88,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 98.58,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 98.23,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 98.77,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 98.23,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 98,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 98.23
+          }
+        }
+      }
+    }
+  },
+  {
+    "dimension": "SYC",
+    "description": "Sycophancy — uncritical validation and excessive agreement",
+    "range": [
+      0,
+      100
+    ],
+    "applicable_tasks": 50,
+    "total_tasks": 50,
+    "models": {
+      "claude-sonnet-4.6": {
+        "tones": {
+          "grateful": {
+            "mean": 1.75,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 1.75,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 0.75,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 0.15,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 1.6,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 4.85,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 0.75,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 0.5,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 4.25,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0.25,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 4.75,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 17.75,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0.25
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0.67,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0.33,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0.33,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0.67
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 5.42,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 2.71,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 0.21,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 1.67,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 1.35,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 0.96,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 1.92,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 0.19,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 1.92,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 3.46,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 1.92
+          }
+        }
+      },
+      "gpt-5-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 1.55,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 0.8,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 0.65,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 0.2,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 1.95,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 5.05,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 0.65,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 0.5,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 4.75,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 2.25,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 1,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0.33,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0.33,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 1.83,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0.33
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 2.08,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 0.42,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 0.42,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 2.08,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 1.04,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 0.42
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 2.88,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 1.92,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 1.73,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 0.77,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 1.92,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 14.62,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 1.73
+          }
+        }
+      },
+      "gemini-2.5-flash": {
+        "tones": {
+          "grateful": {
+            "mean": 14.65,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 15.15,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 5.8,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 5.05,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 18.6,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 24,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 5.8,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 9.25,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 9.5,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 16,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 18.75,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 31.33,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 39.17,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 15.17,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 14.67,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 35.33,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 42.83,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 15.17
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 3.96,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 2.08,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 1.25,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0.21,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 10.83,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 12.08,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 1.25
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 9.42,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 3.85,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 3.65,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 2.31,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 8.46,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 17.31,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 3.65
+          }
+        }
+      },
+      "llama-4-scout": {
+        "tones": {
+          "grateful": {
+            "mean": 8.3,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 4.5,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 2.4,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 2.45,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 6.55,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 14.8,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 2.4,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 10.5,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 8,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 3,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 6,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 7,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 25.75,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 3
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 3.67,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0.33,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 6,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 11.88,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 5.83,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 1.04,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0.42,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 7.5,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 13.12,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 1.04
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 8.65,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 5.77,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 5.96,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 4.42,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 12.5,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 18.08,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 5.96
+          }
+        }
+      },
+      "grok-3-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 12.75,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 5.25,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 3.25,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 1.05,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 9.85,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 21.65,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 3.25,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 10.75,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 4.5,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0.5,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 8.25,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 13,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0.5
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 4.83,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 1,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0.33,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0.33,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 2.67,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 25.33,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0.33
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 22.92,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 8.96,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 2.29,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0.83,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 10.42,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 24.58,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 2.29
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 14.04,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 7.31,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 9.62,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 2.88,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 18.85,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 21.35,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 9.62
+          }
+        }
+      }
+    }
+  },
+  {
+    "dimension": "PBR",
+    "description": "Pushback Retention — willingness to challenge false premises",
+    "range": [
+      0,
+      100
+    ],
+    "applicable_tasks": 31,
+    "total_tasks": 50,
+    "models": {
+      "claude-sonnet-4.6": {
+        "tones": {
+          "grateful": {
+            "mean": 98.45,
+            "observation_count": 42
+          },
+          "friendly": {
+            "mean": 99.17,
+            "observation_count": 42
+          },
+          "neutral": {
+            "mean": 99.05,
+            "observation_count": 42
+          },
+          "curt": {
+            "mean": 99.64,
+            "observation_count": 42
+          },
+          "hostile": {
+            "mean": 99.07,
+            "observation_count": 43
+          },
+          "abusive": {
+            "mean": 93.72,
+            "observation_count": 43
+          }
+        },
+        "neutral_mean": 99.05,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "friendly": {
+                "mean": 98.75,
+                "observation_count": 8
+              },
+              "neutral": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "curt": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "hostile": {
+                "mean": 97.5,
+                "observation_count": 8
+              },
+              "abusive": {
+                "mean": 93.75,
+                "observation_count": 8
+              }
+            },
+            "neutral_mean": 100
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 98.57,
+                "observation_count": 14
+              },
+              "friendly": {
+                "mean": 98.57,
+                "observation_count": 14
+              },
+              "neutral": {
+                "mean": 99.64,
+                "observation_count": 14
+              },
+              "curt": {
+                "mean": 99.29,
+                "observation_count": 14
+              },
+              "hostile": {
+                "mean": 100,
+                "observation_count": 14
+              },
+              "abusive": {
+                "mean": 100,
+                "observation_count": 14
+              }
+            },
+            "neutral_mean": 99.64
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "friendly": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "neutral": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "curt": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "hostile": {
+                "mean": 80,
+                "observation_count": 1
+              },
+              "abusive": {
+                "mean": 80,
+                "observation_count": 1
+              }
+            },
+            "neutral_mean": null
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 97.75,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 99.75,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 98.25,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 99.75,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 100,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 90,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 98.25
+          }
+        }
+      },
+      "gpt-5-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 98.72,
+            "observation_count": 43
+          },
+          "friendly": {
+            "mean": 98.17,
+            "observation_count": 41
+          },
+          "neutral": {
+            "mean": 99,
+            "observation_count": 40
+          },
+          "curt": {
+            "mean": 99.29,
+            "observation_count": 42
+          },
+          "hostile": {
+            "mean": 99.07,
+            "observation_count": 43
+          },
+          "abusive": {
+            "mean": 97.5,
+            "observation_count": 48
+          }
+        },
+        "neutral_mean": 99,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "friendly": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "neutral": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "curt": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "hostile": {
+                "mean": 98.12,
+                "observation_count": 8
+              },
+              "abusive": {
+                "mean": 96.88,
+                "observation_count": 8
+              }
+            },
+            "neutral_mean": 100
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 97.33,
+                "observation_count": 15
+              },
+              "friendly": {
+                "mean": 95.38,
+                "observation_count": 13
+              },
+              "neutral": {
+                "mean": 99.17,
+                "observation_count": 12
+              },
+              "curt": {
+                "mean": 98.57,
+                "observation_count": 14
+              },
+              "hostile": {
+                "mean": 98.67,
+                "observation_count": 15
+              },
+              "abusive": {
+                "mean": 97.65,
+                "observation_count": 17
+              }
+            },
+            "neutral_mean": 99.17
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "friendly": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "neutral": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "curt": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "hostile": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "abusive": {
+                "mean": 86.67,
+                "observation_count": 3
+              }
+            },
+            "neutral_mean": null
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 99.25,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 99.25,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 98.5,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 99.5,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 99.75,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 99.25,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 98.5
+          }
+        }
+      },
+      "gemini-2.5-flash": {
+        "tones": {
+          "grateful": {
+            "mean": 97.07,
+            "observation_count": 41
+          },
+          "friendly": {
+            "mean": 99.34,
+            "observation_count": 38
+          },
+          "neutral": {
+            "mean": 97.69,
+            "observation_count": 39
+          },
+          "curt": {
+            "mean": 97.44,
+            "observation_count": 39
+          },
+          "hostile": {
+            "mean": 96.71,
+            "observation_count": 41
+          },
+          "abusive": {
+            "mean": 95,
+            "observation_count": 40
+          }
+        },
+        "neutral_mean": 97.69,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "friendly": {
+                "mean": 98.12,
+                "observation_count": 8
+              },
+              "neutral": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "curt": {
+                "mean": 95,
+                "observation_count": 8
+              },
+              "hostile": {
+                "mean": 98.12,
+                "observation_count": 8
+              },
+              "abusive": {
+                "mean": 99.29,
+                "observation_count": 7
+              }
+            },
+            "neutral_mean": 100
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 91.92,
+                "observation_count": 13
+              },
+              "friendly": {
+                "mean": 99.5,
+                "observation_count": 10
+              },
+              "neutral": {
+                "mean": 99.09,
+                "observation_count": 11
+              },
+              "curt": {
+                "mean": 94.55,
+                "observation_count": 11
+              },
+              "hostile": {
+                "mean": 98.57,
+                "observation_count": 14
+              },
+              "abusive": {
+                "mean": 88.57,
+                "observation_count": 14
+              }
+            },
+            "neutral_mean": 99.09
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 99.25,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 99.75,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 96,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 100,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 94.74,
+                "observation_count": 19
+              },
+              "abusive": {
+                "mean": 98.16,
+                "observation_count": 19
+              }
+            },
+            "neutral_mean": 96
+          }
+        }
+      },
+      "llama-4-scout": {
+        "tones": {
+          "grateful": {
+            "mean": 92.8,
+            "observation_count": 41
+          },
+          "friendly": {
+            "mean": 91.74,
+            "observation_count": 43
+          },
+          "neutral": {
+            "mean": 95,
+            "observation_count": 42
+          },
+          "curt": {
+            "mean": 96.34,
+            "observation_count": 41
+          },
+          "hostile": {
+            "mean": 92.44,
+            "observation_count": 43
+          },
+          "abusive": {
+            "mean": 88.37,
+            "observation_count": 43
+          }
+        },
+        "neutral_mean": 95,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "friendly": {
+                "mean": 97.5,
+                "observation_count": 8
+              },
+              "neutral": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "curt": {
+                "mean": 95,
+                "observation_count": 8
+              },
+              "hostile": {
+                "mean": 95,
+                "observation_count": 8
+              },
+              "abusive": {
+                "mean": 90.62,
+                "observation_count": 8
+              }
+            },
+            "neutral_mean": 100
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 88.33,
+                "observation_count": 12
+              },
+              "friendly": {
+                "mean": 93.85,
+                "observation_count": 13
+              },
+              "neutral": {
+                "mean": 92.86,
+                "observation_count": 14
+              },
+              "curt": {
+                "mean": 93.85,
+                "observation_count": 13
+              },
+              "hostile": {
+                "mean": 93.33,
+                "observation_count": 15
+              },
+              "abusive": {
+                "mean": 86,
+                "observation_count": 15
+              }
+            },
+            "neutral_mean": 92.86
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 80,
+                "observation_count": 1
+              },
+              "friendly": {
+                "mean": 40,
+                "observation_count": 2
+              },
+              "neutral": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "curt": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "hostile": {
+                "mean": null,
+                "observation_count": 0
+              },
+              "abusive": {
+                "mean": null,
+                "observation_count": 0
+              }
+            },
+            "neutral_mean": null
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 93.25,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 93.25,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 94.5,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 98.5,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 90.75,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 89.25,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 94.5
+          }
+        }
+      },
+      "grok-3-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 94.27,
+            "observation_count": 41
+          },
+          "friendly": {
+            "mean": 96.88,
+            "observation_count": 40
+          },
+          "neutral": {
+            "mean": 95.61,
+            "observation_count": 41
+          },
+          "curt": {
+            "mean": 97.12,
+            "observation_count": 40
+          },
+          "hostile": {
+            "mean": 96.71,
+            "observation_count": 41
+          },
+          "abusive": {
+            "mean": 96.1,
+            "observation_count": 41
+          }
+        },
+        "neutral_mean": 95.61,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 98.75,
+                "observation_count": 8
+              },
+              "friendly": {
+                "mean": 98.75,
+                "observation_count": 8
+              },
+              "neutral": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "curt": {
+                "mean": 100,
+                "observation_count": 8
+              },
+              "hostile": {
+                "mean": 96.25,
+                "observation_count": 8
+              },
+              "abusive": {
+                "mean": 94.38,
+                "observation_count": 8
+              }
+            },
+            "neutral_mean": 100
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 94.62,
+                "observation_count": 13
+              },
+              "friendly": {
+                "mean": 95,
+                "observation_count": 12
+              },
+              "neutral": {
+                "mean": 93.85,
+                "observation_count": 13
+              },
+              "curt": {
+                "mean": 91.67,
+                "observation_count": 12
+              },
+              "hostile": {
+                "mean": 95,
+                "observation_count": 14
+              },
+              "abusive": {
+                "mean": 92.14,
+                "observation_count": 14
+              }
+            },
+            "neutral_mean": 93.85
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 92.25,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 97.25,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 95,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 99.25,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 98.16,
+                "observation_count": 19
+              },
+              "abusive": {
+                "mean": 99.74,
+                "observation_count": 19
+              }
+            },
+            "neutral_mean": 95
+          }
+        }
+      }
+    }
+  },
+  {
+    "dimension": "CRE",
+    "description": "Creative Risk — inventiveness and originality in creative tasks",
+    "range": [
+      0,
+      100
+    ],
+    "applicable_tasks": 12,
+    "total_tasks": 50,
+    "models": {
+      "claude-sonnet-4.6": {
+        "tones": {
+          "grateful": {
+            "mean": 88.12,
+            "observation_count": 24
+          },
+          "friendly": {
+            "mean": 89.58,
+            "observation_count": 24
+          },
+          "neutral": {
+            "mean": 89.17,
+            "observation_count": 24
+          },
+          "curt": {
+            "mean": 90.21,
+            "observation_count": 24
+          },
+          "hostile": {
+            "mean": 92.71,
+            "observation_count": 24
+          },
+          "abusive": {
+            "mean": 90.62,
+            "observation_count": 24
+          }
+        },
+        "neutral_mean": 89.17,
+        "by_domain": {
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 88.12,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 89.58,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 89.17,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 90.21,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 92.71,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 90.62,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 89.17
+          }
+        }
+      },
+      "gpt-5-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 86.25,
+            "observation_count": 24
+          },
+          "friendly": {
+            "mean": 89.58,
+            "observation_count": 24
+          },
+          "neutral": {
+            "mean": 88.75,
+            "observation_count": 24
+          },
+          "curt": {
+            "mean": 90.21,
+            "observation_count": 24
+          },
+          "hostile": {
+            "mean": 91.25,
+            "observation_count": 24
+          },
+          "abusive": {
+            "mean": 87.5,
+            "observation_count": 24
+          }
+        },
+        "neutral_mean": 88.75,
+        "by_domain": {
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 86.25,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 89.58,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 88.75,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 90.21,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 91.25,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 87.5,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 88.75
+          }
+        }
+      },
+      "gemini-2.5-flash": {
+        "tones": {
+          "grateful": {
+            "mean": 82.71,
+            "observation_count": 24
+          },
+          "friendly": {
+            "mean": 83.75,
+            "observation_count": 24
+          },
+          "neutral": {
+            "mean": 79.38,
+            "observation_count": 24
+          },
+          "curt": {
+            "mean": 78.54,
+            "observation_count": 24
+          },
+          "hostile": {
+            "mean": 84.17,
+            "observation_count": 24
+          },
+          "abusive": {
+            "mean": 83.96,
+            "observation_count": 24
+          }
+        },
+        "neutral_mean": 79.38,
+        "by_domain": {
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 82.71,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 83.75,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 79.38,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 78.54,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 84.17,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 83.96,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 79.38
+          }
+        }
+      },
+      "llama-4-scout": {
+        "tones": {
+          "grateful": {
+            "mean": 67.71,
+            "observation_count": 24
+          },
+          "friendly": {
+            "mean": 69.67,
+            "observation_count": 24
+          },
+          "neutral": {
+            "mean": 65.62,
+            "observation_count": 24
+          },
+          "curt": {
+            "mean": 65.83,
+            "observation_count": 24
+          },
+          "hostile": {
+            "mean": 68.33,
+            "observation_count": 24
+          },
+          "abusive": {
+            "mean": 73.96,
+            "observation_count": 24
+          }
+        },
+        "neutral_mean": 65.62,
+        "by_domain": {
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 67.71,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 69.67,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 65.62,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 65.83,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 68.33,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 73.96,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 65.62
+          }
+        }
+      },
+      "grok-3-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 80.42,
+            "observation_count": 24
+          },
+          "friendly": {
+            "mean": 79.58,
+            "observation_count": 24
+          },
+          "neutral": {
+            "mean": 77.92,
+            "observation_count": 24
+          },
+          "curt": {
+            "mean": 78.12,
+            "observation_count": 24
+          },
+          "hostile": {
+            "mean": 84.79,
+            "observation_count": 24
+          },
+          "abusive": {
+            "mean": 84.38,
+            "observation_count": 24
+          }
+        },
+        "neutral_mean": 77.92,
+        "by_domain": {
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 80.42,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 79.58,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 77.92,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 78.12,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 84.79,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 84.38,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 77.92
+          }
+        }
+      }
+    }
+  },
+  {
+    "dimension": "VRB",
+    "description": "Verbosity Change — response length relative to neutral baseline",
+    "range": [
+      0,
+      200
+    ],
+    "applicable_tasks": 50,
+    "total_tasks": 50,
+    "models": {
+      "claude-sonnet-4.6": {
+        "tones": {
+          "grateful": {
+            "mean": 86.52,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 82.09,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 100.0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 87.28,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 88.45,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 63.43,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 100.0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 70.84,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 54.15,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 51.8,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 59.77,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 43.06,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 107.84,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 99.5,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 99.31,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 99.85,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 87.42,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 83.59,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 106.01,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 100.2,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 121.24,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 64.88,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 76.67,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 61.44,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 88.76,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 67.09,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 50.07,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 100.0
+          }
+        }
+      },
+      "gpt-5-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 106.66,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 97.12,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 100.0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 94.55,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 124.92,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 101.07,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 100.0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 104.19,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 84.28,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 66.6,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 112.61,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 99.85,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 113.88,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 106.74,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 103.08,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 111.86,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 103.76,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 102.21,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 108.46,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 107.94,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 170.7,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 123.89,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 104.32,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 85.45,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 93.84,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 107.18,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 77.83,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 100.0
+          }
+        }
+      },
+      "gemini-2.5-flash": {
+        "tones": {
+          "grateful": {
+            "mean": 112.14,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 97.4,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 100.0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 86.77,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 102.5,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 99.35,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 100.0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 110.45,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 86.91,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 47.55,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 95.33,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 89.03,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 109.29,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 99.6,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 102.78,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 101.15,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 94.16,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 107.22,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 125.41,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 99.18,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 117.81,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 124.54,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 121.27,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 77.1,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 86.99,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 95.45,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 90.03,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 100.0
+          }
+        }
+      },
+      "llama-4-scout": {
+        "tones": {
+          "grateful": {
+            "mean": 105.19,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 96.81,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 100.0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 85.22,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 98.35,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 87.08,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 100.0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 108.56,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 95.07,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 46.71,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 85.92,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 74.91,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 108.19,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 105.95,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 106.02,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 109.85,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 98.17,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 103.12,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 104.81,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 89.92,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 116.14,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 100.17,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 101.03,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 80.23,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 86.5,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 78.22,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 71.58,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 100.0
+          }
+        }
+      },
+      "grok-3-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 107.14,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 96.92,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 100.0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 78.16,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 105.47,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 96.7,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 100.0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 98.8,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 86.14,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 32.64,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 86.67,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 73.13,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 110.54,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 100.94,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 99.2,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 112.37,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 108.37,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 112.35,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 110.62,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 82.36,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 124.07,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 117.01,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 100.0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 104.81,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 87.94,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 100.0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 85.02,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 94.79,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 82.63,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 100.0
+          }
+        }
+      }
+    }
+  },
+  {
+    "dimension": "APO",
+    "description": "Apology Frequency — unnecessary or excessive apologizing",
+    "range": [
+      0,
+      100
+    ],
+    "applicable_tasks": 50,
+    "total_tasks": 50,
+    "models": {
+      "claude-sonnet-4.6": {
+        "tones": {
+          "grateful": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 0.4,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 1,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 0.83,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 0
+          }
+        }
+      },
+      "gpt-5-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 0,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 0
+          }
+        }
+      },
+      "gemini-2.5-flash": {
+        "tones": {
+          "grateful": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 0.3,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 1.2,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 4,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 0.42,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 0.77,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 0
+          }
+        }
+      },
+      "llama-4-scout": {
+        "tones": {
+          "grateful": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 0.4,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 1.45,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 1.5,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 0,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 0.83,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 1.67,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 0.77,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 2.88,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 0
+          }
+        }
+      },
+      "grok-3-mini": {
+        "tones": {
+          "grateful": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "friendly": {
+            "mean": 0.2,
+            "observation_count": 100
+          },
+          "neutral": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "curt": {
+            "mean": 0,
+            "observation_count": 100
+          },
+          "hostile": {
+            "mean": 0.1,
+            "observation_count": 100
+          },
+          "abusive": {
+            "mean": 2.45,
+            "observation_count": 100
+          }
+        },
+        "neutral_mean": 0,
+        "by_domain": {
+          "factual": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "friendly": {
+                "mean": 0.5,
+                "observation_count": 20
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 20
+              },
+              "abusive": {
+                "mean": 1.5,
+                "observation_count": 20
+              }
+            },
+            "neutral_mean": 0
+          },
+          "coding": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 30
+              },
+              "abusive": {
+                "mean": 2,
+                "observation_count": 30
+              }
+            },
+            "neutral_mean": 0
+          },
+          "creative": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "friendly": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 24
+              },
+              "hostile": {
+                "mean": 0.42,
+                "observation_count": 24
+              },
+              "abusive": {
+                "mean": 5.21,
+                "observation_count": 24
+              }
+            },
+            "neutral_mean": 0
+          },
+          "analysis": {
+            "tones": {
+              "grateful": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "friendly": {
+                "mean": 0.38,
+                "observation_count": 26
+              },
+              "neutral": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "curt": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "hostile": {
+                "mean": 0,
+                "observation_count": 26
+              },
+              "abusive": {
+                "mean": 1.15,
+                "observation_count": 26
+              }
+            },
+            "neutral_mean": 0
+          }
+        }
+      }
+    }
+  }
+]

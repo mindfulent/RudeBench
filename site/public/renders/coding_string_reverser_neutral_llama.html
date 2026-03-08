@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>String Reverser Tool</title>
+<style>
+  body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to bottom, #f7f7f7, #eaeaea);
+  }
+  .container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .output {
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .highlight {
+    animation: highlight 1s;
+  }
+  @keyframes highlight {
+    0% {
+      background-color: yellow;
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <input id="inputField" type="text" placeholder="Type something here...">
+  <div id="output" class="output"></div>
+</div>
+
+<script>
+  const inputField = document.getElementById('inputField');
+  const outputDiv = document.getElementById('output');
+
+  inputField.addEventListener('input', function() {
+    const input = inputField.value;
+    const reversed = input.split('').reverse().join('');
+    outputDiv.innerHTML = ''; // Clear previous output
+
+    // Build the output character by character with a delay
+    reversed.split('').forEach((char, index) => {
+      const span = document.createElement('span');
+      span.textContent = char;
+      outputDiv.appendChild(span);
+      // Apply highlight effect
+      setTimeout(() => {
+        span.classList.add('highlight');
+        // Remove highlight after animation ends
+        setTimeout(() => span.classList.remove('highlight'), 1000);
+      }, index * 50); // Adjust timing as needed
+    });
+  });
+</script>
+
+</body>
+</html>

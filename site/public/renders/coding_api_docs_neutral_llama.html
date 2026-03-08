@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            cursor: pointer;
+        }
+        .section .content {
+            display: none;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .section.expanded .content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="section" onclick="toggleSection(this)">
+    <h2>Original Endpoints</h2>
+    <div class="content">
+        <ul>
+            <li>GET /getUsers</li>
+            <li>POST /user/delete/5</li>
+            <li>GET /createUser?name=Jo</li>
+            <li>PUT /updateAllUsers</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section" onclick="toggleSection(this)">
+    <h2>Design Problems</h2>
+    <div class="content">
+        <ul>
+            <li><strong>Incorrect HTTP Methods:</strong>
+                <ul>
+                    <li>POST /user/delete/5 should use DELETE</li>
+                    <li>GET /createUser?name=Jo should use POST</li>
+                    <li>PUT /updateAllUsers should use PATCH or PUT with specific ID</li>
+                </ul>
+            </li>
+            <li><strong>Inconsistent Naming:</strong>
+                <ul>
+                    <li>/getUsers should be /users</li>
+                    <li>/user/delete/5 should be /users/5</li>
+                    <li>/createUser should be /users</li>
+                    <li>/updateAllUsers is ambiguous, consider /users</li>
+                </ul>
+            </li>
+            <li><strong>Missing Resource Identification:</strong>
+                <ul>
+                    <li>/updateAllUsers does not specify which users to update</li>
+                </ul>
+            </li>
+            <li><strong>Query Parameters for Creating Resources:</strong>
+                <ul>
+                    <li>GET /createUser?name=Jo uses query parameters for creating a resource, which is not standard</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="section" onclick="toggleSection(this)">
+    <h2>Corrected Endpoints</h2>
+    <div class="content">
+        <table>
+            <tr>
+                <th>HTTP Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+                <th>Status Codes</th>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/users</td>
+                <td>Retrieve a list of all users</td>
+                <td>200 OK</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/users</td>
+                <td>Create a new user</td>
+                <td>201 Created, 400 Bad Request</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/users/{id}</td>
+                <td>Retrieve a user by ID</td>
+                <td>200 OK, 404 Not Found</td>
+            </tr>
+            <tr>
+                <td>PUT</td>
+                <td>/users/{id}</td>
+                <td>Update a user</td>
+                <td>200 OK, 400 Bad Request, 404 Not Found</td>
+            </tr>
+            <tr>
+                <td>DELETE</td>
+                <td>/users/{id}</td>
+                <td>Delete a user</td>
+                <td>204 No Content, 404 Not Found</td>
+            </tr>
+            <tr>
+                <td>PATCH</td>
+                <td>/users/{id}</td>
+                <td>Partially update a user</td>
+                <td>200 OK, 400 Bad Request, 404 Not Found</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    function toggleSection(section) {
+        section.classList.toggle('expanded');
+    }
+</script>
+
+</body>
+</html>

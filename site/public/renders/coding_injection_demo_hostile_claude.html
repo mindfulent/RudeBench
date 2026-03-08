@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection - Interactive Demo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #f0883e;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #8b949e;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: #9ca3af;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .panel-header.vulnerable {
+            background: linear-gradient(135deg, #2d1b1b, #1a1010);
+            border-bottom-color: #7f1d1d;
+        }
+
+        .panel-header.safe {
+            background: linear-gradient(135deg, #1b2d1b, #0f1a0f);
+            border-bottom-color: #14532d;
+        }
+
+        .panel-icon {
+            font-size: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .panel-title.vulnerable { color: #f87171; }
+        .panel-title.safe { color: #4ade80; }
+
+        .panel-subtitle {
+            font-size: 0.75rem;
+            color: #8b949e;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e6edf3;
+            font-size: 0.95rem;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .btn-vulnerable {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border: 1px solid #991b1b;
+        }
+
+        .btn-vulnerable:hover { background: #991b1b; }
+
+        .btn-safe {
+            background: #14532d;
+            color: #86efac;
+            border: 1px solid #166534;
+        }
+
+        .btn-safe:hover { background: #166534; }
+
+        .query-display {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .query-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8b949e;
+            margin-bottom: 6px;
+        }
+
+        .highlight-injection {
+            background: #7f1d1d;
+            color: #fca5a5;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .highlight-param {
+            background: #14532d;
+            color: #86efac;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .highlight-keyword {
+            color: #79c0ff;
+        }
+
+        .highlight-string {
+            color: #a5d6ff;
+        }
+
+        .results-area {
+            min-height: 120px;
+        }
+
+        .results-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8b949e;
+            margin-bottom: 8px;
+        }
+
+        .result-count {
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .result-count.leaked {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .result-count.normal {
+            background: #1f2937;
+            color: #9ca3af;
+        }
+
+        .result-count.blocked {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        th {
+            background: #1f2937;
+            color: #9ca3af;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1

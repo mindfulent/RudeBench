@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Search Visualization</title>
+<style>
+  .box {
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+    border: 1px solid black;
+    margin: 0 2px;
+  }
+  .highlight {
+    background-color: yellow;
+  }
+  .searchRange {
+    border: 2px solid blue;
+  }
+  .result {
+    font-weight: bold;
+    color: green;
+  }
+  .notFound {
+    font-weight: bold;
+    color: red;
+  }
+</style>
+</head>
+<body>
+
+<input id="target" type="number" placeholder="Target">
+<button id="start">Start</button>
+<button id="step" disabled>Step</button>
+<div id="arrayDisplay"></div>
+<div id="result"></div>
+
+<script>
+  let array = [];
+  let target;
+  let left, right;
+  let currentStep = 0;
+  let steps = [];
+
+  // Generate a sorted array of 10 numbers for demonstration
+  for (let i = 0; i < 10; i++) {
+    array.push(i * 2);
+  }
+
+  document.getElementById('start').addEventListener('click', startSearch);
+  document.getElementById('step').addEventListener('click', stepSearch);
+
+  function startSearch() {
+    target = parseInt(document.getElementById('target').value);
+    left = 0;
+    right = array.length - 1;
+    currentStep = 0;
+    steps = [];
+    document.getElementById('result').innerText = '';
+    document.getElementById('step').disabled = false;
+    document.getElementById('start').disabled = true;
+    updateDisplay();
+    performSearch();
+  }
+
+  function stepSearch() {
+    if (currentStep < steps.length) {
+      left = steps[currentStep].left;
+      right = steps[currentStep].right;
+      currentStep++;
+      updateDisplay();
+    } else {
+      document.getElementById('step').disabled = true;
+      document.getElementById('start').disabled = false;
+    }
+  }
+
+  function performSearch() {
+    if (left <= right) {
+      let mid = Math.floor((left + right) / 2);
+      steps.push({left, right});
+      if (array[mid] === target) {
+        document.getElementById('result').innerHTML = `<span class="result">Target ${target} found!</span>`;
+        document.getElementById('step').disabled = true;
+        document.getElementById('start').disabled = false;
+        left = right = mid;
+        updateDisplay();
+      } else if (array[mid] < target) {
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    } else {
+      document.getElementById('result').innerHTML = `<span class="notFound">Target ${target} not found!</span>`;
+      document.getElementById('step').disabled = true;
+      document.getElementById('start').disabled = false;
+    }
+  }
+
+  function updateDisplay() {
+    let arrayDisplay = document.getElementById('arrayDisplay');
+    arrayDisplay.innerHTML = '';
+    for (let i = 0; i < array.length; i++) {
+      let box = document.createElement('div');
+      box.className = 'box';
+      box.innerText = array[i];
+      if (i >= left && i <= right) {
+        box.classList.add('searchRange');
+      }
+      if (steps.length > 0 && i === Math.floor((steps[steps.length - 1].left + steps[steps.length - 1].right) / 2)) {
+        box.classList.add('highlight');
+      }
+      arrayDisplay.appendChild(box);
+    }
+  }
+</script>
+
+</body>
+</html>

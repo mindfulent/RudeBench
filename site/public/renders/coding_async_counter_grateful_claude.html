@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Race Condition Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0f0;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      color: #c9b8ff;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888aaa;
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+
+    .panels {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 1100px;
+      margin: 0 auto 40px auto;
+    }
+
+    .panel {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 28px 24px;
+      flex: 1 1 340px;
+      max-width: 480px;
+      border: 2px solid transparent;
+      position: relative;
+      transition: border-color 0.3s;
+    }
+
+    .panel.buggy {
+      border-color: #ff4d6d44;
+    }
+
+    .panel.fixed {
+      border-color: #4dffb044;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel.buggy .panel-title { color: #ff4d6d; }
+    .panel.fixed  .panel-title { color: #4dffb0; }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .panel.buggy .badge { background: #ff4d6d33; color: #ff4d6d; }
+    .panel.fixed  .badge { background: #4dffb033; color: #4dffb0; }
+
+    .counter-display {
+      background: #0f0f1a;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+      position: relative;
+    }
+
+    .count-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #666888;
+      margin-bottom: 4px;
+    }
+
+    .count-value {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .panel.buggy .count-value { color: #ff4d6d; }
+    .panel.fixed  .count-value { color: #4dffb0; }
+
+    .count-expected {
+      font-size: 0.8rem;
+      color: #666888;
+      margin-top: 8px;
+    }
+
+    .count-expected span {
+      color: #aaa;
+      font-weight: 600;
+    }
+
+    .discrepancy {
+      font-size: 0.8rem;
+      margin-top: 6px;
+      font-weight: 600;
+      min-height: 18px;
+    }
+
+    .panel.buggy .discrepancy { color: #ffaa00; }
+    .panel.fixed  .discrepancy { color: #4dffb0; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: transform 0.1s, opacity 0.2s;
+      margin-bottom: 10px;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .panel.buggy .btn-increment { background: #ff4d6d; color: #fff; }
+    .panel.fixed  .btn-increment { background: #4dffb0; color: #0f1a14; }
+
+    .btn-reset {
+      background: #2a2a3e;
+      color: #888aaa;
+      font-size: 0.85rem;
+      padding: 10px;
+    }
+
+    .btn-reset:hover { background: #33334a; color: #bbb; }
+
+    .pending-indicator {
+      font-size: 0.78rem;
+      color: #666888;
+      text-align: center;
+      min-height: 18px;
+      margin-bottom: 8px;
+    }
+
+    .pending-indicator.active { color: #ffaa00; }
+
+    /* Timeline / log */
+    .log-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #555770;
+      margin-bottom: 6px;
+    }
+
+    .log {
+      background: #0f0f1a;
+      border-radius: 8px;
+      padding: 10px 12px;
+      height: 110px;
+      overflow-y: auto;
+      font-size: 0.72rem;
+      font-family: 'Courier New', monospace;
+      color: #666888;
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
+    }
+
+    .log-entry { margin-bottom: 3px; line-height: 1.4; }
+    .log-entry.warn  { color: #ffaa00; }
+    .log-entry.ok    { color: #4dffb0; }
+    .log-entry.info  { color: #7788ff; }
+
+    /* Explanation section */
+    .explanation {
+      max-width: 1100px;
+      margin: 0 auto 40px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .explain-card {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 24px 28px;
+    }
+
+    .explain-card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .explain-card.how h2  { color: #ff4d6d; }
+    .explain-card.fix h2  { color: #4dffb0; }
+    .explain-card.tip h2  { color: #c9b8ff; }
+
+    .explain-card p, .explain-card li {
+      color: #9999bb;
+      line-height: 1.7;
+      font-size: 0.92rem;
+    }
+
+    .explain-card ul {
+      padding-left: 20px;
+      margin-top: 8px;
+    }
+
+    .explain-card li { margin-bottom: 6px; }
+
+    .code-block {
+      background: #0f0f1a;
+      border-radius: 10px;
+      padding: 16px 18px

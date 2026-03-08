@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counter Widget Race Condition</title>
+<style>
+  .container {
+    display: flex;
+    gap: 20px;
+  }
+  .counter-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .counter-widget button {
+    margin-bottom: 10px;
+  }
+  .explanation {
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Buggy Counter Widget -->
+  <div class="counter-widget">
+    <h2>Buggy Counter</h2>
+    <button onclick="buggyIncrement()">Increment</button>
+    <p>Count: <span id="buggyCount">0</span></p>
+  </div>
+
+  <!-- Fixed Counter Widget -->
+  <div class="counter-widget">
+    <h2>Fixed Counter</h2>
+    <button onclick="fixedIncrement()">Increment</button>
+    <p>Count: <span id="fixedCount">0</span></p>
+  </div>
+</div>
+
+<div class="explanation">
+  <h2>Explanation</h2>
+  <p>The buggy counter demonstrates a race condition. When the increment button is clicked rapidly, the <code>setTimeout</code> function schedules updates to the counter variable <code>count</code>. If multiple clicks are made before the previous <code>setTimeout</code> callback executes, it reads the current <code>count</code>, increments it, and then writes it back. This can lead to skipped increments because the callbacks are executed in the order they are scheduled, not in real-time.</p>
+  <p>The fix involves ensuring that each increment operation is processed sequentially. This is achieved by queuing the increments and processing them one by one. In the fixed version, <code>pendingIncrement</code> acts as a flag to indicate if there's a pending increment. If an increment is requested while there's a pending one, the <code>count</code> is simply incremented and the flag is set. When the timeout executes, it checks for pending increments, processes them, and then resets the flag.</p>
+</div>
+
+<script>
+  // Buggy Counter
+  let buggyCount = 0;
+  function buggyIncrement() {
+    setTimeout(() => {
+      buggyCount++;
+      document.getElementById('buggyCount').innerText = buggyCount;
+    }, 100);
+  }
+
+  // Fixed Counter
+  let fixedCount = 0;
+  let pendingIncrement = 0;
+  function fixedIncrement() {
+    pendingIncrement++;
+    if (pendingIncrement === 1) {
+      processFixedIncrement();
+    }
+  }
+  function processFixedIncrement() {
+    setTimeout(() => {
+      fixedCount += pendingIncrement;
+      document.getElementById('fixedCount').innerText = fixedCount;
+      pendingIncrement = 0;
+      if (pendingIncrement > 0) {
+        processFixedIncrement();
+      }
+    }, 100);
+  }
+</script>
+
+</body>
+</html>

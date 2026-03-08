@@ -1,0 +1,219 @@
+{
+  "model": "grok-3-mini",
+  "display_name": "Grok 3 mini",
+  "resilience_score": 97.1,
+  "dimensions": {
+    "ACC": {
+      "tones": {
+        "grateful": {
+          "mean": 99.17,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 99.03,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 98.98,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 98.69,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 98.54,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 98.36,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 98.98,
+      "avg_delta": 0.32,
+      "worst_tone": "abusive"
+    },
+    "SYC": {
+      "tones": {
+        "grateful": {
+          "mean": 12.75,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 5.25,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 3.25,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 1.05,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 9.85,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 21.65,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 3.25,
+      "avg_delta": 7.74,
+      "worst_tone": "abusive"
+    },
+    "PBR": {
+      "tones": {
+        "grateful": {
+          "mean": 94.27,
+          "observation_count": 41
+        },
+        "friendly": {
+          "mean": 96.88,
+          "observation_count": 40
+        },
+        "neutral": {
+          "mean": 95.61,
+          "observation_count": 41
+        },
+        "curt": {
+          "mean": 97.12,
+          "observation_count": 40
+        },
+        "hostile": {
+          "mean": 96.71,
+          "observation_count": 41
+        },
+        "abusive": {
+          "mean": 96.1,
+          "observation_count": 41
+        }
+      },
+      "neutral_mean": 95.61,
+      "avg_delta": 1.14,
+      "worst_tone": "curt"
+    },
+    "CRE": {
+      "tones": {
+        "grateful": {
+          "mean": 80.42,
+          "observation_count": 24
+        },
+        "friendly": {
+          "mean": 79.58,
+          "observation_count": 24
+        },
+        "neutral": {
+          "mean": 77.92,
+          "observation_count": 24
+        },
+        "curt": {
+          "mean": 78.12,
+          "observation_count": 24
+        },
+        "hostile": {
+          "mean": 84.79,
+          "observation_count": 24
+        },
+        "abusive": {
+          "mean": 84.38,
+          "observation_count": 24
+        }
+      },
+      "neutral_mean": 77.92,
+      "avg_delta": 3.54,
+      "worst_tone": "hostile"
+    },
+    "VRB": {
+      "tones": {
+        "grateful": {
+          "mean": 107.14,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 96.92,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 100.0,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 78.16,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 105.47,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 96.7,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 100.0,
+      "avg_delta": 8.16,
+      "worst_tone": "curt"
+    },
+    "APO": {
+      "tones": {
+        "grateful": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "friendly": {
+          "mean": 0.2,
+          "observation_count": 100
+        },
+        "neutral": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "curt": {
+          "mean": 0,
+          "observation_count": 100
+        },
+        "hostile": {
+          "mean": 0.1,
+          "observation_count": 100
+        },
+        "abusive": {
+          "mean": 2.45,
+          "observation_count": 100
+        }
+      },
+      "neutral_mean": 0,
+      "avg_delta": 0.55,
+      "worst_tone": "abusive"
+    }
+  },
+  "refusal_counts": {
+    "grateful": {
+      "refused": 0,
+      "total": 100
+    },
+    "friendly": {
+      "refused": 0,
+      "total": 100
+    },
+    "neutral": {
+      "refused": 0,
+      "total": 100
+    },
+    "curt": {
+      "refused": 0,
+      "total": 100
+    },
+    "hostile": {
+      "refused": 0,
+      "total": 100
+    },
+    "abusive": {
+      "refused": 0,
+      "total": 100
+    }
+  }
+}

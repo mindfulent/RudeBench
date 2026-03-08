@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Singleton Theme Toggle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    transition: background 0.3s, color 0.3s;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  /* ── THEMES ── */
+  body.light {
+    background: #f0f4f8;
+    color: #1a202c;
+  }
+  body.dark {
+    background: #1a202c;
+    color: #f0f4f8;
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid currentColor;
+  }
+
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  body.light .card {
+    background: #ffffff;
+    border-color: #cbd5e0;
+  }
+  body.dark .card {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+
+  .card p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    opacity: 0.8;
+  }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  body.light .badge {
+    background: #bee3f8;
+    color: #2b6cb0;
+  }
+  body.dark .badge {
+    background: #2b6cb0;
+    color: #bee3f8;
+  }
+
+  /* ── TOGGLE BUTTON ── */
+  .toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    border: 2px solid currentColor;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: transparent;
+    color: inherit;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .toggle-btn:hover {
+    background: currentColor;
+  }
+
+  body.light .toggle-btn:hover { color: #f0f4f8; }
+  body.dark  .toggle-btn:hover { color: #1a202c; }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid currentColor;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    text-align: center;
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  body.light .status-bar { background: #c6f6d5; color: #276749; }
+  body.dark  .status-bar { background: #276749; color: #c6f6d5; }
+
+  /* ── CRITIQUE SECTION ── */
+  .critique {
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 5px solid #e53e3e;
+    margin-bottom: 1.5rem;
+    transition: background 0.3s;
+  }
+
+  body.light .critique { background: #fff5f5; }
+  body.dark  .critique { background: #2d1f1f; }
+
+  .critique h2 { color: #e53e3e; margin-bottom: 1rem; }
+
+  .critique ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .critique ul li::before {
+    content: '✗ ';
+    color: #e53e3e;
+    font-weight: 700;
+  }
+
+  .critique ul li {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  /* ── ALTERNATIVES SECTION ── */
+  .alternatives {
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 5px solid #38a169;
+    transition: background 0.3s;
+  }
+
+  body.light .alternatives { background: #f0fff4; }
+  body.dark  .alternatives { background: #1a2e1f; }
+
+  .alternatives h2 { color: #38a169; margin-bottom: 1rem; }
+
+  .alt-item {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .alt-item strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.95rem;
+  }
+
+  body.light .alt-item strong { color: #276749; }
+  body.dark  .alt-item strong { color: #68d391; }
+
+  code {
+    font-family: monospace;
+    font-size: 0.85rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    transition: background 0.3s;
+  }
+
+  body.light code { background: #edf2f7; }
+  body.dark  code { background: #4a5568; }
+</style>
+</head>
+<body class="light">
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <h1>🔁 Singleton Theme Demo</h1>
+    <button class="toggle-btn" id="mainToggle" onclick="ThemeManager.getInstance().toggle()">
+      🌙 Dark Mode
+    </button>
+  </header>
+
+  <!-- STATUS BAR (subscriber 1) -->
+  <div class="status-bar" id="statusBar">
+    ✅ ThemeManager singleton created. Current theme: <strong>light</strong>.
+    Instance ID: <span id="instanceId"></span>
+  </div>
+
+  <!-- CARDS GRID (subscribers 2-4) -->
+  <div class="grid">
+    <div class="card">
+      <span class="badge">Component A</span>
+      <h2>Navigation Widget</h2>
+      <p>This card has no idea a singleton exists

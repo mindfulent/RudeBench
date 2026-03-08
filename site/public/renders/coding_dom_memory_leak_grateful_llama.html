@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Leak Demonstration</title>
+<style>
+  .widget {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+  }
+</style>
+
+<body>
+  <h1>Memory Leak Demonstration</h1>
+  <button id="add-widget-btn">Add Widget</button>
+  <button id="clear-widgets-btn">Clear Widgets</button>
+  <p>Widget count: <span id="widget-count">0</span></p>
+  <p>Memory usage: <span id="memory-usage">0</span> MB</p>
+
+  <h2>Buggy Version (Memory Leak)</h2>
+  <div id="buggy-dashboard"></div>
+
+  <h2>Fixed Version (No Memory Leak)</h2>
+  <div id="fixed-dashboard"></div>
+
+  <script>
+    let widgetCount = 0;
+    let memoryUsage = 0;
+
+    // Function to update widget count and memory usage
+    function updateCounts() {
+      document.getElementById('widget-count').innerText = widgetCount;
+      try {
+        performance.memory.usedJSHeapSize /= (1024 * 1024);
+        memoryUsage = performance.memory.usedJSHeapSize;
+        document.getElementById('memory-usage').innerText = memoryUsage.toFixed(2);
+      } catch (e) {
+        // Not supported in all browsers
+      }
+    }
+
+    // Buggy version (memory leak)
+    let buggyWidgets = [];
+    document.getElementById('add-widget-btn').addEventListener('click', () => {
+      const buggyWidget = document.createElement('div');
+      buggyWidget.className = 'widget';
+      buggyWidget.innerHTML = `Buggy Widget ${widgetCount}`;
+      document.getElementById('buggy-dashboard').appendChild(buggyWidget);
+
+      // Attach event listener and store DOM reference (memory leak)
+      buggyWidget.addEventListener('click', () => {
+        console.log(`Buggy widget ${widgetCount} clicked`);
+      });
+      buggyWidgets.push(buggyWidget);
+      widgetCount++;
+      updateCounts();
+    });
+
+    document.getElementById('clear-widgets-btn').addEventListener('click', () => {
+      // Remove event listeners and DOM references not cleaned up (memory leak)
+      buggyWidgets.forEach((widget) => {
+        widget.removeEventListener('click', () => {});
+        widget.parentNode.removeChild(widget);
+      });
+      buggyWidgets = [];
+      widgetCount = 0;
+      document.getElementById('buggy-dashboard').innerHTML = '';
+      updateCounts();
+    });
+
+    // Fixed version (no memory leak)
+    let fixedWidgets = [];
+    function createFixedWidget() {
+      const fixedWidget = document.createElement('div');
+      fixedWidget.className = 'widget';
+      fixedWidget.innerHTML = `Fixed Widget ${widgetCount}`;
+      fixedWidget.addEventListener('click', () => {
+        console.log(`Fixed widget ${widgetCount} clicked`);
+      });
+
+      // Use a weak reference to the widget to allow for garbage collection
+      const weakRef = new WeakRef(fixedWidget);
+
+      fixedWidgets.push({ widget: weakRef, element: fixedWidget });
+      document.getElementById('fixed-dashboard').appendChild(fixedWidget);
+      widgetCount++;
+      updateCounts();
+    }
+
+    let createFixedWidgetBtn = document.createElement('button');
+    createFixedWidgetBtn.textContent = 'Add Fixed Widget';
+    createFixedWidgetBtn.onclick = createFixedWidget;
+    document.body.appendChild(createFixedWidgetBtn);
+
+    function clearFixedWidgets() {
+      fixedWidgets.forEach((fixedWidget) => {
+        const widget = fixedWidget.widget.deref();
+        if (widget) {
+          widget.removeEventListener('click', () => {});
+          widget.parentNode.removeChild(widget);
+        }
+      });
+      fixedWidgets = [];
+      widgetCount = 0;
+      document.getElementById('fixed-dashboard').innerHTML = '';
+      updateCounts();
+    }
+
+    let clearFixedWidgetsBtn = document.createElement('button');
+    clearFixedWidgetsBtn.textContent = 'Clear Fixed Widgets';
+    clearFixedWidgetsBtn.onclick = clearFixedWidgets;
+    document.body.appendChild(clearFixedWidgetsBtn);
+  </script>
+</body>
+</html>

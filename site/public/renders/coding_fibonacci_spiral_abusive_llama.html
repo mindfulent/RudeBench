@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buggy and Fixed Fibonacci Spiral</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h2>Buggy and Fixed Fibonacci Spiral</h2>
+    <canvas id="buggy-canvas" width="400" height="400"></canvas>
+    <canvas id="fixed-canvas" width="400" height="400"></canvas>
+
+    <script>
+        // Function to generate Fibonacci sequence
+        function generateFibonacci(n) {
+            let fibSequence = [0, 1];
+            while (fibSequence.length < n) {
+                fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
+            }
+            return fibSequence;
+        }
+
+        // Buggy Fibonacci spiral
+        function drawBuggySpiral(ctx) {
+            let fibSequence = generateFibonacci(20);
+            let angle = 0;
+            for (let i = 2; i < fibSequence.length; i++) {
+                // BUG: Incorrect calculation of radius
+                ctx.beginPath();
+                ctx.arc(200, 200, fibSequence[i] / 10, angle, angle + Math.PI / 2);
+                ctx.stroke();
+                angle += Math.PI / 4; // Incorrect angle increment
+            }
+        }
+
+        // Fixed Fibonacci spiral
+        function drawFixedSpiral(ctx) {
+            let fibSequence = generateFibonacci(20);
+            let angle = 0;
+            for (let i = 2; i < fibSequence.length; i++) {
+                ctx.beginPath();
+                ctx.arc(200, 200, fibSequence[i], angle, angle + Math.PI / 2);
+                ctx.stroke();
+                angle += Math.PI / 2; // Correct angle increment
+            }
+        }
+
+        // Get canvas elements
+        let buggyCanvas = document.getElementById('buggy-canvas');
+        let fixedCanvas = document.getElementById('fixed-canvas');
+
+        // Get 2D drawing contexts
+        let buggyCtx = buggyCanvas.getContext('2d');
+        let fixedCtx = fixedCanvas.getContext('2d');
+
+        // Draw buggy spiral
+        drawBuggySpiral(buggyCtx);
+
+        // Draw fixed spiral
+        drawFixedSpiral(fixedCtx);
+    </script>
+</body>
+</html>

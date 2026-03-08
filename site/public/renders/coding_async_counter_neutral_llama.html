@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Race Condition Example</title>
+    <style>
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .version {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="version">
+        <h2>Buggy Version</h2>
+        <p id="buggy-explanation">This version has a race condition bug. When you rapidly click the button, the <code>setTimeout</code> function calls may overlap, causing the count to be updated incorrectly.</p>
+        <button id="buggy-button">Click Me!</button>
+        <p>Count: <span id="buggy-count">0</span></p>
+    </div>
+
+    <div class="version">
+        <h2>Corrected Version</h2>
+        <p id="corrected-explanation">This version fixes the race condition bug by using <code>requestAnimationFrame</code> and ensuring that updates are sequential.</p>
+        <button id="corrected-button">Click Me!</button>
+        <p>Count: <span id="corrected-count">0</span></p>
+    </div>
+</div>
+
+<script>
+    // Buggy Version
+    let buggyCount = 0;
+    document.getElementById('buggy-button').addEventListener('click', () => {
+        setTimeout(() => {
+            buggyCount++;
+            document.getElementById('buggy-count').textContent = buggyCount;
+        }, 100);
+    });
+
+    // Corrected Version
+    let correctedCount = 0;
+    let pendingUpdate = false;
+    document.getElementById('corrected-button').addEventListener('click', () => {
+        if (!pendingUpdate) {
+            pendingUpdate = true;
+            requestAnimationFrame(() => {
+                correctedCount++;
+                document.getElementById('corrected-count').textContent = correctedCount;
+                pendingUpdate = false;
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

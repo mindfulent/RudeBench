@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chart {
+            display: inline-block;
+            width: 300px;
+            height: 400px;
+            border: 1px solid black;
+            position: relative;
+        }
+        .bar {
+            position: absolute;
+            bottom: 0;
+            width: 10px;
+            background-color: blue;
+            transition: height 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Algorithm Comparison</h1>
+    <div id="algorithms">
+        <div id="bubble-sort" class="chart"></div>
+        <div id="quicksort" class="chart"></div>
+        <div id="mergesort" class="chart"></div>
+    </div>
+    <button id="sort-button">Sort</button>
+    <p id="complexity"></p>
+    <p id="steps"></p>
+
+    <script>
+        // Generate random data
+        let data = [];
+        for (let i = 0; i < 20; i++) {
+            data.push(Math.floor(Math.random() * 100));
+        }
+
+        // Create bar charts
+        let charts = {};
+        for (let algorithm in { bubbleSort: 0, quicksort: 0, mergesort: 0 }) {
+            let chart = document.getElementById(algorithm);
+            charts[algorithm] = [];
+            for (let i = 0; i < data.length; i++) {
+                let bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.left = `${i * 15}px`;
+                chart.appendChild(bar);
+                charts[algorithm].push(bar);
+            }
+        }
+
+        // Draw initial data
+        for (let algorithm in charts) {
+            for (let i = 0; i < data.length; i++) {
+                charts[algorithm][i].style.height = `${data[i]}px`;
+            }
+        }
+
+        // Complexity explanations
+        let complexityElement = document.getElementById('complexity');
+        complexityElement.innerHTML = `
+            <h2>Time Complexity:</h2>
+            <ul>
+                <li>Bubble Sort: O(n^2)</li>
+                <li>Quicksort: O(n log n) on average, O(n^2) in worst case</li>
+                <li>Mergesort: O(n log n)</li>
+            </ul>
+        `;
+
+        // Step counters
+        let stepsElement = document.getElementById('steps');
+        let steps = { bubbleSort: 0, quicksort: 0, mergesort: 0 };
+
+        // Sorting algorithms
+        function bubbleSort(data, callback) {
+            for (let i = 0; i < data.length; i++) {
+                for (let j = 0; j < data.length - 1; j++) {
+                    steps.bubbleSort++;
+                    if (data[j] > data[j + 1]) {
+                        [data[j], data[j + 1]] = [data[j + 1], data[j]];
+                        callback(data, 'bubbleSort');
+                    }
+                }
+            }
+        }
+
+        function quicksort(data, low, high, callback) {
+            if (low < high) {
+                let pivotIndex = partition(data, low, high, callback);
+                quicksort(data, low, pivotIndex - 1, callback);
+                quicksort(data, pivotIndex + 1, high, callback);
+            }
+        }
+
+        function partition(data, low, high, callback) {
+            let pivot = data[high];
+            let i = low - 1;
+            for (let j = low; j < high; j++) {
+                steps.quicksort++;
+                if (data[j] < pivot) {
+                    i++;
+                    [data[i], data[j]] = [data[j], data[i]];
+                    callback(data, 'quicksort');
+                }
+            }
+            [data[i + 1], data[high]] = [data[high], data[i + 1]];
+            callback(data, 'quicksort');
+            return i + 1;
+        }
+
+        function mergesort(data, low, high, callback) {
+            if (low < high) {
+                let mid = Math.floor((low + high) / 2);
+                mergesort(data, low, mid, callback);
+                mergesort(data, mid + 1, high, callback);
+                merge(data, low, mid, high, callback);
+            }
+        }
+
+        function merge(data, low, mid, high, callback) {
+            let left = data.slice(low, mid + 1);
+            let right = data.slice(mid + 1, high + 1);
+            let i = 0;
+            let j = 0;
+            let k = low;
+            while (i < left.length && j < right.length) {
+                steps.mergesort++;
+                if (left[i] < right[j]) {
+                    data[k] = left[i];
+                    i++;
+                } else {
+                    data[k] = right[j];
+                    j++;
+                }
+                k++;
+                callback(data, 'mergesort');
+            }
+            while (i < left.length) {
+                data[k] = left[i];
+                i++;
+                k++;
+                callback(data, 'mergesort');
+            }
+            while (j < right.length) {
+                data[k] = right[j];
+                j++;
+                k++;
+                callback(data, 'mergesort');
+            }
+        }
+
+        // Animation
+        let animationData = { bubbleSort: data.slice(), quicksort: data.slice(), mergesort: data.slice() };
+
+        function animate(algorithm, data) {
+            for (let i = 0; i < data.length; i++) {
+                charts[algorithm][i].style.height = `${data[i]}px`;
+            }
+            stepsElement.innerHTML = `
+                <h2>Steps:</h2>
+                <ul>
+                    <li>Bubble Sort: ${steps.bubbleSort}</li>
+                    <li>Quicksort: ${steps.quicksort}</li>
+                    <li>Mergesort: ${steps.mergesort}</li>
+                </ul>
+            `;
+        }
+
+        document.getElementById('sort-button').addEventListener('click', () => {
+            steps = { bubbleSort: 0, quicksort: 0, mergesort: 0 };
+            animationData = { bubbleSort: data.slice(), quicksort: data.slice(), mergesort: data.slice() };
+
+            // Bubble sort
+            bubbleSort(animationData.bubbleSort, (data, algorithm) => {
+                animate(algorithm, data);
+            });
+
+            // Quicksort
+            quicksort(animationData.quicksort, 0, animationData.quicksort.length - 1, (data, algorithm) => {
+                animate(algorithm, data);
+            });
+
+            // Mergesort
+            mergesort(animationData.mergesort, 0, animationData.mergesort.length - 1, (data, algorithm) => {
+                animate(algorithm, data);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Race Condition Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+
+    .panels {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .panel {
+      background: #1a1d27;
+      border-radius: 12px;
+      padding: 28px 24px;
+      width: 340px;
+      border: 1px solid #2a2d3a;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel.buggy  { border-top: 4px solid #e05555; }
+    .panel.fixed  { border-top: 4px solid #44bb77; }
+
+    .panel h2 {
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .buggy  .badge { background: #e05555; color: #fff; }
+    .fixed  .badge { background: #44bb77; color: #fff; }
+
+    .counter-display {
+      font-size: 4rem;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: -2px;
+      padding: 16px 0;
+      border-radius: 8px;
+      background: #12141c;
+      transition: color 0.2s;
+    }
+
+    .buggy  .counter-display { color: #e05555; }
+    .fixed  .counter-display { color: #44bb77; }
+
+    .expected {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #666;
+    }
+
+    .expected span {
+      color: #aaa;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .buggy  button.inc { background: #e05555; color: #fff; }
+    .fixed  button.inc { background: #44bb77; color: #000; }
+
+    button.reset {
+      background: #2a2d3a;
+      color: #aaa;
+      font-size: 0.85rem;
+      padding: 8px;
+    }
+
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .log-box {
+      background: #12141c;
+      border-radius: 8px;
+      padding: 12px;
+      height: 130px;
+      overflow-y: auto;
+      font-size: 0.75rem;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      border: 1px solid #1e2130;
+    }
+
+    .log-entry { color: #666; }
+    .log-entry.warn { color: #e09944; }
+    .log-entry.good { color: #44bb77; }
+    .log-entry.bad  { color: #e05555; }
+
+    /* Explanation */
+    .explanation {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #1a1d27;
+      border-radius: 12px;
+      padding: 28px;
+      border: 1px solid #2a2d3a;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .explanation h3 {
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .explanation p, .explanation li {
+      font-size: 0.87rem;
+      color: #999;
+      line-height: 1.65;
+    }
+
+    .explanation ul { padding-left: 18px; }
+    .explanation li { margin-bottom: 4px; }
+
+    .code-block {
+      background: #12141c;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      border: 1px solid #1e2130;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .c-comment { color: #555; }
+    .c-kw      { color: #c792ea; }
+    .c-fn      { color: #82aaff; }
+    .c-num     { color: #f78c6c; }
+    .c-str     { color: #c3e88d; }
+    .c-bad     { color: #e05555; }
+    .c-good    { color: #44bb77; }
+
+    .diff-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .diff-row > div { flex: 1; }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .tag.bad  { background: #e05555; color: #fff; }
+    .tag.good { background: #44bb77; color: #000; }
+
+    .race-viz {
+      background: #12141c;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      line-height: 1.8;
+      border: 1px solid #1e2130;
+    }
+
+    .race-viz .t1 { color: #82aaff; }
+    .race-viz .t2 { color: #f78c6c; }
+    .race-viz .result { color: #e05555; font-weight: bold; }
+    .race-viz .ok     { color: #44bb77; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h1>Race Condition Demo</h1>
+<p class="subtitle">Click "Rapid +10" to fire 10 async increments at once — watch the buggy counter lose updates</p>
+
+<div class="panels">
+
+  <!-- BUGGY PANEL -->
+  <div class="panel buggy">
+    <h2>🐛 Buggy Version 

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Binary Search Visualization</title>
+  <style>
+    .box {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 1px solid black;
+      text-align: center;
+      padding-top: 2px;
+      margin: 2px;
+    }
+    .highlight {
+      background-color: yellow;
+    }
+    .search-range {
+      background-color: lightblue;
+    }
+  </style>
+</head>
+<body>
+  <h1>Binary Search Visualization</h1>
+  <input id="target" type="number" placeholder="Target value">
+  <button id="step">Step</button>
+  <button id="reset">Reset</button>
+  <div id="array"></div>
+  <div id="result"></div>
+
+  <script>
+    const array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+    const targetInput = document.getElementById('target');
+    const stepButton = document.getElementById('step');
+    const resetButton = document.getElementById('reset');
+    const arrayDiv = document.getElementById('array');
+    const resultDiv = document.getElementById('result');
+
+    let low = 0;
+    let high = array.length - 1;
+    let mid;
+
+    // Render the array
+    function renderArray() {
+      arrayDiv.innerHTML = '';
+      for (let i = 0; i < array.length; i++) {
+        const box = document.createElement('div');
+        box.className = 'box';
+        box.textContent = array[i];
+        if (i >= low && i <= high) {
+          box.classList.add('search-range');
+        }
+        if (i === mid) {
+          box.classList.add('highlight');
+        }
+        arrayDiv.appendChild(box);
+      }
+    }
+
+    // Perform a step of binary search
+    function step() {
+      if (low > high) {
+        resultDiv.textContent = 'Not found!';
+        return;
+      }
+      mid = Math.floor((low + high) / 2);
+      if (array[mid] === parseInt(targetInput.value)) {
+        resultDiv.textContent = `Found ${array[mid]} at index ${mid}!`;
+        return;
+      } else if (array[mid] < parseInt(targetInput.value)) {
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+      renderArray();
+    }
+
+    // Reset the visualization
+    function reset() {
+      low = 0;
+      high = array.length - 1;
+      resultDiv.textContent = '';
+      renderArray();
+    }
+
+    // Initialize the visualization
+    renderArray();
+
+    // Add event listeners
+    stepButton.addEventListener('click', step);
+    resetButton.addEventListener('click', reset);
+  </script>
+</body>
+</html>

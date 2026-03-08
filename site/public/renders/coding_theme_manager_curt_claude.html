@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Singleton Theme Manager</title>
+  <style>
+    /* ── CSS Custom Properties (tokens) ── */
+    :root {
+      --transition: 0.3s ease;
+    }
+
+    /* ── Light Theme ── */
+    body.light {
+      --bg-primary:    #f0f4f8;
+      --bg-secondary:  #ffffff;
+      --bg-card:       #ffffff;
+      --bg-code:       #e8edf2;
+      --text-primary:  #1a202c;
+      --text-secondary:#4a5568;
+      --text-muted:    #718096;
+      --accent:        #4f46e5;
+      --accent-hover:  #4338ca;
+      --accent-light:  #ede9fe;
+      --border:        #e2e8f0;
+      --shadow:        rgba(0,0,0,0.08);
+      --pro-bg:        #f0fdf4;
+      --pro-border:    #86efac;
+      --con-bg:        #fff7ed;
+      --con-border:    #fdba74;
+      --alt-bg:        #eff6ff;
+      --alt-border:    #93c5fd;
+      --badge-bg:      #ede9fe;
+      --badge-text:    #5b21b6;
+      --tag-bg:        #e0f2fe;
+      --tag-text:      #0369a1;
+      --nav-bg:        #ffffff;
+      --toggle-bg:     #4f46e5;
+      --toggle-knob:   #ffffff;
+      --hr:            #e2e8f0;
+      --blockquote-bg: #f8fafc;
+      --blockquote-border: #4f46e5;
+      --table-head:    #f1f5f9;
+      --table-row-alt: #f8fafc;
+      --input-bg:      #ffffff;
+      --input-border:  #cbd5e1;
+    }
+
+    /* ── Dark Theme ── */
+    body.dark {
+      --bg-primary:    #0f1117;
+      --bg-secondary:  #1a1d27;
+      --bg-card:       #1e2130;
+      --bg-code:       #12141e;
+      --text-primary:  #e2e8f0;
+      --text-secondary:#a0aec0;
+      --text-muted:    #718096;
+      --accent:        #818cf8;
+      --accent-hover:  #a5b4fc;
+      --accent-light:  #1e1b4b;
+      --border:        #2d3148;
+      --shadow:        rgba(0,0,0,0.4);
+      --pro-bg:        #052e16;
+      --pro-border:    #166534;
+      --con-bg:        #1c0a00;
+      --con-border:    #92400e;
+      --alt-bg:        #0c1a2e;
+      --alt-border:    #1e40af;
+      --badge-bg:      #1e1b4b;
+      --badge-text:    #a5b4fc;
+      --tag-bg:        #0c2340;
+      --tag-text:      #7dd3fc;
+      --nav-bg:        #1a1d27;
+      --toggle-bg:     #818cf8;
+      --toggle-knob:   #0f1117;
+      --hr:            #2d3148;
+      --blockquote-bg: #1a1d27;
+      --blockquote-border: #818cf8;
+      --table-head:    #252840;
+      --table-row-alt: #1a1d27;
+      --input-bg:      #1e2130;
+      --input-border:  #2d3148;
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background var(--transition), color var(--transition);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 12px var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+    .nav-logo span { font-size: 1.4rem; }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* ── Toggle Button ── */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .toggle-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .toggle-btn {
+      width: 52px;
+      height: 28px;
+      border-radius: 14px;
+      background: var(--toggle-bg);
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background var(--transition);
+      outline: none;
+    }
+    .toggle-btn:focus-visible { box-shadow: 0 0 0 3px var(--accent-light); }
+    .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--toggle-knob);
+      transition: transform var(--transition), background var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    body.dark .toggle-knob { transform: translateX(24px); }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 4rem 1rem 3rem;
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+      box-shadow: 0 4px 24px var(--shadow);
+      transition: background var(--transition), border-color

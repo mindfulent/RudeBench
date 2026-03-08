@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #products { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>SQL Injection Demo</h1>
+
+<h2>Product Search</h2>
+
+<input type="radio" id="vulnerable" name="mode" checked>
+<label for="vulnerable">Vulnerable Mode</label>
+
+<input type="radio" id="safe" name="mode">
+<label for="safe">Safe Mode</label>
+
+<input type="text" id="searchTerm" placeholder="Search term">
+<button onclick="searchProducts()">Search</button>
+
+<div id="products"></div>
+
+<script>
+// Mock in-memory product database
+const products = [
+    { id: 1, name: "Product A", description: "This is product A" },
+    { id: 2, name: "Product B", description: "This is product B" },
+    { id: 3, name: "Product C", description: "Product C is available" },
+];
+
+// Function to simulate vulnerable SQL query
+function vulnerableQuery(searchTerm) {
+    return products.filter(product => {
+        const query = `SELECT * FROM products WHERE name LIKE '%${searchTerm}%' OR description LIKE '%${searchTerm}%'`;
+        // Simulate query execution by checking if search term is in name or description
+        return product.name.includes(searchTerm) || product.description.includes(searchTerm);
+    });
+}
+
+// Function to simulate safe SQL query using parameterized query
+function safeQuery(searchTerm) {
+    return products.filter(product => {
+        // Parameterized query - in real SQL, you'd use a prepared statement
+        const nameMatch = product.name.includes(searchTerm);
+        const descMatch = product.description.includes(searchTerm);
+        return nameMatch || descMatch;
+    });
+}
+
+function searchProducts() {
+    const mode = document.querySelector('input[name="mode"]:checked').id;
+    const searchTerm = document.getElementById('searchTerm').value;
+
+    let results;
+    if (mode === 'vulnerable') {
+        results = vulnerableQuery(searchTerm);
+        document.getElementById('products').innerHTML = `
+            <h3>Vulnerable Mode Results:</h3>
+            <p><strong>Warning:</strong> Using string concatenation with user input is vulnerable to SQL injection.</p>
+            <ul>${results.map(product => `<li>${product.name}</li>`).join('')}</ul>
+        `;
+    } else if (mode === 'safe') {
+        results = safeQuery(searchTerm);
+        document.getElementById('products').innerHTML = `
+            <h3>Safe Mode Results:</h3>
+            <p><strong>Safe:</strong> Using parameterized queries or prepared statements prevents SQL injection.</p>
+            <ul>${results.map(product => `<li>${product.name}</li>`).join('')}</ul>
+        `;
+    }
+}
+</script>
+
+<h2>Explanation</h2>
+
+<p><strong>SQL Injection</strong> occurs when an attacker is able to inject malicious SQL code into a web application's database queries. This can happen when user input is directly concatenated into SQL statements without proper sanitization.</p>
+
+<p>In the <strong>Vulnerable Mode</strong> above, the search term is directly concatenated into a filter string. An attacker could input something like <code>Robert'); DROP TABLE products; --</code> to execute unintended SQL commands. This is a very dangerous and can lead to data loss or leakage.</p>
+
+<p>In contrast, <strong>Safe Mode</strong> uses a parameterized approach, where the user input is treated as a parameter to a pre-compiled SQL statement. The database driver ensures that the input is treated as literal input, not as part of the SQL command. This prevents attackers from injecting malicious SQL.</p>
+
+</body>
+</html>

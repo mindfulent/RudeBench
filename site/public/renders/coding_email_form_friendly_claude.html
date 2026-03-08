@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real-Time Email Validation Demo</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: #e0e0e0;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 1px;
+    }
+
+    header p {
+      margin-top: 8px;
+      color: #a0aec0;
+      font-size: 0.95rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 28px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #63b3ed;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 .icon {
+      font-size: 1.3rem;
+    }
+
+    /* ── Validator Section ── */
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .input-wrapper label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #a0aec0;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 14px 48px 14px 16px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 2.5px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.07);
+      color: #ffffff;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    }
+
+    .input-wrapper input::placeholder { color: #718096; }
+
+    .input-wrapper input:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Validation states */
+    .input-wrapper input.valid {
+      border-color: #48bb78;
+      box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.2);
+    }
+
+    .input-wrapper input.invalid {
+      border-color: #fc8181;
+      box-shadow: 0 0 0 3px rgba(252, 129, 129, 0.2);
+    }
+
+    /* Status icon inside input */
+    .status-icon {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      font-size: 1.2rem;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    /* ── Feedback Bar ── */
+    .feedback {
+      min-height: 24px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      opacity: 0;
+    }
+
+    .feedback.show { opacity: 1; }
+
+    .feedback.valid-msg {
+      background: rgba(72, 187, 120, 0.15);
+      color: #68d391;
+      border-left: 3px solid #48bb78;
+    }
+
+    .feedback.invalid-msg {
+      background: rgba(252, 129, 129, 0.15);
+      color: #fc8181;
+      border-left: 3px solid #e53e3e;
+    }
+
+    /* ── Regex Display ── */
+    .regex-box {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .regex-box p {
+      font-size: 0.8rem;
+      color: #a0aec0;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .regex-box code {
+      display: block;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.82rem;
+      color: #f6ad55;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    /* ── Live Examples ── */
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .example-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      font-size: 0.82rem;
+      color: #cbd5e0;
+      word-break: break-all;
+    }
+
+    .example-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .example-chip .chip-icon { font-size: 1rem; flex-shrink: 0; }
+    .example-chip.valid-chip .chip-icon { color: #68d391; }
+    .example-chip.invalid-chip .chip-icon { color: #fc8181; }
+
+    /* ── Limitations Section ── */
+    .limitations-section { }
+
+    .limitation-item {
+      display: flex;
+      gap: 14px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+
+    .limitation-item .lim-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;

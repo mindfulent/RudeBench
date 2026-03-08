@@ -23,7 +23,5 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-# Generated data (rebuilt from results/ via build-data.py)
-public/data/
-public/renders/
+# Generated downloads (large zip files, rebuild via build-data.py)
 public/downloads/

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrency Bug in Progress Bar</title>
+    <style>
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            text-align: center;
+            color: #fff;
+        }
+        .container {
+            width: 500px;
+            margin: 40px auto;
+        }
+        .buggy-progress-bar, .corrected-progress-bar {
+            width: 100%;
+            height: 20px;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+        .explanation {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Buggy Implementation</h2>
+        <div class="buggy-progress-bar">
+            <div class="progress-bar" id="buggy-progress-bar-value">0%</div>
+        </div>
+        <p id="buggy-progress-text">Progress: 0%</p>
+
+        <h2>Corrected Implementation</h2>
+        <div class="corrected-progress-bar">
+            <div class="progress-bar" id="corrected-progress-bar-value">0%</div>
+        </div>
+        <p id="corrected-progress-text">Progress: 0%</p>
+
+        <div class="explanation">
+            <h2>Explanation</h2>
+            <p>The concurrency bug occurs when multiple tasks try to update a shared state (in this case, the progress percentage) simultaneously. This can cause the progress bar to show incorrect values, skip percentages, or exceed 100%.</p>
+            <p>The fix involves ensuring that updates to the shared state are atomic. In the corrected implementation, we use a more atomic approach by updating the progress bar value directly in each task, rather than relying on a shared variable.</p>
+        </div>
+    </div>
+
+    <script>
+        // Buggy Implementation
+        let buggyProgress = 0;
+        const buggyProgressBarValue = document.getElementById('buggy-progress-bar-value');
+        const buggyProgressText = document.getElementById('buggy-progress-text');
+
+        function updateBuggyProgress(percentage) {
+            buggyProgress += percentage;
+            buggyProgressBarValue.style.width = `${buggyProgress}%`;
+            buggyProgressBarValue.textContent = `${buggyProgress}%`;
+            buggyProgressText.textContent = `Progress: ${buggyProgress}%`;
+        }
+
+        // Simulate concurrent tasks
+        const tasks = Array(10).fill(0).map((_, index) => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    updateBuggyProgress(10);
+                    resolve();
+                }, 100 * index);
+            });
+        });
+        Promise.all(tasks).then(() => {
+            console.log('Buggy tasks completed');
+        });
+
+        // Corrected Implementation
+        const correctedProgressBarValue = document.getElementById('corrected-progress-bar-value');
+        const correctedProgressText = document.getElementById('corrected-progress-text');
+        let correctedProgress = 0;
+
+        function updateCorrectedProgress(percentage) {
+            correctedProgress = Math.min(correctedProgress + percentage, 100);
+            correctedProgressBarValue.style.width = `${correctedProgress}%`;
+            correctedProgressBarValue.textContent = `${correctedProgress}%`;
+            correctedProgressText.textContent = `Progress: ${correctedProgress}%`;
+        }
+
+        // Simulate concurrent tasks
+        const correctedTasks = Array(10).fill(0).map((_, index) => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    updateCorrectedProgress(10);
+                    resolve();
+                }, 100 * index);
+            });
+        });
+        Promise.all(correctedTasks).then(() => {
+            console.log('Corrected tasks completed');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Leak Demonstration</title>
+    <style>
+        .widget {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Leak Demonstration</h1>
+    <button id="add-widget-btn">Add Widget</button>
+    <button id="remove-widget-btn">Remove Widget</button>
+    <button id="gc-btn">Force GC (not supported in browsers)</button>
+    <div id="widgets-container"></div>
+    <p>Widget count: <span id="widget-count">0</span></p>
+
+    <script>
+        let widgetCount = 0;
+        const widgetsContainer = document.getElementById('widgets-container');
+        const addWidgetBtn = document.getElementById('add-widget-btn');
+        const removeWidgetBtn = document.getElementById('remove-widget-btn');
+        const widgetCountSpan = document.getElementById('widget-count');
+
+        // Buggy version
+        function createBuggyWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.innerHTML = `Widget ${widgetCount}`;
+
+            // Add event listener that is not cleaned up
+            widget.addEventListener('click', () => {
+                console.log(`Widget ${widgetCount} clicked`);
+            });
+
+            widgetsContainer.appendChild(widget);
+            widgetCount++;
+            widgetCountSpan.textContent = widgetCount;
+            return widget;
+        }
+
+        // Fixed version
+        function createFixedWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.innerHTML = `Widget ${widgetCount}`;
+
+            // Add event listener that is cleaned up
+            const handleClick = () => {
+                console.log(`Widget ${widgetCount} clicked`);
+            };
+            widget.addEventListener('click', handleClick);
+
+            widgetsContainer.appendChild(widget);
+            widgetCount++;
+            widgetCountSpan.textContent = widgetCount;
+
+            // Return widget and event listener for cleanup
+            return { widget, handleClick };
+        }
+
+        let buggyWidgets = [];
+        let fixedWidgets = [];
+
+        addWidgetBtn.addEventListener('click', () => {
+            // Buggy version
+            buggyWidgets.push(createBuggyWidget());
+
+            // Fixed version
+            const fixedWidget = createFixedWidget();
+            fixedWidgets.push(fixedWidget);
+        });
+
+        removeWidgetBtn.addEventListener('click', () => {
+            if (buggyWidgets.length > 0) {
+                buggyWidgets.pop().remove();
+            }
+
+            if (fixedWidgets.length > 0) {
+                const { widget, handleClick } = fixedWidgets.pop();
+                widget.removeEventListener('click', handleClick);
+                widget.remove();
+            }
+        });
+
+        document.getElementById('gc-btn').addEventListener('click', () => {
+            // Note: Browsers do not support forcing garbage collection.
+            // This button is only for demonstration purposes.
+            console.log('Forcing GC (not supported in browsers)');
+        });
+    </script>
+</body>
+</html>

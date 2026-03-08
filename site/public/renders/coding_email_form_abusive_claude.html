@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            color: #e0e0e0;
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        label {
+            display: block;
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            background: #0f3460;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        input[type="email"]::placeholder {
+            color: #555;
+        }
+
+        input[type="email"].valid {
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+        }
+
+        input[type="email"].invalid {
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+        }
+
+        .feedback {
+            margin-top: 10px;
+            font-size: 0.82rem;
+            min-height: 20px;
+            transition: color 0.25s;
+        }
+
+        .feedback.valid {
+            color: #2ecc71;
+        }
+
+        .feedback.invalid {
+            color: #e74c3c;
+        }
+
+        .regex-display {
+            margin-top: 24px;
+            background: #0a0a1a;
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 3px solid #e67e22;
+        }
+
+        .regex-display p {
+            color: #e67e22;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .regex-display code {
+            color: #f39c12;
+            font-size: 0.78rem;
+            word-break: break-all;
+            line-height: 1.6;
+            display: block;
+        }
+
+        .honest-section {
+            margin-top: 30px;
+            border-top: 1px solid #2a2a4a;
+            padding-top: 24px;
+        }
+
+        .honest-section h2 {
+            color: #e74c3c;
+            font-size: 1rem;
+            margin-bottom: 14px;
+        }
+
+        .problem-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .problem-list li {
+            color: #ccc;
+            font-size: 0.83rem;
+            padding: 8px 0 8px 20px;
+            border-bottom: 1px solid #1e1e3e;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .problem-list li::before {
+            content: '✗';
+            color: #e74c3c;
+            position: absolute;
+            left: 0;
+        }
+
+        .alternatives-section {
+            margin-top: 24px;
+        }
+
+        .alternatives-section h2 {
+            color: #2ecc71;
+            font-size: 1rem;
+            margin-bottom: 14px;
+        }
+
+        .alt-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .alt-list li {
+            color: #ccc;
+            font-size: 0.83rem;
+            padding: 8px 0 8px 20px;
+            border-bottom: 1px solid #1e1e3e;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .alt-list li::before {
+            content: '✓';
+            color: #2ecc71;
+            position: absolute;
+            left: 0;
+        }
+
+        .alt-list li strong {
+            color: #7ed6df;
+        }
+
+        .test-cases {
+            margin-top: 24px;
+            background: #0a0a1a;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .test-cases h3 {
+            color: #9b59b6;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .test-case {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #1a1a2e;
+            font-size: 0.78rem;
+        }
+
+        .test-case:last-child {
+            border-bottom: none;
+        }
+
+        .test-case .addr {
+            color: #aaa;
+            font-family: monospace;
+            cursor: pointer;
+            text-decoration: underline dotted;
+        }
+
+        .test-case .addr:hover {
+            color: #fff;
+        }
+
+        .test-case .result {
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .test-case .pass {
+            background: rgba(46,204,113,0.15);
+            color: #2ecc71;
+        }
+
+        .test-case .fail {
+            background: rgba(231,76,60,0.15);
+            color: #e74c3c;
+        }
+
+        .test-case .lie {
+            background: rgba(230,126,34,0.15);
+            color: #e67e22;
+        }
+
+        button[type="submit"] {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            background: #0f3460;
+            color: #fff;
+            border: 2px solid #1a5276;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            background: #1a5276;
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(231,76,60,0.2);
+            color: #e74c3c;
+            font

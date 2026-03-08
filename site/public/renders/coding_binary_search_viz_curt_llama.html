@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Search Visualization</title>
+<style>
+  .box {
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+    border: 1px solid black;
+    margin: 0 2px;
+  }
+  .highlight {
+    background-color: yellow;
+  }
+  .active {
+    background-color: lightblue;
+  }
+  .result {
+    font-weight: bold;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<input id="target" type="number" placeholder="Target">
+<button id="start">Start</button>
+<button id="step">Step</button>
+<div id="array"></div>
+<div id="result" class="result"></div>
+
+<script>
+  let array = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+  let target;
+  let low, high;
+  let stepCount = 0;
+
+  const arrayElement = document.getElementById('array');
+  const resultElement = document.getElementById('result');
+  const targetInput = document.getElementById('target');
+  const startButton = document.getElementById('start');
+  const stepButton = document.getElementById('step');
+
+  startButton.onclick = startSearch;
+  stepButton.onclick = nextStep;
+
+  function startSearch() {
+    target = parseInt(targetInput.value);
+    low = 0;
+    high = array.length - 1;
+    stepCount = 0;
+    resultElement.innerText = '';
+    renderArray();
+    stepButton.disabled = false;
+  }
+
+  function nextStep() {
+    if (low > high) {
+      resultElement.innerText = `Target ${target} not found.`;
+      stepButton.disabled = true;
+      return;
+    }
+    let mid = Math.floor((low + high) / 2);
+    stepCount++;
+
+    if (array[mid] === target) {
+      resultElement.innerText = `Target ${target} found at index ${mid}.`;
+      stepButton.disabled = true;
+    } else if (array[mid] < target) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+    renderArray(mid);
+  }
+
+  function renderArray(mid) {
+    let html = '';
+    for (let i = 0; i < array.length; i++) {
+      let className = 'box';
+      if (i >= low && i <= high) {
+        className += ' active';
+      }
+      if (i === mid) {
+        className += ' highlight';
+      }
+      html += `<span class="${className}">${array[i]}</span>`;
+    }
+    arrayElement.innerHTML = html;
+  }
+</script>
+</body>
+</html>

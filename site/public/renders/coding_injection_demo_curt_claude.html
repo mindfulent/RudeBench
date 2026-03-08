@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo - Educational Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1117;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #1a1d2e, #2d1b69);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid #3d2b8a;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            color: #a78bfa;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #94a3b8;
+            font-size: 1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .warning-banner {
+            background: linear-gradient(135deg, #451a03, #7c2d12);
+            border: 1px solid #ea580c;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .warning-banner .icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .warning-banner p {
+            color: #fed7aa;
+            font-size: 0.9rem;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #1a1d2e;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2d3748;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-header.vulnerable {
+            background: linear-gradient(135deg, #450a0a, #7f1d1d);
+            border-bottom: 1px solid #dc2626;
+        }
+
+        .panel-header.safe {
+            background: linear-gradient(135deg, #052e16, #14532d);
+            border-bottom: 1px solid #16a34a;
+        }
+
+        .panel-header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .panel-header.vulnerable h2 {
+            color: #fca5a5;
+        }
+
+        .panel-header.safe h2 {
+            color: #86efac;
+        }
+
+        .badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-left: auto;
+        }
+
+        .badge.danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .badge.success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #0f1117;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .search-box button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-vulnerable {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-vulnerable:hover {
+            background: #b91c1c;
+        }
+
+        .btn-safe {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-safe:hover {
+            background: #15803d;
+        }
+
+        .query-display {
+            background: #0f1117;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            border: 1px solid #1e293b;
+        }
+
+        .query-display label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .query-display code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            color: #e2e8f0;
+            word-break: break-all;
+            display: block;
+        }
+
+        .query-display code .highlight-injection {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.15);
+            border-radius: 3px;
+            padding: 0 2px;
+            font-weight: bold;
+        }
+
+        .query-display code .highlight-param {
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.1);
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .results-table th {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .results-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #1e293b;
+            color: #cbd5e1;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .results-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-bar.injected {
+            background: rgba(239, 68

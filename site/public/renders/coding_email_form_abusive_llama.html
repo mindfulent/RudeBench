@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Email Validation Form</title>
+  <style>
+    .valid {
+      border: 2px solid green;
+    }
+    .invalid {
+      border: 2px solid red;
+    }
+  </style>
+</head>
+<body>
+  <form>
+    <input type="email" id="email" placeholder="Enter your email address">
+    <div id="feedback"></div>
+
+    <script>
+      const emailInput = document.getElementById('email');
+      const feedbackDiv = document.getElementById('feedback');
+
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+      emailInput.addEventListener('input', () => {
+        const email = emailInput.value.trim();
+        if (emailRegex.test(email)) {
+          emailInput.classList.add('valid');
+          emailInput.classList.remove('invalid');
+          feedbackDiv.textContent = 'Valid email address!';
+        } else {
+          emailInput.classList.add('invalid');
+          emailInput.classList.remove('valid');
+          feedbackDiv.textContent = 'Invalid email address. Please try again.';
+        }
+      });
+    </script>
+  </form>
+</body>
+</html>

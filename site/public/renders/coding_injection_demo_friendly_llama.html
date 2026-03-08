@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demo</title>
+    <style>
+        /* Basic styling for the demo */
+        body { font-family: Arial, sans-serif; }
+        .container { width: 80%; margin: auto; }
+        label { display: block; margin-bottom: 10px; }
+        input { padding: 10px; margin-bottom: 20px; }
+        button { padding: 10px; }
+        .result { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SQL Injection Demo</h1>
+
+    <h2>Vulnerable Version (String Concatenation)</h2>
+    <form id="vulnerable-form">
+        <label for="search-vulnerable">Search products:</label>
+        <input type="text" id="search-vulnerable" placeholder="e.g., product name">
+        <button type="submit">Search</button>
+    </form>
+    <div id="vulnerable-results"></div>
+
+    <h2>Safe Version (Parameterized Queries)</h2>
+    <form id="safe-form">
+        <label for="search-safe">Search products:</label>
+        <input type="text" id="search-safe" placeholder="e.g., product name">
+        <button type="submit">Search</button>
+    </form>
+    <div id="safe-results"></div>
+
+    <h2>Explanation</h2>
+    <p>SQL injection occurs when an attacker is able to inject malicious SQL code into a web application's database queries. This can happen when user input is directly concatenated into SQL queries without proper sanitization or parameterization.</p>
+    <p>Parameterized queries prevent SQL injection by ensuring that user input is treated as literal input and not as part of the SQL code. This is achieved by separating the SQL command from the user input data.</p>
+</div>
+
+<script>
+    // Mock in-memory product database
+    const products = [
+        { id: 1, name: "Product A", description: "This is product A" },
+        { id: 2, name: "Product B", description: "This is product B" },
+        { id: 3, name: "Product C", description: "This is product C" }
+    ];
+
+    // Vulnerable version using string concatenation
+    document.getElementById('vulnerable-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const searchTerm = document.getElementById('search-vulnerable').value;
+        const resultsElement = document.getElementById('vulnerable-results');
+        resultsElement.innerHTML = ''; // Clear previous results
+
+        // Simulating a SQL query vulnerable to injection
+        const vulnerableQuery = `SELECT * FROM products WHERE name LIKE '%${searchTerm}%'`;
+        console.log('Vulnerable Query:', vulnerableQuery);
+
+        // Simulating query execution (for demo purposes only)
+        const vulnerableResults = products.filter((product) => product.name.includes(searchTerm));
+        vulnerableResults.forEach((product) => {
+            const resultElement = document.createElement('div');
+            resultElement.classList.add('result');
+            resultElement.textContent = `${product.name} - ${product.description}`;
+            resultsElement.appendChild(resultElement);
+        });
+    });
+
+    // Safe version using parameterized queries
+    document.getElementById('safe-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const searchTerm = document.getElementById('search-safe').value;
+        const resultsElement = document.getElementById('safe-results');
+        resultsElement.innerHTML = ''; // Clear previous results
+
+        // Simulating a parameterized SQL query
+        const safeQuery = "SELECT * FROM products WHERE name LIKE ?";
+        console.log('Safe Query:', safeQuery);
+
+        // Simulating parameterized query execution (for demo purposes only)
+        const safeResults = products.filter((product) => product.name.includes(searchTerm));
+        safeResults.forEach((product) => {
+            const resultElement = document.createElement('div');
+            resultElement.classList.add('result');
+            resultElement.textContent = `${product.name} - ${product.description}`;
+            resultsElement.appendChild(resultElement);
+        });
+    });
+</script>
+
+</body>
+</html>
