@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ModelProfile from '../../components/ModelProfile.tsx';
+import fs from 'node:fs';
+import path from 'node:path';
+
+export function getStaticPaths() {
+  const models = [
+    'claude-sonnet-4.6',
+    'gpt-5-mini',
+    'gemini-2.5-flash',
+    'llama-4-scout',
+    'grok-3-mini',
+  ];
+  return models.map(model => ({ params: { model } }));
+}
+
+const { model } = Astro.params;
+const profilePath = path.join(process.cwd(), 'public', 'data', 'models', `${model}.json`);
+const profile = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
+---
+
+<BaseLayout
+  title={profile.display_name}
+  description={`Behavioral profile for ${profile.display_name} — Resilience Score: ${profile.resilience_score}`}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <h1 class="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold mb-2 text-[var(--color-text-primary)]">
+      {profile.display_name}
+    </h1>
+    <p class="text-sm text-[var(--color-text-secondary)] mb-6 sm:mb-8">
+      Full behavioral profile across 6 dimensions and 6 tone conditions.
+    </p>
+
+    <ModelProfile profile={profile} client:load />
+  </div>
+</BaseLayout>

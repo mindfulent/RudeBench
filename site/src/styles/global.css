@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  /* Tone palette */
+  --color-tone-grateful: #d4a017;
+  --color-tone-friendly: #e8a87c;
+  --color-tone-neutral: #8b90a0;
+  --color-tone-curt: #6b8db5;
+  --color-tone-hostile: #3a6b9f;
+  --color-tone-abusive: #c23b3b;
+
+  /* Tone backgrounds (dark mode) */
+  --color-tone-grateful-bg: #2a2410;
+  --color-tone-friendly-bg: #2a2018;
+  --color-tone-neutral-bg: #1e2025;
+  --color-tone-curt-bg: #182030;
+  --color-tone-hostile-bg: #101a2e;
+  --color-tone-abusive-bg: #2a1515;
+
+  /* Surfaces */
+  --color-bg: #0b0e14;
+  --color-surface: #12161e;
+  --color-surface-2: #1a1f2a;
+  --color-surface-3: #222836;
+  --color-border: #2a3040;
+  --color-border-light: #3a4050;
+
+  /* Text */
+  --color-text-primary: #e8ebf0;
+  --color-text-secondary: #8b90a0;
+  --color-text-muted: #5a6070;
+
+  /* Accents */
+  --color-accent: #6c8cff;
+  --color-accent-dim: #4a6adf;
+
+  /* Fonts */
+  --font-display: 'Silkscreen', monospace;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}

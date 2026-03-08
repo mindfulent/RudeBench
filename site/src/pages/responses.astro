@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ResponseViewer from '../components/ResponseViewer.tsx';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const tasksPath = path.join(process.cwd(), 'public', 'data', 'tasks.json');
+const tasks = JSON.parse(fs.readFileSync(tasksPath, 'utf-8'));
+---
+
+<BaseLayout title="Response Viewer" description="Read actual model responses and compare how they change across tone conditions.">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <h1 class="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold mb-2 text-[var(--color-text-primary)]">
+      Response Viewer
+    </h1>
+    <p class="text-sm text-[var(--color-text-secondary)] mb-6 sm:mb-8">
+      Read actual model responses and compare how they change across tone conditions.
+      Toggle "Compare Tones" to view responses side by side.
+    </p>
+
+    <ResponseViewer tasks={tasks} client:load />
+  </div>
+</BaseLayout>

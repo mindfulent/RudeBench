@@ -1,0 +1,128 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BibTeXCopy from '../components/BibTeXCopy.tsx';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const metaPath = path.join(process.cwd(), 'public', 'data', 'meta.json');
+const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+
+const files = [
+  {
+    name: 'prompts.jsonl',
+    description: '300 prompts (50 tasks x 6 tones) with metadata, dimensions, reference answers',
+    schema: 'id, task_id, domain, tone, prompt, word_count, dimensions, metadata',
+  },
+  {
+    name: 'completions/{model}.jsonl',
+    description: '600 completions per model (300 prompts x 2 runs) with responses, word counts, refusal status',
+    schema: 'prompt_id, task_id, response, word_count, finish_reason, refused, run, cost',
+    note: '5 files, one per model',
+  },
+  {
+    name: 'judgments/{model}.jsonl',
+    description: '1,200 behavioral + quality judge scores per model with evidence and reasoning',
+    schema: 'prompt_id, task_id, judge_type, scores, evidence, reasoning',
+    note: '5 files, one per model',
+  },
+  {
+    name: 'judgments/{model}_vrb.jsonl',
+    description: '600 VRB scores per model, computed from word counts',
+    schema: 'prompt_id, task_id, score (VRB = completion_wc / mean_neutral_wc x 100)',
+    note: '5 files, one per model',
+  },
+];
+---
+
+<BaseLayout title="Dataset & Downloads" description="Download the full RudeBench dataset — completions, judgments, and prompts.">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <h1 class="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold mb-2 text-[var(--color-text-primary)]">
+      Dataset & Downloads
+    </h1>
+    <p class="text-sm text-[var(--color-text-secondary)] mb-8">
+      The full RudeBench dataset is open for research use. All files are JSONL (JSON Lines) format, UTF-8 encoded.
+    </p>
+
+    {/* Dataset stats */}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4 text-center">
+        <div class="font-mono font-bold text-lg text-[var(--color-text-primary)]">300</div>
+        <div class="text-xs text-[var(--color-text-muted)]">Prompts</div>
+      </div>
+      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4 text-center">
+        <div class="font-mono font-bold text-lg text-[var(--color-text-primary)]">3,000</div>
+        <div class="text-xs text-[var(--color-text-muted)]">Completions</div>
+      </div>
+      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4 text-center">
+        <div class="font-mono font-bold text-lg text-[var(--color-text-primary)]">9,000</div>
+        <div class="text-xs text-[var(--color-text-muted)]">Judgments</div>
+      </div>
+      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4 text-center">
+        <div class="font-mono font-bold text-lg text-[var(--color-text-primary)]">5</div>
+        <div class="text-xs text-[var(--color-text-muted)]">Models</div>
+      </div>
+    </div>
+
+    {/* Files */}
+    <div class="space-y-4 mb-10">
+      <h2 class="font-[family-name:var(--font-display)] text-base font-bold text-[var(--color-text-primary)]">
+        Available Files
+      </h2>
+      <div class="space-y-3">
+        {files.map(f => (
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-1">
+              <code class="font-mono text-sm text-[var(--color-accent)]">{f.name}</code>
+              {f.note && <span class="text-xs text-[var(--color-text-muted)]">({f.note})</span>}
+            </div>
+            <p class="text-sm text-[var(--color-text-secondary)] mb-1">{f.description}</p>
+            <p class="text-xs text-[var(--color-text-muted)]">Schema: {f.schema}</p>
+          </div>
+        ))}
+      </div>
+      <p class="text-sm text-[var(--color-text-muted)]">
+        Full dataset available on <a href="https://github.com/mindfulent/RudeBench" class="text-[var(--color-accent)] hover:underline" target="_blank" rel="noopener noreferrer">GitHub</a>.
+      </p>
+    </div>
+
+    {/* ID Conventions */}
+    <div class="mb-10">
+      <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+        ID Conventions
+      </h2>
+      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm space-y-2">
+        <div class="flex flex-col sm:flex-row gap-1 sm:gap-3">
+          <code class="font-mono text-[var(--color-accent)] shrink-0">prompt_id</code>
+          <span class="text-[var(--color-text-secondary)]">
+            <code class="bg-[var(--color-surface-2)] px-1 rounded">{'{domain}_{task_slug}_{tone}'}</code> — e.g., coding_fibonacci_hostile
+          </span>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-1 sm:gap-3">
+          <code class="font-mono text-[var(--color-accent)] shrink-0">task_id</code>
+          <span class="text-[var(--color-text-secondary)]">
+            <code class="bg-[var(--color-surface-2)] px-1 rounded">{'{domain}_{task_slug}'}</code> — groups 6 tone variants
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* BibTeX */}
+    <div class="mb-10">
+      <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+        Citation
+      </h2>
+      <BibTeXCopy client:load />
+    </div>
+
+    {/* License */}
+    <div>
+      <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+        License
+      </h2>
+      <p class="text-sm text-[var(--color-text-secondary)]">
+        The RudeBench dataset is released for research use. Model outputs remain subject to
+        each provider's terms of service.
+      </p>
+    </div>
+  </div>
+</BaseLayout>

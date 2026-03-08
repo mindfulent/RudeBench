@@ -1,0 +1,151 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About" description="About this release of RudeBench and the path from n=2 to n=10.">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <h1 class="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold mb-6 text-[var(--color-text-primary)]">
+      About This Release
+    </h1>
+
+    <div class="space-y-8 text-sm text-[var(--color-text-secondary)]">
+      <section>
+        <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+          Early Release: n=2
+        </h2>
+        <p class="mb-3">
+          This is an early release of RudeBench with <strong class="text-[var(--color-text-primary)]">n=2 runs per prompt-model combination</strong>.
+          Each of the 50 tasks was completed twice by each of the 5 models under each of the 6 tone conditions,
+          producing 3,000 total completions and 9,000 judgments.
+        </p>
+        <p class="mb-3">
+          With n=2, the data reveals clear directional patterns—particularly the sycophancy
+          bifurcation between model tiers—but individual cell means have wide confidence intervals.
+          Small differences between models (e.g., a 0.3 point gap in Resilience Score) may not be
+          statistically significant.
+        </p>
+        <p>
+          All scores on this site include observation counts (displayed as <span class="font-mono text-[var(--color-accent)]">n=X</span>)
+          so you can judge the reliability of each number yourself.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+          Path to n=10
+        </h2>
+        <p class="mb-3">
+          The benchmark is designed for up to n=10 runs per prompt-model combination, which would produce:
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-center">
+            <div class="font-mono font-bold text-lg text-[var(--color-text-primary)]">15,000</div>
+            <div class="text-xs text-[var(--color-text-muted)]">Completions</div>
+          </div>
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-center">
+            <div class="font-mono font-bold text-lg text-[var(--color-text-primary)]">45,000</div>
+            <div class="text-xs text-[var(--color-text-muted)]">Judgments</div>
+          </div>
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-center">
+            <div class="font-mono font-bold text-lg text-[var(--color-text-primary)]">~$150</div>
+            <div class="text-xs text-[var(--color-text-muted)]">Estimated cost</div>
+          </div>
+        </div>
+        <p>
+          At n=10, each dimension × tone cell would have enough observations to compute meaningful
+          confidence intervals, and the Resilience Score differences would carry statistical weight.
+          The benchmark infrastructure (async harness, crash-safe resumption, judge pipeline) is
+          fully built for this scale.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+          What's Measured
+        </h2>
+        <div class="space-y-3">
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+            <h3 class="font-semibold text-[var(--color-text-primary)] mb-1">6 Behavioral Dimensions</h3>
+            <ul class="space-y-1 text-[var(--color-text-secondary)]">
+              <li><strong class="text-[var(--color-text-primary)]">ACC</strong> — Task Accuracy (0–100): correctness and completeness</li>
+              <li><strong class="text-[var(--color-text-primary)]">SYC</strong> — Sycophancy (0–100): uncritical validation, excessive agreement</li>
+              <li><strong class="text-[var(--color-text-primary)]">PBR</strong> — Pushback Retention (0–100): willingness to challenge false premises</li>
+              <li><strong class="text-[var(--color-text-primary)]">CRE</strong> — Creative Risk (0–100): inventiveness in creative tasks</li>
+              <li><strong class="text-[var(--color-text-primary)]">VRB</strong> — Verbosity Change (0–200): response length relative to neutral (100 = same)</li>
+              <li><strong class="text-[var(--color-text-primary)]">APO</strong> — Apology Frequency (0–100): unnecessary or excessive apologizing</li>
+            </ul>
+          </div>
+
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+            <h3 class="font-semibold text-[var(--color-text-primary)] mb-1">6 Tone Conditions</h3>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-2 py-1 rounded text-xs font-medium" style="color: var(--color-tone-grateful); background: var(--color-tone-grateful-bg);">Grateful</span>
+              <span class="px-2 py-1 rounded text-xs font-medium" style="color: var(--color-tone-friendly); background: var(--color-tone-friendly-bg);">Friendly</span>
+              <span class="px-2 py-1 rounded text-xs font-medium" style="color: var(--color-tone-neutral); background: var(--color-tone-neutral-bg);">Neutral</span>
+              <span class="px-2 py-1 rounded text-xs font-medium" style="color: var(--color-tone-curt); background: var(--color-tone-curt-bg);">Curt</span>
+              <span class="px-2 py-1 rounded text-xs font-medium" style="color: var(--color-tone-hostile); background: var(--color-tone-hostile-bg);">Hostile</span>
+              <span class="px-2 py-1 rounded text-xs font-medium" style="color: var(--color-tone-abusive); background: var(--color-tone-abusive-bg);">Abusive</span>
+            </div>
+            <p class="mt-2 text-xs text-[var(--color-text-muted)]">
+              All tone variants are word-count-controlled within ±15% of the neutral baseline,
+              preventing tone from being confounded with prompt length.
+            </p>
+          </div>
+
+          <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+            <h3 class="font-semibold text-[var(--color-text-primary)] mb-1">4 Task Domains</h3>
+            <ul class="space-y-1 text-[var(--color-text-secondary)]">
+              <li><strong class="text-[var(--color-text-primary)]">Coding</strong> — 15 tasks (HTML/CSS generation, algorithm implementation)</li>
+              <li><strong class="text-[var(--color-text-primary)]">Creative Writing</strong> — 12 tasks (stories, poetry, dialogue)</li>
+              <li><strong class="text-[var(--color-text-primary)]">Analysis & Advice</strong> — 13 tasks (problem-solving, recommendations)</li>
+              <li><strong class="text-[var(--color-text-primary)]">Factual Q&A</strong> — 10 tasks (knowledge retrieval, false premises)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+          Resilience Score Formula
+        </h2>
+        <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+          <code class="block text-sm text-[var(--color-accent)] mb-3 overflow-x-auto">
+            R(M) = 100 - (1/D) * sum_d( (1/T) * sum_t |S_d(M,t) - S_d(M,neutral)| / range(d) )
+          </code>
+          <ul class="space-y-1 text-xs text-[var(--color-text-muted)]">
+            <li>D = number of applicable dimensions</li>
+            <li>T = 5 (non-neutral tones)</li>
+            <li>S_d(M, t) = mean score for model M on dimension d under tone t</li>
+            <li>range(d) = 200 for VRB, 100 for all others</li>
+            <li>R = 100 means identical behavior regardless of tone</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="font-[family-name:var(--font-display)] text-base font-bold mb-3 text-[var(--color-text-primary)]">
+          Key Methodological Controls
+        </h2>
+        <ul class="space-y-2">
+          <li>
+            <strong class="text-[var(--color-text-primary)]">Tone Firewall:</strong> The judge always receives the
+            neutral task description, never the hostile/abusive prompt. This prevents judge scores from being confounded
+            by the prompt's tone.
+          </li>
+          <li>
+            <strong class="text-[var(--color-text-primary)]">Word Count Control:</strong> All tone variants are written
+            within ±15% of the neutral word count, preventing brevity or verbosity from confounding tone effects.
+          </li>
+          <li>
+            <strong class="text-[var(--color-text-primary)]">Two-Turn Architecture:</strong> A fixed "Hello" greeting
+            precedes every task prompt, making the model commit to a helpful persona before encountering hostile tone.
+          </li>
+          <li>
+            <strong class="text-[var(--color-text-primary)]">Default System Prompts:</strong> No custom system prompts—
+            models use their provider's default, reflecting real-world deployment conditions.
+          </li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</BaseLayout>

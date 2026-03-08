@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.8.0] - 2026-03-08
+
+### Added
+- **rudebench.com website** (`site/`): Full static site built with Astro 5 + React islands + Tailwind CSS.
+  - **Homepage** with Resilience Score leaderboard, methodology explainer, headline findings cards
+  - **Dimension Explorer** (`/explore`): Interactive heatmap grid — models × tones for each of 6 behavioral dimensions, with domain filtering (factual, coding, creative, analysis), deviation coloring, and observation counts
+  - **Model Profiles** (`/explore/[model]`): Per-model dimensions × tones heatmap with refusal rates
+  - **Response Viewer** (`/responses`): Read actual model responses, toggle between tones, compare mode for side-by-side tone comparison
+  - **HTML Render Viewer** (`/renders`): Sandboxed iframe grid for coding task HTML outputs across tones (desktop-optimized)
+  - **Research Paper** (`/paper`): Full paper draft rendered as HTML with anchor links
+  - **Dataset & Downloads** (`/data`): File descriptions, schema docs, BibTeX citation copy widget
+  - **About** (`/about`): n=2 → n=10 path explainer, methodology details, Resilience Score formula
+- **Data pipeline** (`site/scripts/build-data.py`): Python script that reads raw JSONL from `results/` and generates pre-computed JSON for the website. Produces leaderboard, per-dimension aggregations (with per-domain breakdowns), model profiles, task metadata, per-task response files (250 total), and renders index.
+- **Maturity badge**: Persistent "Early Release — n=2" indicator on every page (non-dismissable)
+- **Mobile-responsive design** throughout (renders page desktop-only by design)
+- **URL state management**: Deep-linkable URLs with search params (`/explore?dim=SYC&domain=coding`)
+- **Dark theme** with tone-mapped color palette (warm gold → peach → gray → steel blue → deep blue → crimson)
+- **Typography**: Silkscreen (Google Fonts) for headings, Inter for body text
+
+### Tech Stack
+- Astro 5.x (SSG, zero JS for editorial pages)
+- React islands (hydrated on demand for interactive components)
+- Tailwind CSS v4 with custom theme tokens
+- `marked` for Markdown → HTML rendering
+- Sitemap generation via `@astrojs/sitemap`
+
 ## [v0.7.9] - 2026-03-08
 
 ### Added

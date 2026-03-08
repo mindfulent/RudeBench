@@ -1,0 +1,77 @@
+---
+const currentPath = Astro.url.pathname;
+
+const links = [
+  { href: '/', label: 'Leaderboard' },
+  { href: '/explore', label: 'Explorer' },
+  { href: '/responses', label: 'Responses' },
+  { href: '/renders', label: 'Renders' },
+  { href: '/paper', label: 'Paper' },
+  { href: '/data', label: 'Data' },
+  { href: '/about', label: 'About' },
+];
+
+function isActive(href: string): boolean {
+  if (href === '/') return currentPath === '/';
+  return currentPath.startsWith(href);
+}
+---
+
+<nav class="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-14">
+      <a href="/" class="font-[family-name:var(--font-display)] text-lg font-bold text-[var(--color-text-primary)] hover:text-[var(--color-accent)] transition-colors">
+        RudeBench
+      </a>
+      <div class="hidden md:flex items-center gap-1">
+        {links.map(link => (
+          <a
+            href={link.href}
+            class:list={[
+              'px-3 py-1.5 rounded-md text-sm transition-colors',
+              isActive(link.href)
+                ? 'text-[var(--color-accent)] bg-[var(--color-surface-2)]'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)]',
+            ]}
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+      <!-- Mobile menu button -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+        aria-label="Toggle menu"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden pb-3">
+      {links.map(link => (
+        <a
+          href={link.href}
+          class:list={[
+            'block px-3 py-2 rounded-md text-sm transition-colors',
+            isActive(link.href)
+              ? 'text-[var(--color-accent)] bg-[var(--color-surface-2)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+  </div>
+</nav>
+
+<script>
+  const btn = document.getElementById('mobile-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  btn?.addEventListener('click', () => {
+    menu?.classList.toggle('hidden');
+  });
+</script>
