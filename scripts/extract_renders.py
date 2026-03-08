@@ -224,12 +224,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .task-counter { font-size: 13px; color: var(--text2); white-space: nowrap; }
 
   /* Grid */
-  .main { padding: 20px 24px; max-width: 1800px; margin: 0 auto; }
+  .main { padding: 20px 24px; }
   .tones-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
   }
-  @media (max-width: 1200px) { .tones-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 700px) { .tones-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 1600px) { .tones-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 900px) { .tones-grid { grid-template-columns: 1fr; } }
 
   /* Tone cards */
   .tone-card {
@@ -266,7 +266,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     padding: 8px; background: var(--surface);
   }
   .iframe-wrap iframe {
-    width: 100%; height: 400px; border: 1px solid var(--border);
+    width: 100%; height: 500px; border: 1px solid var(--border);
     border-radius: 6px; background: #fff; resize: vertical;
   }
 

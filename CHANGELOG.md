@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.7.3] - 2026-03-07
+
+### Added
+- **Claude Sonnet 4.6 n=1 completions** (`results/completions/claude-sonnet-4.6.jsonl`): 300/300 complete, 0 refusals, 4 truncated. Cost: $13.78. Key finding: VRB drops dramatically under abuse (-36.6%) — opposite pattern from GPT-5 mini (+20.6% under hostile). Claude gets concise when berated; GPT over-explains.
+
+### Fixed
+- **Coding render viewer layout** (`scripts/extract_renders.py`): Removed `max-width: 1800px` cap so the grid fills the full browser width. Increased iframe height from 400px to 500px. Adjusted responsive breakpoints for better use of screen real estate.
+
 ## [v0.7.2] - 2026-03-07
 
 ### Fixed
